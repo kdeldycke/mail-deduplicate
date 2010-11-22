@@ -27,8 +27,6 @@
     You can give a list of mail headers to ignore when comparing mails between each others.
     I used this script to clean up a messed maildir folder after I move several mails from a Lotus Notes database.
 
-  Last update: 2010 jun 08
-
   Tested on MacOS X 10.6 with python 2.6.2.
 """
 
