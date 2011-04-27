@@ -116,14 +116,14 @@ def findDuplicates(mails_by_hash, delete):
       i = 0
       for size, mail_file, message in sizes:
         i += 1
-        prefix = "--"
+        prefix = "  "
         if delete:
           if i > 1:
             prefix = "removed"
             os.unlink(mail_file)
           else:
             prefix = "left   "
-        print "%s %d %6d %s" % (prefix, i, size, mail_file)
+        print "%s %2d %d %s" % (prefix, i, size, mail_file)
     # else:
     #   print "unique:", messages[0]
 
