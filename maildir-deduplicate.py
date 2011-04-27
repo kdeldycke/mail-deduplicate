@@ -113,8 +113,10 @@ def findDuplicates(mails_by_hash):
       duplicates += len(messages) - 1
       checkMessagesSimilar(messages)
       checkSizesComparable(messages)
+      i = 0
       for mail_file, message in messages:
-        print "  ", mail_file
+        i += 1
+        print "-- %d %s" % (i, mail_file)
     # else:
     #   print "unique:", messages[0]
 
