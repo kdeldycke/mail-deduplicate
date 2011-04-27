@@ -81,12 +81,12 @@ def computeDigest(mail, ignored_headers):
 
 def collateFolderByHash(mails_by_hash, mail_folder):
   mail_count = 0
-  show_progress("Processing %s mails in the %r folder..." % \
-                  (len(mail_folder), mail_folder._path))
+  sys.stderr.write("Processing %s mails in the %r folder " % \
+                     (len(mail_folder), mail_folder._path))
   for mail_id, message in mail_folder.iteritems():
     mail_hash = computeDigest(message, HEADERS_TO_IGNORE)
     if mail_count > 0 and mail_count % 100 == 0:
-      show_progress("  processed %d mails" % mail_count)
+      sys.stderr.write(".")
     #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
     if mail_hash not in mails_by_hash:
       mails_by_hash[mail_hash] = [ ]
@@ -94,6 +94,8 @@ def collateFolderByHash(mails_by_hash, mail_folder):
     mail_file = os.path.join(mail_folder._path, mail_folder._lookup(mail_id))
     mails_by_hash[mail_hash].append((mail_file, message))
     mail_count += 1
+
+  sys.stderr.write("\n")
 
   # We've analysed all mails in the current folder. Look in sub folders
   for folder_name in mail_folder.list_folders():
