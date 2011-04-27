@@ -97,11 +97,6 @@ def collateFolderByHash(mails_by_hash, mail_folder):
 
   sys.stderr.write("\n")
 
-  # We've analysed all mails in the current folder. Look in sub folders
-  for folder_name in mail_folder.list_folders():
-    print "Would look in", folder_name
-    #processMails(mail_folder.get_folder(folder_name))
-
   return mail_count
 
 def findDuplicates(mails_by_hash, delete):
