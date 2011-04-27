@@ -50,8 +50,9 @@ def computeDigest(mail, ignored_headers):
   # representation.
   p = Parser()
   mail_copy = p.parsestr(mail.as_string())
-  for header in HEADERS_TO_IGNORE:
-    if mail_copy.has_key(header):
+  for header in mail_copy.keys():
+    if header in HEADERS_TO_IGNORE or header.lower().startswith("x-offlineimap-"):
+      print "  ignoring header '%s'" % header
       del mail_copy[header]
 
   return hashlib.sha224(mail_copy.as_string()).hexdigest()
