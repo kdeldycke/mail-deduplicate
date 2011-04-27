@@ -144,9 +144,11 @@ def checkSizesComparable(messages):
 
   for size, mail_file, message in sizes[1:]:
     if size > smallest_size + SIZE_DIFFERENCE_THRESHOLD:
-      raise RuntimeError, \
-        "%s was %d bytes long which is more than %d bytes longer than %s at %d. " % \
+      sys.stderr.write(
+        "\nERROR: %s was %d bytes long which is more than %d bytes longer than %s at %d; aborting\n" % \
         (mail_file, size, SIZE_DIFFERENCE_THRESHOLD, smallest_file, smallest_size)
+      )
+      sys.exit(2)
     # else:
     #   show_progress(
     #     "%s was %d bytes long which is less than %d bytes longer than %s at %d. " %
@@ -174,8 +176,13 @@ def checkMessagesSimilar(messages):
                         n = 0, lineterm = "\n")
     difftext = "".join(diff)
     if len(difftext) > DIFF_THRESHOLD:
-      raise RuntimeError, \
-        "diff between duplicate messages was too big:\n" + difftext
+      sys.stderr.write("\nERROR: diff between duplicate messages was too big; aborting!\n\n"
+                       + difftext)
+      sys.exit(1)
+    # elif len(difftext) == 0:
+    #   show_progress("diff produced no differences")
+    # else:
+    #   show_progress("diff between duplicate messages was small:\n" + difftext)
 
 def show_progress(msg):
   sys.stderr.write(msg + "\n")
