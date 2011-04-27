@@ -31,6 +31,7 @@
 """
 
 import os
+import re
 import sys
 import hashlib
 from mailbox      import Maildir
@@ -61,7 +62,7 @@ def collateFolderByHash(mails_by_hash, mail_folder):
   mail_count = 0
   show_progress("Processing %s mails in the %r folder..." % \
                   (len(mail_folder), mail_folder._path))
-  for mail_id in mail_folder.keys():
+  for mail_id, message in mail_folder.iteritems():
     mail_hash = computeDigest(mail_folder.get(mail_id), HEADERS_TO_IGNORE)
     if mail_count > 0 and mail_count % 100 == 0:
       show_progress("  processed %d mails" % mail_count)
@@ -70,9 +71,7 @@ def collateFolderByHash(mails_by_hash, mail_folder):
       mails_by_hash[mail_hash] = [ ]
 
     mail_file = os.path.join(mail_folder._path, mail_folder._lookup(mail_id))
-    #message_key = mail_id
-    message_key = mail_file
-    mails_by_hash[mail_hash].append(message_key)
+    mails_by_hash[mail_hash].append((mail_file, message))
     mail_count += 1
 
   # We've analysed all mails in the current folder. Look in sub folders
@@ -84,14 +83,16 @@ def collateFolderByHash(mails_by_hash, mail_folder):
 
 def findDuplicates(mails_by_hash):
   duplicates = 0
-  for digest, message_keys in mails_by_hash.iteritems():
-    if len(message_keys) > 1:
-      print "\n" + digest
-      duplicates += len(message_keys) - 1
-      for message_key in message_keys:
-        print "  ", message_key
+  for digest, messages in mails_by_hash.iteritems():
+    if len(messages) > 1:
+      subject = messages[0][1].get('Subject')
+      subject, count = re.subn('\s+', ' ', subject)
+      print "\n" + subject
+      duplicates += len(messages) - 1
+      for mail_file, message in messages:
+        print "  ", mail_file
     # else:
-    #   print "unique:", message_keys[0]
+    #   print "unique:", messages[0]
 
   return duplicates
 
