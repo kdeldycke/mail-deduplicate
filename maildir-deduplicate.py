@@ -110,10 +110,11 @@ def findDuplicates(mails_by_hash, delete):
       subject, count = re.subn('\s+', ' ', subject)
       print "\n" + subject
       duplicates += len(messages) - 1
-      checkMessagesSimilar(messages)
-      checkSizesComparable(messages)
+      sizes = sort_messages_by_size(messages)
+      checkMessagesSimilar(sizes)
+      checkSizesComparable(sizes)
       i = 0
-      for mail_file, message in messages:
+      for size, mail_file, message in sizes:
         i += 1
         prefix = "--"
         if delete:
@@ -122,7 +123,7 @@ def findDuplicates(mails_by_hash, delete):
             os.unlink(mail_file)
           else:
             prefix = "left   "
-        print "%s %d %s" % (prefix, i, mail_file)
+        print "%s %d %6d %s" % (prefix, i, size, mail_file)
     # else:
     #   print "unique:", messages[0]
 
@@ -138,8 +139,7 @@ def sort_messages_by_size(messages):
   sizes.sort(cmp = _sort_by_size)
   return sizes
 
-def checkSizesComparable(messages):
-  sizes = sort_messages_by_size(messages)
+def checkSizesComparable(sizes):
   smallest_size, smallest_file, smallest_message = sizes[0]
 
   for size, mail_file, message in sizes[1:]:
@@ -161,8 +161,7 @@ def getLinesFromFile(path):
   f.close()
   return lines
 
-def checkMessagesSimilar(messages):
-  sizes = sort_messages_by_size(messages)
+def checkMessagesSimilar(sizes):
   smallest_size, smallest_file, smallest_message = sizes[0]
   smallest_lines = smallest_message.as_string().splitlines(True)
 
