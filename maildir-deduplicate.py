@@ -67,15 +67,14 @@ def computeDigest(mail, ignored_headers):
   # a cleaner way than passing through a intermediate string
   # representation.
   p = Parser()
-  mail_copy = p.parsestr(mail.as_string(), headersonly = True)
-  for header in mail_copy.keys():
+  for header in mail.keys():
     if header.lower() in HEADERS_TO_IGNORE \
     or header.lower().startswith("x-offlineimap-"):
       #show_progress("  ignoring header '%s'" % header)
-      del mail_copy[header]
+      del mail[header]
 
-  #header_text, sep, payload = mail_copy.as_string().partition("\n\n")
-  header_text = '\n'.join('%s: %s' % header for header in mail_copy.items())
+  #header_text, sep, payload = mail.as_string().partition("\n\n")
+  header_text = '\n'.join('%s: %s' % header for header in mail.items())
   #print header_text
 
   return hashlib.sha224(header_text).hexdigest()
@@ -85,7 +84,7 @@ def collateFolderByHash(mails_by_hash, mail_folder):
   show_progress("Processing %s mails in the %r folder..." % \
                   (len(mail_folder), mail_folder._path))
   for mail_id, message in mail_folder.iteritems():
-    mail_hash = computeDigest(mail_folder.get(mail_id), HEADERS_TO_IGNORE)
+    mail_hash = computeDigest(message, HEADERS_TO_IGNORE)
     if mail_count > 0 and mail_count % 100 == 0:
       show_progress("  processed %d mails" % mail_count)
     #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
@@ -133,7 +132,7 @@ def sort_messages_by_size(messages):
   sizes = [ ]
   for mail_file, message in messages:
     size = os.path.getsize(mail_file)
-    sizes.append((size, mail_file))
+    sizes.append((size, mail_file, message))
   def _sort_by_size(a, b):
     return cmp(a[0], b[0])
   sizes.sort(cmp = _sort_by_size)
@@ -141,9 +140,9 @@ def sort_messages_by_size(messages):
 
 def checkSizesComparable(messages):
   sizes = sort_messages_by_size(messages)
-  smallest_size, smallest_file = sizes[0]
+  smallest_size, smallest_file, smallest_message = sizes[0]
 
-  for size, mail_file in sizes[1:]:
+  for size, mail_file, message in sizes[1:]:
     if size > smallest_size + SIZE_DIFFERENCE_THRESHOLD:
       raise RuntimeError, \
         "%s was %d bytes long which is more than %d bytes longer than %s at %d. " % \
@@ -162,11 +161,11 @@ def getLinesFromFile(path):
 
 def checkMessagesSimilar(messages):
   sizes = sort_messages_by_size(messages)
-  smallest_size, smallest_file = sizes[0]
-  smallest_lines = getLinesFromFile(smallest_file)
+  smallest_size, smallest_file, smallest_message = sizes[0]
+  smallest_lines = smallest_message.as_string().splitlines(True)
 
-  for size, mail_file in sizes[1:]:
-    lines = getLinesFromFile(mail_file)
+  for size, mail_file, message in sizes[1:]:
+    lines = message.as_string().splitlines(True)
     diff = unified_diff(smallest_lines, lines,
                         fromfile = smallest_file,
                         tofile   = mail_file,
