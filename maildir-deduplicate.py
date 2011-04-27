@@ -52,17 +52,20 @@ def computeDigest(mail, ignored_headers):
   mail_copy = p.parsestr(mail.as_string())
   for header in mail_copy.keys():
     if header in HEADERS_TO_IGNORE or header.lower().startswith("x-offlineimap-"):
-      print "  ignoring header '%s'" % header
+      #show_progress("  ignoring header '%s'" % header)
       del mail_copy[header]
 
   return hashlib.sha224(mail_copy.as_string()).hexdigest()
 
 def collateFolderByHash(mails_by_hash, mail_folder):
   mail_count = 0
-  print "Processing %s mails in the %r folder..." % (len(mail_folder), mail_folder._path)
+  show_progress("Processing %s mails in the %r folder..." % \
+                  (len(mail_folder), mail_folder._path))
   for mail_id in mail_folder.keys():
     mail_hash = computeDigest(mail_folder.get(mail_id), HEADERS_TO_IGNORE)
-    print "  Hash is %s for mail %r" % (mail_hash, mail_id)
+    if mail_count > 0 and mail_count % 100 == 0:
+      show_progress("  processed %d mails" % mail_count)
+    #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
     if mail_hash not in mails_by_hash:
       mails_by_hash[mail_hash] = [ ]
 
@@ -83,7 +86,7 @@ def findDuplicates(mails_by_hash):
   duplicates = 0
   for digest, message_keys in mails_by_hash.iteritems():
     if len(message_keys) > 1:
-      print digest
+      print "\n" + digest
       duplicates += len(message_keys) - 1
       for message_key in message_keys:
         print "  ", message_key
@@ -91,6 +94,9 @@ def findDuplicates(mails_by_hash):
     #   print "unique:", message_keys[0]
 
   return duplicates
+
+def show_progress(msg):
+  sys.stderr.write(msg + "\n")
 
 def main():
   mails_by_hash = { }
@@ -101,6 +107,7 @@ def main():
     mail_count += collateFolderByHash(mails_by_hash, maildir)
 
   duplicates = findDuplicates(mails_by_hash)
-  print "%s duplicates in a total of %s mails." % (duplicates, mail_count)
+  show_progress("\n%s duplicates in a total of %s mails." % \
+                  (duplicates, mail_count))
 
 main()
