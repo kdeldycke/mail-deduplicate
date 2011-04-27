@@ -2,7 +2,8 @@
 
 ##############################################################################
 #
-# Copyright (C) 2010 Kevin Deldycke <kevin@deldycke.com>
+# Copyright (C) 2010-2011 Kevin Deldycke <kevin@deldycke.com>
+#                         Adam Spiers <adam@spiers.net>
 #
 # This program is Free Software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
