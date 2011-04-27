@@ -36,6 +36,7 @@ import sys
 import hashlib
 from mailbox      import Maildir
 from email.parser import Parser
+from difflib      import unified_diff
 
 # List of mail headers to ignore when computing the hash of a mail.
 # BTW, don't worry: mail header manipulation methods are case-insensitive.
@@ -54,6 +55,10 @@ HEADERS_TO_IGNORE = [
 # If this is exceed, a RuntimeError is thrown, because this could
 # point to message corruption somewhere.
 SIZE_DIFFERENCE_THRESHOLD = 256 # bytes
+
+# Similarly, we generated unified diffs of duplicates and ensure that
+# the diff is not greater than a certain size.
+DIFF_THRESHOLD = 512 # bytes
 
 def computeDigest(mail, ignored_headers):
   """ This method remove some mail headers before generating a digest of the message
@@ -106,6 +111,7 @@ def findDuplicates(mails_by_hash):
       subject, count = re.subn('\s+', ' ', subject)
       print "\n" + subject
       duplicates += len(messages) - 1
+      checkMessagesSimilar(messages)
       checkSizesComparable(messages)
       for mail_file, message in messages:
         print "  ", mail_file
@@ -138,6 +144,30 @@ def checkSizesComparable(messages):
     #     "%s was %d bytes long which is less than %d bytes longer than %s at %d. " %
     #     (mail_file, size, SIZE_DIFFERENCE_THRESHOLD, smallest_file, smallest_size)
     #   )
+
+def getLinesFromFile(path):
+  f = open(path)
+  lines = f.readlines()
+  f.close()
+  return lines
+
+def checkMessagesSimilar(messages):
+  sizes = sort_messages_by_size(messages)
+  smallest_size, smallest_file = sizes[0]
+  smallest_lines = getLinesFromFile(smallest_file)
+
+  for size, mail_file in sizes[1:]:
+    lines = getLinesFromFile(mail_file)
+    diff = unified_diff(smallest_lines, lines,
+                        fromfile = smallest_file,
+                        tofile   = mail_file,
+                        fromfiledate = os.path.getmtime(smallest_file),
+                        tofiledate = os.path.getmtime(mail_file),
+                        n = 0, lineterm = "\n")
+    difftext = "".join(diff)
+    if len(difftext) > DIFF_THRESHOLD:
+      raise RuntimeError, \
+        "diff between duplicate messages was too big:\n" + difftext
 
 def show_progress(msg):
   sys.stderr.write(msg + "\n")
