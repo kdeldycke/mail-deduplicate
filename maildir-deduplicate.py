@@ -103,7 +103,7 @@ def collateFolderByHash(mails_by_hash, mail_folder):
 
   return mail_count
 
-def findDuplicates(mails_by_hash):
+def findDuplicates(mails_by_hash, delete):
   duplicates = 0
   for digest, messages in mails_by_hash.iteritems():
     if len(messages) > 1:
@@ -116,7 +116,14 @@ def findDuplicates(mails_by_hash):
       i = 0
       for mail_file, message in messages:
         i += 1
-        print "-- %d %s" % (i, mail_file)
+        prefix = "--"
+        if delete:
+          if i > 1:
+            prefix = "removed"
+            os.unlink(mail_file)
+          else:
+            prefix = "left   "
+        print "%s %d %s" % (prefix, i, mail_file)
     # else:
     #   print "unique:", messages[0]
 
@@ -175,14 +182,20 @@ def show_progress(msg):
   sys.stderr.write(msg + "\n")
 
 def main():
+  cli_args = sys.argv[1:]
+  delete = False
+  if cli_args[0] == '-d':
+    delete = True
+    cli_args.pop(0)
+
   mails_by_hash = { }
   mail_count = 0
 
-  for maildir_path in sys.argv[1:]:
+  for maildir_path in cli_args:
     maildir = Maildir(maildir_path, factory = None)
     mail_count += collateFolderByHash(mails_by_hash, maildir)
 
-  duplicates = findDuplicates(mails_by_hash)
+  duplicates = findDuplicates(mails_by_hash, delete)
   show_progress("\n%s duplicates in a total of %s mails." % \
                   (duplicates, mail_count))
 
