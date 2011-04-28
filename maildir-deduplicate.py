@@ -180,8 +180,9 @@ def getHeaderText(mail):
 
 def collateFolderByHash(mails_by_hash, mail_folder, use_message_id):
   mail_count = 0
-  sys.stderr.write("Processing %s mails in the %r folder " % \
-                     (len(mail_folder), mail_folder._path))
+  path = re.sub(os.getenv('HOME'), '~', mail_folder._path)
+  sys.stderr.write("Processing %s mails in %s " % \
+                     (len(mail_folder), path))
   for mail_id, message in mail_folder.iteritems():
     mail_hash = computeHashKey(message, use_message_id)
     if mail_count > 0 and mail_count % 100 == 0:
