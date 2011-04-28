@@ -101,15 +101,15 @@ def collateFolderByHash(mails_by_hash, mail_folder):
 
 def findDuplicates(mails_by_hash, delete):
   duplicates = 0
-  for digest, messages in mails_by_hash.iteritems():
+  for hash_key, messages in mails_by_hash.iteritems():
     if len(messages) > 1:
       subject = messages[0][1].get('Subject')
       subject, count = re.subn('\s+', ' ', subject)
       print "\n" + subject
       duplicates += len(messages) - 1
       sizes = sort_messages_by_size(messages)
-      checkMessagesSimilar(sizes)
-      checkSizesComparable(sizes)
+      checkMessagesSimilar(hash_key, sizes)
+      checkSizesComparable(hash_key, sizes)
       i = 0
       for size, mail_file, message in sizes:
         i += 1
@@ -136,15 +136,18 @@ def sort_messages_by_size(messages):
   sizes.sort(cmp = _sort_by_size)
   return sizes
 
-def checkSizesComparable(sizes):
+def checkSizesComparable(hash_key, sizes):
   smallest_size, smallest_file, smallest_message = sizes[0]
 
   for size, mail_file, message in sizes[1:]:
     if size > smallest_size + SIZE_DIFFERENCE_THRESHOLD:
-      sys.stderr.write(
-        "\nERROR: %s was %d bytes long which is more than %d bytes longer than %s at %d; aborting\n" % \
-        (mail_file, size, SIZE_DIFFERENCE_THRESHOLD, smallest_file, smallest_size)
-      )
+      msg = "\nERROR: for hash key %s, " \
+            "%s was %d bytes long which is more than " \
+            "%d bytes longer than %s at %d; aborting\n" % \
+        (hash_key,
+         mail_file, size,
+         SIZE_DIFFERENCE_THRESHOLD, smallest_file, smallest_size)
+      sys.stderr.write(msg)
       sys.exit(2)
     # else:
     #   show_progress(
@@ -158,7 +161,7 @@ def getLinesFromFile(path):
   f.close()
   return lines
 
-def checkMessagesSimilar(sizes):
+def checkMessagesSimilar(hash_key, sizes):
   smallest_size, smallest_file, smallest_message = sizes[0]
   smallest_lines = smallest_message.as_string().splitlines(True)
 
@@ -172,8 +175,9 @@ def checkMessagesSimilar(sizes):
                         n = 0, lineterm = "\n")
     difftext = "".join(diff)
     if len(difftext) > DIFF_THRESHOLD:
-      sys.stderr.write("\nERROR: diff between duplicate messages was too big; aborting!\n\n"
-                       + difftext)
+      msg = ("\nERROR: diff between duplicate messages with hash key %s " % hash_key) + \
+          "was too big; aborting!\n\n" + difftext
+      sys.stderr.write(msg)
       sys.exit(1)
     # elif len(difftext) == 0:
     #   show_progress("diff produced no differences")
