@@ -83,9 +83,10 @@ HEADER_LOOKUP = dict((h.lower(), True) for h in HEADERS)
 
 # Since we're ignoring the Content-Length header for the reasons
 # stated above, we limit the allowed difference between message sizes.
-# If this is exceeded, execution is halted, because this could
-# point to message corruption somewhere.  Note that the default
-# is quite high because of the number of headers mailman can add.
+# If this is exceeded, a warning is issued and the messages are not
+# considered duplicates, because this could point to message
+# corruption somewhere.  Note that the default is quite high because
+# of the number of headers mailman can add.
 DEFAULT_SIZE_DIFFERENCE_THRESHOLD = 2048 # bytes
 
 # Similarly, we generated unified diffs of duplicates and ensure that
@@ -200,30 +201,39 @@ def findDuplicates(mails_by_hash, opts):
   duplicates = 0
   sets = 0
   for hash_key, messages in mails_by_hash.iteritems():
-    if len(messages) > 1:
-      subject = messages[0][1].get('Subject')
-      subject, count = re.subn('\s+', ' ', subject)
-      print "\nSubject: " + subject
-      duplicates += len(messages) - 1
-      sets += 1
-      sizes = sortMessagesBySize(messages)
-      checkMessagesSimilar(hash_key, sizes, opts)
-      checkSizesComparable(hash_key, sizes, opts.size_threshold)
-      i = 0
-      for size, mail_file, message in sizes:
-        i += 1
-        prefix = "  "
-        if opts.remove:
-          if i > 1:
-            prefix = "removed"
-            os.unlink(mail_file)
-          else:
-            prefix = "left   "
-        print "%s %2d %d %s" % (prefix, i, size, mail_file)
-    # else:
-    #   print "unique:", messages[0]
+    if len(messages) == 1:
+      #print "unique:", messages[0]
+      continue
+
+    subject = messages[0][1].get('Subject')
+    subject, count = re.subn('\s+', ' ', subject)
+    print "\nSubject: " + subject
+
+    sizes = sortMessagesBySize(messages)
+    if not checkMessagesSimilar(hash_key, sizes, opts):
+        continue
+    if not checkSizesComparable(hash_key, sizes, opts.size_threshold):
+        continue
+
+    duplicates += len(messages) - 1
+    sets += 1
+
+    process_duplicates(sizes, opts)
 
   return duplicates, sets
+
+def process_duplicates(sizes, opts):
+  i = 0
+  for size, mail_file, message in sizes:
+    i += 1
+    prefix = "  "
+    if opts.remove:
+      if i > 1:
+        prefix = "removed"
+        os.unlink(mail_file)
+      else:
+        prefix = "left   "
+    print "%s %2d %d %s" % (prefix, i, size, mail_file)
 
 def sortMessagesBySize(messages):
   sizes = [ ]
@@ -237,20 +247,22 @@ def sortMessagesBySize(messages):
 
 def checkSizesComparable(hash_key, sizes, threshold):
   if threshold < 0:
-    return
+    return True
 
   largest_size, largest_file, largest_message = sizes[0]
 
   for size, mail_file, message in sizes[1:]:
     size_difference = largest_size - size
     if size_difference > threshold:
-      msg = "\nERROR: for hash key %s, sizes differ by %d > %d bytes:\n" \
-            "  %d %s\n  %d %s\nAborting.\n" % \
+      msg = "\nFor hash key %s, sizes differ by %d > %d bytes:\n" \
+            "  %d %s\n  %d %s\n" % \
         (hash_key, size_difference, threshold,
          size, mail_file,
          largest_size, largest_file)
       sys.stderr.write(msg)
-      sys.exit(2)
+      return False
+
+  return True
 
 def getLinesFromFile(path):
   f = open(path)
@@ -261,7 +273,7 @@ def getLinesFromFile(path):
 def checkMessagesSimilar(hash_key, sizes, opts):
   threshold = opts.diff_threshold
   if threshold < 0:
-    return
+    return True
 
   largest_size, largest_file, largest_message = sizes[0]
   largest_lines = largest_message.as_string().splitlines(True)
@@ -287,18 +299,20 @@ def checkMessagesSimilar(hash_key, sizes, opts):
                                    n = 0, lineterm = "\n")
 
     if len(difftext) > threshold:
-      msg = ("\nERROR: diff between duplicate messages with hash key %s " \
-             "was %d > %d bytes; aborting!\n\n" %
-             (hash_key, len(difftext), threshold)) + \
-        "".join(friendly_diff)
-      sys.stderr.write(msg)
-      sys.exit(1)
+      msg = "diff between duplicate messages with hash key %s " \
+            "was %d > %d bytes" % (hash_key, len(difftext), threshold)
+      show_progress(msg)
+      if opts.show_diffs:
+        show_progress("".join(friendly_diff))
+      return False
     elif len(difftext) == 0:
       if opts.show_diffs:
         show_progress("diff produced no differences")
     else:
       if opts.show_diffs:
         show_progress("".join(friendly_diff))
+
+  return True
 
 def show_progress(msg):
   sys.stderr.write(msg + "\n")
