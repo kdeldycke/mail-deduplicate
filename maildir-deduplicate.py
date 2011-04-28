@@ -103,6 +103,10 @@ def parse_args():
         help = 'Remove duplicates rather than just list them'
     )
     parser.add_option(
+        '-s', '--show-diffs', action = 'store_true',
+        help = 'Show diffs between duplicates'
+    )
+    parser.add_option(
         '-i', '--message-id', action = 'store_true',
         help = 'Use Message-ID header as hash key ' \
                '(not recommended - the default is to compute a digest ' \
@@ -197,7 +201,7 @@ def findDuplicates(mails_by_hash, opts):
       duplicates += len(messages) - 1
       sets += 1
       sizes = sortMessagesBySize(messages)
-      checkMessagesSimilar(hash_key, sizes, opts.diff_threshold)
+      checkMessagesSimilar(hash_key, sizes, opts)
       checkSizesComparable(hash_key, sizes, opts.size_threshold)
       i = 0
       for size, mail_file, message in sizes:
@@ -253,7 +257,8 @@ def getLinesFromFile(path):
   f.close()
   return lines
 
-def checkMessagesSimilar(hash_key, sizes, threshold):
+def checkMessagesSimilar(hash_key, sizes, opts):
+  threshold = opts.diff_threshold
   if threshold < 0:
     return
 
@@ -272,21 +277,27 @@ def checkMessagesSimilar(hash_key, sizes, threshold):
     # print "".join(smallest_lines[:20])
     # print "------\n"
     # print "".join(lines[:20])
-    if len(difftext) > threshold:
+    if opts.show_diffs or len(difftext) > threshold:
       friendly_diff = unified_diff(smallest_lines, lines,
                                    fromfile = smallest_file,
                                    tofile   = mail_file,
                                    fromfiledate = os.path.getmtime(smallest_file),
                                    tofiledate = os.path.getmtime(mail_file),
                                    n = 0, lineterm = "\n")
-      msg = ("\nERROR: diff between duplicate messages with hash key %s " % hash_key) + \
-          "was too big; aborting!\n\n" + "".join(friendly_diff)
+
+    if len(difftext) > threshold:
+      msg = ("\nERROR: diff between duplicate messages with hash key %s " \
+             "was %d > %d bytes; aborting!\n\n" %
+             (hash_key, len(difftext), threshold)) + \
+        "".join(friendly_diff)
       sys.stderr.write(msg)
       sys.exit(1)
-    # elif len(difftext) == 0:
-    #   show_progress("diff produced no differences")
-    # else:
-    #   show_progress("diff between duplicate messages was small:\n" + difftext)
+    elif len(difftext) == 0:
+      if opts.show_diffs:
+        show_progress("diff produced no differences")
+    else:
+      if opts.show_diffs:
+        show_progress("".join(friendly_diff))
 
 def show_progress(msg):
   sys.stderr.write(msg + "\n")
