@@ -148,12 +148,14 @@ def collateFolderByHash(mails_by_hash, mail_folder, use_message_id):
 
 def findDuplicates(mails_by_hash, opts):
   duplicates = 0
+  sets = 0
   for hash_key, messages in mails_by_hash.iteritems():
     if len(messages) > 1:
       subject = messages[0][1].get('Subject')
       subject, count = re.subn('\s+', ' ', subject)
       print "\n" + subject
       duplicates += len(messages) - 1
+      sets += 1
       sizes = sort_messages_by_size(messages)
       checkMessagesSimilar(hash_key, sizes, opts.diff_threshold)
       checkSizesComparable(hash_key, sizes, opts.size_threshold)
@@ -171,7 +173,7 @@ def findDuplicates(mails_by_hash, opts):
     # else:
     #   print "unique:", messages[0]
 
-  return duplicates
+  return duplicates, sets
 
 def sort_messages_by_size(messages):
   sizes = [ ]
@@ -250,8 +252,8 @@ def main():
     maildir = Maildir(maildir_path, factory = None)
     mail_count += collateFolderByHash(mails_by_hash, maildir, opts.message_id)
 
-  duplicates = findDuplicates(mails_by_hash, opts)
-  show_progress("\n%s duplicates in a total of %s mails." % \
-                  (duplicates, mail_count))
+  duplicates, sets = findDuplicates(mails_by_hash, opts)
+  show_progress("\n%s duplicates in %d sets from a total of %s mails." % \
+                  (duplicates, sets, mail_count))
 
 main()
