@@ -190,13 +190,13 @@ def checkSizesComparable(hash_key, sizes, threshold):
   smallest_size, smallest_file, smallest_message = sizes[0]
 
   for size, mail_file, message in sizes[1:]:
-    if size > smallest_size + threshold:
-      msg = "\nERROR: for hash key %s, " \
-            "%s was %d bytes long which is more than " \
-            "%d bytes longer than %s at %d; aborting\n" % \
-        (hash_key,
-         mail_file, size,
-         threshold, smallest_file, smallest_size)
+    size_difference = size - smallest_size
+    if size_difference > threshold:
+      msg = "\nERROR: for hash key %s, sizes differ by %d > %d bytes:\n" \
+            "  %d %s\n  %d %s\nAborting.\n" % \
+        (hash_key, size_difference, threshold,
+         size, mail_file,
+         smallest_size, smallest_file)
       sys.stderr.write(msg)
       sys.exit(2)
     # else:
