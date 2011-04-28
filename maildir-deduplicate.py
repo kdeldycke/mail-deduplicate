@@ -225,7 +225,7 @@ def sortMessagesBySize(messages):
     size = os.path.getsize(mail_file)
     sizes.append((size, mail_file, message))
   def _sort_by_size(a, b):
-    return cmp(a[0], b[0])
+    return cmp(b[0], a[0])
   sizes.sort(cmp = _sort_by_size)
   return sizes
 
@@ -233,23 +233,18 @@ def checkSizesComparable(hash_key, sizes, threshold):
   if threshold < 0:
     return
 
-  smallest_size, smallest_file, smallest_message = sizes[0]
+  largest_size, largest_file, largest_message = sizes[0]
 
   for size, mail_file, message in sizes[1:]:
-    size_difference = size - smallest_size
+    size_difference = largest_size - size
     if size_difference > threshold:
       msg = "\nERROR: for hash key %s, sizes differ by %d > %d bytes:\n" \
             "  %d %s\n  %d %s\nAborting.\n" % \
         (hash_key, size_difference, threshold,
          size, mail_file,
-         smallest_size, smallest_file)
+         largest_size, largest_file)
       sys.stderr.write(msg)
       sys.exit(2)
-    # else:
-    #   show_progress(
-    #     "%s was %d bytes long which is less than %d bytes longer than %s at %d. " %
-    #     (mail_file, size, threshold, smallest_file, smallest_size)
-    #   )
 
 def getLinesFromFile(path):
   f = open(path)
@@ -262,27 +257,27 @@ def checkMessagesSimilar(hash_key, sizes, opts):
   if threshold < 0:
     return
 
-  smallest_size, smallest_file, smallest_message = sizes[0]
-  smallest_lines = smallest_message.as_string().splitlines(True)
+  largest_size, largest_file, largest_message = sizes[0]
+  largest_lines = largest_message.as_string().splitlines(True)
 
   for size, mail_file, message in sizes[1:]:
     lines = message.as_string().splitlines(True)
     # We don't want the size of this diff to depend on the length of
     # the filenames or timestamps.
-    diff = unified_diff(smallest_lines, lines,
+    diff = unified_diff(lines, largest_lines,
                         fromfile     = 'a', tofile     = 'b',
                         fromfiledate = '',  tofiledate = '',
                         n = 0, lineterm = "\n")
     difftext = "".join(diff)
-    # print "".join(smallest_lines[:20])
+    # print "".join(largest_lines[:20])
     # print "------\n"
     # print "".join(lines[:20])
     if opts.show_diffs or len(difftext) > threshold:
-      friendly_diff = unified_diff(smallest_lines, lines,
-                                   fromfile = smallest_file,
-                                   tofile   = mail_file,
-                                   fromfiledate = os.path.getmtime(smallest_file),
-                                   tofiledate = os.path.getmtime(mail_file),
+      friendly_diff = unified_diff(lines, largest_lines,
+                                   fromfile = mail_file,
+                                   tofile   = largest_file,
+                                   fromfiledate = os.path.getmtime(mail_file),
+                                   tofiledate = os.path.getmtime(largest_file),
                                    n = 0, lineterm = "\n")
 
     if len(difftext) > threshold:
