@@ -156,7 +156,7 @@ def findDuplicates(mails_by_hash, opts):
       print "\n" + subject
       duplicates += len(messages) - 1
       sets += 1
-      sizes = sort_messages_by_size(messages)
+      sizes = sortMessagesBySize(messages)
       checkMessagesSimilar(hash_key, sizes, opts.diff_threshold)
       checkSizesComparable(hash_key, sizes, opts.size_threshold)
       i = 0
@@ -175,7 +175,7 @@ def findDuplicates(mails_by_hash, opts):
 
   return duplicates, sets
 
-def sort_messages_by_size(messages):
+def sortMessagesBySize(messages):
   sizes = [ ]
   for mail_file, message in messages:
     size = os.path.getsize(mail_file)
