@@ -35,6 +35,7 @@ import os
 import re
 import sys
 import hashlib
+from optparse     import OptionParser
 from mailbox      import Maildir
 from email.parser import Parser
 from difflib      import unified_diff
@@ -61,7 +62,36 @@ SIZE_DIFFERENCE_THRESHOLD = 256 # bytes
 # the diff is not greater than a certain size.
 DIFF_THRESHOLD = 512 # bytes
 
-def computeDigest(mail, ignored_headers):
+def parse_args():
+    parser = OptionParser(
+        usage = '%prog [OPTIONS] [MAILDIR [MAILDIR ...]]',
+        description = 'Detect/remove duplicates from maildir folders',
+    )
+
+    parser.add_option(
+        '-d', '--remove', action = 'store_true',
+        help = 'Remove duplicates rather than just list them'
+    )
+    parser.add_option(
+        '-i', '--message-id', action = 'store_true',
+        help = 'Use Message-ID header as hash key ' \
+               '(not recommended - the default is to compute a digest ' \
+               'of the whole header with selected headers removed'
+    )
+
+    opts, maildirs = parser.parse_args()
+
+    if len(maildirs) == 0:
+        usage_error(parser, "Must specify at least one maildir folder")
+
+    return opts, maildirs
+
+def usage_error(parser, error_msg):
+    sys.stderr.write("Error: %s\n\n" % error_msg)
+    parser.print_help()
+    sys.exit(2)
+
+def computeHashKey(mail, ignored_headers, use_message_id):
   """ This method remove some mail headers before generating a digest of the message
   """
   # Make a local copy of the message to manipulate it. I haven't found
@@ -73,18 +103,21 @@ def computeDigest(mail, ignored_headers):
       #show_progress("  ignoring header '%s'" % header)
       del mail[header]
 
+  if use_message_id:
+    return mail.get('Message-ID')
+
   #header_text, sep, payload = mail.as_string().partition("\n\n")
   header_text = '\n'.join('%s: %s' % header for header in mail.items())
   #print header_text
 
   return hashlib.sha224(header_text).hexdigest()
 
-def collateFolderByHash(mails_by_hash, mail_folder):
+def collateFolderByHash(mails_by_hash, mail_folder, use_message_id):
   mail_count = 0
   sys.stderr.write("Processing %s mails in the %r folder " % \
                      (len(mail_folder), mail_folder._path))
   for mail_id, message in mail_folder.iteritems():
-    mail_hash = computeDigest(message, HEADERS_TO_IGNORE)
+    mail_hash = computeHashKey(message, HEADERS_TO_IGNORE, use_message_id)
     if mail_count > 0 and mail_count % 100 == 0:
       sys.stderr.write(".")
     #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
@@ -188,20 +221,16 @@ def show_progress(msg):
   sys.stderr.write(msg + "\n")
 
 def main():
-  cli_args = sys.argv[1:]
-  delete = False
-  if cli_args[0] == '-d':
-    delete = True
-    cli_args.pop(0)
+  opts, maildir_paths = parse_args()
 
   mails_by_hash = { }
   mail_count = 0
 
-  for maildir_path in cli_args:
+  for maildir_path in maildir_paths:
     maildir = Maildir(maildir_path, factory = None)
-    mail_count += collateFolderByHash(mails_by_hash, maildir)
+    mail_count += collateFolderByHash(mails_by_hash, maildir, opts.message_id)
 
-  duplicates = findDuplicates(mails_by_hash, delete)
+  duplicates = findDuplicates(mails_by_hash, opts.remove)
   show_progress("\n%s duplicates in a total of %s mails." % \
                   (duplicates, mail_count))
 
