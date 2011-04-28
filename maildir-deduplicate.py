@@ -162,13 +162,19 @@ def computeHashKey(mail, use_message_id):
     #show_progress("\nTrimmed '%s' from %s" % (m.group(1), mail['Subject']))
 
   if use_message_id:
-    return mail.get('Message-ID')
+    message_id = mail.get('Message-Id')
+    if message_id:
+      return message_id
+    sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + getHeaderText(mail))
+    #sys.exit(3)
 
+  return hashlib.sha224(getHeaderText(mail)).hexdigest()
+
+def getHeaderText(mail):
   #header_text, sep, payload = mail.as_string().partition("\n\n")
-  header_text = '\n'.join('%s: %s' % (header, mail[header]) for header in HEADERS)
-  #print header_text
-
-  return hashlib.sha224(header_text).hexdigest()
+  header_text = ''.join('%s: %s\n' % (header, mail[header]) for header in HEADERS
+                        if mail[header] is not None)
+  return header_text
 
 def collateFolderByHash(mails_by_hash, mail_folder, use_message_id):
   mail_count = 0
