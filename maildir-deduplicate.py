@@ -262,19 +262,25 @@ def checkMessagesSimilar(hash_key, sizes, threshold):
 
   for size, mail_file, message in sizes[1:]:
     lines = message.as_string().splitlines(True)
+    # We don't want the size of this diff to depend on the length of
+    # the filenames or timestamps.
     diff = unified_diff(smallest_lines, lines,
-                        fromfile = smallest_file,
-                        tofile   = mail_file,
-                        fromfiledate = os.path.getmtime(smallest_file),
-                        tofiledate = os.path.getmtime(mail_file),
+                        fromfile     = 'a', tofile     = 'b',
+                        fromfiledate = '',  tofiledate = '',
                         n = 0, lineterm = "\n")
     difftext = "".join(diff)
     # print "".join(smallest_lines[:20])
     # print "------\n"
     # print "".join(lines[:20])
     if len(difftext) > threshold:
+      friendly_diff = unified_diff(smallest_lines, lines,
+                                   fromfile = smallest_file,
+                                   tofile   = mail_file,
+                                   fromfiledate = os.path.getmtime(smallest_file),
+                                   tofiledate = os.path.getmtime(mail_file),
+                                   n = 0, lineterm = "\n")
       msg = ("\nERROR: diff between duplicate messages with hash key %s " % hash_key) + \
-          "was too big; aborting!\n\n" + difftext
+          "was too big; aborting!\n\n" + "".join(friendly_diff)
       sys.stderr.write(msg)
       sys.exit(1)
     # elif len(difftext) == 0:
