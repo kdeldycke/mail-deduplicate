@@ -56,11 +56,11 @@ HEADERS_TO_IGNORE = [
 # stated above, we limit the allowed difference between message sizes.
 # If this is exceed, a RuntimeError is thrown, because this could
 # point to message corruption somewhere.
-SIZE_DIFFERENCE_THRESHOLD = 256 # bytes
+DEFAULT_SIZE_DIFFERENCE_THRESHOLD = 256 # bytes
 
 # Similarly, we generated unified diffs of duplicates and ensure that
 # the diff is not greater than a certain size.
-DIFF_THRESHOLD = 512 # bytes
+DEFAULT_DIFF_THRESHOLD = 512 # bytes
 
 def parse_args():
     parser = OptionParser(
@@ -77,6 +77,20 @@ def parse_args():
         help = 'Use Message-ID header as hash key ' \
                '(not recommended - the default is to compute a digest ' \
                'of the whole header with selected headers removed'
+    )
+    parser.add_option(
+        '-S', '--size-threshold', type = 'int',
+        default = DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
+        help = 'Specify maximum allowed difference in bytes ' \
+               'between size of duplicates. ' \
+               'Default is %default; set -1 for no threshold.'
+    )
+    parser.add_option(
+        '-D', '--diff-threshold', type = 'int',
+        default = DEFAULT_DIFF_THRESHOLD,
+        help = 'Specify maximum allowed size in bytes of unified diff ' \
+               'between duplicates. ' \
+               'Default is %default; set -1 for no threshold.'
     )
 
     opts, maildirs = parser.parse_args()
@@ -132,7 +146,7 @@ def collateFolderByHash(mails_by_hash, mail_folder, use_message_id):
 
   return mail_count
 
-def findDuplicates(mails_by_hash, delete):
+def findDuplicates(mails_by_hash, opts):
   duplicates = 0
   for hash_key, messages in mails_by_hash.iteritems():
     if len(messages) > 1:
@@ -141,13 +155,13 @@ def findDuplicates(mails_by_hash, delete):
       print "\n" + subject
       duplicates += len(messages) - 1
       sizes = sort_messages_by_size(messages)
-      checkMessagesSimilar(hash_key, sizes)
-      checkSizesComparable(hash_key, sizes)
+      checkMessagesSimilar(hash_key, sizes, opts.diff_threshold)
+      checkSizesComparable(hash_key, sizes, opts.size_threshold)
       i = 0
       for size, mail_file, message in sizes:
         i += 1
         prefix = "  "
-        if delete:
+        if opts.remove:
           if i > 1:
             prefix = "removed"
             os.unlink(mail_file)
@@ -169,23 +183,26 @@ def sort_messages_by_size(messages):
   sizes.sort(cmp = _sort_by_size)
   return sizes
 
-def checkSizesComparable(hash_key, sizes):
+def checkSizesComparable(hash_key, sizes, threshold):
+  if threshold < 0:
+    return
+
   smallest_size, smallest_file, smallest_message = sizes[0]
 
   for size, mail_file, message in sizes[1:]:
-    if size > smallest_size + SIZE_DIFFERENCE_THRESHOLD:
+    if size > smallest_size + threshold:
       msg = "\nERROR: for hash key %s, " \
             "%s was %d bytes long which is more than " \
             "%d bytes longer than %s at %d; aborting\n" % \
         (hash_key,
          mail_file, size,
-         SIZE_DIFFERENCE_THRESHOLD, smallest_file, smallest_size)
+         threshold, smallest_file, smallest_size)
       sys.stderr.write(msg)
       sys.exit(2)
     # else:
     #   show_progress(
     #     "%s was %d bytes long which is less than %d bytes longer than %s at %d. " %
-    #     (mail_file, size, SIZE_DIFFERENCE_THRESHOLD, smallest_file, smallest_size)
+    #     (mail_file, size, threshold, smallest_file, smallest_size)
     #   )
 
 def getLinesFromFile(path):
@@ -194,7 +211,10 @@ def getLinesFromFile(path):
   f.close()
   return lines
 
-def checkMessagesSimilar(hash_key, sizes):
+def checkMessagesSimilar(hash_key, sizes, threshold):
+  if threshold < 0:
+    return
+
   smallest_size, smallest_file, smallest_message = sizes[0]
   smallest_lines = smallest_message.as_string().splitlines(True)
 
@@ -207,7 +227,7 @@ def checkMessagesSimilar(hash_key, sizes):
                         tofiledate = os.path.getmtime(mail_file),
                         n = 0, lineterm = "\n")
     difftext = "".join(diff)
-    if len(difftext) > DIFF_THRESHOLD:
+    if len(difftext) > threshold:
       msg = ("\nERROR: diff between duplicate messages with hash key %s " % hash_key) + \
           "was too big; aborting!\n\n" + difftext
       sys.stderr.write(msg)
@@ -230,7 +250,7 @@ def main():
     maildir = Maildir(maildir_path, factory = None)
     mail_count += collateFolderByHash(mails_by_hash, maildir, opts.message_id)
 
-  duplicates = findDuplicates(mails_by_hash, opts.remove)
+  duplicates = findDuplicates(mails_by_hash, opts)
   show_progress("\n%s duplicates in a total of %s mails." % \
                   (duplicates, mail_count))
 
