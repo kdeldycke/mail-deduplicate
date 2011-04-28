@@ -67,7 +67,6 @@ def computeDigest(mail, ignored_headers):
   # Make a local copy of the message to manipulate it. I haven't found
   # a cleaner way than passing through a intermediate string
   # representation.
-  p = Parser()
   for header in mail.keys():
     if header.lower() in HEADERS_TO_IGNORE \
     or header.lower().startswith("x-offlineimap-"):
