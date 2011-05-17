@@ -158,10 +158,11 @@ def computeHashKey(mail, use_message_id):
             for value in values:
                 mail.add_header(header, value)
 
-    m = re.match("(\[\w[\w_-]+\w\] )(.+)", mail['Subject'])
-    if m:
-        mail.replace_header('Subject', m.group(2))
-        #show_progress("\nTrimmed '%s' from %s" % (m.group(1), mail['Subject']))
+    if mail['Subject']:
+        m = re.match("(\[\w[\w_-]+\w\] )(.+)", mail['Subject'])
+        if m:
+            mail.replace_header('Subject', m.group(2))
+            #show_progress("\nTrimmed '%s' from %s" % (m.group(1), mail['Subject']))
 
     if use_message_id:
         message_id = mail.get('Message-Id')
