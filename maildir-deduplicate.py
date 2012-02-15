@@ -87,8 +87,10 @@ HEADER_LOOKUP = dict((h.lower(), True) for h in HEADERS)
 # If this is exceeded, a warning is issued and the messages are not
 # considered duplicates, because this could point to message
 # corruption somewhere.  Note that the default is quite high because
-# of the number of headers mailman can add.
-DEFAULT_SIZE_DIFFERENCE_THRESHOLD = 2048 # bytes
+# of the number of headers which can be added by mailman, or even by
+# the process of sending the mail through various MTAs (since one copy
+# could have been stored by the sender's MUA prior to sending).
+DEFAULT_SIZE_DIFFERENCE_THRESHOLD = 2500 # bytes
 
 # Similarly, we generated unified diffs of duplicates and ensure that
 # the diff is not greater than a certain size.
