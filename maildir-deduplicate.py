@@ -269,12 +269,6 @@ def checkSizesComparable(hash_key, sizes, threshold):
 
     return True
 
-def getLinesFromFile(path):
-    f = open(path)
-    lines = f.readlines()
-    f.close()
-    return lines
-
 def checkMessagesSimilar(hash_key, sizes, opts):
     threshold = opts.diff_threshold
     if threshold < 0:
