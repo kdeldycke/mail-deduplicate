@@ -143,7 +143,7 @@ def usage_error(parser, error_msg):
     parser.print_help()
     sys.exit(2)
 
-def computeHashKey(mail, use_message_id):
+def canonise_mail(mail):
     # Delete all headers, then put back the ones we want in a fixed order.
     add_back = { }
     for header in mail.keys():
@@ -160,12 +160,18 @@ def computeHashKey(mail, use_message_id):
             for value in values:
                 mail.add_header(header, value)
 
+    # Trim Subject prefixes automatically added by mailing list software,
+    # since the mail could have been cc'd to multiple lists, in which case
+    # it will receive a different prefix for each, but this shouldn't be
+    # treated as a real difference between duplicate mails.
     if mail['Subject']:
         m = re.match("(\[\w[\w_-]+\w\] )(.+)", mail['Subject'])
         if m:
             mail.replace_header('Subject', m.group(2))
             #show_progress("\nTrimmed '%s' from %s" % (m.group(1), mail['Subject']))
 
+def computeHashKey(mail, use_message_id):
+    canonise_mail(mail)
     header_text = getHeaderText(mail)
 
     if use_message_id:
