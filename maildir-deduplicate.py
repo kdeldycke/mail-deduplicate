@@ -166,14 +166,16 @@ def computeHashKey(mail, use_message_id):
             mail.replace_header('Subject', m.group(2))
             #show_progress("\nTrimmed '%s' from %s" % (m.group(1), mail['Subject']))
 
+    header_text = getHeaderText(mail)
+
     if use_message_id:
         message_id = mail.get('Message-Id')
         if message_id:
             return message_id
-        sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + getHeaderText(mail))
+        sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + header_text)
         #sys.exit(3)
 
-    return hashlib.sha224(getHeaderText(mail)).hexdigest()
+    return hashlib.sha224(header_text).hexdigest()
 
 def getHeaderText(mail):
     #header_text, sep, payload = mail.as_string().partition("\n\n")
