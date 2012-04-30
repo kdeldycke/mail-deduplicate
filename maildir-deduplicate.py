@@ -87,8 +87,10 @@ HEADER_LOOKUP = dict((h.lower(), True) for h in HEADERS)
 # If this is exceeded, a warning is issued and the messages are not
 # considered duplicates, because this could point to message
 # corruption somewhere.  Note that the default is quite high because
-# of the number of headers mailman can add.
-DEFAULT_SIZE_DIFFERENCE_THRESHOLD = 2048 # bytes
+# of the number of headers which can be added by mailman, or even by
+# the process of sending the mail through various MTAs (since one copy
+# could have been stored by the sender's MUA prior to sending).
+DEFAULT_SIZE_DIFFERENCE_THRESHOLD = 2500 # bytes
 
 # Similarly, we generated unified diffs of duplicates and ensure that
 # the diff is not greater than a certain size.
@@ -105,8 +107,9 @@ def parse_args():
         help = 'Remove duplicates rather than just list them'
     )
     parser.add_option(
-        '-s', '--show-diffs', action = 'store_true',
-        help = 'Show diffs between duplicates'
+        '-s', '--show-diffs', action = 'count',
+        help = "Show diffs between duplicates even if " \
+               "they're within the thresholds"
     )
     parser.add_option(
         '-i', '--message-id', action = 'store_true',
@@ -141,7 +144,7 @@ def usage_error(parser, error_msg):
     parser.print_help()
     sys.exit(2)
 
-def computeHashKey(mail, use_message_id):
+def canonise_mail(mail):
     # Delete all headers, then put back the ones we want in a fixed order.
     add_back = { }
     for header in mail.keys():
@@ -158,20 +161,28 @@ def computeHashKey(mail, use_message_id):
             for value in values:
                 mail.add_header(header, value)
 
+    # Trim Subject prefixes automatically added by mailing list software,
+    # since the mail could have been cc'd to multiple lists, in which case
+    # it will receive a different prefix for each, but this shouldn't be
+    # treated as a real difference between duplicate mails.
     if mail['Subject']:
         m = re.match("(\[\w[\w_-]+\w\] )(.+)", mail['Subject'])
         if m:
             mail.replace_header('Subject', m.group(2))
             #show_progress("\nTrimmed '%s' from %s" % (m.group(1), mail['Subject']))
 
+def computeHashKey(mail, use_message_id):
+    canonise_mail(mail)
+    header_text = getHeaderText(mail)
+
     if use_message_id:
         message_id = mail.get('Message-Id')
         if message_id:
             return message_id
-        sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + getHeaderText(mail))
+        sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + header_text)
         #sys.exit(3)
 
-    return hashlib.sha224(getHeaderText(mail)).hexdigest()
+    return hashlib.sha224(header_text).hexdigest()
 
 def getHeaderText(mail):
     #header_text, sep, payload = mail.as_string().partition("\n\n")
@@ -215,8 +226,6 @@ def findDuplicates(mails_by_hash, opts):
         sizes = sortMessagesBySize(messages)
         if not checkMessagesSimilar(hash_key, sizes, opts):
             continue
-        if not checkSizesComparable(hash_key, sizes, opts.size_threshold):
-            continue
 
         duplicates += len(messages) - 1
         sets += 1
@@ -248,77 +257,80 @@ def sortMessagesBySize(messages):
     sizes.sort(cmp = _sort_by_size)
     return sizes
 
-def checkSizesComparable(hash_key, sizes, threshold):
-    if threshold < 0:
-        return True
+def get_lines_from_message(message):
+    return message.as_string().splitlines(True)
+
+def checkMessagesSimilar(hash_key, sizes, opts):
+    diff_threshold = opts.diff_threshold
+    size_threshold = opts.size_threshold
 
     largest_size, largest_file, largest_message = sizes[0]
+    largest_lines = get_lines_from_message(largest_message)
 
     for size, mail_file, message in sizes[1:]:
         size_difference = largest_size - size
-        if size_difference > threshold:
-            msg = "\nFor hash key %s, sizes differ by %d > %d bytes:\n" \
-                  "  %d %s\n  %d %s\n" % \
-                  (hash_key, size_difference, threshold,
+        lines = get_lines_from_message(message)
+
+        if size_threshold >= 0 and size_difference > size_threshold:
+            msg = "For hash key %s, sizes differ by %d > %d bytes:\n" \
+                  "  %d %s\n  %d %s" % \
+                  (hash_key, size_difference, size_threshold,
                    size, mail_file,
                    largest_size, largest_file)
-            sys.stderr.write(msg)
-            return False
-
-    return True
-
-def getLinesFromFile(path):
-    f = open(path)
-    lines = f.readlines()
-    f.close()
-    return lines
-
-def checkMessagesSimilar(hash_key, sizes, opts):
-    threshold = opts.diff_threshold
-    if threshold < 0:
-        return True
-
-    largest_size, largest_file, largest_message = sizes[0]
-    largest_lines = largest_message.as_string().splitlines(True)
-
-    for size, mail_file, message in sizes[1:]:
-        lines = message.as_string().splitlines(True)
-        # We don't want the size of this diff to depend on the length of
-        # the filenames or timestamps.
-        diff = unified_diff(lines, largest_lines,
-                            fromfile     = 'a', tofile     = 'b',
-                            fromfiledate = '',  tofiledate = '',
-                            n = 0, lineterm = "\n")
-        difftext = "".join(diff)
-        # print "".join(largest_lines[:20])
-        # print "------\n"
-        # print "".join(lines[:20])
-        if opts.show_diffs or len(difftext) > threshold:
-            friendly_diff = unified_diff(lines, largest_lines,
-                                         fromfile = mail_file,
-                                         tofile   = largest_file,
-                                         fromfiledate = os.path.getmtime(mail_file),
-                                         tofiledate = os.path.getmtime(largest_file),
-                                         n = 0, lineterm = "\n")
-
-        if len(difftext) > threshold:
-            msg = "diff between duplicate messages with hash key %s " \
-                  "was %d > %d bytes" % (hash_key, len(difftext), threshold)
             show_progress(msg)
-            if opts.show_diffs:
-                show_progress("".join(friendly_diff))
+            # Showing the diff here can be misleading because the size
+            # difference is often due to headers 
+
+            #show_friendly_diff(lines, largest_lines, mail_file, largest_file)
             return False
-        elif len(difftext) == 0:
+
+        text_difference = get_text_difference(lines, largest_lines)
+        if diff_threshold >= 0 and len(text_difference) > diff_threshold:
+            msg = "diff between duplicate messages with hash key %s " \
+                  "was %d > %d bytes\n" % \
+                  (hash_key,
+                   len(text_difference), diff_threshold)
+            show_progress(msg)
+            show_friendly_diff(lines, largest_lines, mail_file, largest_file)
+            return False
+        elif len(text_difference) == 0:
             if opts.show_diffs:
                 show_progress("diff produced no differences")
         else:
+            # Difference is inside threshold
             if opts.show_diffs:
-                show_progress("".join(friendly_diff))
+                show_friendly_diff(lines, largest_lines, mail_file, largest_file)
 
     return True
 
+def get_text_difference(lines, largest_lines):
+    # We don't want the size of this diff to depend on the length of
+    # the filenames or timestamps.
+    diff = unified_diff(lines, largest_lines,
+                        fromfile     = 'a', tofile     = 'b',
+                        fromfiledate = '',  tofiledate = '',
+                        n = 0, lineterm = "\n")
+    difftext = "".join(diff)
+    # print "".join(largest_lines[:20])
+    # print "------\n"
+    # print "".join(lines[:20])
+    return difftext
+
+def show_friendly_diff(from_lines, to_lines, from_file, to_file):
+    friendly_diff = unified_diff(from_lines, to_lines,
+                                 fromfile = 'canonical version of ' + from_file,
+                                 tofile   = 'canonical version of ' + to_file,
+                                 fromfiledate = os.path.getmtime(from_file),
+                                 tofiledate = os.path.getmtime(to_file),
+                                 n = 0, lineterm = "\n")
+    show_progress("".join(friendly_diff))
+
 def show_progress(msg):
     sys.stderr.write(msg + "\n")
+
+def fatal(msg):
+    show_progress(msg)
+    sys.exit(1)
 
 def main():
     opts, maildir_paths = parse_args()
@@ -327,6 +339,11 @@ def main():
     mail_count = 0
 
     for maildir_path in maildir_paths:
+        if not os.path.exists(maildir_path):
+            fatal("%s does not exist; aborting." % maildir_path)
+        if not os.path.isdir(maildir_path):
+            fatal("%s is not a directory; aborting." % maildir_path)
+
         maildir = Maildir(maildir_path, factory = None)
         mail_count += collateFolderByHash(mails_by_hash, maildir, opts.message_id)
 
