@@ -328,6 +328,10 @@ def show_friendly_diff(from_lines, to_lines, from_file, to_file):
 def show_progress(msg):
     sys.stderr.write(msg + "\n")
 
+def fatal(msg):
+    show_progress(msg)
+    sys.exit(1)
+
 def main():
     opts, maildir_paths = parse_args()
 
@@ -335,6 +339,11 @@ def main():
     mail_count = 0
 
     for maildir_path in maildir_paths:
+        if not os.path.exists(maildir_path):
+            fatal("%s does not exist; aborting." % maildir_path)
+        if not os.path.isdir(maildir_path):
+            fatal("%s is not a directory; aborting." % maildir_path)
+
         maildir = Maildir(maildir_path, factory = None)
         mail_count += collateFolderByHash(mails_by_hash, maildir, opts.message_id)
 
