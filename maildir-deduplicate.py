@@ -71,7 +71,9 @@ HEADERS = [
     'From',
     'To',
     'Cc',
-    'Bcc',
+    # No Bcc since copies of the mail saved by the MUA at send-time
+    # will have Bcc, but copies reflected back from the list server
+    # won't.
     'Subject',
     'Message-ID',
     'Reply-To',
