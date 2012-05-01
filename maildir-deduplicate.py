@@ -179,8 +179,8 @@ def canonise_mail(mail):
             mail.replace_header('Subject', m.group(2))
             #show_progress("\nTrimmed '%s' from %s" % (m.group(1), mail['Subject']))
 
-def computeHashKey(message, use_message_id):
-    header_text = getHeaderText(message)
+def compute_hash_key(message, use_message_id):
+    header_text = get_header_text(message)
 
     if use_message_id:
         message_id = message.get('Message-Id')
@@ -191,20 +191,20 @@ def computeHashKey(message, use_message_id):
 
     return hashlib.sha224(header_text).hexdigest(), header_text
 
-def getHeaderText(mail):
+def get_header_text(mail):
     #header_text, sep, payload = mail.as_string().partition("\n\n")
     header_text = ''.join('%s: %s\n' % (header, mail[header]) for header in HEADERS
                           if mail[header] is not None)
     return header_text
 
-def collateFolderByHash(mails_by_hash, mail_folder, use_message_id):
+def collate_folder_by_hash(mails_by_hash, mail_folder, use_message_id):
     mail_count = 0
     path = re.sub(os.getenv('HOME'), '~', mail_folder._path)
     sys.stderr.write("Processing %s mails in %s " % \
                          (len(mail_folder), path))
     for mail_id, message in mail_folder.iteritems():
         canonise_mail(message)
-        mail_hash, header_text = computeHashKey(message, use_message_id)
+        mail_hash, header_text = compute_hash_key(message, use_message_id)
         if mail_count > 0 and mail_count % 100 == 0:
             sys.stderr.write(".")
         #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
@@ -219,7 +219,7 @@ def collateFolderByHash(mails_by_hash, mail_folder, use_message_id):
 
     return mail_count
 
-def findDuplicates(mails_by_hash, opts):
+def find_duplicates(mails_by_hash, opts):
     duplicates = 0
     sets = 0
     for hash_key, messages in mails_by_hash.iteritems():
@@ -231,8 +231,8 @@ def findDuplicates(mails_by_hash, opts):
         subject, count = re.subn('\s+', ' ', subject)
         print "\nSubject: " + subject
 
-        sizes = sortMessagesBySize(messages)
-        if not checkMessagesSimilar(hash_key, sizes, opts):
+        sizes = sort_messages_by_size(messages)
+        if not check_messages_similar(hash_key, sizes, opts):
             continue
 
         duplicates += len(messages) - 1
@@ -255,7 +255,7 @@ def process_duplicates(sizes, opts):
                 prefix = "left   "
         print "%s %2d %d %s" % (prefix, i, size, mail_file)
 
-def sortMessagesBySize(messages):
+def sort_messages_by_size(messages):
     sizes = [ ]
     for mail_file, message in messages:
         size = os.path.getsize(mail_file)
@@ -268,7 +268,7 @@ def sortMessagesBySize(messages):
 def get_lines_from_message(message):
     return message.as_string().splitlines(True)
 
-def checkMessagesSimilar(hash_key, sizes, opts):
+def check_messages_similar(hash_key, sizes, opts):
     diff_threshold = opts.diff_threshold
     size_threshold = opts.size_threshold
 
@@ -353,7 +353,7 @@ def debug_hash_algorithm(opts):
     #message = email.message_from_string(mail_text)
     message = email.message_from_file(sys.stdin)
     canonise_mail(message)
-    mail_hash, header_text = computeHashKey(message, opts.message_id)
+    mail_hash, header_text = compute_hash_key(message, opts.message_id)
     print header_text
     print 'Hash: ', mail_hash
 
@@ -368,9 +368,9 @@ def duplicates_run(opts, maildir_paths):
             fatal("%s is not a directory; aborting." % maildir_path)
 
         maildir = Maildir(maildir_path, factory = None)
-        mail_count += collateFolderByHash(mails_by_hash, maildir, opts.message_id)
+        mail_count += collate_folder_by_hash(mails_by_hash, maildir, opts.message_id)
 
-    duplicates, sets = findDuplicates(mails_by_hash, opts)
+    duplicates, sets = find_duplicates(mails_by_hash, opts)
     show_progress("\n%s duplicates in %d sets from a total of %s mails." % \
                       (duplicates, sets, mail_count))
 
