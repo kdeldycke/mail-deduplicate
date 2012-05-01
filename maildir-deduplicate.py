@@ -36,6 +36,7 @@ import os
 import re
 import sys
 import hashlib
+import email
 from optparse     import OptionParser
 from mailbox      import Maildir
 from email.parser import Parser
@@ -131,10 +132,17 @@ def parse_args():
                'between duplicates. ' \
                'Default is %default; set -1 for no threshold.'
     )
+    parser.add_option(
+        '-H', '--hash-pipe', action = 'store_true',
+        help = "Take a single mail message texted piped from STDIN "  \
+               "and show its canonicalised form and hash thereof. "   \
+               "This is useful for debugging why two messages don't " \
+               "have the same hash when you expect them to (or vice-versa)."
+    )
 
     opts, maildirs = parser.parse_args()
 
-    if len(maildirs) == 0:
+    if len(maildirs) == 0 and not opts.hash_pipe:
         usage_error(parser, "Must specify at least one maildir folder")
 
     return opts, maildirs
@@ -171,18 +179,17 @@ def canonise_mail(mail):
             mail.replace_header('Subject', m.group(2))
             #show_progress("\nTrimmed '%s' from %s" % (m.group(1), mail['Subject']))
 
-def computeHashKey(mail, use_message_id):
-    canonise_mail(mail)
-    header_text = getHeaderText(mail)
+def computeHashKey(message, use_message_id):
+    header_text = getHeaderText(message)
 
     if use_message_id:
-        message_id = mail.get('Message-Id')
+        message_id = message.get('Message-Id')
         if message_id:
             return message_id
         sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + header_text)
         #sys.exit(3)
 
-    return hashlib.sha224(header_text).hexdigest()
+    return hashlib.sha224(header_text).hexdigest(), header_text
 
 def getHeaderText(mail):
     #header_text, sep, payload = mail.as_string().partition("\n\n")
@@ -196,7 +203,8 @@ def collateFolderByHash(mails_by_hash, mail_folder, use_message_id):
     sys.stderr.write("Processing %s mails in %s " % \
                          (len(mail_folder), path))
     for mail_id, message in mail_folder.iteritems():
-        mail_hash = computeHashKey(message, use_message_id)
+        canonise_mail(message)
+        mail_hash, header_text = computeHashKey(message, use_message_id)
         if mail_count > 0 and mail_count % 100 == 0:
             sys.stderr.write(".")
         #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
@@ -335,6 +343,21 @@ def fatal(msg):
 def main():
     opts, maildir_paths = parse_args()
 
+    if opts.hash_pipe:
+        debug_hash_algorithm(opts)
+    else:
+        duplicates_run(opts, maildir_paths)
+
+def debug_hash_algorithm(opts):
+    #mail_text = ''.join(sys.stdin.readlines())
+    #message = email.message_from_string(mail_text)
+    message = email.message_from_file(sys.stdin)
+    canonise_mail(message)
+    mail_hash, header_text = computeHashKey(message, opts.message_id)
+    print header_text
+    print 'Hash: ', mail_hash
+
+def duplicates_run(opts, maildir_paths):
     mails_by_hash = { }
     mail_count = 0
 
