@@ -176,19 +176,21 @@ def get_canonical_headers(mail):
 
         for value in mail.get_all(header):
             canonical_value = get_canonical_header_value(header, value)
-            canonical_headers += '%s: %s\n' % (header, canonical_value)
+            if re.search('\S', canonical_value):
+                canonical_headers += '%s: %s\n' % (header, canonical_value)
 
     return canonical_headers
 
 def get_canonical_header_value(header, value):
     header = header.lower()
+    value = re.sub('\s+', ' ', value)
 
     # Trim Subject prefixes automatically added by mailing list software,
     # since the mail could have been cc'd to multiple lists, in which case
     # it will receive a different prefix for each, but this shouldn't be
     # treated as a real difference between duplicate mails.
     if header == 'subject':
-        m = re.match("(\[\w[\w_-]+\w\] )(.+)", value)
+        m = re.match("(\[\w[\w_-]+\w\] )(?s)(.+)", value)
         if m:
             #show_progress("\nTrimmed '%s' from %s" % (m.group(1), value))
             return m.group(2)
