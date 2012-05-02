@@ -190,7 +190,7 @@ def get_canonical_header_value(header, value):
     # it will receive a different prefix for each, but this shouldn't be
     # treated as a real difference between duplicate mails.
     if header == 'subject':
-        m = re.match("(\[\w[\w_-]+\w\] )(?s)(.+)", value)
+        m = re.match("(\[\w[\w_-]+\w\] )+(?s)(.+)", value)
         if m:
             #show_progress("\nTrimmed '%s' from %s" % (m.group(1), value))
             return m.group(2)
