@@ -78,7 +78,13 @@ HEADERS = [
     'Date',
     'From',
     'To',
-    'Cc',
+    # No Cc since mailman apparently sometimes trims list members
+    # from the Cc header to avoid sending duplicates:
+    #   http://mail.python.org/pipermail/mailman-developers/2002-September/013233.html
+    # but this means that copies of mail reflected back from the list
+    # server will have a different Cc to the copy saved by the MUA
+    # at send-time.
+    #
     # No Bcc since copies of the mail saved by the MUA at send-time
     # will have Bcc, but copies reflected back from the list server
     # won't.
