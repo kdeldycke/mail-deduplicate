@@ -260,6 +260,8 @@ def find_duplicates(mails_by_hash, opts):
     duplicates = 0
     sets = 0
     removed = 0
+    sizes_too_dissimilar = 0
+    diff_too_big = 0
     for hash_key, messages in mails_by_hash.iteritems():
         if len(messages) == 1:
             #print "unique:", messages[0]
@@ -270,15 +272,25 @@ def find_duplicates(mails_by_hash, opts):
         print "\nSubject: " + subject
 
         sizes = sort_messages_by_size(messages)
-        if not check_messages_similar(hash_key, sizes, opts):
+        too_dissimilar = messages_too_dissimilar(hash_key, sizes, opts)
+        if too_dissimilar == 'size':
+            sizes_too_dissimilar += 1
             continue
+        elif too_dissimilar == 'diff':
+            diff_too_big += 1
+            continue
+        elif too_dissimilar is False:
+            pass
+        else:
+            error = "BUG: unexpected value '%s' for too_dissimilar"
+            raise RuntimeError(error % too_dissimilar)
 
         duplicates += len(messages) - 1
         sets += 1
 
         removed += process_duplicates(sizes, opts)
 
-    return duplicates, removed, sets
+    return duplicates, sizes_too_dissimilar, diff_too_big, removed, sets
 
 def process_duplicates(sizes, opts):
     i = 0
@@ -313,7 +325,7 @@ def get_lines_from_message_body(message):
     header_text, sep, body = message.as_string().partition("\n\n")
     return body.splitlines(True)
 
-def check_messages_similar(hash_key, sizes, opts):
+def messages_too_dissimilar(hash_key, sizes, opts):
     diff_threshold = opts.diff_threshold
     size_threshold = opts.size_threshold
 
@@ -332,7 +344,7 @@ def check_messages_similar(hash_key, sizes, opts):
                    largest_size, largest_file)
             show_progress(msg)
             show_friendly_diff(lines, largest_lines, mail_file, largest_file)
-            return False
+            return 'size'
 
         text_difference = get_text_difference(lines, largest_lines)
         if diff_threshold >= 0 and len(text_difference) > diff_threshold:
@@ -342,7 +354,7 @@ def check_messages_similar(hash_key, sizes, opts):
                    len(text_difference), diff_threshold)
             show_progress(msg)
             show_friendly_diff(lines, largest_lines, mail_file, largest_file)
-            return False
+            return 'diff'
         elif len(text_difference) == 0:
             if opts.show_diffs:
                 show_progress("diff produced no differences")
@@ -351,7 +363,7 @@ def check_messages_similar(hash_key, sizes, opts):
             if opts.show_diffs:
                 show_friendly_diff(lines, largest_lines, mail_file, largest_file)
 
-    return True
+    return False
 
 def get_text_difference(lines, largest_lines):
     # We don't want the size of this diff to depend on the length of
@@ -411,10 +423,13 @@ def duplicates_run(opts, maildir_paths):
         maildir = Maildir(maildir_path, factory = None)
         mail_count += collate_folder_by_hash(mails_by_hash, maildir, opts.message_id)
 
-    duplicates, removed, sets = find_duplicates(mails_by_hash, opts)
-    report_results(duplicates, removed, sets, mail_count)
+    duplicates, sizes_too_dissimilar, diff_too_big, removed, sets = \
+        find_duplicates(mails_by_hash, opts)
+    report_results(duplicates, sizes_too_dissimilar, diff_too_big,
+                   removed, sets, mail_count)
 
-def report_results(duplicates, removed, sets, mail_count):
+def report_results(duplicates, sizes_too_dissimilar, diff_too_big,
+                   removed, sets, mail_count):
     total = " in %d set%s from a total of %s mails." % \
         (sets, '' if sets == 1 else 's', mail_count)
     if removed > 0:
@@ -423,5 +438,12 @@ def report_results(duplicates, removed, sets, mail_count):
         results = 'Found %s duplicates' % duplicates
 
     show_progress("\n" + results + total)
+
+    if sizes_too_dissimilar > 0:
+        show_progress("%d potential duplicates were rejected as being "
+                      "too dissimilar in size." % sizes_too_dissimilar)
+    if diff_too_big > 0:
+        show_progress("%d potential duplicates were rejected as being "
+                      "too dissimilar in contents." % diff_too_big)
 
 main()
