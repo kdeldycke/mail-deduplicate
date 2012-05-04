@@ -259,6 +259,7 @@ def collate_folder_by_hash(mails_by_hash, mail_folder, use_message_id):
 def find_duplicates(mails_by_hash, opts):
     duplicates = 0
     sets = 0
+    removed = 0
     for hash_key, messages in mails_by_hash.iteritems():
         if len(messages) == 1:
             #print "unique:", messages[0]
@@ -275,12 +276,13 @@ def find_duplicates(mails_by_hash, opts):
         duplicates += len(messages) - 1
         sets += 1
 
-        process_duplicates(sizes, opts)
+        removed += process_duplicates(sizes, opts)
 
-    return duplicates, sets
+    return duplicates, removed, sets
 
 def process_duplicates(sizes, opts):
     i = 0
+    removed = 0
     for size, mail_file, message in sizes:
         i += 1
         prefix = "  "
@@ -288,9 +290,12 @@ def process_duplicates(sizes, opts):
             if i > 1:
                 prefix = "removed"
                 os.unlink(mail_file)
+                removed += 1
             else:
                 prefix = "left   "
         print "%s %2d %d %s" % (prefix, i, size, mail_file)
+
+    return removed
 
 def sort_messages_by_size(messages):
     sizes = [ ]
@@ -406,8 +411,17 @@ def duplicates_run(opts, maildir_paths):
         maildir = Maildir(maildir_path, factory = None)
         mail_count += collate_folder_by_hash(mails_by_hash, maildir, opts.message_id)
 
-    duplicates, sets = find_duplicates(mails_by_hash, opts)
-    show_progress("\n%s duplicates in %d sets from a total of %s mails." % \
-                      (duplicates, sets, mail_count))
+    duplicates, removed, sets = find_duplicates(mails_by_hash, opts)
+    report_results(duplicates, removed, sets, mail_count)
+
+def report_results(duplicates, removed, sets, mail_count):
+    total = " in %d set%s from a total of %s mails." % \
+        (sets, '' if sets == 1 else 's', mail_count)
+    if removed > 0:
+        results = 'Removed %d of %s duplicates found' % (removed, duplicates)
+    else:
+        results = 'Found %s duplicates' % duplicates
+
+    show_progress("\n" + results + total)
 
 main()
