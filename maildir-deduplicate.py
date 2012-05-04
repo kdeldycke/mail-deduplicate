@@ -115,7 +115,7 @@ DEFAULT_SIZE_DIFFERENCE_THRESHOLD = 512 # bytes
 
 # Similarly, we generated unified diffs of duplicates and ensure that
 # the diff is not greater than a certain size.
-DEFAULT_DIFF_THRESHOLD = 512 # bytes
+DEFAULT_DIFF_THRESHOLD = 768 # bytes
 
 def parse_args():
     parser = OptionParser(
