@@ -214,6 +214,10 @@ def get_canonical_header_value(header, value):
         # from a mailing list you're both subscribed to - then it's
         # still useful to be able to eliminate duplicates.
         return re.sub(';.*', '', value)
+    elif header == 'date':
+        # Date timestamps can differ by seconds or hours for various
+        # reasons, so let's only honour the date for now.
+        return re.sub('(\d{4} )\d\d:\d\d:\d\d ', '\\1', value)
 
     return value
 
