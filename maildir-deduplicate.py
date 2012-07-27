@@ -272,6 +272,8 @@ def find_duplicates(mails_by_hash, opts):
             continue
 
         subject = messages[0][1].get('Subject')
+        if subject==None:
+        	subject=""
         subject, count = re.subn('\s+', ' ', subject)
         print "\nSubject: " + subject
 
