@@ -68,6 +68,7 @@ import re
 import sys
 import hashlib
 import email
+import time
 from optparse     import OptionParser
 from mailbox      import Maildir
 from email.parser import Parser
@@ -217,7 +218,8 @@ def get_canonical_header_value(header, value):
     elif header == 'date':
         # Date timestamps can differ by seconds or hours for various
         # reasons, so let's only honour the date for now.
-        return re.sub('(\d{4} )\d\d:\d\d:\d\d ', '\\1', value)
+        utc_timestamp = email.utils.mktime_tz(email.utils.parsedate_tz(value))
+        return time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
 
     return value
 
