@@ -89,9 +89,11 @@ HEADERS = [
     # No Bcc since copies of the mail saved by the MUA at send-time
     # will have Bcc, but copies reflected back from the list server
     # won't.
+    #
+    # No Reply-To since a mail could be Cc'd to two lists with
+    # different Reply-To munging options set.
     'Subject',
     'Message-ID',
-    'Reply-To',
     'MIME-Version',
     'Content-Type',
     'Content-Disposition',
