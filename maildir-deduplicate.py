@@ -222,6 +222,17 @@ def get_canonical_header_value(header, value):
         # reasons, so let's only honour the date for now.
         utc_timestamp = email.utils.mktime_tz(email.utils.parsedate_tz(value))
         return time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
+    elif header == 'to':
+        # Sometimes email.parser strips the <> brackets from a To:
+        # header which has a single address.  I have seen this happen
+        # for only one mail in a duplicate pair.  I'm not sure why
+        # (presumably the parser uses email.utils.unquote somewhere in
+        # its code path which was only triggered by that mail and not
+        # its sister mail), but to be safe, we should always strip the
+        # <> brackets to avoid this difference preventing duplicate
+        # detection.
+        if re.match("^<[^<>,]+>$", value):
+            return email.utils.unquote(value)
 
     return value
 
