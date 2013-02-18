@@ -131,6 +131,10 @@ def parse_args():
         help = 'Remove duplicates rather than just list them'
     )
     parser.add_option(
+        '-n', '--dry-run', action = 'store_true',
+        help = "Don't actually remove anything; just show what would be removed."
+    )
+    parser.add_option(
         '-s', '--show-diffs', action = 'count',
         help = "Show diffs between duplicates even if " \
                "they're within the thresholds"
@@ -320,7 +324,8 @@ def process_duplicates(sizes, opts):
         if opts.remove:
             if i > 1:
                 prefix = "removed"
-                os.unlink(mail_file)
+                if not opts.dry_run:
+                    os.unlink(mail_file)
                 removed += 1
             else:
                 prefix = "left   "
