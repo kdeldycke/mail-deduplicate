@@ -127,8 +127,20 @@ def parse_args():
     )
 
     parser.add_option(
-        '-d', '--remove', action = 'store_true',
-        help = 'Remove duplicates rather than just list them'
+        '-d', '--remove-smaller', action = 'store_true',
+        help = 'Remove all but largest duplicate in each duplicate set'
+    )
+    parser.add_option(
+        '-r', '--remove-matching', type = 'string', metavar='REGEXP',
+        help = 'Remove duplicates whose file path matches REGEXP'
+    )
+    parser.add_option(
+        '-R', '--remove-not-matching', type = 'string', metavar='REGEXP',
+        help = 'Remove duplicates whose file path does not match REGEXP'
+    )
+    parser.add_option(
+        '-n', '--dry-run', action = 'store_true',
+        help = "Don't actually remove anything; just show what would be removed."
     )
     parser.add_option(
         '-s', '--show-diffs', action = 'count',
@@ -142,16 +154,16 @@ def parse_args():
                'of the whole header with selected headers removed)'
     )
     parser.add_option(
-        '-S', '--size-threshold', type = 'int',
+        '-S', '--size-threshold', type = 'int', metavar='BYTES',
         default = DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
-        help = 'Specify maximum allowed difference in bytes ' \
+        help = 'Specify maximum allowed difference ' \
                'between size of duplicates. ' \
                'Default is %default; set -1 for no threshold.'
     )
     parser.add_option(
-        '-D', '--diff-threshold', type = 'int',
+        '-D', '--diff-threshold', type = 'int', metavar='BYTES',
         default = DEFAULT_DIFF_THRESHOLD,
-        help = 'Specify maximum allowed size in bytes of unified diff ' \
+        help = 'Specify maximum allowed size of unified diff ' \
                'between duplicates. ' \
                'Default is %default; set -1 for no threshold.'
     )
@@ -168,7 +180,20 @@ def parse_args():
     if len(maildirs) == 0 and not opts.hash_pipe:
         usage_error(parser, "Must specify at least one maildir folder")
 
+    if count_removal_strategies(opts) > 1:
+        usage_error(parser, "Cannot specify multiple removal strategies.")
+
+    if opts.remove_matching:
+        opts.remove_matching = re.compile(opts.remove_matching)
+
     return opts, maildirs
+
+def count_removal_strategies(opts):
+    count = 0
+    for strategy in ('smaller', 'matching', 'not_matching'):
+        if getattr(opts, "remove_%s" % strategy):
+            count += 1
+    return count
 
 def usage_error(parser, error_msg):
     sys.stderr.write("Error: %s\n\n" % error_msg)
@@ -302,31 +327,68 @@ def find_duplicates(mails_by_hash, opts):
             pass
         else:
             error = "BUG: unexpected value '%s' for too_dissimilar"
-            raise RuntimeError(error % too_dissimilar)
+            fatal(error % too_dissimilar)
 
         duplicates += len(messages) - 1
         sets += 1
 
-        removed += process_duplicates(sizes, opts)
+        removed += process_duplicate_set(sizes, opts)
 
     return duplicates, sizes_too_dissimilar, diff_too_big, removed, sets
 
-def process_duplicates(sizes, opts):
+def process_duplicate_set(duplicate_set, opts):
     i = 0
     removed = 0
-    for size, mail_file, message in sizes:
+
+    if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching:
+        doomed = choose_duplicates_to_remove(duplicate_set, opts)
+        # safety valve
+        if len(doomed) == len(duplicate_set):
+            fatal("BUG: tried to remove whole duplicate set!")
+
+    for size, mail_file, message in duplicate_set:
         i += 1
         prefix = "  "
-        if opts.remove:
-            if i > 1:
+        if opts.remove_smaller or opts.remove_matching:
+            if mail_file in doomed:
                 prefix = "removed"
-                os.unlink(mail_file)
+                if not opts.dry_run:
+                    os.unlink(mail_file)
                 removed += 1
             else:
                 prefix = "left   "
         print "%s %2d %d %s" % (prefix, i, size, mail_file)
 
     return removed
+
+def choose_duplicates_to_remove(duplicate_set, opts):
+    doomed = { }
+
+    for i, duplicate in enumerate(duplicate_set):
+        size, mail_file, message = duplicate
+        if opts.remove_smaller:
+            if i > 0:
+                doomed[mail_file] = 1
+        elif opts.remove_matching:
+            if re.search(opts.remove_matching, mail_file):
+                doomed[mail_file] = 1
+        elif opts.remove_not_matching:
+            if not re.search(opts.remove_not_matching, mail_file):
+                doomed[mail_file] = 1
+
+    # safety valve
+    if len(doomed) == len(duplicate_set):
+        if opts.remove_matching:
+            sys.stderr.write("/%s/ matched whole set; not removing any duplicates.\n" %
+                             opts.remove_matching.pattern)
+        elif opts.remove_not_matching:
+            sys.stderr.write("/%s/ matched whole set; not removing any duplicates.\n" %
+                             opts.remove_not_matching.pattern)
+        else:
+            fatal("BUG: removal strategy tried to remove all duplicates in set!")
+        return { }
+
+    return doomed
 
 def sort_messages_by_size(messages):
     sizes = [ ]
@@ -362,7 +424,8 @@ def messages_too_dissimilar(hash_key, sizes, opts):
                    size, mail_file,
                    largest_size, largest_file)
             show_progress(msg)
-            show_friendly_diff(lines, largest_lines, mail_file, largest_file)
+            if opts.show_diffs:
+                show_friendly_diff(lines, largest_lines, mail_file, largest_file)
             return 'size'
 
         text_difference = get_text_difference(lines, largest_lines)
@@ -433,12 +496,9 @@ def duplicates_run(opts, maildir_paths):
     mails_by_hash = { }
     mail_count = 0
 
-    for maildir_path in maildir_paths:
-        if not os.path.exists(maildir_path):
-            fatal("%s does not exist; aborting." % maildir_path)
-        if not os.path.isdir(maildir_path):
-            fatal("%s is not a directory; aborting." % maildir_path)
+    check_maildirs_valid(maildir_paths)
 
+    for maildir_path in maildir_paths:
         maildir = Maildir(maildir_path, factory = None)
         mail_count += collate_folder_by_hash(mails_by_hash, maildir, opts.message_id)
 
@@ -446,6 +506,17 @@ def duplicates_run(opts, maildir_paths):
         find_duplicates(mails_by_hash, opts)
     report_results(duplicates, sizes_too_dissimilar, diff_too_big,
                    removed, sets, mail_count)
+
+def check_maildirs_valid(maildir_paths):
+    for maildir_path in maildir_paths:
+        if not os.path.exists(maildir_path):
+            fatal("%s does not exist; aborting." % maildir_path)
+        if not os.path.isdir(maildir_path):
+            fatal("%s is not a directory; aborting." % maildir_path)
+        for subdir in ('cur', 'new', 'tmp'):
+            if not os.path.isdir(os.path.join(maildir_path, subdir)):
+                fatal("%s is not a maildir (missing %s); aborting." %
+                      (maildir_path, subdir))
 
 def report_results(duplicates, sizes_too_dissimilar, diff_too_big,
                    removed, sets, mail_count):
