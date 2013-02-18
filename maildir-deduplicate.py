@@ -302,7 +302,7 @@ def find_duplicates(mails_by_hash, opts):
             pass
         else:
             error = "BUG: unexpected value '%s' for too_dissimilar"
-            raise RuntimeError(error % too_dissimilar)
+            fatal(error % too_dissimilar)
 
         duplicates += len(messages) - 1
         sets += 1
