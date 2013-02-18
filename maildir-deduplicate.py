@@ -127,8 +127,12 @@ def parse_args():
     )
 
     parser.add_option(
-        '-d', '--remove', action = 'store_true',
-        help = 'Remove duplicates rather than just list them'
+        '-d', '--remove-smaller', action = 'store_true',
+        help = 'Remove all but largest duplicate in each duplicate set'
+    )
+    parser.add_option(
+        '-r', '--remove-matching', type = 'string', metavar='REGEXP',
+        help = 'Remove duplicates whose file path matches REGEXP'
     )
     parser.add_option(
         '-n', '--dry-run', action = 'store_true',
@@ -171,6 +175,13 @@ def parse_args():
 
     if len(maildirs) == 0 and not opts.hash_pipe:
         usage_error(parser, "Must specify at least one maildir folder")
+
+    if opts.remove_matching:
+        if opts.remove_smaller:
+            usage_error(parser,
+                        "Cannot specify both --remove-smaller "
+                        "and --remove-matching")
+        opts.remove_matching = re.compile(opts.remove_matching)
 
     return opts, maildirs
 
@@ -311,18 +322,25 @@ def find_duplicates(mails_by_hash, opts):
         duplicates += len(messages) - 1
         sets += 1
 
-        removed += process_duplicates(sizes, opts)
+        removed += process_duplicate_set(sizes, opts)
 
     return duplicates, sizes_too_dissimilar, diff_too_big, removed, sets
 
-def process_duplicates(sizes, opts):
+def process_duplicate_set(duplicate_set, opts):
     i = 0
     removed = 0
-    for size, mail_file, message in sizes:
+
+    if opts.remove_smaller or opts.remove_matching:
+        doomed = choose_duplicates_to_remove(duplicate_set, opts)
+        # safety valve
+        if len(doomed) == len(duplicate_set):
+            fatal("BUG: tried to remove whole duplicate set!")
+
+    for size, mail_file, message in duplicate_set:
         i += 1
         prefix = "  "
-        if opts.remove:
-            if i > 1:
+        if opts.remove_smaller or opts.remove_matching:
+            if mail_file in doomed:
                 prefix = "removed"
                 if not opts.dry_run:
                     os.unlink(mail_file)
@@ -332,6 +350,32 @@ def process_duplicates(sizes, opts):
         print "%s %2d %d %s" % (prefix, i, size, mail_file)
 
     return removed
+
+def choose_duplicates_to_remove(duplicate_set, opts):
+    doomed = { }
+
+    for i, duplicate in enumerate(duplicate_set):
+        size, mail_file, message = duplicate
+        if opts.remove_smaller:
+            if i > 0:
+                doomed[mail_file] = 1
+        elif opts.remove_matching:
+            if re.search(opts.remove_matching, mail_file):
+                doomed[mail_file] = 1
+
+    # safety valve
+    if len(doomed) == len(duplicate_set):
+        if opts.remove_matching:
+            sys.stderr.write("/%s/ matched whole set; not removing any duplicates.\n" %
+                             opts.remove_matching.pattern)
+        elif opts.remove_not_matching:
+            sys.stderr.write("/%s/ matched whole set; not removing any duplicates.\n" %
+                             opts.remove_not_matching.pattern)
+        else:
+            fatal("BUG: removal strategy tried to remove all duplicates in set!")
+        return { }
+
+    return doomed
 
 def sort_messages_by_size(messages):
     sizes = [ ]
