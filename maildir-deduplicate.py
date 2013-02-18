@@ -433,12 +433,9 @@ def duplicates_run(opts, maildir_paths):
     mails_by_hash = { }
     mail_count = 0
 
-    for maildir_path in maildir_paths:
-        if not os.path.exists(maildir_path):
-            fatal("%s does not exist; aborting." % maildir_path)
-        if not os.path.isdir(maildir_path):
-            fatal("%s is not a directory; aborting." % maildir_path)
+    check_maildirs_valid(maildir_paths)
 
+    for maildir_path in maildir_paths:
         maildir = Maildir(maildir_path, factory = None)
         mail_count += collate_folder_by_hash(mails_by_hash, maildir, opts.message_id)
 
@@ -446,6 +443,17 @@ def duplicates_run(opts, maildir_paths):
         find_duplicates(mails_by_hash, opts)
     report_results(duplicates, sizes_too_dissimilar, diff_too_big,
                    removed, sets, mail_count)
+
+def check_maildirs_valid(maildir_paths):
+    for maildir_path in maildir_paths:
+        if not os.path.exists(maildir_path):
+            fatal("%s does not exist; aborting." % maildir_path)
+        if not os.path.isdir(maildir_path):
+            fatal("%s is not a directory; aborting." % maildir_path)
+        for subdir in ('cur', 'new', 'tmp'):
+            if not os.path.isdir(os.path.join(maildir_path, subdir)):
+                fatal("%s is not a maildir (missing %s); aborting." %
+                      (maildir_path, subdir))
 
 def report_results(duplicates, sizes_too_dissimilar, diff_too_big,
                    removed, sets, mail_count):
