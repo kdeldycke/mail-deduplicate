@@ -135,6 +135,10 @@ def parse_args():
         help = 'Remove duplicates whose file path matches REGEXP'
     )
     parser.add_option(
+        '-R', '--remove-not-matching', type = 'string', metavar='REGEXP',
+        help = 'Remove duplicates whose file path does not match REGEXP'
+    )
+    parser.add_option(
         '-n', '--dry-run', action = 'store_true',
         help = "Don't actually remove anything; just show what would be removed."
     )
@@ -176,14 +180,20 @@ def parse_args():
     if len(maildirs) == 0 and not opts.hash_pipe:
         usage_error(parser, "Must specify at least one maildir folder")
 
+    if count_removal_strategies(opts) > 1:
+        usage_error(parser, "Cannot specify multiple removal strategies.")
+
     if opts.remove_matching:
-        if opts.remove_smaller:
-            usage_error(parser,
-                        "Cannot specify both --remove-smaller "
-                        "and --remove-matching")
         opts.remove_matching = re.compile(opts.remove_matching)
 
     return opts, maildirs
+
+def count_removal_strategies(opts):
+    count = 0
+    for strategy in ('smaller', 'matching', 'not_matching'):
+        if getattr(opts, "remove_%s" % strategy):
+            count += 1
+    return count
 
 def usage_error(parser, error_msg):
     sys.stderr.write("Error: %s\n\n" % error_msg)
@@ -330,7 +340,7 @@ def process_duplicate_set(duplicate_set, opts):
     i = 0
     removed = 0
 
-    if opts.remove_smaller or opts.remove_matching:
+    if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching:
         doomed = choose_duplicates_to_remove(duplicate_set, opts)
         # safety valve
         if len(doomed) == len(duplicate_set):
@@ -361,6 +371,9 @@ def choose_duplicates_to_remove(duplicate_set, opts):
                 doomed[mail_file] = 1
         elif opts.remove_matching:
             if re.search(opts.remove_matching, mail_file):
+                doomed[mail_file] = 1
+        elif opts.remove_not_matching:
+            if not re.search(opts.remove_not_matching, mail_file):
                 doomed[mail_file] = 1
 
     # safety valve
