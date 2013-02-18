@@ -362,7 +362,8 @@ def messages_too_dissimilar(hash_key, sizes, opts):
                    size, mail_file,
                    largest_size, largest_file)
             show_progress(msg)
-            show_friendly_diff(lines, largest_lines, mail_file, largest_file)
+            if opts.show_diffs:
+                show_friendly_diff(lines, largest_lines, mail_file, largest_file)
             return 'size'
 
         text_difference = get_text_difference(lines, largest_lines)
