@@ -142,16 +142,16 @@ def parse_args():
                'of the whole header with selected headers removed)'
     )
     parser.add_option(
-        '-S', '--size-threshold', type = 'int',
+        '-S', '--size-threshold', type = 'int', metavar='BYTES',
         default = DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
-        help = 'Specify maximum allowed difference in bytes ' \
+        help = 'Specify maximum allowed difference ' \
                'between size of duplicates. ' \
                'Default is %default; set -1 for no threshold.'
     )
     parser.add_option(
-        '-D', '--diff-threshold', type = 'int',
+        '-D', '--diff-threshold', type = 'int', metavar='BYTES',
         default = DEFAULT_DIFF_THRESHOLD,
-        help = 'Specify maximum allowed size in bytes of unified diff ' \
+        help = 'Specify maximum allowed size of unified diff ' \
                'between duplicates. ' \
                'Default is %default; set -1 for no threshold.'
     )
