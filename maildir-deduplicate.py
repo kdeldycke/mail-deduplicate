@@ -245,7 +245,12 @@ def get_canonical_header_value(header, value):
     elif header == 'date':
         # Date timestamps can differ by seconds or hours for various
         # reasons, so let's only honour the date for now.
-        utc_timestamp = email.utils.mktime_tz(email.utils.parsedate_tz(value))
+        try:
+            parsed = email.utils.parsedate_tz(value)
+            utc_timestamp = email.utils.mktime_tz(parsed)
+        except TypeError: # if parsedate_tz cannot parse the date
+            return value
+
         return time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
     elif header == 'to':
         # Sometimes email.parser strips the <> brackets from a To:
