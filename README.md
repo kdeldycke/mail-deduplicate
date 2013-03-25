@@ -1,4 +1,4 @@
-maildir-deduplicate
+Maildir Deduplicate
 ===================
 
 Command-line tool written in Python to deduplicate mails from a set of maildir folders.
