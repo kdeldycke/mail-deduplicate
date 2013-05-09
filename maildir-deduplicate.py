@@ -186,6 +186,9 @@ def parse_args():
     if opts.remove_matching:
         opts.remove_matching = re.compile(opts.remove_matching)
 
+    if opts.remove_not_matching:
+        opts.remove_not_matching = re.compile(opts.remove_not_matching)
+
     return opts, maildirs
 
 def count_removal_strategies(opts):
