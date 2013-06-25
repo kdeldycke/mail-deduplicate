@@ -55,7 +55,7 @@ Authors
 History
 -------
 
-This script was [initially released in 2010](http://kevin.deldycke.com/2010/08/maildir-deduplication-script-python/), and was living in a [messy GitHub repository](https://github.com/kdeldycke/scripts). After some years, the script basically outgrew its initial intent, abd moved in 2013 to its own repository.
+This script was [initially released in 2010](http://kevin.deldycke.com/2010/08/maildir-deduplication-script-python/), and was living in a [messy GitHub repository](https://github.com/kdeldycke/scripts). After some years, the script basically outgrew its initial intent, and [moved in 2013 to its own repository](http://kevin.deldycke.com/2013/06/maildir-deduplicate-moved/).
 
 
 License
