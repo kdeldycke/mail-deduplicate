@@ -357,7 +357,7 @@ def process_duplicate_set(duplicate_set, opts):
     for size, mail_file, message in duplicate_set:
         i += 1
         prefix = "  "
-        if opts.remove_smaller or opts.remove_matching:
+        if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching:
             if mail_file in doomed:
                 prefix = "removed"
                 if not opts.dry_run:
