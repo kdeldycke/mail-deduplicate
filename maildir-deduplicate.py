@@ -251,7 +251,7 @@ def get_canonical_header_value(header, value):
         try:
             parsed = email.utils.parsedate_tz(value)
             utc_timestamp = email.utils.mktime_tz(parsed)
-        except TypeError: # if parsedate_tz cannot parse the date
+        except (TypeError, ValueError): # if parsedate_tz cannot parse the date
             return value
 
         return time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
