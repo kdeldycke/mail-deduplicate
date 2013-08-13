@@ -50,6 +50,7 @@ Authors
 
   * Kevin Deldycke <kevin@deldycke.com>
   * Adam Spiers <adam@spiers.net>
+  * Ben Reser @brener
 
 
 History
