@@ -45,12 +45,12 @@ So far, it was tested on:
   * Linux with Python 2.6.0 and 2.7.2.
 
 
-Authors
--------
+Authors & Contributors
+----------------------
 
-  * Kevin Deldycke <kevin@deldycke.com>
-  * Adam Spiers <adam@spiers.net>
-  * Ben Reser @brener
+  * [Kevin Deldycke](https://github.com/kdeldycke)
+  * [Adam Spiers](https://github.com/aspiers)
+  * [Ben Reser](https://github.com/breser)
 
 
 History
