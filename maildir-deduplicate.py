@@ -220,7 +220,7 @@ def get_canonical_headers(mail):
 
 def get_canonical_header_value(header, value):
     header = header.lower()
-    value = re.sub('\s+', ' ', value)
+    value = re.sub('\s+', ' ', value).strip()
 
     # Trim Subject prefixes automatically added by mailing list software,
     # since the mail could have been cc'd to multiple lists, in which case
@@ -275,7 +275,7 @@ def compute_hash_key(message, use_message_id):
     if use_message_id:
         message_id = message.get('Message-Id')
         if message_id:
-            return message_id, ''
+            return message_id.strip(), ''
         sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + header_text)
         #sys.exit(3)
 
