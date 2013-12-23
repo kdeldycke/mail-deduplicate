@@ -275,7 +275,7 @@ def compute_hash_key(message, use_message_id):
     if use_message_id:
         message_id = message.get('Message-Id')
         if message_id:
-            return message_id
+            return message_id, ''
         sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + header_text)
         #sys.exit(3)
 
