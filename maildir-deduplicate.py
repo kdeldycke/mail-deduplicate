@@ -411,7 +411,10 @@ def sort_messages_by_size(messages):
     return sizes
 
 def get_lines_from_message_body(message):
-    header_text, sep, body = message.as_string().partition("\n\n")
+    if not message.is_multipart():
+        body = message.get_payload(None, decode=True)
+    else:
+        header_text, sep, body = message.as_string().partition("\n\n")
     return body.splitlines(True)
 
 def messages_too_dissimilar(hash_key, sizes, opts):
