@@ -220,7 +220,7 @@ def get_canonical_headers(mail):
 
 def get_canonical_header_value(header, value):
     header = header.lower()
-    value = re.sub('\s+', ' ', value)
+    value = re.sub('\s+', ' ', value).strip()
 
     # Trim Subject prefixes automatically added by mailing list software,
     # since the mail could have been cc'd to multiple lists, in which case
@@ -275,7 +275,7 @@ def compute_hash_key(message, use_message_id):
     if use_message_id:
         message_id = message.get('Message-Id')
         if message_id:
-            return message_id
+            return message_id.strip(), ''
         sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + header_text)
         #sys.exit(3)
 
@@ -411,7 +411,10 @@ def sort_messages_by_size(messages):
     return sizes
 
 def get_lines_from_message_body(message):
-    header_text, sep, body = message.as_string().partition("\n\n")
+    if not message.is_multipart():
+        body = message.get_payload(None, decode=True)
+    else:
+        header_text, sep, body = message.as_string().partition("\n\n")
     return body.splitlines(True)
 
 def messages_too_dissimilar(hash_key, sizes, opts):
