@@ -51,6 +51,7 @@ Authors & Contributors
   * [Kevin Deldycke](https://github.com/kdeldycke)
   * [Adam Spiers](https://github.com/aspiers)
   * [Ben Reser](https://github.com/breser)
+  * [Marcel Martin](https://github.com/marcelm)
 
 
 History
