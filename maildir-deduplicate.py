@@ -227,10 +227,14 @@ def get_canonical_header_value(header, value):
     # it will receive a different prefix for each, but this shouldn't be
     # treated as a real difference between duplicate mails.
     if header == 'subject':
-        m = re.match("(\[\w[\w_-]+\w\] )+(?s)(.+)", value)
-        if m:
-            #show_progress("\nTrimmed '%s' from %s" % (m.group(1), value))
-            return m.group(2)
+        subject = value
+        while True:
+            m = re.match("([Rr]e: )*(\[\w[\w_-]+\w\] )+(?s)(.+)", subject)
+            if not m:
+                break
+            subject = m.group(3)
+            show_progress("Trimmed Subject to %s" % subject)
+        return subject
     elif header == 'content-type':
         # Apparently list servers actually munge Content-Type
         # e.g. by stripping the quotes from charset="us-ascii".
