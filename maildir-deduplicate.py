@@ -233,7 +233,7 @@ def get_canonical_header_value(header, value):
             if not m:
                 break
             subject = m.group(3)
-            show_progress("Trimmed Subject to %s" % subject)
+            #show_progress("Trimmed Subject to %s" % subject)
         return subject
     elif header == 'content-type':
         # Apparently list servers actually munge Content-Type
