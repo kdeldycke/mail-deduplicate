@@ -139,6 +139,10 @@ def parse_args():
         help = 'Remove duplicates whose file path does not match REGEXP'
     )
     parser.add_option(
+        '-o', '--remove-older', action = 'store_true',
+        help = 'Remove all but the newest duplicate (determined by ctime) in each duplicate set'
+    )
+    parser.add_option(
         '-n', '--dry-run', action = 'store_true',
         help = "Don't actually remove anything; just show what would be removed."
     )
@@ -193,7 +197,7 @@ def parse_args():
 
 def count_removal_strategies(opts):
     count = 0
-    for strategy in ('smaller', 'matching', 'not_matching'):
+    for strategy in ('smaller', 'matching', 'not_matching', 'older'):
         if getattr(opts, "remove_%s" % strategy):
             count += 1
     return count
@@ -327,8 +331,11 @@ def find_duplicates(mails_by_hash, opts):
         subject, count = re.subn('\s+', ' ', subject)
         print "\nSubject: " + subject
 
-        sizes = sort_messages_by_size(messages)
-        too_dissimilar = messages_too_dissimilar(hash_key, sizes, opts)
+        if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching:
+            sorted_messages = sort_messages_by_size(messages)
+        elif opts.remove_older:
+            sorted_messages = sort_messages_by_ctime(messages)
+        too_dissimilar = messages_too_dissimilar(hash_key, sorted_messages, opts)
         if too_dissimilar == 'size':
             sizes_too_dissimilar += 1
             continue
@@ -344,7 +351,7 @@ def find_duplicates(mails_by_hash, opts):
         duplicates += len(messages) - 1
         sets += 1
 
-        removed += process_duplicate_set(sizes, opts)
+        removed += process_duplicate_set(sorted_messages, opts)
 
     return duplicates, sizes_too_dissimilar, diff_too_big, removed, sets
 
@@ -352,7 +359,7 @@ def process_duplicate_set(duplicate_set, opts):
     i = 0
     removed = 0
 
-    if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching:
+    if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching or opts.remove_older:
         doomed = choose_duplicates_to_remove(duplicate_set, opts)
         # safety valve
         if len(doomed) == len(duplicate_set):
@@ -361,7 +368,7 @@ def process_duplicate_set(duplicate_set, opts):
     for size, mail_file, message in duplicate_set:
         i += 1
         prefix = "  "
-        if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching:
+        if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching or opts.remove_older:
             if mail_file in doomed:
                 prefix = "removed"
                 if not opts.dry_run:
@@ -378,7 +385,7 @@ def choose_duplicates_to_remove(duplicate_set, opts):
 
     for i, duplicate in enumerate(duplicate_set):
         size, mail_file, message = duplicate
-        if opts.remove_smaller:
+        if opts.remove_smaller or opts.remove_older:
             if i > 0:
                 doomed[mail_file] = 1
         elif opts.remove_matching:
@@ -401,6 +408,16 @@ def choose_duplicates_to_remove(duplicate_set, opts):
         return { }
 
     return doomed
+
+def sort_messages_by_ctime(messages):
+    ctimes = [ ]
+    for mail_file, message in messages:
+        ctime = os.path.getctime(mail_file)
+        ctimes.append((ctime, mail_file, message))
+    def _sort_by_ctime(a, b):
+        return cmp(b[0], a[0])
+    ctimes.sort(cmp = _sort_by_ctime)
+    return ctimes
 
 def sort_messages_by_size(messages):
     sizes = [ ]
