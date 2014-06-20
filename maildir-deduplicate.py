@@ -278,12 +278,11 @@ def get_canonical_header_value(header, value):
     return value
 
 def compute_hash_key(message, use_message_id):
-    header_text = get_header_text(message)
-
     if use_message_id:
         message_id = message.get('Message-Id')
         if message_id:
             return message_id.strip(), ''
+        header_text = get_header_text(message)
         sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + header_text)
         #sys.exit(3)
 
