@@ -220,7 +220,24 @@ def get_canonical_headers(mail_file, mail):
             if re.search('\S', canonical_value):
                 canonical_headers += '%s: %s\n' % (header, canonical_value)
 
-    return canonical_headers
+    if len(canonical_headers) > 50:
+        return canonical_headers
+
+    # We should have at absolute minimum 3 or 4 headers, e.g.
+    # From/To/Date/Subject; if not, something went badly wrong.
+
+    if len(canonical_headers) == 0:
+        fatal("\nNo canonical headers found for %s!" % mail_file)
+
+    err = """
+Not enough data from canonical headers to compute reliable hash!
+File: %s
+Headers:
+--------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
+%s--------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
+"""
+    err %= (mail_file, canonical_headers)
+    fatal(err)
 
 def get_canonical_header_value(header, value):
     header = header.lower()
