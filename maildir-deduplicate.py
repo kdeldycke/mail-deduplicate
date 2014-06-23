@@ -207,7 +207,7 @@ def usage_error(parser, error_msg):
     parser.print_help()
     sys.exit(2)
 
-def get_canonical_headers(mail):
+def get_canonical_headers(mail_file, mail):
     '''Copy selected headers into a new string.'''
     canonical_headers = ''
 
@@ -220,7 +220,24 @@ def get_canonical_headers(mail):
             if re.search('\S', canonical_value):
                 canonical_headers += '%s: %s\n' % (header, canonical_value)
 
-    return canonical_headers
+    if len(canonical_headers) > 50:
+        return canonical_headers
+
+    # We should have at absolute minimum 3 or 4 headers, e.g.
+    # From/To/Date/Subject; if not, something went badly wrong.
+
+    if len(canonical_headers) == 0:
+        fatal("\nNo canonical headers found for %s!" % mail_file)
+
+    err = """
+Not enough data from canonical headers to compute reliable hash!
+File: %s
+Headers:
+--------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
+%s--------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
+"""
+    err %= (mail_file, canonical_headers)
+    fatal(err)
 
 def get_canonical_header_value(header, value):
     header = header.lower()
@@ -277,17 +294,17 @@ def get_canonical_header_value(header, value):
 
     return value
 
-def compute_hash_key(message, use_message_id):
-    header_text = get_header_text(message)
-
+def compute_hash_key(mail_file, message, use_message_id):
     if use_message_id:
         message_id = message.get('Message-Id')
         if message_id:
             return message_id.strip(), ''
-        sys.stderr.write("\n\nWARNING: no Message-ID in:\n" + header_text)
+        header_text = get_header_text(message)
+        sys.stderr.write("\n\nWARNING: no Message-ID in %s:\n%s" %
+                         (mail_file, header_text))
         #sys.exit(3)
 
-    canonical_headers_text = get_canonical_headers(message)
+    canonical_headers_text = get_canonical_headers(mail_file, message)
     return hashlib.sha224(canonical_headers_text).hexdigest(), canonical_headers_text
 
 def get_header_text(mail):
@@ -301,14 +318,14 @@ def collate_folder_by_hash(mails_by_hash, mail_folder, use_message_id):
     sys.stderr.write("Processing %s mails in %s " % \
                          (len(mail_folder), path))
     for mail_id, message in mail_folder.iteritems():
-        mail_hash, header_text = compute_hash_key(message, use_message_id)
+        mail_file = os.path.join(mail_folder._path, mail_folder._lookup(mail_id))
+        mail_hash, header_text = compute_hash_key(mail_file, message, use_message_id)
         if mail_count > 0 and mail_count % 100 == 0:
             sys.stderr.write(".")
         #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
         if mail_hash not in mails_by_hash:
             mails_by_hash[mail_hash] = [ ]
 
-        mail_file = os.path.join(mail_folder._path, mail_folder._lookup(mail_id))
         mails_by_hash[mail_hash].append((mail_file, message))
         mail_count += 1
 
