@@ -348,10 +348,10 @@ def find_duplicates(mails_by_hash, opts):
         subject, count = re.subn('\s+', ' ', subject)
         print "\nSubject: " + subject
 
-        if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching:
-            sorted_messages = sort_messages_by_size(messages)
-        elif opts.remove_older:
+        if opts.remove_older:
             sorted_messages = sort_messages_by_ctime(messages)
+        else:
+            sorted_messages = sort_messages_by_size(messages)
         too_dissimilar = messages_too_dissimilar(hash_key, sorted_messages, opts)
         if too_dissimilar == 'size':
             sizes_too_dissimilar += 1
