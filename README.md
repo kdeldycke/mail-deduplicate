@@ -52,6 +52,7 @@ Authors & Contributors
   * [Adam Spiers](https://github.com/aspiers)
   * [Ben Reser](https://github.com/breser)
   * [Marcel Martin](https://github.com/marcelm)
+  * [reedog117](https://github.com/reedog117)
 
 
 History
