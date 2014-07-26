@@ -348,11 +348,9 @@ def find_duplicates(mails_by_hash, opts):
         subject, count = re.subn('\s+', ' ', subject)
         print "\nSubject: " + subject
 
-        if opts.remove_older:
-            sorted_messages = sort_messages_by_ctime(messages)
-        else:
-            sorted_messages = sort_messages_by_size(messages)
-        too_dissimilar = messages_too_dissimilar(hash_key, sorted_messages, opts)
+        sorted_messages_ctime = sort_messages_by_ctime(messages)
+        sorted_messages_size = sort_messages_by_size(messages)
+        too_dissimilar = messages_too_dissimilar(hash_key, sorted_messages_size, opts)
         if too_dissimilar == 'size':
             sizes_too_dissimilar += 1
             continue
@@ -368,7 +366,10 @@ def find_duplicates(mails_by_hash, opts):
         duplicates += len(messages) - 1
         sets += 1
 
-        removed += process_duplicate_set(sorted_messages, opts)
+        if opts.remove_older:
+            removed += process_duplicate_set(sorted_messages_ctime, opts)
+        else:
+            removed += process_duplicate_set(sorted_messages_size, opts)
 
     return duplicates, sizes_too_dissimilar, diff_too_big, removed, sets
 
@@ -553,7 +554,7 @@ def duplicates_run(opts, maildir_paths):
 
     duplicates, sizes_too_dissimilar, diff_too_big, removed, sets = \
         find_duplicates(mails_by_hash, opts)
-    report_results(duplicates, sizes_too_dissimilar, diff_too_big,
+    report_results(opts, duplicates, sizes_too_dissimilar, diff_too_big,
                    removed, sets, mail_count)
 
 def check_maildirs_valid(maildir_paths):
@@ -567,12 +568,14 @@ def check_maildirs_valid(maildir_paths):
                 fatal("%s is not a maildir (missing %s); aborting." %
                       (maildir_path, subdir))
 
-def report_results(duplicates, sizes_too_dissimilar, diff_too_big,
+def report_results(opts, duplicates, sizes_too_dissimilar, diff_too_big,
                    removed, sets, mail_count):
     total = " in %d set%s from a total of %s mails." % \
         (sets, '' if sets == 1 else 's', mail_count)
     if removed > 0:
         results = 'Removed %d of %s duplicates found' % (removed, duplicates)
+        if opts.dry_run:
+            results = 'Would have ' + results
     else:
         results = 'Found %s duplicates' % duplicates
 
