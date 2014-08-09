@@ -143,6 +143,10 @@ def parse_args():
         help = 'Remove all but the newest duplicate (determined by ctime) in each duplicate set'
     )
     parser.add_option(
+        '-O', '--remove-newer', action = 'store_true',
+        help = 'Remove all but the oldest duplicate (determined by ctime) in each duplicate set'
+    )
+    parser.add_option(
         '-n', '--dry-run', action = 'store_true',
         help = "Don't actually remove anything; just show what would be removed."
     )
@@ -197,7 +201,7 @@ def parse_args():
 
 def count_removal_strategies(opts):
     count = 0
-    for strategy in ('smaller', 'matching', 'not_matching', 'older'):
+    for strategy in ('smaller', 'matching', 'not_matching', 'older', 'newer'):
         if getattr(opts, "remove_%s" % strategy):
             count += 1
     return count
@@ -348,7 +352,10 @@ def find_duplicates(mails_by_hash, opts):
         subject, count = re.subn('\s+', ' ', subject)
         print "\nSubject: " + subject
 
-        sorted_messages_ctime = sort_messages_by_ctime(messages)
+	if opts.remove_older:
+            sorted_messages_ctime = sort_messages_by_ctime(messages, False)
+	if opts.remove_newer:
+            sorted_messages_ctime = sort_messages_by_ctime(messages, True)
         sorted_messages_size = sort_messages_by_size(messages)
         too_dissimilar = messages_too_dissimilar(hash_key, sorted_messages_size, opts)
         if too_dissimilar == 'size':
@@ -366,7 +373,7 @@ def find_duplicates(mails_by_hash, opts):
         duplicates += len(messages) - 1
         sets += 1
 
-        if opts.remove_older:
+        if opts.remove_older or opts.remove_newer:
             removed += process_duplicate_set(sorted_messages_ctime, opts)
         else:
             removed += process_duplicate_set(sorted_messages_size, opts)
@@ -377,7 +384,7 @@ def process_duplicate_set(duplicate_set, opts):
     i = 0
     removed = 0
 
-    if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching or opts.remove_older:
+    if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching or opts.remove_older or opts.remove_newer:
         doomed = choose_duplicates_to_remove(duplicate_set, opts)
         # safety valve
         if len(doomed) == len(duplicate_set):
@@ -386,7 +393,7 @@ def process_duplicate_set(duplicate_set, opts):
     for size, mail_file, message in duplicate_set:
         i += 1
         prefix = "  "
-        if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching or opts.remove_older:
+        if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching or opts.remove_older or opts.remove_newer:
             if mail_file in doomed:
                 prefix = "removed"
                 if not opts.dry_run:
@@ -403,7 +410,7 @@ def choose_duplicates_to_remove(duplicate_set, opts):
 
     for i, duplicate in enumerate(duplicate_set):
         size, mail_file, message = duplicate
-        if opts.remove_smaller or opts.remove_older:
+        if opts.remove_smaller or opts.remove_older or opts.remove_newer:
             if i > 0:
                 doomed[mail_file] = 1
         elif opts.remove_matching:
@@ -427,14 +434,24 @@ def choose_duplicates_to_remove(duplicate_set, opts):
 
     return doomed
 
-def sort_messages_by_ctime(messages):
+def sort_messages_by_ctime(messages, order):
+    # if order = False, 
     ctimes = [ ]
     for mail_file, message in messages:
         ctime = os.path.getctime(mail_file)
         ctimes.append((ctime, mail_file, message))
-    def _sort_by_ctime(a, b):
+    def _sort_by_ctime_new_to_old(a, b):
         return cmp(b[0], a[0])
-    ctimes.sort(cmp = _sort_by_ctime)
+    def _sort_by_ctime_old_to_new(a, b):
+        return cmp(a[0], b[0])
+    # if order = True, order from oldest to newest
+    if order:
+        ctimes.sort(cmp = _sort_by_ctime_old_to_new)
+    # if order = False, order from newest to oldest
+    elif not order:
+        ctimes.sort(cmp = _sort_by_ctime_new_to_old)
+    else:
+        fatal("This function should never be called unless removing duplicates based upon age")
     return ctimes
 
 def sort_messages_by_size(messages):
