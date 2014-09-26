@@ -323,15 +323,19 @@ def collate_folder_by_hash(mails_by_hash, mail_folder, use_message_id):
                          (len(mail_folder), path))
     for mail_id, message in mail_folder.iteritems():
         mail_file = os.path.join(mail_folder._path, mail_folder._lookup(mail_id))
-        mail_hash, header_text = compute_hash_key(mail_file, message, use_message_id)
-        if mail_count > 0 and mail_count % 100 == 0:
-            sys.stderr.write(".")
-        #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
-        if mail_hash not in mails_by_hash:
-            mails_by_hash[mail_hash] = [ ]
+        try:
+            mail_hash, header_text = compute_hash_key(mail_file, message, use_message_id)
+        except:
+            sys.stderr.write("WARNING: ignoring problematic %s\n" % (mail_file))
+        else:
+            if mail_count > 0 and mail_count % 100 == 0:
+                sys.stderr.write(".")
+            #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
+            if mail_hash not in mails_by_hash:
+                mails_by_hash[mail_hash] = [ ]
 
-        mails_by_hash[mail_hash].append((mail_file, message))
-        mail_count += 1
+            mails_by_hash[mail_hash].append((mail_file, message))
+            mail_count += 1
 
     sys.stderr.write("\n")
 
