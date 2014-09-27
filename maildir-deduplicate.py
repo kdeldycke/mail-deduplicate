@@ -281,10 +281,10 @@ def get_canonical_header_value(header, value):
         try:
             parsed = email.utils.parsedate_tz(value)
             utc_timestamp = email.utils.mktime_tz(parsed)
+            date_only = time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
         except (TypeError, ValueError): # if parsedate_tz cannot parse the date
             return value
-
-        return time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
+        return date_only
     elif header == 'to':
         # Sometimes email.parser strips the <> brackets from a To:
         # header which has a single address.  I have seen this happen
