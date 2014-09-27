@@ -74,6 +74,9 @@ from mailbox      import Maildir
 from email.parser import Parser
 from difflib      import unified_diff
 
+class MyMsgError(Exception):
+    pass
+
 # List of mail headers to use when computing the hash of a mail.
 HEADERS = [
     'Date',
@@ -231,17 +234,15 @@ def get_canonical_headers(mail_file, mail):
     # From/To/Date/Subject; if not, something went badly wrong.
 
     if len(canonical_headers) == 0:
-        fatal("\nNo canonical headers found for %s!" % mail_file)
+        raise MyMsgError("No canonical headers found")
 
-    err = """
-Not enough data from canonical headers to compute reliable hash!
-File: %s
+    err = """Not enough data from canonical headers to compute reliable hash!
 Headers:
 --------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
 %s--------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
 """
-    err %= (mail_file, canonical_headers)
-    fatal(err)
+    err %= canonical_headers
+    raise MyMsgError(err)
 
 def get_canonical_header_value(header, value):
     header = header.lower()
@@ -325,8 +326,8 @@ def collate_folder_by_hash(mails_by_hash, mail_folder, use_message_id):
         mail_file = os.path.join(mail_folder._path, mail_folder._lookup(mail_id))
         try:
             mail_hash, header_text = compute_hash_key(mail_file, message, use_message_id)
-        except:
-            sys.stderr.write("WARNING: ignoring problematic %s\n" % (mail_file))
+        except MyMsgError as e:
+            sys.stderr.write("\nWARNING: ignoring problematic %s: %s\n" % (mail_file, e.args[0]))
         else:
             if mail_count > 0 and mail_count % 100 == 0:
                 sys.stderr.write(".")
