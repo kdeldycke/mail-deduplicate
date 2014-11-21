@@ -555,7 +555,7 @@ def debug_hash_algorithm(opts):
     #mail_text = ''.join(sys.stdin.readlines())
     #message = email.message_from_string(mail_text)
     message = email.message_from_file(sys.stdin)
-    mail_hash, header_text = compute_hash_key(message, opts.message_id)
+    mail_hash, header_text = compute_hash_key(None, message, opts.message_id)
     print header_text
     print 'Hash:', mail_hash
 
