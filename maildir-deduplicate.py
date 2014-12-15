@@ -74,6 +74,9 @@ from mailbox      import Maildir
 from email.parser import Parser
 from difflib      import unified_diff
 
+class MyMsgError(Exception):
+    pass
+
 # List of mail headers to use when computing the hash of a mail.
 HEADERS = [
     'Date',
@@ -231,17 +234,15 @@ def get_canonical_headers(mail_file, mail):
     # From/To/Date/Subject; if not, something went badly wrong.
 
     if len(canonical_headers) == 0:
-        fatal("\nNo canonical headers found for %s!" % mail_file)
+        raise MyMsgError("No canonical headers found")
 
-    err = """
-Not enough data from canonical headers to compute reliable hash!
-File: %s
+    err = """Not enough data from canonical headers to compute reliable hash!
 Headers:
 --------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
 %s--------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
 """
-    err %= (mail_file, canonical_headers)
-    fatal(err)
+    err %= canonical_headers
+    raise MyMsgError(err)
 
 def get_canonical_header_value(header, value):
     header = header.lower()
@@ -280,10 +281,10 @@ def get_canonical_header_value(header, value):
         try:
             parsed = email.utils.parsedate_tz(value)
             utc_timestamp = email.utils.mktime_tz(parsed)
+            date_only = time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
         except (TypeError, ValueError): # if parsedate_tz cannot parse the date
             return value
-
-        return time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
+        return date_only
     elif header == 'to':
         # Sometimes email.parser strips the <> brackets from a To:
         # header which has a single address.  I have seen this happen
@@ -323,15 +324,19 @@ def collate_folder_by_hash(mails_by_hash, mail_folder, use_message_id):
                          (len(mail_folder), path))
     for mail_id, message in mail_folder.iteritems():
         mail_file = os.path.join(mail_folder._path, mail_folder._lookup(mail_id))
-        mail_hash, header_text = compute_hash_key(mail_file, message, use_message_id)
-        if mail_count > 0 and mail_count % 100 == 0:
-            sys.stderr.write(".")
-        #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
-        if mail_hash not in mails_by_hash:
-            mails_by_hash[mail_hash] = [ ]
+        try:
+            mail_hash, header_text = compute_hash_key(mail_file, message, use_message_id)
+        except MyMsgError as e:
+            sys.stderr.write("\nWARNING: ignoring problematic %s: %s\n" % (mail_file, e.args[0]))
+        else:
+            if mail_count > 0 and mail_count % 100 == 0:
+                sys.stderr.write(".")
+            #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
+            if mail_hash not in mails_by_hash:
+                mails_by_hash[mail_hash] = [ ]
 
-        mails_by_hash[mail_hash].append((mail_file, message))
-        mail_count += 1
+            mails_by_hash[mail_hash].append((mail_file, message))
+            mail_count += 1
 
     sys.stderr.write("\n")
 
