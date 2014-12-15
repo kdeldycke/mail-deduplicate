@@ -90,13 +90,13 @@ So far, it was tested on:
 Contributors
 ------------
 
-  * `Kevin Deldycke <https://github.com/kdeldycke>`_
-  * `Adam Spiers <https://github.com/aspiers>`_
-  * `Ben Reser <https://github.com/breser>`_
-  * `Marcel Martin <https://github.com/marcelm>`_
-  * `reedog117 <https://github.com/reedog117>`_
-  * `Tristan Henderson <https://github.com/tnhh>`_
-  * `Matija Nalis <https://github.com/mnalis>`_
+* `Kevin Deldycke <https://github.com/kdeldycke>`_
+* `Adam Spiers <https://github.com/aspiers>`_
+* `Ben Reser <https://github.com/breser>`_
+* `Marcel Martin <https://github.com/marcelm>`_
+* `reedog117 <https://github.com/reedog117>`_
+* `Tristan Henderson <https://github.com/tnhh>`_
+* `Matija Nalis <https://github.com/mnalis>`_
 
 
 History
