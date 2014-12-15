@@ -1,0 +1,20 @@
+ChangeLog
+=========
+
+
+0.1.0 (unreleased)
+------------------
+
+* Package the script for proper distribution.
+
+
+0.0.1 (2011-04-27)
+------------------
+
+* First external contribution.
+
+
+0.0.0 (2010-06-08)
+------------------
+
+* First commit.

@@ -1,8 +1,6 @@
 #!/usr/bin/python
-
-##############################################################################
 #
-# Copyright (C) 2010-2011 Kevin Deldycke <kevin@deldycke.com>
+# Copyright (C) 2010-2014 Kevin Deldycke <kevin@deldycke.com>
 #                         Adam Spiers <adam@spiers.net>
 #
 # This program is Free Software; you can redistribute it and/or
@@ -18,8 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-#
-##############################################################################
 
 """
     This script reads all mails in a given list of maildir folders and
@@ -73,6 +69,8 @@ from optparse     import OptionParser
 from mailbox      import Maildir
 from email.parser import Parser
 from difflib      import unified_diff
+
+__version__ = '0.1.0'
 
 class InsufficientHeadersError(Exception):
     pass
