@@ -109,14 +109,14 @@ So far, it was tested on:
 Release process
 ---------------
 
-.. code-block:: shell
+.. code-block:: bash
 
-    $ python setup.py register -r testpypi
-    $ pip install wheel
-    $ python setup.py sdist bdist_egg bdist_wheel upload -r testpypi
-    $ git push --tags
-    $ python setup.py register -r pypi
-    $ python setup.py sdist bdist_egg bdist_wheel upload -r pypi
+    python setup.py register -r testpypi
+    pip install wheel
+    python setup.py sdist bdist_egg bdist_wheel upload -r testpypi
+    git push --tags
+    python setup.py register -r pypi
+    python setup.py sdist bdist_egg bdist_wheel upload -r pypi
 
 
 Contributors
