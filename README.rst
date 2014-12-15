@@ -61,14 +61,14 @@ potentially:
 * append a footer to a list body, thus changing the ``Content-Length`` header;
 
 * create a new path described by the ``Received`` headers which would not be
-contained in any copy of the mail saved locally at the time it was sent to the
-list;
+  contained in any copy of the mail saved locally at the time it was sent to
+  the list;
 
 * munge the ``Reply-To`` header even though it's a bad idea;
 
 * add plenty of other random headers which a copy saved locally at sending-time
-would not have, such as ``X-Mailman-Version``, ``Precedence``, ``X-BeenThere``,
-``List-*``, ``Sender``, ``Errors-To``, and so on;
+  would not have, such as ``X-Mailman-Version``, ``Precedence``,
+  ``X-BeenThere``, ``List-*``, ``Sender``, ``Errors-To``, and so on;
 
 * add a prefix to the ``Subject`` header.
 
