@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-0.1.0 (unreleased)
+0.1.0 (2014-12-15)
 ------------------
 
 * Package the script for proper distribution.
