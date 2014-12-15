@@ -443,7 +443,7 @@ def choose_duplicates_to_remove(duplicate_set, opts):
     return doomed
 
 def sort_messages_by_ctime(messages, order):
-    # if order = False, 
+    # if order = False,
     ctimes = [ ]
     for mail_file, message in messages:
         ctime = os.path.getctime(mail_file)
