@@ -280,9 +280,12 @@ def get_canonical_header_value(header, value):
         # reasons, so let's only honour the date for now.
         try:
             parsed = email.utils.parsedate_tz(value)
-            utc_timestamp = email.utils.mktime_tz(parsed)
-            date_only = time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
         except (TypeError, ValueError): # if parsedate_tz cannot parse the date
+            return value
+        utc_timestamp = email.utils.mktime_tz(parsed)
+        try:
+            return time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
+        except ValueError:
             return value
         return date_only
     elif header == 'to':
