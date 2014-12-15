@@ -50,6 +50,8 @@ setup(
     description="Deduplicate mails from a set of maildir folders",
     long_description=get_long_description(),
 
+    author='Kevin Deldycke',
+    author_email='kevin@deldycke.com',
     url='https://github.com/kdeldycke/maildir-deduplicate',
     license='GPLv2',
 
