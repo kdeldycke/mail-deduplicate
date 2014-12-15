@@ -4,6 +4,46 @@ Maildir Deduplicate
 Command-line tool written in Python to deduplicate mails from a set of maildir folders.
 
 
+Usage
+-----
+
+```
+Usage: __init__.py [OPTIONS] [MAILDIR [MAILDIR ...]]
+
+Detect/remove duplicates from maildir folders
+
+Options:
+  -h, --help            show this help message and exit
+  -d, --remove-smaller  Remove all but largest duplicate in each duplicate set
+  -r REGEXP, --remove-matching=REGEXP
+                        Remove duplicates whose file path matches REGEXP
+  -R REGEXP, --remove-not-matching=REGEXP
+                        Remove duplicates whose file path does not match
+                        REGEXP
+  -o, --remove-older    Remove all but the newest duplicate (determined by
+                        ctime) in each duplicate set
+  -O, --remove-newer    Remove all but the oldest duplicate (determined by
+                        ctime) in each duplicate set
+  -n, --dry-run         Don't actually remove anything; just show what would
+                        be removed.
+  -s, --show-diffs      Show diffs between duplicates even if they're within
+                        the thresholds
+  -i, --message-id      Use Message-ID header as hash key (not recommended -
+                        the default is to compute a digest of the whole header
+                        with selected headers removed)
+  -S BYTES, --size-threshold=BYTES
+                        Specify maximum allowed difference between size of
+                        duplicates. Default is 512; set -1 for no threshold.
+  -D BYTES, --diff-threshold=BYTES
+                        Specify maximum allowed size of unified diff between
+                        duplicates. Default is 768; set -1 for no threshold.
+  -H, --hash-pipe       Take a single mail message texted piped from STDIN and
+                        show its canonicalised form and hash thereof. This is
+                        useful for debugging why two messages don't have the
+                        same hash when you expect them to (or vice-versa).
+```
+
+
 Details
 -------
 
