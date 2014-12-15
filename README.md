@@ -54,6 +54,7 @@ Authors & Contributors
   * [Marcel Martin](https://github.com/marcelm)
   * [reedog117](https://github.com/reedog117)
   * [Tristan Henderson](https://github.com/tnhh)
+  * [Matija Nalis](https://github.com/mnalis)
 
 
 History
