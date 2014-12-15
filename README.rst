@@ -7,7 +7,7 @@ Command-line tool to deduplicate mails from a set of maildir folders.
 Usage
 -----
 
-.. code-block:: bash
+.. code-block::
 
     Usage: __init__.py [OPTIONS] [MAILDIR [MAILDIR ...]]
 
