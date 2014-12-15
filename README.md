@@ -66,4 +66,4 @@ This script was [initially released in 2010](http://kevin.deldycke.com/2010/08/m
 License
 -------
 
-This software is licensed under the [GNU General Public License v2 or later (GPLv2+)](https://github.com/kdeldycke/maildir-deduplicate/LICENSE.md).
+This software is licensed under the [GNU General Public License v2 or later (GPLv2+)](https://github.com/kdeldycke/maildir-deduplicate/LICENSE.rst).
