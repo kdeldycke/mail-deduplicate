@@ -1,0 +1,9 @@
+# http://nedbatchelder.com/code/coverage/config.html#config
+
+[run]
+source = maildir_deduplicate
+branch = True
+omit = */tests/*
+
+[report]
+omit = */tests/*
