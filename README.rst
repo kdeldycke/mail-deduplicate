@@ -106,6 +106,19 @@ So far, it was tested on:
 * Linux with Python 2.6.0 and 2.7.2.
 
 
+Release process
+---------------
+
+.. code-block:: shell
+
+    $ python setup.py register -r testpypi
+    $ pip install wheel
+    $ python setup.py sdist bdist_egg bdist_wheel upload -r testpypi
+    $ git push --tags
+    $ python setup.py register -r pypi
+    $ python setup.py sdist bdist_egg bdist_wheel upload -r pypi
+
+
 Contributors
 ------------
 
