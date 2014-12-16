@@ -53,7 +53,7 @@ setup(
     author='Kevin Deldycke',
     author_email='kevin@deldycke.com',
     url='https://github.com/kdeldycke/maildir-deduplicate',
-    license='GPLv2',
+    license='GPLv2+',
 
     install_requires=[],
 
