@@ -5,7 +5,7 @@ ChangeLog
 0.1.1.dev (unreleased)
 ----------------------
 
-* No changes yet.
+* Fix package version parsing.
 
 
 0.1.0 (2014-12-15)

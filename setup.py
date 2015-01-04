@@ -33,7 +33,7 @@ def get_version():
     ) as init:
 
         for line in init.readlines():
-            res = re.match(r'__version__ *= *[\'"]([0-9\.]*)[\'"]$', line)
+            res = re.match(r'__version__ *= *[\'"]([0-9a-z\.]*)[\'"]$', line)
             if res:
                 return res.group(1)
 
