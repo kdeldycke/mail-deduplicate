@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010-2014 Kevin Deldycke <kevin@deldycke.com>
 #                         Adam Spiers <adam@spiers.net>
