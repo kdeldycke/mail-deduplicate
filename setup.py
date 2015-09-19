@@ -49,7 +49,7 @@ def get_long_description():
 setup(
     name='maildir-deduplicate',
     version=get_version(),
-    description="Deduplicate mails from a set of maildir folders",
+    description="Deduplicate mails from a set of maildir folders.",
     long_description=get_long_description(),
 
     author='Kevin Deldycke',
