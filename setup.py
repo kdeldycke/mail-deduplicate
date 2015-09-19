@@ -17,6 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+import codecs
 import os
 import re
 
@@ -41,7 +42,8 @@ def get_version():
 def get_long_description():
     readme = os.path.join(os.path.dirname(__file__), 'README.rst')
     changes = os.path.join(os.path.dirname(__file__), 'CHANGES.rst')
-    return open(readme).read() + '\n' + open(changes).read()
+    return codecs.open(readme, encoding='utf-8').read() + '\n' + \
+        codecs.open(changes, encoding='utf-8').read()
 
 
 setup(
