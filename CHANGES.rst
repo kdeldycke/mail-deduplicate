@@ -8,7 +8,7 @@ ChangeLog
 * Fix package version parsing.
 * Add installation instructions. Closes #21.
 * Add PEP8 and PyLint configuration.
-
+* Add bumpversion configuration.
 
 0.1.0 (2014-12-15)
 ------------------
