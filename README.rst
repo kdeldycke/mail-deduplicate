@@ -31,6 +31,18 @@ Development: |build| |coverage| |quality|
     :alt: Code Quality
 
 
+Install
+-------
+
+This package is `available on PyPi
+<https://pypi.python.org/pypi/maildir-deduplicate>`_, so you can install the
+latest stable release and its dependencies with a simple `pip` call:
+
+.. code-block:: bash
+
+    $ pip install maildir-deduplicate
+
+
 Usage
 -----
 
