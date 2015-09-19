@@ -1,2 +1,12 @@
 *~
+*#
+.#*
 *.py[cod]
+*.sw[op]
+.coverage
+*.egg-info/
+*.egg
+build/
+doc/_build/
+dist/
+venv/
