@@ -67,7 +67,8 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
-        'License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)',
+        'License :: OSI Approved :: '
+        'GNU General Public License v2 or later (GPLv2+)',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
