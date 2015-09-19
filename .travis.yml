@@ -1,12 +1,28 @@
+# After changing this file, check it on:
+#   http://lint.travis-ci.org/
 language: python
+sudo: false
+
 python:
   - "2.6"
   - "2.7"
+
+virtualenv:
+  system_site_packages: true
+
+addons:
+  apt:
+    packages:
+      - python-numpy
+      - python-scipy
+
 install:
   - pip install -e .
   - pip install coveralls
+
 script:
   - coverage run setup.py test
   - coverage report -m
+
 after_script:
   coveralls --verbose
