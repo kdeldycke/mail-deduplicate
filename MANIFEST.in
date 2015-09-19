@@ -1,3 +1,5 @@
+include .coveragerc
 include CHANGES.rst
 include LICENSE
 include MANIFEST.in
+include setup.cfg
