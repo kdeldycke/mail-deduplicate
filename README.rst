@@ -4,7 +4,7 @@ Maildir Deduplicate
 Command-line tool to deduplicate mails from a set of maildir folders.
 
 
-Stable release: |release| |dependencies| |license| |popularity|
+Stable release: |release| |license| |dependencies| |popularity|
 
 Development: |build| |coverage| |quality|
 
