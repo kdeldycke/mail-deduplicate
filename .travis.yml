@@ -7,15 +7,6 @@ python:
   - "2.6"
   - "2.7"
 
-virtualenv:
-  system_site_packages: true
-
-addons:
-  apt:
-    packages:
-      - python-numpy
-      - python-scipy
-
 install:
   - pip install -e .
   - pip install coveralls
