@@ -23,20 +23,29 @@ from click.testing import CliRunner
 from maildir_deduplicate.cli import cli
 
 
-class TestCLI(unittest.TestCase):
+class CLITestCase(unittest.TestCase):
 
     def setUp(self):
         self.runner = CliRunner()
+
+
+class TestCLI(CLITestCase):
 
     def test_main_help(self):
         result = self.runner.invoke(cli, ['--help'])
         self.assertEqual(result.exit_code, 0)
         self.assertIn('--help', result.output)
 
+
+class TestDeduplicateCLI(CLITestCase):
+
     def test_deduplicate_help(self):
         result = self.runner.invoke(cli, ['deduplicate', '--help'])
         self.assertEqual(result.exit_code, 0)
         self.assertIn('--help', result.output)
+
+
+class TestHashCLI(CLITestCase):
 
     def test_hash_help(self):
         result = self.runner.invoke(cli, ['hash', '--help'])
