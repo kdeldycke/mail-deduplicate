@@ -168,11 +168,6 @@ positives, duplicates are verified by comparing body sizes and also diff'ing
 the contents.  If the sizes or contents differ by more than a threshold, they
 are not counted as duplicates.
 
-So far, it was tested on:
-
-* MacOS X 10.6 with Python 2.6.2,
-* Linux with Python 2.6.0 and 2.7.2.
-
 
 Development
 -----------
