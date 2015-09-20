@@ -100,7 +100,7 @@ def validate_maildirs(ctx, param, value):
 @click.argument('maildirs', type=click.Path(exists=True), nargs=-1,
                 callback=validate_maildirs)
 @click.pass_context
-def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
+def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, use_message_id,
                 size_threshold, diff_threshold, maildirs):
     """ Deduplicate mails from a set of maildir folders.
 
@@ -139,7 +139,7 @@ def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
               'header with selected headers removed.')
 @click.argument('message', type=click.File('rb'))
 @click.pass_context
-def hash(ctx, message_id, message):
+def hash(ctx, use_message_id, message):
     """ Take a single mail message and show its canonicalised form and hash.
 
     This is essentially provided for debugging why two messages do not have the
@@ -150,6 +150,6 @@ def hash(ctx, message_id, message):
         cat mail.txt | mdedup hash -
     """
     message = email.message_from_file(message)
-    mail_hash, header_text = compute_hash_key(None, message, message_id)
+    mail_hash, header_text = compute_hash_key(None, message, use_message_id)
     click.echo(header_text)
     click.echo('Hash: {}'.format(mail_hash))
