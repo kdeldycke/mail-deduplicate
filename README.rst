@@ -49,41 +49,86 @@ See also `pip installation instructions
 Usage
 -----
 
+List global options and commands:
+
 .. code-block::
 
-    Usage: __init__.py [OPTIONS] [MAILDIR [MAILDIR ...]]
+    $ mdedup --help
+    Usage: mdedup [OPTIONS] COMMAND [ARGS]...
 
-    Detect/remove duplicates from maildir folders
+      CLI for maildirs content analysis and deletion.
 
     Options:
-      -h, --help            show this help message and exit
-      -d, --remove-smaller  Remove all but largest duplicate in each duplicate set
-      -r REGEXP, --remove-matching=REGEXP
-                            Remove duplicates whose file path matches REGEXP
-      -R REGEXP, --remove-not-matching=REGEXP
-                            Remove duplicates whose file path does not match
-                            REGEXP
-      -o, --remove-older    Remove all but the newest duplicate (determined by
-                        ctime) in each duplicate set
-      -O, --remove-newer    Remove all but the oldest duplicate (determined by
-                            ctime) in each duplicate set
-      -n, --dry-run         Don't actually remove anything; just show what would
-                            be removed.
-      -s, --show-diffs      Show diffs between duplicates even if they're within
-                            the thresholds
-      -i, --message-id      Use Message-ID header as hash key (not recommended -
-                            the default is to compute a digest of the whole header
-                            with selected headers removed)
-      -S BYTES, --size-threshold=BYTES
-                            Specify maximum allowed difference between size of
-                            duplicates. Default is 512; set -1 for no threshold.
-      -D BYTES, --diff-threshold=BYTES
-                            Specify maximum allowed size of unified diff between
-                            duplicates. Default is 768; set -1 for no threshold.
-      -H, --hash-pipe       Take a single mail message texted piped from STDIN and
-                            show its canonicalised form and hash thereof. This is
-                            useful for debugging why two messages don't have the
-                            same hash when you expect them to (or vice-versa).
+      --version      Show the version and exit.
+      -v, --verbose  Print much more debug statements.
+      --help         Show this message and exit.
+
+    Commands:
+      deduplicate  Deduplicate maildirs content.
+      hash         Hash a single mail.
+
+
+Deduplication command specific options:
+
+.. code-block:: bash
+
+    $ mdedup deduplicate --help
+    Usage: mdedup deduplicate [OPTIONS] [MAILDIRS]...
+
+      Deduplicate mails from a set of maildir folders.
+
+      Removal strategies for each set of mail duplicates:
+          - older: remove all but the newest message (determined by ctime).
+          - newer: remove all but the oldest message (determined by ctime).
+          - smaller: Remove all but largest message.
+          - matching: Remove duplicates whose file path matches the regular
+            expression provided via the --regexp parameter.
+          - not-matching: Remove duplicates whose file path does not match the
+            regular expression provided via the --regexp parameter.
+
+    Options:
+      --strategy [not-matching|smaller|matching|newer|older]
+                                      Removal strategy to apply on found
+                                      duplicates.
+      -r, --regexp REGEXP             Regular expression for file path. Required
+                                      in matching and not-matching strategies.
+      -n, --dry-run                   Do not actually remove anything; just show
+                                      what would be removed.
+      -s, --show-diffs                Show diffs between duplicates even if they
+                                      are within the thresholds.
+      -i, --message-id                Use Message-ID header as hash key. This is
+                                      not recommended: the default is to compute a
+                                      digest of the whole header with selected
+                                      headers removed.
+      -S, --size-threshold BYTES      Specify maximum allowed difference between
+                                      size of duplicates. Set to -1 for no
+                                      threshold.
+      -D, --diff-threshold BYTES      Specify maximum allowed difference between
+                                      size of duplicates. Set to -1 for no
+                                      threshold.
+      --help                          Show this message and exit.
+
+
+Hashing command specific options:
+
+.. code-block:: bash
+
+    $ mdedup hash --help
+    Usage: mdedup hash [OPTIONS] MESSAGE
+
+      Take a single mail message and show its canonicalised form and hash.
+
+      This is essentially provided for debugging why two messages do not have
+      the same hash when you expect them to (or vice-versa).
+
+      To get the message from STDIN, use a dash in place of the filename:
+          cat mail.txt | mdedup hash -
+
+    Options:
+      -i, --message-id  Use Message-ID header as hash key. This is not
+                        recommended: the default is to compute a digest of the
+                        whole header with selected headers removed.
+      --help            Show this message and exit.
 
 
 Details
