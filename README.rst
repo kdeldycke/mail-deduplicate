@@ -42,8 +42,8 @@ latest stable release and its dependencies with a simple `pip` call:
 
     $ pip install maildir-deduplicate
 
-See also `pip installation instruction
-<https://pip.pypa.io/en/stable/installing>`_.
+See also `pip installation instructions
+<https://pip.pypa.io/en/stable/installing/>`_.
 
 
 Usage
