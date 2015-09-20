@@ -9,6 +9,7 @@ ChangeLog
 * Add installation instructions. Closes #21.
 * Add PEP8 and PyLint configuration.
 * Add bumpversion configuration.
+* Rework CLI around click framework. Closes #26.
 
 
 0.1.0 (2014-12-15)
