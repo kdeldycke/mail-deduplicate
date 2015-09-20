@@ -57,7 +57,9 @@ setup(
     url='https://github.com/kdeldycke/maildir-deduplicate',
     license='GPLv2+',
 
-    install_requires=[],
+    install_requires=[
+        'click >= 5.0',
+    ],
 
     packages=find_packages(),
 
@@ -81,6 +83,8 @@ setup(
     ],
 
     entry_points={
-        'console_scripts': [],
+        'console_scripts': [
+            'mdedup=maildir_deduplicate.cli:cli',
+        ],
     }
 )

@@ -1,0 +1,400 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2010-2015 Kevin Deldycke <kevin@deldycke.com>
+#                         Adam Spiers <adam@spiers.net>
+#
+# This program is Free Software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+import os
+import re
+import sys
+import hashlib
+import email
+import time
+from mailbox import Maildir
+from difflib import unified_diff
+
+from . import HEADERS, InsufficientHeadersError
+
+
+def get_canonical_headers(mail_file, mail):
+    '''Copy selected headers into a new string.'''
+    canonical_headers = ''
+
+    for header in HEADERS:
+        if header not in mail:
+            continue
+
+        for value in mail.get_all(header):
+            canonical_value = get_canonical_header_value(header, value)
+            if re.search('\S', canonical_value):
+                canonical_headers += '%s: %s\n' % (header, canonical_value)
+
+    if len(canonical_headers) > 50:
+        return canonical_headers
+
+    # We should have at absolute minimum 3 or 4 headers, e.g.
+    # From/To/Date/Subject; if not, something went badly wrong.
+
+    if len(canonical_headers) == 0:
+        raise InsufficientHeadersError("No canonical headers found")
+
+    err = """Not enough data from canonical headers to compute reliable hash!
+Headers:
+--------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
+%s--------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
+"""
+    err %= canonical_headers
+    raise InsufficientHeadersError(err)
+
+def get_canonical_header_value(header, value):
+    header = header.lower()
+    value = re.sub('\s+', ' ', value).strip()
+
+    # Trim Subject prefixes automatically added by mailing list software,
+    # since the mail could have been cc'd to multiple lists, in which case
+    # it will receive a different prefix for each, but this shouldn't be
+    # treated as a real difference between duplicate mails.
+    if header == 'subject':
+        subject = value
+        while True:
+            m = re.match("([Rr]e: )*(\[\w[\w_-]+\w\] )+(?s)(.+)", subject)
+            if not m:
+                break
+            subject = m.group(3)
+            #show_progress("Trimmed Subject to %s" % subject)
+        return subject
+    elif header == 'content-type':
+        # Apparently list servers actually munge Content-Type
+        # e.g. by stripping the quotes from charset="us-ascii".
+        # Section 5.1 of RFC2045 says that either form is valid
+        # (and they are equivalent).
+        #
+        # Additionally, with multipart/mixed, boundary delimiters can
+        # vary by recipient.  We need to allow for duplicates coming
+        # from multiple recipients, since for example you could be
+        # signed up to the same list twice with different addresses.
+        # Or maybe someone bounces you a load of mail some of which is
+        # from a mailing list you're both subscribed to - then it's
+        # still useful to be able to eliminate duplicates.
+        return re.sub(';.*', '', value)
+    elif header == 'date':
+        # Date timestamps can differ by seconds or hours for various
+        # reasons, so let's only honour the date for now.
+        try:
+            parsed = email.utils.parsedate_tz(value)
+        except (TypeError, ValueError): # if parsedate_tz cannot parse the date
+            return value
+        utc_timestamp = email.utils.mktime_tz(parsed)
+        try:
+            return time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
+        except ValueError:
+            return value
+        return date_only
+    elif header == 'to':
+        # Sometimes email.parser strips the <> brackets from a To:
+        # header which has a single address.  I have seen this happen
+        # for only one mail in a duplicate pair.  I'm not sure why
+        # (presumably the parser uses email.utils.unquote somewhere in
+        # its code path which was only triggered by that mail and not
+        # its sister mail), but to be safe, we should always strip the
+        # <> brackets to avoid this difference preventing duplicate
+        # detection.
+        if re.match("^<[^<>,]+>$", value):
+            return email.utils.unquote(value)
+
+    return value
+
+def compute_hash_key(mail_file, message, use_message_id):
+    if use_message_id:
+        message_id = message.get('Message-Id')
+        if message_id:
+            return message_id.strip(), ''
+        header_text = get_header_text(message)
+        sys.stderr.write("\n\nWARNING: no Message-ID in %s:\n%s" %
+                         (mail_file, header_text))
+        #sys.exit(3)
+
+    canonical_headers_text = get_canonical_headers(mail_file, message)
+    return hashlib.sha224(canonical_headers_text).hexdigest(), canonical_headers_text
+
+def get_header_text(mail):
+    header_text = ''.join('%s: %s\n' % (header, mail[header]) for header in HEADERS
+                          if mail[header] is not None)
+    return header_text
+
+def collate_folder_by_hash(mails_by_hash, mail_folder, use_message_id):
+    mail_count = 0
+    path = re.sub(os.getenv('HOME'), '~', mail_folder._path)
+    sys.stderr.write("Processing %s mails in %s " % \
+                         (len(mail_folder), path))
+    for mail_id, message in mail_folder.iteritems():
+        mail_file = os.path.join(mail_folder._path, mail_folder._lookup(mail_id))
+        try:
+            mail_hash, header_text = compute_hash_key(mail_file, message, use_message_id)
+        except InsufficientHeadersError as e:
+            sys.stderr.write("\nWARNING: ignoring problematic %s: %s\n" % (mail_file, e.args[0]))
+        else:
+            if mail_count > 0 and mail_count % 100 == 0:
+                sys.stderr.write(".")
+            #show_progress("  Hash is %s for mail %r" % (mail_hash, mail_id))
+            if mail_hash not in mails_by_hash:
+                mails_by_hash[mail_hash] = [ ]
+
+            mails_by_hash[mail_hash].append((mail_file, message))
+            mail_count += 1
+
+    sys.stderr.write("\n")
+
+    return mail_count
+
+def find_duplicates(mails_by_hash, opts):
+    duplicates = 0
+    sets = 0
+    removed = 0
+    sizes_too_dissimilar = 0
+    diff_too_big = 0
+    for hash_key, messages in mails_by_hash.iteritems():
+        if len(messages) == 1:
+            #print "unique:", messages[0]
+            continue
+
+        subject = messages[0][1].get('Subject', '')
+        subject, count = re.subn('\s+', ' ', subject)
+        print "\nSubject: " + subject
+
+	if opts.remove_older:
+            sorted_messages_ctime = sort_messages_by_ctime(messages, False)
+	if opts.remove_newer:
+            sorted_messages_ctime = sort_messages_by_ctime(messages, True)
+        sorted_messages_size = sort_messages_by_size(messages)
+        too_dissimilar = messages_too_dissimilar(hash_key, sorted_messages_size, opts)
+        if too_dissimilar == 'size':
+            sizes_too_dissimilar += 1
+            continue
+        elif too_dissimilar == 'diff':
+            diff_too_big += 1
+            continue
+        elif too_dissimilar is False:
+            pass
+        else:
+            error = "BUG: unexpected value '%s' for too_dissimilar"
+            fatal(error % too_dissimilar)
+
+        duplicates += len(messages) - 1
+        sets += 1
+
+        if opts.remove_older or opts.remove_newer:
+            removed += process_duplicate_set(sorted_messages_ctime, opts)
+        else:
+            removed += process_duplicate_set(sorted_messages_size, opts)
+
+    return duplicates, sizes_too_dissimilar, diff_too_big, removed, sets
+
+def process_duplicate_set(duplicate_set, opts):
+    i = 0
+    removed = 0
+
+    if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching or opts.remove_older or opts.remove_newer:
+        doomed = choose_duplicates_to_remove(duplicate_set, opts)
+        # safety valve
+        if len(doomed) == len(duplicate_set):
+            fatal("BUG: tried to remove whole duplicate set!")
+
+    for size, mail_file, message in duplicate_set:
+        i += 1
+        prefix = "  "
+        if opts.remove_smaller or opts.remove_matching or opts.remove_not_matching or opts.remove_older or opts.remove_newer:
+            if mail_file in doomed:
+                prefix = "removed"
+                if not opts.dry_run:
+                    os.unlink(mail_file)
+                removed += 1
+            else:
+                prefix = "left   "
+        print "%s %2d %d %s" % (prefix, i, size, mail_file)
+
+    return removed
+
+def choose_duplicates_to_remove(duplicate_set, opts):
+    doomed = { }
+
+    for i, duplicate in enumerate(duplicate_set):
+        size, mail_file, message = duplicate
+        if opts.remove_smaller or opts.remove_older or opts.remove_newer:
+            if i > 0:
+                doomed[mail_file] = 1
+        elif opts.remove_matching:
+            if re.search(opts.remove_matching, mail_file):
+                doomed[mail_file] = 1
+        elif opts.remove_not_matching:
+            if not re.search(opts.remove_not_matching, mail_file):
+                doomed[mail_file] = 1
+
+    # safety valve
+    if len(doomed) == len(duplicate_set):
+        if opts.remove_matching:
+            sys.stderr.write("/%s/ matched whole set; not removing any duplicates.\n" %
+                             opts.remove_matching.pattern)
+        elif opts.remove_not_matching:
+            sys.stderr.write("/%s/ matched whole set; not removing any duplicates.\n" %
+                             opts.remove_not_matching.pattern)
+        else:
+            fatal("BUG: removal strategy tried to remove all duplicates in set!")
+        return { }
+
+    return doomed
+
+def sort_messages_by_ctime(messages, order):
+    # if order = False,
+    ctimes = [ ]
+    for mail_file, message in messages:
+        ctime = os.path.getctime(mail_file)
+        ctimes.append((ctime, mail_file, message))
+    def _sort_by_ctime_new_to_old(a, b):
+        return cmp(b[0], a[0])
+    def _sort_by_ctime_old_to_new(a, b):
+        return cmp(a[0], b[0])
+    # if order = True, order from oldest to newest
+    if order:
+        ctimes.sort(cmp = _sort_by_ctime_old_to_new)
+    # if order = False, order from newest to oldest
+    elif not order:
+        ctimes.sort(cmp = _sort_by_ctime_new_to_old)
+    else:
+        fatal("This function should never be called unless removing duplicates based upon age")
+    return ctimes
+
+def sort_messages_by_size(messages):
+    sizes = [ ]
+    for mail_file, message in messages:
+        body = get_lines_from_message_body(message)
+        #size = os.path.getsize(mail_file)
+        size = len("".join(body))
+        sizes.append((size, mail_file, message))
+    def _sort_by_size(a, b):
+        return cmp(b[0], a[0])
+    sizes.sort(cmp = _sort_by_size)
+    return sizes
+
+def get_lines_from_message_body(message):
+    if not message.is_multipart():
+        body = message.get_payload(None, decode=True)
+    else:
+        header_text, sep, body = message.as_string().partition("\n\n")
+    return body.splitlines(True)
+
+def messages_too_dissimilar(hash_key, sizes, opts):
+    diff_threshold = opts.diff_threshold
+    size_threshold = opts.size_threshold
+
+    largest_size, largest_file, largest_message = sizes[0]
+    largest_lines = get_lines_from_message_body(largest_message)
+
+    for size, mail_file, message in sizes[1:]:
+        size_difference = largest_size - size
+        lines = get_lines_from_message_body(message)
+
+        if size_threshold >= 0 and size_difference > size_threshold:
+            msg = "For hash key %s, sizes differ by %d > %d bytes:\n" \
+                  "  %d %s\n  %d %s" % \
+                  (hash_key, size_difference, size_threshold,
+                   size, mail_file,
+                   largest_size, largest_file)
+            show_progress(msg)
+            if opts.show_diffs:
+                show_friendly_diff(lines, largest_lines, mail_file, largest_file)
+            return 'size'
+
+        text_difference = get_text_difference(lines, largest_lines)
+        if diff_threshold >= 0 and len(text_difference) > diff_threshold:
+            msg = "diff between duplicate messages with hash key %s " \
+                  "was %d > %d bytes\n" % \
+                  (hash_key,
+                   len(text_difference), diff_threshold)
+            show_progress(msg)
+            show_friendly_diff(lines, largest_lines, mail_file, largest_file)
+            return 'diff'
+        elif len(text_difference) == 0:
+            if opts.show_diffs:
+                show_progress("diff produced no differences")
+        else:
+            # Difference is inside threshold
+            if opts.show_diffs:
+                show_friendly_diff(lines, largest_lines, mail_file, largest_file)
+
+    return False
+
+def get_text_difference(lines, largest_lines):
+    # We don't want the size of this diff to depend on the length of
+    # the filenames or timestamps.
+    diff = unified_diff(lines, largest_lines,
+                        fromfile     = 'a', tofile     = 'b',
+                        fromfiledate = '',  tofiledate = '',
+                        n = 0, lineterm = "\n")
+    difftext = "".join(diff)
+    # print "".join(largest_lines[:20])
+    # print "------\n"
+    # print "".join(lines[:20])
+    return difftext
+
+def show_friendly_diff(from_lines, to_lines, from_file, to_file):
+    friendly_diff = unified_diff(from_lines, to_lines,
+                                 fromfile = 'body of ' + from_file,
+                                 tofile   = 'body of ' + to_file,
+                                 fromfiledate = os.path.getmtime(from_file),
+                                 tofiledate = os.path.getmtime(to_file),
+                                 n = 0, lineterm = "\n")
+    show_progress("".join(friendly_diff))
+
+def show_progress(msg):
+    sys.stderr.write(msg + "\n")
+
+def fatal(msg):
+    show_progress(msg)
+    sys.exit(1)
+
+def duplicates_run(opts, maildir_paths):
+    mails_by_hash = { }
+    mail_count = 0
+
+    for maildir_path in maildir_paths:
+        maildir = Maildir(maildir_path, factory = None)
+        mail_count += collate_folder_by_hash(mails_by_hash, maildir, opts.message_id)
+
+    duplicates, sizes_too_dissimilar, diff_too_big, removed, sets = \
+        find_duplicates(mails_by_hash, opts)
+    report_results(opts, duplicates, sizes_too_dissimilar, diff_too_big,
+                   removed, sets, mail_count)
+
+def report_results(opts, duplicates, sizes_too_dissimilar, diff_too_big,
+                   removed, sets, mail_count):
+    total = " in %d set%s from a total of %s mails." % \
+        (sets, '' if sets == 1 else 's', mail_count)
+    if removed > 0:
+        results = 'Removed %d of %s duplicates found' % (removed, duplicates)
+        if opts.dry_run:
+            results = 'Would have ' + results
+    else:
+        results = 'Found %s duplicates' % duplicates
+
+    show_progress("\n" + results + total)
+
+    if sizes_too_dissimilar > 0:
+        show_progress("%d potential duplicates were rejected as being "
+                      "too dissimilar in size." % sizes_too_dissimilar)
+    if diff_too_big > 0:
+        show_progress("%d potential duplicates were rejected as being "
+                      "too dissimilar in contents." % diff_too_big)
