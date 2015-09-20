@@ -18,10 +18,15 @@
 
 import unittest
 
-from maildir_deduplicate import main
+from click.testing import CliRunner
+
+from maildir_deduplicate.cli import cli
 
 
-class TestMaildirDeduplicate(unittest.TestCase):
+class TestCLI(unittest.TestCase):
 
     def test_help(self):
-        main()
+        runner = CliRunner()
+        result = runner.invoke(cli, ['--help'])
+        assert result.exit_code == 0
+        assert '--help' in result.output
