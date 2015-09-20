@@ -30,7 +30,7 @@ import click
 from . import (
     __version__, STRATEGIES, MATCHING, NOT_MATCHING,
     DEFAULT_SIZE_DIFFERENCE_THRESHOLD, DEFAULT_DIFF_THRESHOLD,
-    duplicates_run, compute_hash_key,
+    Deduplicate
 )
 
 
@@ -100,7 +100,7 @@ def validate_maildirs(ctx, param, value):
 @click.argument('maildirs', type=click.Path(exists=True), nargs=-1,
                 callback=validate_maildirs)
 @click.pass_context
-def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, use_message_id,
+def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
                 size_threshold, diff_threshold, maildirs):
     """ Deduplicate mails from a set of maildir folders.
 
@@ -129,7 +129,13 @@ def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, use_message_id,
         raise click.BadParameter(
             '--regexp parameter not allowed in {} strategy.'.format(strategy))
 
-    duplicates_run(opts, maildirs)
+    dedup = Deduplicate(
+        strategy, regexp, dry_run, show_diffs, message_id,
+        size_threshold, diff_threshold)
+    for maildir in maildirs:
+        dedup.add_maildir(maildir)
+    dedup.run()
+    dedup.report()
 
 
 @cli.command(short_help='Hash a single mail.')
@@ -139,7 +145,7 @@ def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, use_message_id,
               'header with selected headers removed.')
 @click.argument('message', type=click.File('rb'))
 @click.pass_context
-def hash(ctx, use_message_id, message):
+def hash(ctx, message_id, message):
     """ Take a single mail message and show its canonicalised form and hash.
 
     This is essentially provided for debugging why two messages do not have the
@@ -150,6 +156,7 @@ def hash(ctx, use_message_id, message):
         cat mail.txt | mdedup hash -
     """
     message = email.message_from_file(message)
-    mail_hash, header_text = compute_hash_key(None, message, use_message_id)
+    mail_hash, header_text = Deduplicate.compute_hash(
+        None, message, message_id)
     click.echo(header_text)
     click.echo('Hash: {}'.format(mail_hash))
