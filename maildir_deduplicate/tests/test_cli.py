@@ -25,8 +25,20 @@ from maildir_deduplicate.cli import cli
 
 class TestCLI(unittest.TestCase):
 
-    def test_help(self):
-        runner = CliRunner()
-        result = runner.invoke(cli, ['--help'])
-        assert result.exit_code == 0
-        assert '--help' in result.output
+    def setUp(self):
+        self.runner = CliRunner()
+
+    def test_main_help(self):
+        result = self.runner.invoke(cli, ['--help'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn('--help', result.output)
+
+    def test_deduplicate_help(self):
+        result = self.runner.invoke(cli, ['deduplicate', '--help'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn('--help', result.output)
+
+    def test_hash_help(self):
+        result = self.runner.invoke(cli, ['hash', '--help'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertIn('--help', result.output)
