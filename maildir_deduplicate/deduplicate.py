@@ -64,8 +64,7 @@ class Deduplicate(object):
         """ Load up a maildir add compute hash for each mail their contain. """
         maildir = Maildir(maildir_path, factory=None)
         # Collate folders by hash.
-        path = re.sub(os.getenv('HOME'), '~', maildir._path)
-        print("Processing {} mails in {}".format(len(maildir), path))
+        print("Processing {} mails in {}".format(len(maildir), maildir._path))
         for mail_id, message in maildir.iteritems():
             mail_file = os.path.join(maildir._path, maildir._lookup(mail_id))
             try:
