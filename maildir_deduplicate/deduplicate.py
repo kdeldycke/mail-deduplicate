@@ -62,7 +62,7 @@ class Deduplicate(object):
 
     def add_maildir(self, maildir_path):
         """ Load up a maildir add compute hash for each mail their contain. """
-        maildir = Maildir(maildir_path, factory=None)
+        maildir = Maildir(maildir_path, create=False)
         # Collate folders by hash.
         print("Processing {} mails in {}".format(len(maildir), maildir._path))
         for mail_id, message in maildir.iteritems():
