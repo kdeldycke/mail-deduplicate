@@ -42,7 +42,12 @@ class TestDeduplicateCLI(CLITestCase):
     def test_deduplicate_help(self):
         result = self.runner.invoke(cli, ['deduplicate', '--help'])
         self.assertEqual(result.exit_code, 0)
-        self.assertIn('--help', result.output)
+        self.assertIn("--help", result.output)
+
+    def test_invalid_maildir(self):
+        result = self.runner.invoke(cli, ['deduplicate', '.'])
+        self.assertEqual(result.exit_code, 2)
+        self.assertIn("is not a maildir", result.output)
 
 
 class TestHashCLI(CLITestCase):

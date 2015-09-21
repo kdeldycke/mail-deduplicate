@@ -63,12 +63,10 @@ def validate_regexp(ctx, param, value):
 def validate_maildirs(ctx, param, value):
     """ Check that folders are maildirs. """
     for path in value:
-        if not os.path.isdir(path):
-            raise click.BadParameter('{} is not a directory.'.format(path))
         for subdir in ('cur', 'new', 'tmp'):
             if not os.path.isdir(os.path.join(path, subdir)):
                 raise click.BadParameter(
-                    '{} is not a maildir (missing {} sub-directory).'.format(
+                    '{} is not a maildir (missing {!r} sub-directory).'.format(
                         path, subdir))
     return value
 
@@ -97,7 +95,8 @@ def validate_maildirs(ctx, param, value):
               default=DEFAULT_DIFF_THRESHOLD,
               help='Specify maximum allowed difference between size of '
               'duplicates. Set to -1 for no threshold.')
-@click.argument('maildirs', type=click.Path(exists=True), nargs=-1,
+@click.argument('maildirs', type=click.Path(exists=True, file_okay=False,
+                                            resolve_path=True), nargs=-1,
                 callback=validate_maildirs)
 @click.pass_context
 def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
