@@ -34,7 +34,7 @@ class TestCLI(CLITestCase):
     def test_main_help(self):
         result = self.runner.invoke(cli, ['--help'])
         self.assertEqual(result.exit_code, 0)
-        self.assertIn('--help', result.output)
+        self.assertIn("--help", result.output)
 
 
 class TestDeduplicateCLI(CLITestCase):
@@ -55,4 +55,4 @@ class TestHashCLI(CLITestCase):
     def test_hash_help(self):
         result = self.runner.invoke(cli, ['hash', '--help'])
         self.assertEqual(result.exit_code, 0)
-        self.assertIn('--help', result.output)
+        self.assertIn("--help", result.output)
