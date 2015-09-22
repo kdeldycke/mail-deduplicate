@@ -160,4 +160,5 @@ def hash(ctx, message_id, message):
     mail_hash, header_text = Deduplicate.compute_hash(
         None, message, message_id)
     click.echo(header_text)
+    click.echo('_______________________________________')
     click.echo('Hash: {}'.format(mail_hash))

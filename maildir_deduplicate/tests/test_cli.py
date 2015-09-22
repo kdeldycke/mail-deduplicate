@@ -17,6 +17,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import unittest
+import textwrap
 
 from click.testing import CliRunner
 
@@ -68,3 +69,24 @@ class TestHashCLI(CLITestCase):
         result = self.runner.invoke(cli, ['hash', '--help'])
         self.assertEqual(result.exit_code, 0)
         self.assertIn("--help", result.output)
+
+    def test_stdin_hashing(self):
+        message = textwrap.dedent(u"""\
+            From: foo@bar.com
+            To: iTrue@dslk.com
+            Subject: Test
+            Mime-Version: 1.0
+            Content-Type: text/plain; charset="utf-8"
+            Content-Transfer-Encoding: 8bit
+            Да, они летят.
+            """).encode('utf-8')
+
+        with self.runner.isolated_filesystem():
+            with open('mail.txt', 'w') as f:
+                f.write(message)
+
+            result = self.runner.invoke(cli, ['hash', 'mail.txt'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertIn(
+                "Hash: 39e40845b3548dc4bb6d0b8d7c7018eef8497363a62c195c8f49236a",
+                result.output)
