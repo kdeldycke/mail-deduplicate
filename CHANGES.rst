@@ -2,8 +2,8 @@ ChangeLog
 =========
 
 
-1.0.0.dev0 (unreleased)
------------------------
+1.0.0 (2015-10-03)
+------------------
 
 * Fix package version parsing.
 * Add installation instructions. Closes #21.
