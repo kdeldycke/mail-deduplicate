@@ -250,6 +250,8 @@ Headers:
             if mail_file in doomed:
                 prefix = "removed"
                 if not self.dry_run:
+                    # Why not use maildir's .remove
+                    # https://github.com/python/cpython/blob/origin/2.7/Lib/mailbox.py#L329-L331
                     os.unlink(mail_file)
                 removed += 1
             else:
