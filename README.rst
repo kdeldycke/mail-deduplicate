@@ -23,8 +23,8 @@ Development: |build| |coverage| |quality|
 .. |build| image:: https://img.shields.io/travis/kdeldycke/maildir-deduplicate/develop.svg?style=flat
     :target: https://travis-ci.org/kdeldycke/maildir-deduplicate
     :alt: Unit-tests status
-.. |coverage| image:: https://coveralls.io/repos/kdeldycke/maildir-deduplicate/badge.svg?branch=develop&service=github
-    :target: https://coveralls.io/r/kdeldycke/maildir-deduplicate?branch=develop
+.. |coverage| image:: https://codecov.io/github/kdeldycke/maildir-deduplicate/coverage.svg?branch=develop
+    :target: https://codecov.io/github/kdeldycke/maildir-deduplicate?branch=develop
     :alt: Coverage Status
 .. |quality| image:: https://img.shields.io/scrutinizer/g/kdeldycke/maildir-deduplicate.svg?style=flat
     :target: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/?branch=develop

@@ -8,11 +8,11 @@ python:
 
 install:
   - pip install -e .
-  - pip install coveralls
+  - pip install codecov
 
 script:
   - coverage run setup.py test
   - coverage report -m
 
 after_script:
-  coveralls --verbose
+  codecov
