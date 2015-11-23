@@ -20,7 +20,7 @@
 """ Expose package-wide elements. """
 
 
-__version__ = '1.0.1.dev0'
+__version__ = '1.0.1'
 
 
 # List of mail headers to use when computing the hash of a mail.
