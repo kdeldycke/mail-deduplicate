@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-1.0.2 (unreleased)
+1.0.2 (2015-12-22)
 ------------------
 
 * Fix ``AttributeError`` on message instance. Closes #28.
