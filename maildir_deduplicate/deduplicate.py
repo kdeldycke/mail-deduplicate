@@ -406,7 +406,7 @@ Headers:
         if self.removed > 0:
             results = "Removed {} of {} duplicates found".format(
                 self.removed, self.duplicates)
-            if opts.dry_run:
+            if self.dry_run:
                 results = "Would have {}".format(results)
         else:
             results = "Found {} duplicates".format(self.duplicates)
