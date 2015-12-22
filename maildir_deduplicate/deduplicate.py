@@ -26,8 +26,13 @@ import re
 import hashlib
 import email
 import time
+import sys
 from mailbox import Maildir
 from difflib import unified_diff
+
+# Assume latin-1 encoding by default
+reload(sys)
+sys.setdefaultencoding('latin-1')
 
 from . import (
     HEADERS, SMALLER, OLDER, NEWER, MATCHING, NOT_MATCHING,
