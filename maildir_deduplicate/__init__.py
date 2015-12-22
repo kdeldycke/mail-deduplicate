@@ -45,7 +45,6 @@ HEADERS = [
     # 'Reply-To',
 
     'Subject',
-    'Message-ID',
     'MIME-Version',
     'Content-Type',
     'Content-Disposition',
