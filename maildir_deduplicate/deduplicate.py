@@ -26,8 +26,13 @@ import re
 import hashlib
 import email
 import time
+import sys
 from mailbox import Maildir
 from difflib import unified_diff
+
+# Assume latin-1 encoding by default
+reload(sys)
+sys.setdefaultencoding('latin-1')
 
 from . import (
     HEADERS, SMALLER, OLDER, NEWER, MATCHING, NOT_MATCHING,
@@ -62,7 +67,7 @@ class Deduplicate(object):
 
     def add_maildir(self, maildir_path):
         """ Load up a maildir add compute hash for each mail their contain. """
-        maildir = Maildir(maildir_path, create=False)
+        maildir = Maildir(maildir_path, factory=None, create=False)
         # Collate folders by hash.
         print("Processing {} mails in {}".format(len(maildir), maildir._path))
         for mail_id, message in maildir.iteritems():
@@ -346,7 +351,7 @@ Headers:
                 print(
                     "For hash key {}, sizes differ by {} > {} bytes:\n"
                     "  {} {}\n  {} {}".format(
-                        hash_key, size_difference, size_threshold,
+                        hash_key, size_difference, self.size_threshold,
                         size, mail_file,
                         largest_size, largest_file))
                 if self.show_diffs:
@@ -397,11 +402,11 @@ Headers:
 
     def report(self):
         total = " in {} set{} from a total of {} mails.".format(
-            self.sets, 's' if self.sets > 1 else '', mail_count)
+            self.sets, 's' if self.sets > 1 else '', self.mail_count)
         if self.removed > 0:
             results = "Removed {} of {} duplicates found".format(
                 self.removed, self.duplicates)
-            if opts.dry_run:
+            if self.dry_run:
                 results = "Would have {}".format(results)
         else:
             results = "Found {} duplicates".format(self.duplicates)
