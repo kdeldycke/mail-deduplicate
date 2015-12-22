@@ -5,7 +5,10 @@ ChangeLog
 1.0.2 (unreleased)
 ------------------
 
-* No changes yet.
+* Fix ``AttributeError`` on message instance. Closes #28.
+* Various fixes of references to internal variables introduced
+  by a switch to more Pythonic classes in 1.0.0.
+* Remove ``Message-ID`` from the list of default canonical headers.
 
 
 1.0.1 (2015-11-23)
