@@ -351,7 +351,7 @@ Headers:
                 print(
                     "For hash key {}, sizes differ by {} > {} bytes:\n"
                     "  {} {}\n  {} {}".format(
-                        hash_key, size_difference, size_threshold,
+                        hash_key, size_difference, self.size_threshold,
                         size, mail_file,
                         largest_size, largest_file))
                 if self.show_diffs:
