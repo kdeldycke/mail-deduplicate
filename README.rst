@@ -297,6 +297,7 @@ Contributors
 * `reedog117 <https://github.com/reedog117>`_
 * `Tristan Henderson <https://github.com/tnhh>`_
 * `Matija Nalis <https://github.com/mnalis>`_
+* `Painted-Fox <https://github.com/Painted-Fox>`_
 
 
 History
