@@ -402,7 +402,7 @@ Headers:
 
     def report(self):
         total = " in {} set{} from a total of {} mails.".format(
-            self.sets, 's' if self.sets > 1 else '', mail_count)
+            self.sets, 's' if self.sets > 1 else '', self.mail_count)
         if self.removed > 0:
             results = "Removed {} of {} duplicates found".format(
                 self.removed, self.duplicates)
