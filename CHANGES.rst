@@ -5,7 +5,7 @@ ChangeLog
 1.0.3 (unreleased)
 ------------------
 
-* No changes yet.
+* Add default `ìsort` configuration.
 
 
 1.0.2 (2015-12-22)

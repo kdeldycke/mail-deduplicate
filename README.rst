@@ -186,6 +186,13 @@ Run unit-tests:
 
     $ python ./setup.py nosetests
 
+Run `isort <https://pep8.readthedocs.org>`_ utility to sort Python imports:
+
+.. code-block:: bash
+
+    $ pip install isort
+    $ isort --apply
+
 Run `PEP8 <https://pep8.readthedocs.org>`_ and `Pylint
 <http://docs.pylint.org>`_ code style checks:
 
