@@ -30,8 +30,12 @@ import sys
 from mailbox import Maildir
 from difflib import unified_diff
 
-# Assume latin-1 encoding by default
+try:
+    from importlib import reload
+except ImportError:  # pragma: no cover
+    pass
 reload(sys)
+# Assume latin-1 encoding by default.
 sys.setdefaultencoding('latin-1')
 
 from . import (
