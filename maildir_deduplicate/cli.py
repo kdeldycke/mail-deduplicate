@@ -17,20 +17,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-from __future__ import (
-    division, print_function, absolute_import
-)
+from __future__ import absolute_import, division, print_function
 
 import email
-import re
 import os
+import re
 
 import click
 
 from . import (
-    __version__, STRATEGIES, MATCHING, NOT_MATCHING,
-    DEFAULT_SIZE_DIFFERENCE_THRESHOLD, DEFAULT_DIFF_THRESHOLD,
-    Deduplicate
+    DEFAULT_DIFF_THRESHOLD,
+    DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
+    MATCHING,
+    NOT_MATCHING,
+    STRATEGIES,
+    Deduplicate,
+    __version__
 )
 
 

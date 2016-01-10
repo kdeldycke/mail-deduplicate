@@ -18,20 +18,28 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from __future__ import (
-    division, print_function, absolute_import, unicode_literals
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals
 )
 
+import email
+import hashlib
 import os
 import re
-import hashlib
-import email
-import time
 import sys
-from mailbox import Maildir
+import time
 from difflib import unified_diff
+from mailbox import Maildir
 
 from . import (
-    HEADERS, SMALLER, OLDER, NEWER, MATCHING, NOT_MATCHING,
+    HEADERS,
+    MATCHING,
+    NEWER,
+    NOT_MATCHING,
+    OLDER,
+    SMALLER,
     InsufficientHeadersError
 )
 
