@@ -81,7 +81,7 @@ class TestHashCLI(CLITestCase):
             """).encode('utf-8')
 
         with self.runner.isolated_filesystem():
-            with open('mail.txt', 'w') as f:
+            with open('mail.txt', 'wb') as f:
                 f.write(message)
 
             result = self.runner.invoke(cli, ['hash', 'mail.txt'])
