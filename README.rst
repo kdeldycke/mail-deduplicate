@@ -217,7 +217,7 @@ Here is a bunch of rules we're trying to follow regarding stability:
   version but are allowed to drop compatibility with the ``0.(n-1).*`` series
   and below.
 
-* Major releases (``n.*.*`` → ``(n+1).0.0`` upgrades) are not planned yet, 
+* Major releases (``n.*.*`` → ``(n+1).0.0`` upgrades) are not planned yet,
   unless we introduce huge changes to the project.
 
 
