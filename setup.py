@@ -67,6 +67,7 @@ setup(
     test_suite=MODULE_NAME + '.tests',
 
     classifiers=[
+        # See: https://pypi.python.org/pypi?:action=list_classifiers
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Developers',
