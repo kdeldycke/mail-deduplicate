@@ -30,14 +30,6 @@ import sys
 from mailbox import Maildir
 from difflib import unified_diff
 
-try:
-    from importlib import reload
-except ImportError:  # pragma: no cover
-    pass
-reload(sys)
-# Assume latin-1 encoding by default.
-sys.setdefaultencoding('latin-1')
-
 from . import (
     HEADERS, SMALLER, OLDER, NEWER, MATCHING, NOT_MATCHING,
     InsufficientHeadersError
