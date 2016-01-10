@@ -90,4 +90,4 @@ class InsufficientHeadersError(Exception):
 
 # Expose important classes and methods to the root of the module. These are not
 # lexicographically sorted to avoid cyclic imports.
-from deduplicate import Deduplicate
+from maildir_deduplicate.deduplicate import Deduplicate
