@@ -5,6 +5,7 @@ ChangeLog
 1.0.3 (unreleased)
 ------------------
 
+* Add Python 3.4 and 3.5 support. Closes #30.
 * Add default ``isort`` configuration.
 * Remove hackish default encoding forcing in main code.
 
