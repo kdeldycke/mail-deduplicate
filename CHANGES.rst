@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-1.0.3 (unreleased)
+1.1.0 (unreleased)
 ------------------
 
 * Add Python 3.4 and 3.5 support. Closes #30.
