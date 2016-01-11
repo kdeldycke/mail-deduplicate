@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2010-2015 Kevin Deldycke <kevin@deldycke.com>
+# Copyright (C) 2010-2016 Kevin Deldycke <kevin@deldycke.com>
 #
 # This program is Free Software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
