@@ -101,8 +101,9 @@ class Deduplicate(object):
             print("WARNING: no Message-ID in {}: {}".format(
                 mail_file, header_text))
         canonical_headers_text = cls.canonical_headers(mail_file, message)
-        return hashlib.sha224(
-            canonical_headers_text).hexdigest(), canonical_headers_text
+        return (
+            hashlib.sha224(canonical_headers_text.encode('utf-8')).hexdigest(),
+            canonical_headers_text)
 
     @staticmethod
     def header_text(mail):

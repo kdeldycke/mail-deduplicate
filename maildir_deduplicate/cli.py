@@ -146,7 +146,7 @@ def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
               help='Use Message-ID header as hash key. This is not '
               'recommended: the default is to compute a digest of the whole '
               'header with selected headers removed.')
-@click.argument('message', type=click.File('rb'))
+@click.argument('message', type=click.File('r'))
 @click.pass_context
 def hash(ctx, message_id, message):
     """ Take a single mail message and show its canonicalised form and hash.
