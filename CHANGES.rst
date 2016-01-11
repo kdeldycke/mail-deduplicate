@@ -6,6 +6,7 @@ ChangeLog
 ------------------
 
 * Add default ``isort`` configuration.
+* Remove hackish default encoding forcing in main code.
 
 
 1.0.2 (2015-12-22)
