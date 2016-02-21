@@ -19,8 +19,12 @@
 
 """ Expose package-wide elements. """
 
+import logging
 
 __version__ = '1.1.1'
+
+
+logger = logging.getLogger(__name__)
 
 
 # List of mail headers to use when computing the hash of a mail.

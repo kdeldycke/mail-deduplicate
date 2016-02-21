@@ -39,7 +39,8 @@ from . import (
     NOT_MATCHING,
     OLDER,
     SMALLER,
-    InsufficientHeadersError
+    InsufficientHeadersError,
+    logger
 )
 
 
@@ -72,19 +73,21 @@ class Deduplicate(object):
         """ Load up a maildir add compute hash for each mail their contain. """
         maildir = Maildir(maildir_path, factory=None, create=False)
         # Collate folders by hash.
-        print("Processing {} mails in {}".format(len(maildir), maildir._path))
+        logger.info(
+            "Processing {} mails in {}".format(len(maildir), maildir._path))
         for mail_id, message in maildir.iteritems():
             mail_file = os.path.join(maildir._path, maildir._lookup(mail_id))
             try:
                 mail_hash, header_text = self.compute_hash(
                     mail_file, message, self.use_message_id)
             except InsufficientHeadersError as e:
-                print("WARNING: ignoring problematic {}: {}".format(
-                    mail_file, e.args[0]))
+                logger.warning(
+                    "Ignoring problematic {}: {}".format(mail_file, e.args[0]))
             else:
                 if self.mail_count > 0 and self.mail_count % 100 == 0:
-                    print(".")
-                # print("Hash is {} for mail {!r}.".format(mail_hash, mail_id))
+                    logger.info(".")
+                logger.debug(
+                    "Hash is {} for mail {!r}.".format(mail_hash, mail_id))
                 if mail_hash not in self.mails:
                     self.mails[mail_hash] = []
 
@@ -98,8 +101,8 @@ class Deduplicate(object):
             if message_id:
                 return message_id.strip(), ''
             header_text = cls.header_text(message)
-            print("WARNING: no Message-ID in {}: {}".format(
-                mail_file, header_text))
+            logger.warning(
+                "No Message-ID in {}: {}".format(mail_file, header_text))
         canonical_headers_text = cls.canonical_headers(mail_file, message)
         return (
             hashlib.sha224(canonical_headers_text.encode('utf-8')).hexdigest(),
@@ -210,7 +213,7 @@ Headers:
 
             subject = messages[0][1].get('Subject', '')
             subject, count = re.subn('\s+', ' ', subject)
-            print("Subject: {}".format(subject))
+            logger.info("Subject: {}".format(subject))
 
             if self.strategy == OLDER:
                 sorted_messages_ctime = self.time_sort(messages, False)
@@ -265,7 +268,7 @@ Headers:
                 removed += 1
             else:
                 prefix = "left   "
-            print("{} {} {} {}".format(prefix, i, size, mail_file))
+            logger.info("{} {} {} {}".format(prefix, i, size, mail_file))
 
         return removed
 
@@ -287,7 +290,7 @@ Headers:
         # Safety valve.
         if len(doomed) == len(duplicate_set):
             if self.strategy in [MATCHING, NOT_MATCHING]:
-                print(
+                logger.info(
                     "/{}/ matched whole set; not removing any duplicates."
                     "".format(self.regexp.pattern))
             else:
@@ -352,7 +355,7 @@ Headers:
 
             if (self.size_threshold >= 0) and (
                     size_difference > self.size_threshold):
-                print(
+                logger.info(
                     "For hash key {}, sizes differ by {} > {} bytes:\n"
                     "  {} {}\n  {} {}".format(
                         hash_key, size_difference, self.size_threshold,
@@ -366,7 +369,7 @@ Headers:
             text_difference = self.text_diff(lines, largest_lines)
             if self.diff_threshold >= 0 and len(
                     text_difference) > self.diff_threshold:
-                print(
+                logger.info(
                     "Diff between duplicate messages with hash key {} was "
                     "{} > {} bytes.".format(
                         hash_key, len(text_difference), self.diff_threshold))
@@ -375,7 +378,7 @@ Headers:
 
             elif len(text_difference) == 0:
                 if self.show_diffs:
-                    print("Diff produced no differences")
+                    logger.info("Diff produced no differences")
 
             else:
                 # Difference is inside threshold
@@ -396,7 +399,7 @@ Headers:
 
     @staticmethod
     def print_diff(from_lines, to_lines, from_file, to_file):
-        print(''.join(unified_diff(
+        logger.info(''.join(unified_diff(
             from_lines, to_lines,
             fromfile='Body of {}'.format(from_file),
             tofile='Body of {}'.format(to_file),
@@ -415,14 +418,14 @@ Headers:
         else:
             results = "Found {} duplicates".format(self.duplicates)
 
-        print("{}\n{}".format(results, total))
+        logger.info("{}\n{}".format(results, total))
 
         if self.sizes_too_dissimilar > 0:
-            print(
+            logger.info(
                 "{} potential duplicates were rejected as being too dissimilar "
                 "in size.".format(self.sizes_too_dissimilar))
 
         if self.diff_too_big > 0:
-            print(
+            logger.info(
                 "{} potential duplicates were rejected as being too dissimilar "
                 "in contents.".format(self.diff_too_big))

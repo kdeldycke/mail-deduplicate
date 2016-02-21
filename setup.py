@@ -58,6 +58,7 @@ setup(
 
     install_requires=[
         'click >= 5.0',
+        'click_log',
     ],
 
     packages=find_packages(),

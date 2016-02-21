@@ -24,6 +24,7 @@ import os
 import re
 
 import click
+import click_log
 
 from . import (
     DEFAULT_DIFF_THRESHOLD,
@@ -32,24 +33,24 @@ from . import (
     NOT_MATCHING,
     STRATEGIES,
     Deduplicate,
-    __version__
+    __version__,
+    logger
 )
 
 
 @click.group(invoke_without_command=True)
+@click_log.init(logger)
+@click_log.simple_verbosity_option(default='INFO', metavar='LEVEL')
 @click.version_option(__version__)
-@click.option('-v', '--verbose', is_flag=True, default=False,
-              help='Print much more debug statements.')
 @click.pass_context
-def cli(ctx, verbose):
+def cli(ctx):
     """ CLI for maildirs content analysis and deletion. """
     # Print help screen and exit if no sub-commands provided.
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
         ctx.exit()
     # Load up global options to the context.
-    ctx.obj = {
-        'verbose': verbose}
+    ctx.obj = {}
 
 
 def validate_regexp(ctx, param, value):
@@ -167,6 +168,6 @@ def hash(ctx, message_id, message):
     message = email.message_from_file(message)
     mail_hash, header_text = Deduplicate.compute_hash(
         None, message, message_id)
-    click.echo(header_text)
-    click.echo('_______________________________________')
-    click.echo('Hash: {}'.format(mail_hash))
+    logger.info(header_text)
+    logger.info('_______________________________________')
+    logger.info('Hash: {}'.format(mail_hash))

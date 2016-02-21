@@ -5,7 +5,7 @@ ChangeLog
 1.1.1 (unreleased)
 ------------------
 
-* No changes yet.
+* Use logger to output messages to the user.
 
 
 1.1.0 (2016-01-10)
