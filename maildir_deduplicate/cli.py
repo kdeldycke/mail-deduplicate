@@ -74,34 +74,39 @@ def validate_maildirs(ctx, param, value):
 
 
 @cli.command(short_help='Deduplicate maildirs content.')
-@click.option('--strategy', type=click.Choice(STRATEGIES),
-              help='Removal strategy to apply on found duplicates.')
-@click.option('-r', '--regexp', callback=validate_regexp, metavar='REGEXP',
-              help='Regular expression for file path. Required in matching and '
-              'not-matching strategies.')
-@click.option('-n', '--dry-run', is_flag=True, default=False,
-              help='Do not actually remove anything; just show what would be '
-              'removed.')
-@click.option('-s', '--show-diffs', count=True,
-              help='Show diffs between duplicates even if they are within the '
-              'thresholds.')
-@click.option('-i', '--message-id', is_flag=True, default=False,
-              help='Use Message-ID header as hash key. This is not '
-              'recommended: the default is to compute a digest of the whole '
-              'header with selected headers removed.')
-@click.option('-S', '--size-threshold', type=int, metavar='BYTES',
-              default=DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
-              help='Specify maximum allowed difference between size of '
-              'duplicates. Set to -1 for no threshold. Defaults to {}.'.format(
-                DEFAULT_SIZE_DIFFERENCE_THRESHOLD))
-@click.option('-D', '--diff-threshold', type=int, metavar='BYTES',
-              default=DEFAULT_DIFF_THRESHOLD,
-              help='Specify maximum allowed difference between size of '
-              'duplicates. Set to -1 for no threshold. Defaults to {}.'.format(
-                DEFAULT_DIFF_THRESHOLD))
-@click.argument('maildirs', type=click.Path(exists=True, file_okay=False,
-                                            resolve_path=True), nargs=-1,
-                callback=validate_maildirs)
+@click.option(
+    '--strategy', type=click.Choice(STRATEGIES),
+    help='Removal strategy to apply on found duplicates.')
+@click.option(
+    '-r', '--regexp', callback=validate_regexp, metavar='REGEXP',
+    help='Regular expression for file path. Required in matching and '
+    'not-matching strategies.')
+@click.option(
+    '-n', '--dry-run', is_flag=True, default=False,
+    help='Do not actually remove anything; just show what would be removed.')
+@click.option(
+    '-s', '--show-diffs', count=True,
+    help='Show diffs between duplicates even if they are within the '
+    'thresholds.')
+@click.option(
+    '-i', '--message-id', is_flag=True, default=False,
+    help='Use Message-ID header as hash key. This is not recommended: the '
+    'default is to compute a digest of the whole header with selected '
+    'headers removed.')
+@click.option(
+    '-S', '--size-threshold', type=int, metavar='BYTES',
+    default=DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
+    help='Specify maximum allowed difference between size of duplicates. Set '
+    'to -1 for no threshold. Defaults to {}.'.format(
+        DEFAULT_SIZE_DIFFERENCE_THRESHOLD))
+@click.option(
+    '-D', '--diff-threshold', type=int, metavar='BYTES',
+    default=DEFAULT_DIFF_THRESHOLD,
+    help='Specify maximum allowed difference between size of duplicates. Set '
+    'to -1 for no threshold. Defaults to {}.'.format(DEFAULT_DIFF_THRESHOLD))
+@click.argument(
+    'maildirs', nargs=-1, callback=validate_maildirs,
+    type=click.Path(exists=True, file_okay=False, resolve_path=True))
 @click.pass_context
 def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
                 size_threshold, diff_threshold, maildirs):
@@ -142,10 +147,11 @@ def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
 
 
 @cli.command(short_help='Hash a single mail.')
-@click.option('-i', '--message-id', is_flag=True, default=False,
-              help='Use Message-ID header as hash key. This is not '
-              'recommended: the default is to compute a digest of the whole '
-              'header with selected headers removed.')
+@click.option(
+    '-i', '--message-id', is_flag=True, default=False,
+    help='Use Message-ID header as hash key. This is not recommended: the '
+    'default is to compute a digest of the whole header with selected headers '
+    'removed.')
 @click.argument('message', type=click.File('r'))
 @click.pass_context
 def hash(ctx, message_id, message):
