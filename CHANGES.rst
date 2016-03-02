@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-1.1.1 (unreleased)
+1.2.0 (unreleased)
 ------------------
 
 * Use logger to output messages to the user.
