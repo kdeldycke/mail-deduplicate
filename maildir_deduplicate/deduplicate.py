@@ -75,7 +75,7 @@ class Deduplicate(object):
         # Collate folders by hash.
         logger.info(
             "Processing {} mails in {}".format(len(maildir), maildir._path))
-        for mail_id, message in maildir.iteritems():
+        for mail_id, message in maildir.items():
             mail_file = os.path.join(maildir._path, maildir._lookup(mail_id))
             try:
                 mail_hash, header_text = self.compute_hash(
@@ -206,7 +206,7 @@ Headers:
 
     def run(self):
         """ Run the deduplication process. """
-        for hash_key, messages in self.mails.iteritems():
+        for hash_key, messages in self.mails.items():
             # Skip unique mails.
             if len(messages) == 1:
                 continue
