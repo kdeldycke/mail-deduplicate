@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-1.2.0 (unreleased)
+1.2.0 (2016-03-29)
 ------------------
 
 * Use logger to output messages to the user.
