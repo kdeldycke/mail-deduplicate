@@ -304,6 +304,7 @@ Contributors
 * `Tristan Henderson <https://github.com/tnhh>`_
 * `Matija Nalis <https://github.com/mnalis>`_
 * `Painted-Fox <https://github.com/Painted-Fox>`_
+* `Juan Diego Tascón <https://github.com/juantascon>`_
 
 
 History
