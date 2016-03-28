@@ -75,7 +75,7 @@ class Deduplicate(object):
         # Collate folders by hash.
         logger.info(
             "Processing {} mails in {}".format(len(maildir), maildir._path))
-        for mail_id, message in maildir.iteritems():
+        for mail_id, message in maildir.items():
             mail_file = os.path.join(maildir._path, maildir._lookup(mail_id))
             try:
                 mail_hash, header_text = self.compute_hash(
@@ -148,6 +148,10 @@ Headers:
     @classmethod
     def canonical_header_value(cls, header, value):
         header = header.lower()
+        # Problematic when reading utf8 emails
+        # this will ensure value is always string
+        if (not type(value) is str):
+            value = value.encode()
         value = re.sub('\s+', ' ', value).strip()
 
         # Trim Subject prefixes automatically added by mailing list software,
@@ -182,6 +186,8 @@ Headers:
             # reasons, so let's only honour the date for now.
             try:
                 parsed = email.utils.parsedate_tz(value)
+                if not parsed:
+                    raise TypeError
             except (TypeError, ValueError):  # if parsedate_tz cannot parse the date
                 return value
             utc_timestamp = email.utils.mktime_tz(parsed)
@@ -206,7 +212,7 @@ Headers:
 
     def run(self):
         """ Run the deduplication process. """
-        for hash_key, messages in self.mails.iteritems():
+        for hash_key, messages in self.mails.items():
             # Skip unique mails.
             if len(messages) == 1:
                 continue
