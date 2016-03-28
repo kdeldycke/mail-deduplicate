@@ -7,6 +7,8 @@ ChangeLog
 
 * Use logger to output messages to the user.
 * Activate tests on Python 3.3, PyPy and PyPy3.
+* Fix date parsing. See #33.
+* Fix decoding of unicode header value. Closes #24 and #32.
 
 
 1.1.0 (2016-01-10)
