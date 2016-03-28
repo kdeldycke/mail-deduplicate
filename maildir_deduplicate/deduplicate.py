@@ -148,6 +148,10 @@ Headers:
     @classmethod
     def canonical_header_value(cls, header, value):
         header = header.lower()
+        # Problematic when reading utf8 emails
+        # this will ensure value is always string
+        if (not type(value) is str):
+            value = value.encode()
         value = re.sub('\s+', ' ', value).strip()
 
         # Trim Subject prefixes automatically added by mailing list software,
