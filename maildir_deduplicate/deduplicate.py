@@ -186,6 +186,8 @@ Headers:
             # reasons, so let's only honour the date for now.
             try:
                 parsed = email.utils.parsedate_tz(value)
+                if not parsed:
+                    raise TypeError
             except (TypeError, ValueError):  # if parsedate_tz cannot parse the date
                 return value
             utc_timestamp = email.utils.mktime_tz(parsed)
