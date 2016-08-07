@@ -319,18 +319,7 @@ Headers:
             ctime = os.path.getctime(mail_file)
             ctimes.append((ctime, mail_file, message))
 
-        def _sort_by_ctime_new_to_old(a, b):
-            return cmp(b[0], a[0])
-
-        def _sort_by_ctime_old_to_new(a, b):
-            return cmp(a[0], b[0])
-
-        # Order from oldest to newest.
-        if old_to_new:
-            ctimes.sort(cmp=_sort_by_ctime_old_to_new)
-        # Order from newest to oldest.
-        else:
-            ctimes.sort(cmp=_sort_by_ctime_new_to_old)
+        ctimes.sort(reverse=old_to_new)
 
         return ctimes
 
@@ -343,10 +332,7 @@ Headers:
             size = len(''.join(body))
             sizes.append((size, mail_file, message))
 
-        def _sort_by_size(a, b):
-            return cmp(b[0], a[0])
-
-        sizes.sort(cmp=_sort_by_size)
+        sizes.sort()
         return sizes
 
     @staticmethod
