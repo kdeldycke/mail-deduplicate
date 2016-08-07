@@ -80,7 +80,7 @@ class Deduplicate(object):
         # Collate folders by hash.
         logger.info(
             "Processing {} mails in {}".format(len(maildir), maildir._path))
-        for mail_id, message in maildir.items():
+        for mail_id, message in maildir.iteritems():
             mail_file = os.path.join(maildir._path, maildir._lookup(mail_id))
             try:
                 mail_hash, header_text = self.compute_hash(
