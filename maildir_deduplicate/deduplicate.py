@@ -31,6 +31,12 @@ import re
 import time
 from difflib import unified_diff
 from mailbox import Maildir
+from progressbar import (
+    Bar,
+    ProgressBar,
+    Percentage,
+)
+
 
 from . import (
     HEADERS,
@@ -80,7 +86,10 @@ class Deduplicate(object):
         # Collate folders by hash.
         logger.info(
             "Processing {} mails in {}".format(len(maildir), maildir._path))
-        for mail_id, message in maildir.iteritems():
+        bar = ProgressBar(widgets=[Percentage(), Bar()], max_value=len(maildir),
+                          redirect_stderr=True, redirect_stdout=True)
+
+        for mail_id, message in bar(maildir.iteritems()):
             mail_file = os.path.join(maildir._path, maildir._lookup(mail_id))
             try:
                 mail_hash, header_text = self.compute_hash(
@@ -89,8 +98,6 @@ class Deduplicate(object):
                 logger.warning(
                     "Ignoring problematic {}: {}".format(mail_file, e.args[0]))
             else:
-                if self.mail_count > 0 and self.mail_count % 100 == 0:
-                    logger.info(".")
                 logger.debug(
                     "Hash is {} for mail {!r}.".format(mail_hash, mail_id))
                 if mail_hash not in self.mails:

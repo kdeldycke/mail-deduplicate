@@ -59,6 +59,7 @@ setup(
     install_requires=[
         'click >= 5.0',
         'click_log',
+        'progressbar2',
     ],
 
     packages=find_packages(),
