@@ -339,7 +339,7 @@ Headers:
             size = len(''.join(body))
             sizes.append((size, mail_file, message))
 
-        sizes.sort()
+        sizes.sort(reverse=True)
         return sizes
 
     @staticmethod
