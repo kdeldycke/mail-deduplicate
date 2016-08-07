@@ -45,8 +45,8 @@ from . import (
 
 
 def read_mailfile(mail_file):
-    with open(mail_file) as fh:
-        return email.message_from_file(fh)
+    with open(mail_file, 'rb') as fh:
+        return email.message_from_binary_file(fh)
 
 
 class Deduplicate(object):
