@@ -67,7 +67,7 @@ class TestDeduplicate(unittest.TestCase):
 
     def do_maildir_test_strategies(self, dedup_kwargs, keptfile, mdir=None):
         if mdir is None:
-            mdir = "testdata/maildir_dups"
+            mdir = path.join(path.dirname(__file__), "testdata/maildir_dups")
         dedup = Deduplicate(**dedup_kwargs)
         dedup.add_maildir(mdir)
         dedup.run()
