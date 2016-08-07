@@ -387,7 +387,12 @@ Headers:
                     "Diff between duplicate messages with hash key {} was "
                     "{} > {} bytes.".format(
                         hash_key, len(text_difference), self.diff_threshold))
-                self.print_diff(lines, largest_lines, mail_file, largest_file)
+                if len(largest_lines) > 8192:
+                    logger.info("Not printing diff for this duplicate set, "
+                                "it is too large")
+                else:
+                    self.print_diff(lines, largest_lines, mail_file,
+                                    largest_file)
                 return 'diff'
 
             elif len(text_difference) == 0:
