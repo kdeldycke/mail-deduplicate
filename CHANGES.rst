@@ -5,7 +5,11 @@ ChangeLog
 `1.2.1 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.2.0...develop>`_
 -------------------------------------------------------------------------------------------------
 
-* No changes yet.
+* User-friendly progress bar.
+* Decrease memory usage on large datasets. Closes #19, #8 and #3.
+* Attempt several encodings when parsing message body. Closes #32.
+* Fixed comparison issue in Python 3. Closes #34.
+* Add a set of basic deduplication unittests.
 
 
 `1.2.0 (2016-03-29) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.1.0...1.2.0>`_
