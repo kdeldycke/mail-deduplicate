@@ -31,6 +31,12 @@ import re
 import time
 from difflib import unified_diff
 from mailbox import Maildir
+from progressbar import (
+    Bar,
+    ProgressBar,
+    Percentage,
+)
+
 
 from . import (
     HEADERS,
@@ -44,10 +50,15 @@ from . import (
 )
 
 
+def read_mailfile(mail_file):
+    with open(mail_file, 'rb') as fh:
+        return email.message_from_binary_file(fh)
+
+
 class Deduplicate(object):
 
     def __init__(self, strategy, regexp, dry_run, show_diffs, use_message_id,
-                 size_threshold, diff_threshold):
+                 size_threshold, diff_threshold, progress=True):
         # All mails grouped by hashes.
         self.mails = {}
         # Total count of mails found in all maildirs.
@@ -69,13 +80,23 @@ class Deduplicate(object):
         self.sizes_too_dissimilar = 0
         self.diff_too_big = 0
 
+        self.progress = progress
+
     def add_maildir(self, maildir_path):
         """ Load up a maildir add compute hash for each mail their contain. """
         maildir = Maildir(maildir_path, factory=None, create=False)
         # Collate folders by hash.
         logger.info(
             "Processing {} mails in {}".format(len(maildir), maildir._path))
-        for mail_id, message in maildir.items():
+        if self.progress:
+            bar = ProgressBar(widgets=[Percentage(), Bar()],
+                              max_value=len(maildir), redirect_stderr=True,
+                              redirect_stdout=True)
+        else:
+            def bar(x):
+                return x
+
+        for mail_id, message in bar(maildir.iteritems()):
             mail_file = os.path.join(maildir._path, maildir._lookup(mail_id))
             try:
                 mail_hash, header_text = self.compute_hash(
@@ -84,14 +105,12 @@ class Deduplicate(object):
                 logger.warning(
                     "Ignoring problematic {}: {}".format(mail_file, e.args[0]))
             else:
-                if self.mail_count > 0 and self.mail_count % 100 == 0:
-                    logger.info(".")
                 logger.debug(
                     "Hash is {} for mail {!r}.".format(mail_hash, mail_id))
                 if mail_hash not in self.mails:
                     self.mails[mail_hash] = []
 
-                self.mails[mail_hash].append((mail_file, message))
+                self.mails[mail_hash].append(mail_file)
                 self.mail_count += 1
 
     @classmethod
@@ -211,10 +230,11 @@ Headers:
 
     def run(self):
         """ Run the deduplication process. """
-        for hash_key, messages in self.mails.items():
+        for hash_key, message_files in self.mails.items():
             # Skip unique mails.
-            if len(messages) == 1:
+            if len(message_files) == 1:
                 continue
+            messages = [(mf, read_mailfile(mf)) for mf in message_files]
 
             subject = messages[0][1].get('Subject', '')
             subject, count = re.subn('\s+', ' ', subject)
@@ -312,18 +332,7 @@ Headers:
             ctime = os.path.getctime(mail_file)
             ctimes.append((ctime, mail_file, message))
 
-        def _sort_by_ctime_new_to_old(a, b):
-            return cmp(b[0], a[0])
-
-        def _sort_by_ctime_old_to_new(a, b):
-            return cmp(a[0], b[0])
-
-        # Order from oldest to newest.
-        if old_to_new:
-            ctimes.sort(cmp=_sort_by_ctime_old_to_new)
-        # Order from newest to oldest.
-        else:
-            ctimes.sort(cmp=_sort_by_ctime_new_to_old)
+        ctimes.sort(reverse=old_to_new)
 
         return ctimes
 
@@ -336,10 +345,7 @@ Headers:
             size = len(''.join(body))
             sizes.append((size, mail_file, message))
 
-        def _sort_by_size(a, b):
-            return cmp(b[0], a[0])
-
-        sizes.sort(cmp=_sort_by_size)
+        sizes.sort(reverse=True)
         return sizes
 
     @staticmethod
@@ -348,6 +354,15 @@ Headers:
             body = message.get_payload(None, decode=True)
         else:
             header_text, sep, body = message.as_string().partition("\n\n")
+        if isinstance(body, bytes):
+            for enc in ['ascii', 'utf-8']:
+                try:
+                    body = body.decode(enc)
+                    break
+                except UnicodeDecodeError:
+                    continue
+            else:
+                body = message.get_payload(None, decode=False)
         return body.splitlines(True)
 
     def messages_too_dissimilar(self, hash_key, sizes):
@@ -378,7 +393,12 @@ Headers:
                     "Diff between duplicate messages with hash key {} was "
                     "{} > {} bytes.".format(
                         hash_key, len(text_difference), self.diff_threshold))
-                self.print_diff(lines, largest_lines, mail_file, largest_file)
+                if len(largest_lines) > 8192:
+                    logger.info("Not printing diff for this duplicate set, "
+                                "it is too large")
+                else:
+                    self.print_diff(lines, largest_lines, mail_file,
+                                    largest_file)
                 return 'diff'
 
             elif len(text_difference) == 0:
@@ -408,8 +428,8 @@ Headers:
             from_lines, to_lines,
             fromfile='Body of {}'.format(from_file),
             tofile='Body of {}'.format(to_file),
-            fromfiledate=os.path.getmtime(from_file),
-            tofiledate=os.path.getmtime(to_file),
+            fromfiledate='{:0.2f}'.format(os.path.getmtime(from_file)),
+            tofiledate='{:0.2f}'.format(os.path.getmtime(to_file)),
             n=0, lineterm='\n')))
 
     def report(self):
