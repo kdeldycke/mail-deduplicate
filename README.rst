@@ -305,6 +305,7 @@ Contributors
 * `Matija Nalis <https://github.com/mnalis>`_
 * `Painted-Fox <https://github.com/Painted-Fox>`_
 * `Juan Diego Tascón <https://github.com/juantascon>`_
+* `Kevin Murray <https://github.com/kdmurray91>`_
 
 
 History
