@@ -58,7 +58,7 @@ def read_mailfile(mail_file):
 class Deduplicate(object):
 
     def __init__(self, strategy, regexp, dry_run, show_diffs, use_message_id,
-                 size_threshold, diff_threshold):
+                 size_threshold, diff_threshold, progress=True):
         # All mails grouped by hashes.
         self.mails = {}
         # Total count of mails found in all maildirs.
@@ -80,14 +80,21 @@ class Deduplicate(object):
         self.sizes_too_dissimilar = 0
         self.diff_too_big = 0
 
+        self.progress = progress
+
     def add_maildir(self, maildir_path):
         """ Load up a maildir add compute hash for each mail their contain. """
         maildir = Maildir(maildir_path, factory=None, create=False)
         # Collate folders by hash.
         logger.info(
             "Processing {} mails in {}".format(len(maildir), maildir._path))
-        bar = ProgressBar(widgets=[Percentage(), Bar()], max_value=len(maildir),
-                          redirect_stderr=True, redirect_stdout=True)
+        if self.progress:
+            bar = ProgressBar(widgets=[Percentage(), Bar()],
+                              max_value=len(maildir), redirect_stderr=True,
+                              redirect_stdout=True)
+        else:
+            def bar(x):
+                return x
 
         for mail_id, message in bar(maildir.iteritems()):
             mail_file = os.path.join(maildir._path, maildir._lookup(mail_id))
