@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-`1.2.1 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.2.0...develop>`_
+`1.3.0 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.2.0...develop>`_
 -------------------------------------------------------------------------------------------------
 
 * User-friendly progress bar.
