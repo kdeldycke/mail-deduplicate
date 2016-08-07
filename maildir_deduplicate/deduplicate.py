@@ -341,6 +341,15 @@ Headers:
             body = message.get_payload(None, decode=True)
         else:
             header_text, sep, body = message.as_string().partition("\n\n")
+        if isinstance(body, bytes):
+            for enc in ['ascii', 'utf-8']:
+                try:
+                    body = body.decode(enc)
+                    break
+                except UnicodeDecodeError:
+                    continue
+            else:
+                body = message.get_payload(None, decode=False)
         return body.splitlines(True)
 
     def messages_too_dissimilar(self, hash_key, sizes):
@@ -401,8 +410,8 @@ Headers:
             from_lines, to_lines,
             fromfile='Body of {}'.format(from_file),
             tofile='Body of {}'.format(to_file),
-            fromfiledate=os.path.getmtime(from_file),
-            tofiledate=os.path.getmtime(to_file),
+            fromfiledate='{:0.2f}'.format(os.path.getmtime(from_file)),
+            tofiledate='{:0.2f}'.format(os.path.getmtime(to_file)),
             n=0, lineterm='\n')))
 
     def report(self):
