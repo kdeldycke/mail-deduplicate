@@ -44,6 +44,11 @@ from . import (
 )
 
 
+def read_mailfile(mail_file):
+    with open(mail_file) as fh:
+        return email.message_from_file(fh)
+
+
 class Deduplicate(object):
 
     def __init__(self, strategy, regexp, dry_run, show_diffs, use_message_id,
@@ -75,7 +80,7 @@ class Deduplicate(object):
         # Collate folders by hash.
         logger.info(
             "Processing {} mails in {}".format(len(maildir), maildir._path))
-        for mail_id, message in maildir.items():
+        for mail_id, message in maildir.iteritems():
             mail_file = os.path.join(maildir._path, maildir._lookup(mail_id))
             try:
                 mail_hash, header_text = self.compute_hash(
@@ -91,7 +96,7 @@ class Deduplicate(object):
                 if mail_hash not in self.mails:
                     self.mails[mail_hash] = []
 
-                self.mails[mail_hash].append((mail_file, message))
+                self.mails[mail_hash].append(mail_file)
                 self.mail_count += 1
 
     @classmethod
@@ -212,10 +217,11 @@ Headers:
 
     def run(self):
         """ Run the deduplication process. """
-        for hash_key, messages in self.mails.items():
+        for hash_key, message_files in self.mails.items():
             # Skip unique mails.
-            if len(messages) == 1:
+            if len(message_files) == 1:
                 continue
+            messages = [(mf, read_mailfile(mf)) for mf in message_files]
 
             subject = messages[0][1].get('Subject', '')
             subject, count = re.subn('\s+', ' ', subject)
