@@ -195,7 +195,6 @@ Headers:
                 return time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
             except ValueError:
                 return value
-            return date_only
         elif header == 'to':
             # Sometimes email.parser strips the <> brackets from a To:
             # header which has a single address.  I have seen this happen
