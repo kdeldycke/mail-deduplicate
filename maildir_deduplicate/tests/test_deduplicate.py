@@ -22,12 +22,13 @@ import textwrap
 import unittest
 from copy import deepcopy
 from os import path
+from logging import Filter
 
 from maildir_deduplicate import Deduplicate, logger
 
 
-class DevNull(object):
-    def filter(self):
+class DevNull(Filter):
+    def filter(self, *args):
         return 0
 
 
