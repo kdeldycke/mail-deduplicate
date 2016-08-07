@@ -31,12 +31,8 @@ import re
 import time
 from difflib import unified_diff
 from mailbox import Maildir
-from progressbar import (
-    Bar,
-    ProgressBar,
-    Percentage,
-)
 
+from progressbar import Bar, Percentage, ProgressBar
 
 from . import (
     HEADERS,
