@@ -61,6 +61,8 @@ class Deduplicate(object):
                  size_threshold, diff_threshold, progress=True):
         # All mails grouped by hashes.
         self.mails = {}
+        # Mails with insufficient headers etc.
+        self.bad_mails = []
         # Total count of mails found in all maildirs.
         self.mail_count = 0
 
@@ -104,6 +106,7 @@ class Deduplicate(object):
             except InsufficientHeadersError as e:
                 logger.warning(
                     "Ignoring problematic {}: {}".format(mail_file, e.args[0]))
+                self.bad_mails.append(mail_file)
             else:
                 logger.debug(
                     "Hash is {} for mail {!r}.".format(mail_hash, mail_id))
@@ -468,3 +471,10 @@ Headers:
             logger.info(
                 "{} potential duplicates were rejected as being too dissimilar "
                 "in contents.".format(self.diff_too_big))
+
+        if len(self.bad_mails) > 0:
+            logger.info("-----")
+            logger.info("The following mails did not have sufficient headers "
+                        "to scan.")
+            for mf in self.bad_mails:
+                logger.info("\t{}".format(mf))
