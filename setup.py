@@ -57,6 +57,7 @@ setup(
     license='GPLv2+',
 
     install_requires=[
+        'chardet',
         'click >= 5.0',
         'click_log',
         'progressbar2',
