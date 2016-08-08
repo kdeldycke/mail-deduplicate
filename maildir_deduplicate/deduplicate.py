@@ -359,7 +359,6 @@ Headers:
                 break
             except UnicodeError as exc:
                 logger.debug(str(exc))
-                continue
         else:
             # Fall back on detecing encoding
             detenc = chardet.detect(body)
@@ -368,13 +367,15 @@ Headers:
                     "decoding using {} with low confidence ({})".format(
                             detenc["encoding"], detenc["confidence"])
                 )
-            else:
-                logger.info("decoding using {}".format(detenc["encoding"]))
             try:
                 # try the detected encoding
                 body = body.decode(detenc["encoding"])
             except UnicodeError:
                 # Give up and replace troublesome chars.
+                logger.warn(
+                    "Decoding using {} failed. Using char replacement".format(
+                        detenc["encoding"])
+                )
                 body = body.decode('utf-8', errors='replace')
         return body.splitlines(True)
 
