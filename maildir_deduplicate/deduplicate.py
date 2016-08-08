@@ -32,6 +32,7 @@ import time
 from difflib import unified_diff
 from mailbox import Maildir
 
+import chardet
 from progressbar import Bar, Percentage, ProgressBar
 
 from . import (
@@ -349,19 +350,32 @@ Headers:
 
     @staticmethod
     def get_lines_from_message_body(message):
-        if not message.is_multipart():
-            body = message.get_payload(None, decode=True)
+        header_text, sep, body = message.as_bytes().partition(b"\n\n")
+
+        # Try common/basic encodings first
+        for enc in ['ascii', 'utf-8']:
+            try:
+                body = body.decode(enc)
+                break
+            except UnicodeError as exc:
+                logger.debug(str(exc))
+                continue
         else:
-            header_text, sep, body = message.as_string().partition("\n\n")
-        if isinstance(body, bytes):
-            for enc in ['ascii', 'utf-8']:
-                try:
-                    body = body.decode(enc)
-                    break
-                except UnicodeDecodeError:
-                    continue
+            # Fall back on detecing encoding
+            detenc = chardet.detect(body)
+            if detenc["confidence"] <= 0.6:
+                logger.warn(
+                    "decoding using {} with low confidence ({})".format(
+                            detenc["encoding"], detenc["confidence"])
+                )
             else:
-                body = message.get_payload(None, decode=False)
+                logger.info("decoding using {}".format(detenc["encoding"]))
+            try:
+                # try the detected encoding
+                body = body.decode(detenc["encoding"])
+            except UnicodeError:
+                # Give up and replace troublesome chars.
+                body = body.decode('utf-8', errors='replace')
         return body.splitlines(True)
 
     def messages_too_dissimilar(self, hash_key, sizes):
