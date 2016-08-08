@@ -403,6 +403,11 @@ Headers:
                         lines, largest_lines, mail_file, largest_file)
                 return 'size'
 
+            if len(largest_lines) > 2**10:
+                logger.info("Not calculating diff for this duplicate set, "
+                            "it is too large (>1Mb)")
+                continue
+
             text_difference = self.text_diff(lines, largest_lines)
             if self.diff_threshold >= 0 and len(
                     text_difference) > self.diff_threshold:
