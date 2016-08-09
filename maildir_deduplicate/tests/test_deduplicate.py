@@ -37,6 +37,7 @@ class TestDeduplicate(unittest.TestCase):
         "diff_threshold": 512,
         "progress": False,
     }
+
     mails = {
         "bigger": "mail1:1,S",
         "smaller": "mail0:1,S",
@@ -61,7 +62,7 @@ class TestDeduplicate(unittest.TestCase):
         dedup.add_maildir(mdir)
         dedup.run()
 
-        # check that keptfile is kept
+        # Check that keptfile is kept.
         self.assertTrue(path.isfile(path.join(mdir, "cur", keptfile)))
 
     def get_args(self, **kwargs):
