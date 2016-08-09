@@ -21,7 +21,6 @@ from __future__ import absolute_import, division, print_function
 import textwrap
 import unittest
 from copy import deepcopy
-from logging import Filter
 from os import path
 
 from maildir_deduplicate import Deduplicate, logger
