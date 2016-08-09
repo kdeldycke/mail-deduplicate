@@ -40,6 +40,7 @@ from . import (
     NEWER,
     NOT_MATCHING,
     OLDER,
+    PY2,
     SMALLER,
     InsufficientHeadersError,
     logger
@@ -48,6 +49,8 @@ from . import (
 
 def read_mailfile(mail_file):
     with open(mail_file, 'rb') as fh:
+        if PY2:
+            return email.message_from_file(fh)
         return email.message_from_binary_file(fh)
 
 
