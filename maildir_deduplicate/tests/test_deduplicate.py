@@ -27,11 +27,6 @@ from os import path
 from maildir_deduplicate import Deduplicate, logger
 
 
-class DevNull(Filter):
-    def filter(self, *args):
-        return 0
-
-
 class TestDeduplicate(unittest.TestCase):
     default_args = {
         "strategy": "smaller",
@@ -47,12 +42,6 @@ class TestDeduplicate(unittest.TestCase):
         "bigger": "mail1:1,S",
         "smaller": "mail0:1,S",
     }
-
-    def setUp(self):
-        logger.addFilter(DevNull)
-
-    def tearDown(self):
-        logger.removeFilter(DevNull)
 
     def message_factory(self):
         return textwrap.dedent("""\
