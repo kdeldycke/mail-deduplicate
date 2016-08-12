@@ -32,6 +32,7 @@ import time
 from difflib import unified_diff
 from mailbox import Maildir
 
+import chardet
 from progressbar import Bar, Percentage, ProgressBar
 
 from . import (
@@ -60,6 +61,8 @@ class Deduplicate(object):
                  size_threshold, diff_threshold, progress=True):
         # All mails grouped by hashes.
         self.mails = {}
+        # Mails with insufficient headers etc.
+        self.bad_mails = []
         # Total count of mails found in all maildirs.
         self.mail_count = 0
 
@@ -103,6 +106,7 @@ class Deduplicate(object):
             except InsufficientHeadersError as e:
                 logger.warning(
                     "Ignoring problematic {}: {}".format(mail_file, e.args[0]))
+                self.bad_mails.append(mail_file)
             else:
                 logger.debug(
                     "Hash is {} for mail {!r}.".format(mail_hash, mail_id))
@@ -349,19 +353,33 @@ Headers:
 
     @staticmethod
     def get_lines_from_message_body(message):
-        if not message.is_multipart():
-            body = message.get_payload(None, decode=True)
+        header_text, sep, body = message.as_bytes().partition(b"\n\n")
+
+        # Try common/basic encodings first
+        for enc in ['ascii', 'utf-8']:
+            try:
+                body = body.decode(enc)
+                break
+            except UnicodeError as exc:
+                logger.debug(str(exc))
         else:
-            header_text, sep, body = message.as_string().partition("\n\n")
-        if isinstance(body, bytes):
-            for enc in ['ascii', 'utf-8']:
-                try:
-                    body = body.decode(enc)
-                    break
-                except UnicodeDecodeError:
-                    continue
-            else:
-                body = message.get_payload(None, decode=False)
+            # Fall back on detecing encoding
+            detenc = chardet.detect(body)
+            if detenc["confidence"] <= 0.6:
+                logger.warn(
+                    "decoding using {} with low confidence ({})".format(
+                            detenc["encoding"], detenc["confidence"])
+                )
+            try:
+                # try the detected encoding
+                body = body.decode(detenc["encoding"])
+            except UnicodeError:
+                # Give up and replace troublesome chars.
+                logger.warn(
+                    "Decoding using {} failed. Using char replacement".format(
+                        detenc["encoding"])
+                )
+                body = body.decode('utf-8', errors='replace')
         return body.splitlines(True)
 
     def messages_too_dissimilar(self, hash_key, sizes):
@@ -384,6 +402,11 @@ Headers:
                     self.print_diff(
                         lines, largest_lines, mail_file, largest_file)
                 return 'size'
+
+            if len(largest_lines) > 2**10:
+                logger.info("Not calculating diff for this duplicate set, "
+                            "it is too large (>1Mb)")
+                continue
 
             text_difference = self.text_diff(lines, largest_lines)
             if self.diff_threshold >= 0 and len(
@@ -453,3 +476,10 @@ Headers:
             logger.info(
                 "{} potential duplicates were rejected as being too dissimilar "
                 "in contents.".format(self.diff_too_big))
+
+        if len(self.bad_mails) > 0:
+            logger.info("-----")
+            logger.info("The following mails did not have sufficient headers "
+                        "to scan.")
+            for mf in self.bad_mails:
+                logger.info("\t{}".format(mf))
