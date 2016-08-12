@@ -25,6 +25,27 @@ from setuptools import find_packages, setup
 
 MODULE_NAME = 'maildir_deduplicate'
 
+DEPENDENCIES = [
+    'click >= 5.0',
+    'click_log',
+    'progressbar2',
+]
+
+EXTRA_DEPENDENCIES = {
+    # Extra dependencies are made available through the
+    # `$ pip install .[keyword]` command.
+    'tests': [
+        'nose',
+        'coverage',
+        'pep8',
+        'pylint'],
+    'develop': [
+        'isort',
+        'wheel',
+        'setuptools >= 24.2.1',
+        'bumpversion'],
+}
+
 
 def get_version():
 
@@ -56,15 +77,14 @@ setup(
     url='https://github.com/kdeldycke/maildir-deduplicate',
     license='GPLv2+',
 
-    install_requires=[
-        'click >= 5.0',
-        'click_log',
-        'progressbar2',
-    ],
-
     packages=find_packages(),
-
-    tests_require=[],
+    # https://www.python.org/dev/peps/pep-0345/#version-specifiers
+    python_requires='>= 2.7, != 3.0, != 3.1, != 3.2',
+    install_requires=DEPENDENCIES,
+    tests_require=DEPENDENCIES + EXTRA_DEPENDENCIES['tests'],
+    extras_require=EXTRA_DEPENDENCIES,
+    dependency_links=[
+    ],
     test_suite=MODULE_NAME + '.tests',
 
     classifiers=[
