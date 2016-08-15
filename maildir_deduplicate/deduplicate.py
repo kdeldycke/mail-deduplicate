@@ -24,6 +24,7 @@ from __future__ import (
     unicode_literals
 )
 
+import textwrap
 import email
 import hashlib
 import os
@@ -157,10 +158,12 @@ class Deduplicate(object):
         if len(canonical_headers) == 0:
             raise InsufficientHeadersError("No canonical headers found")
 
-        err = """Not enough data from canonical headers to compute reliable hash!
-Headers:
---------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------
-{}--------- 8< --------- 8< --------- 8< --------- 8< --------- 8< ---------"""
+        err = textwrap.dedent("""\
+            Not enough data from canonical headers to compute reliable hash!
+            Headers:
+            --------- 8< --------- 8< --------- 8< --------- 8< ---------
+            {}
+            --------- 8< --------- 8< --------- 8< --------- 8< ---------""")
         raise InsufficientHeadersError(err.format(canonical_headers))
 
     @classmethod
@@ -206,11 +209,13 @@ Headers:
                 parsed = email.utils.parsedate_tz(value)
                 if not parsed:
                     raise TypeError
-            except (TypeError, ValueError):  # if parsedate_tz cannot parse the date
+            # If parsedate_tz cannot parse the date.
+            except (TypeError, ValueError):
                 return value
             utc_timestamp = email.utils.mktime_tz(parsed)
             try:
-                return time.strftime('%Y/%m/%d UTC', time.gmtime(utc_timestamp))
+                return time.strftime(
+                    '%Y/%m/%d UTC', time.gmtime(utc_timestamp))
             except ValueError:
                 return value
         elif header == 'to':
@@ -286,8 +291,8 @@ Headers:
             if mail_file in doomed:
                 prefix = "removed"
                 if not self.dry_run:
-                    # Why not use maildir's .remove
-                    # https://github.com/python/cpython/blob/origin/2.7/Lib/mailbox.py#L329-L331
+                    # Why not use maildir's .remove. See: https://github.com
+                    # /python/cpython/blob/origin/2.7/Lib/mailbox.py#L329-L331
                     os.unlink(mail_file)
                 removed += 1
             else:
@@ -446,10 +451,10 @@ Headers:
 
         if self.sizes_too_dissimilar > 0:
             logger.info(
-                "{} potential duplicates were rejected as being too dissimilar "
-                "in size.".format(self.sizes_too_dissimilar))
+                "{} potential duplicates were rejected as being too "
+                "dissimilar in size.".format(self.sizes_too_dissimilar))
 
         if self.diff_too_big > 0:
             logger.info(
-                "{} potential duplicates were rejected as being too dissimilar "
-                "in contents.".format(self.diff_too_big))
+                "{} potential duplicates were rejected as being too "
+                "dissimilar in contents.".format(self.diff_too_big))

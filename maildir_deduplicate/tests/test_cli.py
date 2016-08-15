@@ -87,5 +87,6 @@ class TestHashCLI(CLITestCase):
             result = self.runner.invoke(cli, ['hash', 'mail.txt'])
             self.assertEqual(result.exit_code, 0)
             self.assertIn(
-                "Hash: 39e40845b3548dc4bb6d0b8d7c7018eef8497363a62c195c8f49236a",
+                "Hash: "
+                "39e40845b3548dc4bb6d0b8d7c7018eef8497363a62c195c8f49236a",
                 result.output)
