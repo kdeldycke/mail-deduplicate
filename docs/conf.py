@@ -44,11 +44,6 @@ templates_path = ['templates']
 
 # Keep the same ordering as in original source code.
 autodoc_member_order = 'bysource'
-# Include all default flags
-import pdb; pdb.set_trace()  # XXX BREAKPOINT
-
-#autodoc_default_flag [
-#    'members', 'undoc-members', 'private-members', 'special-members']
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
