@@ -40,7 +40,7 @@ EXTRA_DEPENDENCIES = {
     'tests': [
         'nose',
         'coverage',
-        'pep8',
+        'pycodestyle',
         'pylint'],
     'develop': [
         'isort',
