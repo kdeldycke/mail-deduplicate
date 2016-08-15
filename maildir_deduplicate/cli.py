@@ -32,10 +32,10 @@ from . import (
     MATCHING,
     NOT_MATCHING,
     STRATEGIES,
-    Deduplicate,
     __version__,
     logger
 )
+from .deduplicate import Deduplicate
 
 
 @click.group(invoke_without_command=True)

@@ -96,8 +96,3 @@ STRATEGIES = frozenset([OLDER, NEWER, SMALLER, MATCHING, NOT_MATCHING])
 class InsufficientHeadersError(Exception):
 
     """ Issue was encountered with email headers. """
-
-
-# Expose important classes and methods to the root of the module. These are not
-# lexicographically sorted to avoid cyclic imports.
-from maildir_deduplicate.deduplicate import Deduplicate
