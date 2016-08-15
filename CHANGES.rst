@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-`1.3.1 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.3.0...develop>`_
+`1.4.0 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.3.0...develop>`_
 -------------------------------------------------------------------------------------------------
 
 * Add ``test`` and ``develop`` dependencies.
