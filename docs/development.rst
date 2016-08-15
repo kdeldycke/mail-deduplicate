@@ -177,7 +177,6 @@ Push packaging to the `test cheeseshop
 
     $ ./setup.py register -r testpypi
     $ ./setup.py clean --all
-    $ rm -rf ./build ./dist
     $ ./setup.py sdist bdist_egg bdist_wheel upload -r testpypi
 
 Publish packaging to `PyPi <https://pypi.python.org>`_:
@@ -186,7 +185,6 @@ Publish packaging to `PyPi <https://pypi.python.org>`_:
 
     $ ./setup.py register -r pypi
     $ ./setup.py clean --all
-    $ rm -rf ./build ./dist
     $ ./setup.py sdist bdist_egg bdist_wheel upload -r pypi
 
 Update revision with `bumpversion <https://github.com/peritus/bumpversion>`_
