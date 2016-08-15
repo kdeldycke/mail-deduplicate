@@ -171,40 +171,6 @@ the contents.  If the sizes or contents differ by more than a threshold, they
 are not counted as duplicates.
 
 
-Development
------------
-
-Check out latest development branch:
-
-.. code-block:: bash
-
-    $ git clone git@github.com:kdeldycke/maildir-deduplicate.git
-    $ cd ./maildir-deduplicate
-    $ python ./setup.py develop
-
-Run unit-tests:
-
-.. code-block:: bash
-
-    $ python ./setup.py nosetests
-
-Run `isort <https://pep8.readthedocs.org>`_ utility to sort Python imports:
-
-.. code-block:: bash
-
-    $ pip install isort
-    $ isort --apply
-
-Run `PEP8 <https://pep8.readthedocs.org>`_ and `Pylint
-<http://docs.pylint.org>`_ code style checks:
-
-.. code-block:: bash
-
-    $ pip install pep8 pylint
-    $ pep8 maildir-deduplicate
-    $ pylint --rcfile=setup.cfg maildir-deduplicate
-
-
 Stability policy
 ----------------
 
@@ -221,78 +187,6 @@ Here is a bunch of rules we're trying to follow regarding stability:
 
 * Major releases (``n.*.*`` → ``(n+1).0.0`` upgrades) are not planned yet,
   unless we introduce huge changes to the project.
-
-
-Release process
----------------
-
-Start from the ``develop`` branch:
-
-.. code-block:: bash
-
-    $ git clone git@github.com:kdeldycke/maildir-deduplicate.git
-    $ git checkout develop
-
-Revision should already be set to the next version, so we just need to set the
-released date in the changelog:
-
-.. code-block:: bash
-
-    $ vi ./CHANGES.rst
-
-Create a release commit, tag it and merge it back to ``master`` branch:
-
-.. code-block:: bash
-
-    $ git add ./maildir-deduplicate/__init__.py ./CHANGES.rst
-    $ git commit -m "Release vX.Y.Z"
-    $ git tag "vX.Y.Z"
-    $ git push
-    $ git push --tags
-    $ git checkout master
-    $ git pull
-    $ git merge "vX.Y.Z"
-    $ git push
-
-Push packaging to the `test cheeseshop
-<https://wiki.python.org/moin/TestPyPI>`_:
-
-.. code-block:: bash
-
-    $ pip install wheel
-    $ python ./setup.py register -r testpypi
-    $ python ./setup.py clean
-    $ rm -rf ./build ./dist
-    $ python ./setup.py sdist bdist_egg bdist_wheel upload -r testpypi
-
-Publish packaging to `PyPi <https://pypi.python.org>`_:
-
-.. code-block:: bash
-
-    $ python ./setup.py register -r pypi
-    $ python ./setup.py clean
-    $ rm -rf ./build ./dist
-    $ python ./setup.py sdist bdist_egg bdist_wheel upload -r pypi
-
-Bump revision back to its development state:
-
-.. code-block:: bash
-
-    $ pip install bumpversion
-    $ git checkout develop
-    $ bumpversion --verbose patch
-    $ git add ./maildir-deduplicate/__init__.py ./CHANGES.rst
-    $ git commit -m "Post release version bump."
-    $ git push
-
-Now if the next revision is no longer bug-fix only:
-
-.. code-block:: bash
-
-    $ bumpversion --verbose minor
-    $ git add ./maildir-deduplicate/__init__.py ./CHANGES.rst
-    $ git commit -m "Next release no longer bug-fix only. Bump revision."
-    $ git push
 
 
 Contributors
