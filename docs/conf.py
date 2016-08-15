@@ -13,7 +13,7 @@ import time
 
 # Expose package to autodoc.
 sys.path.insert(0, os.path.abspath('..'))
-import maildir_deduplicate
+import maildir_deduplicate  # noqa
 
 extensions = [
     'sphinx.ext.autodoc',
