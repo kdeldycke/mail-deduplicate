@@ -24,11 +24,11 @@ from __future__ import (
     unicode_literals
 )
 
-import textwrap
 import email
 import hashlib
 import os
 import re
+import textwrap
 import time
 from difflib import unified_diff
 from mailbox import Maildir
