@@ -3,7 +3,7 @@ Maildir Deduplicate
 
 Command-line tool to deduplicate mails from a set of maildir folders.
 
-Stable release: |release| |versions| |license| |dependencies| |popularity|
+Stable release: |release| |versions| |license| |dependencies|
 
 Development: |build| |docs| |coverage| |quality|
 
@@ -16,9 +16,6 @@ Development: |build| |docs| |coverage| |quality|
 .. |license| image:: https://img.shields.io/pypi/l/maildir-deduplicate.svg
     :target: https://www.gnu.org/licenses/gpl-2.0.html
     :alt: Software license
-.. |popularity| image:: https://img.shields.io/pypi/dm/maildir-deduplicate.svg
-    :target: https://pypi.python.org/pypi/maildir-deduplicate#downloads
-    :alt: Popularity
 .. |dependencies| image:: https://img.shields.io/requires/github/kdeldycke/maildir-deduplicate/master.svg
     :target: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements/?branch=master
     :alt: Requirements freshness

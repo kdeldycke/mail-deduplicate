@@ -12,6 +12,8 @@ ChangeLog
 * Build documentation via Sphinx.
 * Replace ``pep8`` package by ``pycodestyle``.
 * Enforce ``pycodestyle`` checks in Travis CI jobs.
+* Remove popularity badge: PyPI download counters are broken and no longer
+  displayed.
 
 
 `1.3.0 (2016-08-11) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.2.0...v1.3.0>`_
