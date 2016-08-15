@@ -31,6 +31,7 @@ import re
 from setuptools import find_packages, setup
 
 MODULE_NAME = 'maildir_deduplicate'
+PACKAGE_NAME = MODULE_NAME.replace('_', '-')
 
 DEPENDENCIES = [
     'click >= 5.0',
@@ -77,7 +78,7 @@ def get_long_description():
 
 
 setup(
-    name='maildir-deduplicate',
+    name=PACKAGE_NAME,
     version=get_version(),
     description="Deduplicate mails from a set of maildir folders.",
     long_description=get_long_description(),
@@ -96,7 +97,7 @@ setup(
     extras_require=EXTRA_DEPENDENCIES,
     dependency_links=[
     ],
-    test_suite=MODULE_NAME + '.tests',
+    test_suite='{}.tests'.format(MODULE_NAME),
 
     classifiers=[
         # See: https://pypi.python.org/pypi?:action=list_classifiers
@@ -124,7 +125,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'mdedup=maildir_deduplicate.cli:cli',
+            'mdedup={}.cli:cli'.format(MODULE_NAME),
         ],
     }
 )
