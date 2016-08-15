@@ -3,30 +3,35 @@ Maildir Deduplicate
 
 Command-line tool to deduplicate mails from a set of maildir folders.
 
+Stable release: |release| |versions| |license| |dependencies| |popularity|
 
-Stable release: |release| |license| |dependencies| |popularity|
+Development: |build| |docs| |coverage| |quality|
 
-Development: |build| |coverage| |quality|
-
-.. |release| image:: https://img.shields.io/pypi/v/maildir-deduplicate.svg?style=flat
+.. |release| image:: https://img.shields.io/pypi/v/maildir-deduplicate.svg
     :target: https://pypi.python.org/pypi/maildir-deduplicate
     :alt: Last release
-.. |license| image:: https://img.shields.io/pypi/l/maildir-deduplicate.svg?style=flat
+.. |versions| image:: https://img.shields.io/pypi/pyversions/maildir-deduplicate.svg
+    :target: https://pypi.python.org/pypi/maildir-deduplicate
+    :alt: Python versions
+.. |license| image:: https://img.shields.io/pypi/l/maildir-deduplicate.svg
     :target: https://www.gnu.org/licenses/gpl-2.0.html
     :alt: Software license
-.. |popularity| image:: https://img.shields.io/pypi/dm/maildir-deduplicate.svg?style=flat
+.. |popularity| image:: https://img.shields.io/pypi/dm/maildir-deduplicate.svg
     :target: https://pypi.python.org/pypi/maildir-deduplicate#downloads
     :alt: Popularity
-.. |dependencies| image:: https://img.shields.io/requires/github/kdeldycke/maildir-deduplicate/master.svg?style=flat
+.. |dependencies| image:: https://img.shields.io/requires/github/kdeldycke/maildir-deduplicate/master.svg
     :target: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements/?branch=master
     :alt: Requirements freshness
-.. |build| image:: https://img.shields.io/travis/kdeldycke/maildir-deduplicate/develop.svg?style=flat
+.. |build| image:: https://img.shields.io/travis/kdeldycke/maildir-deduplicate/develop.svg
     :target: https://travis-ci.org/kdeldycke/maildir-deduplicate
     :alt: Unit-tests status
+.. |docs| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=develop
+    :target: http://maildir-deduplicate.readthedocs.io/en/develop/
+    :alt: Documentation Status
 .. |coverage| image:: https://codecov.io/github/kdeldycke/maildir-deduplicate/coverage.svg?branch=develop
     :target: https://codecov.io/github/kdeldycke/maildir-deduplicate?branch=develop
     :alt: Coverage Status
-.. |quality| image:: https://img.shields.io/scrutinizer/g/kdeldycke/maildir-deduplicate.svg?style=flat
+.. |quality| image:: https://img.shields.io/scrutinizer/g/kdeldycke/maildir-deduplicate.svg
     :target: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/?branch=develop
     :alt: Code Quality
 
