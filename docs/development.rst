@@ -176,7 +176,7 @@ Push packaging to the `test cheeseshop
 .. code-block:: bash
 
     $ python ./setup.py register -r testpypi
-    $ python ./setup.py clean
+    $ python ./setup.py clean --all
     $ rm -rf ./build ./dist
     $ python ./setup.py sdist bdist_egg bdist_wheel upload -r testpypi
 
@@ -185,7 +185,7 @@ Publish packaging to `PyPi <https://pypi.python.org>`_:
 .. code-block:: bash
 
     $ python ./setup.py register -r pypi
-    $ python ./setup.py clean
+    $ python ./setup.py clean --all
     $ rm -rf ./build ./dist
     $ python ./setup.py sdist bdist_egg bdist_wheel upload -r pypi
 
