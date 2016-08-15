@@ -34,6 +34,9 @@ DEPENDENCIES = [
 EXTRA_DEPENDENCIES = {
     # Extra dependencies are made available through the
     # `$ pip install .[keyword]` command.
+    'docs': [
+        'sphinx >= 1.4',
+        'sphinx_rtd_theme'],
     'tests': [
         'nose',
         'coverage',
