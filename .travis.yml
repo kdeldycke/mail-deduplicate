@@ -23,7 +23,7 @@ before_script:
 script:
   - coverage run ./setup.py test
   - coverage report -m
-  - pycodestyle
+  - pep8
 
 after_script:
   - codecov
