@@ -58,23 +58,25 @@ EXTRA_DEPENDENCIES = {
 }
 
 
+def read_file(*args):
+    """ Return content of a file relative to this ``setup.py``. """
+    file_path = os.path.join(os.path.dirname(__file__), *args)
+    return codecs.open(file_path, encoding='utf-8').read()
+
+
 def get_version():
-
-    with open(os.path.join(
-        os.path.dirname(__file__), MODULE_NAME, '__init__.py')
-    ) as init:
-
-        for line in init.readlines():
-            res = re.match(r'__version__ *= *[\'"]([0-9a-z\.]*)[\'"]$', line)
-            if res:
-                return res.group(1)
+    """ Extracts version from the ``__init__.py`` file at the module's root.
+    """
+    init_file = read_file(MODULE_NAME, '__init__.py')
+    matches = re.search(
+        r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', init_file, re.M)
+    if matches:
+        return matches.group(1)
+    raise RuntimeError("Unable to find version string in __init__.py .")
 
 
 def get_long_description():
-    readme = os.path.join(os.path.dirname(__file__), 'README.rst')
-    changes = os.path.join(os.path.dirname(__file__), 'CHANGES.rst')
-    return codecs.open(readme, encoding='utf-8').read() + '\n' + \
-        codecs.open(changes, encoding='utf-8').read()
+    return "{}\n{}".format(read_file('README.rst'), read_file('CHANGES.rst'))
 
 
 setup(
