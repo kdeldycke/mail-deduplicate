@@ -5,6 +5,8 @@ ChangeLog
 `1.4.0 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.3.0...develop>`_
 -------------------------------------------------------------------------------------------------
 
+.. note:: This version is not yet released and is under active development.
+
 * Add ``test`` and ``develop`` dependencies.
 * Move coverage config to ``setup.cfg``.
 * Build documentation via Sphinx.
