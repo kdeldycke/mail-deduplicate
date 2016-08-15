@@ -14,15 +14,15 @@ before_install:
   # Check default Python version installed.
   - python --version
 
-install:
-  - pip install -e .[tests]
-
 before_script:
   - pip install codecov
 
 script:
+  # Laucnh unittests.
+  - pip install -e .[tests]
   - coverage run ./setup.py test
   - coverage report -m
+  # Check coding style.
   - pycodestyle
   # Test that building packages works.
   - pip install -e .[develop]
