@@ -10,13 +10,20 @@ python:
   - pypy
   - pypy3
 
+before_install:
+  # Check default Python version installed.
+  - python --version
+
 install:
-  - pip install -e .
+  - pip install -e .[tests]
+
+before_script:
   - pip install codecov
 
 script:
-  - coverage run setup.py test
+  - coverage run ./setup.py test
   - coverage report -m
+  - pycodestyle
 
 after_script:
-  codecov
+  - codecov
