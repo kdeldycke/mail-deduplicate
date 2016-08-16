@@ -32,10 +32,10 @@ from . import (
     MATCHING,
     NOT_MATCHING,
     STRATEGIES,
+    Deduplicate,
     __version__,
     logger
 )
-from .deduplicate import Deduplicate
 
 
 @click.group(invoke_without_command=True)
@@ -69,8 +69,7 @@ def validate_maildirs(ctx, param, value):
         for subdir in ('cur', 'new', 'tmp'):
             if not os.path.isdir(os.path.join(path, subdir)):
                 raise click.BadParameter(
-                    '{} is not a maildir (missing {!r} sub-directory).'.format(
-                        path, subdir))
+                    '{0} is not a maildir (missing {1} sub-directory).'.format(path, repr(subdir)))
     return value
 
 
@@ -98,13 +97,13 @@ def validate_maildirs(ctx, param, value):
     '-S', '--size-threshold', type=int, metavar='BYTES',
     default=DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
     help='Specify maximum allowed difference between size of duplicates. Set '
-    'to -1 for no threshold. Defaults to {}.'.format(
+    'to -1 for no threshold. Defaults to {0}.'.format(
         DEFAULT_SIZE_DIFFERENCE_THRESHOLD))
 @click.option(
     '-D', '--diff-threshold', type=int, metavar='BYTES',
     default=DEFAULT_DIFF_THRESHOLD,
     help='Specify maximum allowed difference between size of duplicates. Set '
-    'to -1 for no threshold. Defaults to {}.'.format(DEFAULT_DIFF_THRESHOLD))
+    'to -1 for no threshold. Defaults to {0}.'.format(DEFAULT_DIFF_THRESHOLD))
 @click.argument(
     'maildirs', nargs=-1, callback=validate_maildirs,
     type=click.Path(exists=True, file_okay=False, resolve_path=True))
@@ -132,11 +131,11 @@ def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
     if strategy in [MATCHING, NOT_MATCHING]:
         if not regexp:
             raise click.BadParameter(
-                '{} strategy requires the --regexp parameter.'.format(
+                '{0} strategy requires the --regexp parameter.'.format(
                     strategy))
     elif regexp:
         raise click.BadParameter(
-            '--regexp parameter not allowed in {} strategy.'.format(strategy))
+            '--regexp parameter not allowed in {0} strategy.'.format(strategy))
 
     dedup = Deduplicate(
         strategy, regexp, dry_run, show_diffs, message_id,
@@ -170,4 +169,4 @@ def hash(ctx, message_id, message):
         None, message, message_id)
     logger.info(header_text)
     logger.info('_______________________________________')
-    logger.info('Hash: {}'.format(mail_hash))
+    logger.info('Hash: {0}'.format(mail_hash))
