@@ -17,6 +17,8 @@ ChangeLog
 * Test production of packages in Travis CI jobs.
 * Move development and packaging documentation to Sphinx. Closes #22.
 * Make wheels generated under Python 2 environnment available for Python 3 too.
+* Replace ``requirements-docs.txt`` by ``setup.py``'s ``docs``
+  extra-requirements.
 
 
 `1.3.0 (2016-08-11) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.2.0...v1.3.0>`_
