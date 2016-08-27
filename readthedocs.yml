@@ -6,6 +6,8 @@ formats:
 
 python:
     pip_install: true
-    requirements_file: requirements-docs.txt
+    #requirements_file: requirements-docs.txt
     extra_requirements:
         - docs
+        - develop
+        - tests
