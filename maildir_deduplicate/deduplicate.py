@@ -33,6 +33,7 @@ import textwrap
 import time
 from difflib import unified_diff
 from mailbox import Maildir
+from sys import exc_info
 
 from progressbar import Bar, Percentage, ProgressBar
 
@@ -236,46 +237,56 @@ class Deduplicate(object):
     def run(self):
         """ Run the deduplication process. """
         for hash_key, message_files in self.mails.items():
-            # Skip unique mails.
-            if len(message_files) == 1:
-                continue
-            messages = [(mf, read_mailfile(mf)) for mf in message_files]
-
-            subject = messages[0][1].get('Subject', '')
-            subject, count = re.subn('\s+', ' ', subject)
-            logger.info("Subject: {}".format(subject))
-
-            if self.strategy == OLDER:
-                sorted_messages_ctime = self.time_sort(messages, False)
-            elif self.strategy == NEWER:
-                sorted_messages_ctime = self.time_sort(messages, True)
-
-            sorted_messages_size = self.size_sort(messages)
-
-            too_dissimilar = self.messages_too_dissimilar(
-                hash_key, sorted_messages_size)
-            if too_dissimilar == 'size':
-                self.sizes_too_dissimilar += 1
-                continue
-            elif too_dissimilar == 'diff':
-                self.diff_too_big += 1
-                continue
-            elif too_dissimilar is False:
-                pass
-            else:
-                raise ValueError(
-                    "Unexpected value {!r} for too_dissimilar".format(
-                        too_dissimilar))
-
-            self.duplicates += len(messages) - 1
-            self.sets += 1
-
-            if self.strategy in [OLDER, NEWER]:
-                self.removed += self.process_duplicate_set(
-                    sorted_messages_ctime)
-            else:
-                self.removed += self.process_duplicate_set(
-                    sorted_messages_size)
+            try:
+                # Skip unique mails.
+                if len(message_files) == 1:
+                    continue
+                messages = [(mf, read_mailfile(mf)) for mf in message_files]
+    
+                subject = messages[0][1].get('Subject', '')
+                subject, count = re.subn('\s+', ' ', subject)
+                logger.info("Subject: {}".format(subject))
+    
+                if self.strategy == OLDER:
+                    sorted_messages_ctime = self.time_sort(messages, False)
+                elif self.strategy == NEWER:
+                    sorted_messages_ctime = self.time_sort(messages, True)
+    
+                sorted_messages_size = self.size_sort(messages)
+    
+                too_dissimilar = self.messages_too_dissimilar(
+                    hash_key, sorted_messages_size)
+                if too_dissimilar == 'size':
+                    self.sizes_too_dissimilar += 1
+                    continue
+                elif too_dissimilar == 'diff':
+                    self.diff_too_big += 1
+                    continue
+                elif too_dissimilar is False:
+                    pass
+                else:
+                    raise ValueError(
+                        "Unexpected value {!r} for too_dissimilar".format(
+                            too_dissimilar))
+    
+                self.duplicates += len(messages) - 1
+                self.sets += 1
+    
+                if self.strategy in [OLDER, NEWER]:
+                    self.removed += self.process_duplicate_set(
+                        sorted_messages_ctime)
+                else:
+                    self.removed += self.process_duplicate_set(
+                        sorted_messages_size)
+            except:
+                exc_type, exc_value, exc_traceback = exc_info()
+                logger.error("""
+# # # # # # # EXCEPTION # # # # # # #
+Type: %s
+Value: %s
+Files parsed: %s
+# # # # # # # # # # # # # # # # # # #
+""", exc_type, exc_value, message_files, exc_info=True)
 
     def process_duplicate_set(self, duplicate_set):
         i = 0
