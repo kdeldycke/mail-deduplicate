@@ -242,18 +242,18 @@ class Deduplicate(object):
                 if len(message_files) == 1:
                     continue
                 messages = [(mf, read_mailfile(mf)) for mf in message_files]
-    
+
                 subject = messages[0][1].get('Subject', '')
                 subject, count = re.subn('\s+', ' ', subject)
                 logger.info("Subject: {}".format(subject))
-    
+
                 if self.strategy == OLDER:
                     sorted_messages_ctime = self.time_sort(messages, False)
                 elif self.strategy == NEWER:
                     sorted_messages_ctime = self.time_sort(messages, True)
-    
+
                 sorted_messages_size = self.size_sort(messages)
-    
+
                 too_dissimilar = self.messages_too_dissimilar(
                     hash_key, sorted_messages_size)
                 if too_dissimilar == 'size':
@@ -268,10 +268,10 @@ class Deduplicate(object):
                     raise ValueError(
                         "Unexpected value {!r} for too_dissimilar".format(
                             too_dissimilar))
-    
+
                 self.duplicates += len(messages) - 1
                 self.sets += 1
-    
+
                 if self.strategy in [OLDER, NEWER]:
                     self.removed += self.process_duplicate_set(
                         sorted_messages_ctime)
