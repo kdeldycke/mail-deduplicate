@@ -31,20 +31,16 @@ from maildir_deduplicate.deduplicate import Deduplicate
 
 class TestDeduplicate(unittest.TestCase):
     default_args = {
-        "strategy": "smaller",
-        "regexp": None,
-        "dry_run": True,
-        "show_diffs": False,
-        "use_message_id": False,
-        "size_threshold": 512,
-        "diff_threshold": 512,
-        "progress": False,
-    }
+        'strategy': 'smaller',
+        'regexp': None,
+        'dry_run': True,
+        'show_diffs': False,
+        'use_message_id': False,
+        'size_threshold': 512,
+        'diff_threshold': 512,
+        'progress': False}
 
-    mails = {
-        "bigger": "mail1:1,S",
-        "smaller": "mail0:1,S",
-    }
+    maildir_path = None
 
     def message_factory(self):
         return textwrap.dedent("""\
@@ -58,23 +54,55 @@ class TestDeduplicate(unittest.TestCase):
             Да, они летят.
             """).encode('utf-8')
 
-    def do_maildir_test_strategies(self, dedup_kwargs, keptfile, mdir=None):
-        if mdir is None:
-            mdir = path.join(path.dirname(__file__), "testdata/maildir_dups")
+    def run_maildir_test(
+            self, dedup_kwargs, kept_files=None, removed_files=None):
+        """ Run the deduplication and check for removed and kept files. """
+        assert self.maildir_path
+        maildir = path.join(path.dirname(__file__), self.maildir_path)
+
         dedup = Deduplicate(**dedup_kwargs)
-        dedup.add_maildir(mdir)
+        dedup.add_maildir(maildir)
         dedup.run()
 
-        # Check that keptfile is kept.
-        self.assertTrue(path.isfile(path.join(mdir, "cur", keptfile)))
+        # Check files that should be kept are still there.
+        if kept_files:
+            assert isinstance(kept_files, list)
+            for filename in kept_files:
+                self.assertTrue(
+                    path.isfile(path.join(maildir, 'cur', filename)))
+
+        # Check files that should be removed were deleted.
+        if removed_files:
+            assert isinstance(removed_files, list)
+            for filename in removed_files:
+                self.assertFalse(
+                    path.isfile(path.join(maildir, 'cur', filename)))
 
     def get_args(self, **kwargs):
         '''Gets a copy of the defaults and updates with any kwargs given'''
         args = deepcopy(self.default_args)
-        for k, v in kwargs.items():
-            args[k] = v
+        args.update(kwargs)
         return args
 
-    def test_maildir_smaller(self):
-        args = self.get_args(strategy="smaller")
-        self.do_maildir_test_strategies(args, self.mails["bigger"])
+
+class TestSizeStrategy(TestDeduplicate):
+
+    maildir_path = 'testdata/maildir_dups'
+
+    mails = {
+        'bigger': 'mail1:1,S',
+        'smaller': 'mail0:1,S'}
+
+    def test_maildir_smaller_strategy_dry_run(self):
+        args = self.get_args(strategy='smaller')
+        self.run_maildir_test(
+            args,
+            kept_files=[self.mails['bigger'], self.mails['smaller']])
+
+    @unittest.skip("TODO: find a way to resurect initial test data.")
+    def test_maildir_smaller_strategy(self):
+        args = self.get_args(strategy='smaller', dry_run=False)
+        self.run_maildir_test(
+            args,
+            kept_files=[self.mails['bigger']],
+            removed_files=[self.mails['smaller']])
