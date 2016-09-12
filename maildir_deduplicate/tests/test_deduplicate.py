@@ -107,3 +107,26 @@ class TestSizeStrategy(TestDeduplicate):
             args,
             kept_files=[self.mails['bigger']],
             removed_files=[self.mails['smaller']])
+
+
+class TestDateStrategy(TestDeduplicate):
+
+    maildir_path = 'test_maildirs/strategy_date'
+
+    mails = {
+        'oldest': 'mail1:1,S',
+        'newer': 'mail0:1,S'}
+
+    def test_maildir_newer_strategy_dry_run(self):
+        args = self.get_args(strategy='newer')
+        self.run_maildir_test(
+            args,
+            kept_files=[self.mails['newer'], self.mails['oldest']])
+
+    @unittest.skip("TODO: find a way to resurect initial test data.")
+    def test_maildir_newer_strategy(self):
+        args = self.get_args(strategy='newer', dry_run=False)
+        self.run_maildir_test(
+            args,
+            kept_files=[self.mails['oldest']],
+            removed_files=[self.mails['newer']])
