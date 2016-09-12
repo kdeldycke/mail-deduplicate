@@ -29,6 +29,7 @@ from maildir_deduplicate.deduplicate import Deduplicate
 
 
 class TestDeduplicate(unittest.TestCase):
+
     default_args = {
         'strategy': 'smaller',
         'regexp': None,
