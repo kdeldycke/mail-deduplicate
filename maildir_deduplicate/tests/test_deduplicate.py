@@ -43,6 +43,7 @@ class TestDeduplicate(unittest.TestCase):
     maildir_path = None
 
     def message_factory(self):
+        """ Building block for future fuzzing and dynamic content creation. """
         return textwrap.dedent("""\
             From: foo@bar.com
             To: báz
@@ -79,7 +80,7 @@ class TestDeduplicate(unittest.TestCase):
                     path.isfile(path.join(maildir, 'cur', filename)))
 
     def get_args(self, **kwargs):
-        '''Gets a copy of the defaults and updates with any kwargs given'''
+        """ Gets a copy of the defaults and updates with any kwargs given. """
         args = deepcopy(self.default_args)
         args.update(kwargs)
         return args
