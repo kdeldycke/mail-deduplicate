@@ -88,7 +88,7 @@ class TestDeduplicate(unittest.TestCase):
 
 class TestSizeStrategy(TestDeduplicate):
 
-    maildir_path = 'testdata/maildir_dups'
+    maildir_path = 'test_maildirs/strategy_smaller'
 
     mails = {
         'bigger': 'mail1:1,S',
