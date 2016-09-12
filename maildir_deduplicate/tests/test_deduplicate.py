@@ -25,7 +25,6 @@ import unittest
 from copy import deepcopy
 from os import path
 
-from maildir_deduplicate import logger
 from maildir_deduplicate.deduplicate import Deduplicate
 
 
