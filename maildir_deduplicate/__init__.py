@@ -92,6 +92,10 @@ NOT_MATCHING = 'not-matching'
 STRATEGIES = frozenset([OLDER, NEWER, SMALLER, MATCHING, NOT_MATCHING])
 
 
+# List of required sub-folders defining a properly structured maildir.
+MD_SUBDIRS = frozenset(('cur', 'new', 'tmp'))
+
+
 # Defines custom exception first to avoid circular imports.
 
 class InsufficientHeadersError(Exception):

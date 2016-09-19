@@ -34,7 +34,8 @@ from . import (
     NOT_MATCHING,
     STRATEGIES,
     __version__,
-    logger
+    logger,
+    MD_SUBDIRS,
 )
 from .deduplicate import Deduplicate
 
@@ -67,7 +68,7 @@ def validate_regexp(ctx, param, value):
 def validate_maildirs(ctx, param, value):
     """ Check that folders are maildirs. """
     for path in value:
-        for subdir in ('cur', 'new', 'tmp'):
+        for subdir in MD_SUBDIRS:
             if not os.path.isdir(os.path.join(path, subdir)):
                 raise click.BadParameter(
                     '{} is not a maildir (missing {!r} sub-directory).'.format(
