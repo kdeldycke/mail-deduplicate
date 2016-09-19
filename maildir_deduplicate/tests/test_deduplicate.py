@@ -20,27 +20,16 @@
 
 from __future__ import absolute_import, division, print_function
 
-import textwrap
-import unittest
-from copy import deepcopy
-from os import path
+from textwrap import dedent
+from os import path, makedirs
 
-from maildir_deduplicate.deduplicate import Deduplicate
+from maildir_deduplicate import MD_SUBDIRS
+from maildir_deduplicate.cli import cli
+
+from .test_cli import CLITestCase
 
 
-class TestDeduplicate(unittest.TestCase):
-
-    default_args = {
-        'strategy': 'smaller',
-        'regexp': None,
-        'dry_run': True,
-        'show_diffs': False,
-        'use_message_id': False,
-        'size_threshold': 512,
-        'diff_threshold': 512,
-        'progress': False}
-
-    maildir_path = None
+class TestDeduplicate(CLITestCase):
 
     def message_factory(self):
         """ Building block for future fuzzing and dynamic content creation. """
@@ -55,78 +44,222 @@ class TestDeduplicate(unittest.TestCase):
             Да, они летят.
             """).encode('utf-8')
 
-    def run_maildir_test(
-            self, dedup_kwargs, kept_files=None, removed_files=None):
-        """ Run the deduplication and check for removed and kept files. """
-        assert self.maildir_path
-        maildir = path.join(path.dirname(__file__), self.maildir_path)
+    def fake_maildir(self, mails, md_path):
+        """ Create a fake maildir and populate it with mails. """
+        # Create maildir structure.
+        for subdir in MD_SUBDIRS:
+            makedirs(path.join(md_path, subdir))
 
-        dedup = Deduplicate(**dedup_kwargs)
-        dedup.add_maildir(maildir)
-        dedup.run()
-
-        # Check files that should be kept are still there.
-        if kept_files:
-            assert isinstance(kept_files, list)
-            for filename in kept_files:
-                self.assertTrue(
-                    path.isfile(path.join(maildir, 'cur', filename)))
-
-        # Check files that should be removed were deleted.
-        if removed_files:
-            assert isinstance(removed_files, list)
-            for filename in removed_files:
-                self.assertFalse(
-                    path.isfile(path.join(maildir, 'cur', filename)))
-
-    def get_args(self, **kwargs):
-        """ Gets a copy of the defaults and updates with any kwargs given. """
-        args = deepcopy(self.default_args)
-        args.update(kwargs)
-        return args
+        # Populate the 'cur' sub-folder with provided mails.
+        for filename, content in mails.items():
+            filepath = path.join(md_path, 'cur', filename)
+            with open(filepath, 'wb') as mail_file:
+                mail_file.write(content)
 
 
 class TestSizeStrategy(TestDeduplicate):
 
-    maildir_path = 'test_maildirs/strategy_smaller'
+    maildir_path = './strategy_smaller'
 
     mails = {
-        'bigger': 'mail1:1,S',
-        'smaller': 'mail0:1,S'}
+        # Small mail #1.
+        'mail0:1,S': dedent(u"""\
+            Return-path: <none@nohost.com>
+            Envelope-to: me@host.com
+            Delivery-date: Fri, 11 Nov 2011 23:11:11 +1100
+            Received: from [11.11.11.11] (helo=nope.com)
+            \tby host.com with esmtp (Exim 4.80)
+            \t(envelope-from <noone@nohost.com>)
+            \tid 1CX8OJ-0014c9-Ii
+            \tfor me@host.com; Fri, 11 Nov 2011 23:11:11 +1100
+            Date: Fri, 11 Nov 2011 23:11:11 +1100
+            From: none@nohost.com
+            Message-Id: <201111231111.abcdef101@mail.nohost.com>
+            To: me@host.com
+            Subject: A duplicate mail
+            Content-Length: 60
+
+            Hello I am a duplicate mail. With annoying ćĥäŖş.
+            """).encode('utf-8'),
+        # Big mail.
+        'mail1:1,S': dedent(u"""\
+            Return-path: <none@nohost.com>
+            Envelope-to: me@host.com
+            Delivery-date: Fri, 11 Nov 2011 23:11:11 +1100
+            Received: from [11.11.11.11] (helo=nope.com)
+            \tby host.com with esmtp (Exim 4.80)
+            \t(envelope-from <noone@nohost.com>)
+            \tid 1CX8OJ-0014c9-Ii
+            \tfor me@host.com; Fri, 11 Nov 2011 23:11:11 +1100
+            Date: Fri, 11 Nov 2011 23:11:11 +1100
+            From: none@nohost.com
+            Message-Id: <201111231111.abcdef101@mail.nohost.com>
+            To: me@host.com
+            Subject: A duplicate mail
+            Content-Length: 60
+
+            Hello I am a duplicate mail. With annoying ćĥäŖş.
+
+            EOM
+            """).encode('utf-8'),
+        # Small mail #2.
+        'mail2:1,S': dedent(u"""\
+            Return-path: <none@nohost.com>
+            Envelope-to: me@host.com
+            Delivery-date: Fri, 11 Nov 2011 23:11:11 +1100
+            Received: from [11.11.11.11] (helo=nope.com)
+            \tby host.com with esmtp (Exim 4.80)
+            \t(envelope-from <noone@nohost.com>)
+            \tid 1CX8OJ-0014c9-Ii
+            \tfor me@host.com; Fri, 11 Nov 2011 23:11:11 +1100
+            Date: Fri, 11 Nov 2011 23:11:11 +1100
+            From: none@nohost.com
+            Message-Id: <201111231111.abcdef101@mail.nohost.com>
+            To: me@host.com
+            Subject: A duplicate mail
+            Content-Length: 60
+
+            Hello I am a duplicate Mail. With annoying ćĥäŖş.
+            """).encode('utf-8'),
+    }
 
     def test_maildir_smaller_strategy_dry_run(self):
-        args = self.get_args(strategy='smaller')
-        self.run_maildir_test(
-            args,
-            kept_files=[self.mails['bigger'], self.mails['smaller']])
+        """ Check nothing is removed in dry-run mode. """
+        with self.runner.isolated_filesystem():
+            self.fake_maildir(
+                mails=self.mails,
+                md_path=self.maildir_path)
 
-    @unittest.skip("TODO: find a way to resurect initial test data.")
+            result = self.runner.invoke(cli, [
+                'deduplicate', '--strategy=smaller', '--dry-run',
+                self.maildir_path])
+
+            self.assertEqual(result.exit_code, 0)
+
+            for filename in self.mails.keys():
+                self.assertTrue(
+                    path.isfile(path.join(self.maildir_path, 'cur', filename)))
+
     def test_maildir_smaller_strategy(self):
-        args = self.get_args(strategy='smaller', dry_run=False)
-        self.run_maildir_test(
-            args,
-            kept_files=[self.mails['bigger']],
-            removed_files=[self.mails['smaller']])
+        """ Test strategy of smaller mail deletion for real. """
+        with self.runner.isolated_filesystem():
+            self.fake_maildir(
+                mails=self.mails,
+                md_path=self.maildir_path)
+
+            result = self.runner.invoke(cli, [
+                'deduplicate', '--strategy=smaller', self.maildir_path])
+
+            self.assertEqual(result.exit_code, 0)
+
+            # Biggest mail is kept but not the smaller ones.
+            self.assertTrue(
+                path.isfile(path.join(self.maildir_path, 'cur', 'mail1:1,S')))
+            self.assertFalse(
+                path.isfile(path.join(self.maildir_path, 'cur', 'mail0:1,S')))
+            self.assertFalse(
+                path.isfile(path.join(self.maildir_path, 'cur', 'mail2:1,S')))
 
 
 class TestDateStrategy(TestDeduplicate):
 
-    maildir_path = 'test_maildirs/strategy_date'
+    maildir_path = './strategy_date'
 
     mails = {
-        'oldest': 'mail1:1,S',
-        'newer': 'mail0:1,S'}
+        # New mail #1.
+        'mail0:1,S': dedent(u"""\
+            Return-path: <none@nohost.com>
+            Envelope-to: me@host.com
+            Delivery-date: Wed, 31 Aug 2016 23:10:12 -0000
+            Received: from [11.11.11.11] (helo=nope.com)
+            \tby host.com with esmtp (Exim 4.80)
+            \t(envelope-from <noone@nohost.com>)
+            \tid 1CX8OJ-0014c9-Ii
+            \tfor me@host.com; Wed, 31 Aug 2016 23:10:12 -0000
+            Date: Wed, 31 Aug 2016 23:10:12 -0000
+            From: none@nohost.com
+            Message-Id: <201111231111.abcdef101@mail.nohost.com>
+            To: me@host.com
+            Subject: A duplicate mail
+            Content-Length: 60
+
+            Hello I am a duplicate mail. With annoying ćĥäŖş.
+            """).encode('utf-8'),
+        # Old mail.
+        'mail1:1,S': dedent(u"""\
+            Return-path: <none@nohost.com>
+            Envelope-to: me@host.com
+            Delivery-date: Wed, 31 Aug 2016 21:59:16 -0000
+            Received: from [11.11.11.11] (helo=nope.com)
+            \tby host.com with esmtp (Exim 4.80)
+            \t(envelope-from <noone@nohost.com>)
+            \tid 1CX8OJ-0014c9-Ii
+            \tfor me@host.com; Wed, 31 Aug 2016 21:59:16 -0000
+            Date: Wed, 31 Aug 2016 21:59:16 -0000
+            From: none@nohost.com
+            Message-Id: <201111231111.abcdef101@mail.nohost.com>
+            To: me@host.com
+            Subject: A duplicate mail
+            Content-Length: 60
+
+            Hello I am a duplicate mail. With annoying ćĥäŖş.
+            """).encode('utf-8'),
+        # New mail #2.
+        'mail2:1,S': dedent(u"""\
+            Return-path: <none@nohost.com>
+            Envelope-to: me@host.com
+            Delivery-date: Wed, 31 Aug 2016 23:10:12 -0000
+            Received: from [11.11.11.11] (helo=nope.com)
+            \tby host.com with esmtp (Exim 4.80)
+            \t(envelope-from <noone@nohost.com>)
+            \tid 1CX8OJ-0014c9-Ii
+            \tfor me@host.com; Wed, 31 Aug 2016 23:10:12 -0000
+            Date: Wed, 31 Aug 2016 23:10:12 -0000
+            From: none@nohost.com
+            Message-Id: <201111231111.abcdef101@mail.nohost.com>
+            To: me@host.com
+            Subject: A duplicate mail
+            Content-Length: 60
+
+            Hello I am a duplicate mail. With annoying ćĥäŖş.
+            """).encode('utf-8'),
+    }
 
     def test_maildir_newer_strategy_dry_run(self):
-        args = self.get_args(strategy='newer')
-        self.run_maildir_test(
-            args,
-            kept_files=[self.mails['newer'], self.mails['oldest']])
+        """ Check nothing is removed in dry-run mode. """
+        with self.runner.isolated_filesystem():
+            self.fake_maildir(
+                mails=self.mails,
+                md_path=self.maildir_path)
 
-    @unittest.skip("TODO: find a way to resurect initial test data.")
+            result = self.runner.invoke(cli, [
+                'deduplicate', '--strategy=newer', '--dry-run',
+                self.maildir_path])
+
+            self.assertEqual(result.exit_code, 0)
+
+            for filename in self.mails.keys():
+                self.assertTrue(
+                    path.isfile(path.join(self.maildir_path, 'cur', filename)))
+
     def test_maildir_newer_strategy(self):
-        args = self.get_args(strategy='newer', dry_run=False)
-        self.run_maildir_test(
-            args,
-            kept_files=[self.mails['oldest']],
-            removed_files=[self.mails['newer']])
+        """ Test strategy of newer mail deletion for real. """
+        with self.runner.isolated_filesystem():
+            self.fake_maildir(
+                mails=self.mails,
+                md_path=self.maildir_path)
+
+            result = self.runner.invoke(cli, [
+                'deduplicate', '--strategy=newer', self.maildir_path])
+
+            self.assertEqual(result.exit_code, 0)
+
+            import pdb; pdb.set_trace()  # XXX BREAKPOINT
+
+            # Oldest mail is kept but not the newer ones.
+            self.assertTrue(
+                path.isfile(path.join(self.maildir_path, 'cur', 'mail1:1,S')))
+            self.assertFalse(
+                path.isfile(path.join(self.maildir_path, 'cur', 'mail0:1,S')))
+            self.assertFalse(
+                path.isfile(path.join(self.maildir_path, 'cur', 'mail2:1,S')))
