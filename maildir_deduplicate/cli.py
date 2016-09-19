@@ -31,11 +31,11 @@ from . import (
     DEFAULT_DIFF_THRESHOLD,
     DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
     MATCHING,
+    MD_SUBDIRS,
     NOT_MATCHING,
     STRATEGIES,
     __version__,
-    logger,
-    MD_SUBDIRS,
+    logger
 )
 from .deduplicate import Deduplicate
 
