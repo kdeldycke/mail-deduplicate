@@ -20,32 +20,64 @@
 
 from __future__ import absolute_import, division, print_function
 
+from os import makedirs, path
 from textwrap import dedent
-from os import path, makedirs
 
-from maildir_deduplicate import MD_SUBDIRS
+from maildir_deduplicate import MD_SUBDIRS, PY3
 from maildir_deduplicate.cli import cli
 
 from .test_cli import CLITestCase
 
+if PY3:
+    basestring = (str, bytes)
+
 
 class TestDeduplicate(CLITestCase):
 
-    def message_factory(self):
-        """ Building block for future fuzzing and dynamic content creation. """
-        return textwrap.dedent("""\
+    @staticmethod
+    def message_factory(**custom_fields):
+        """ Produce a random or customized mail message. """
+        # Defaults fields values.
+        fields = {
+            'body': "Да, они летят.",
+            'date': "Fri, 11 Nov 2011 23:11:11 +1100"
+        }
+
+        # Check all custom fields are recognized and in the expected format.
+        assert set(custom_fields).issubset(fields)
+        for value in custom_fields.values():
+            assert isinstance(value, basestring)
+
+        # Update default values with custom ones.
+        fields.update(custom_fields)
+
+        return dedent("""\
+            Return-path: <none@nohost.com>
+            Envelope-to: me@host.com
+            Delivery-date: {date}
+            Received: from [11.11.11.11] (helo=nope.com)
+            \tby host.com with esmtp (Exim 4.80)
+            \t(envelope-from <noone@nohost.com>)
+            \tid 1CX8OJ-0014c9-Ii
+            \tfor me@host.com; {date}
+            Date: {date}
             From: foo@bar.com
+            Message-Id: <201111231111.abcdef101@mail.nohost.com>
             To: báz
             Subject: Maintenant je vous présente mon collègue, le pouf célèbre
             \tJean de Baddie
             Mime-Version: 1.0
+            Content-Length: 60
             Content-Type: text/plain; charset="utf-8"
             Content-Transfer-Encoding: 8bit
-            Да, они летят.
-            """).encode('utf-8')
+            {body}""".format(**fields)).encode('utf-8')
 
-    def fake_maildir(self, mails, md_path):
-        """ Create a fake maildir and populate it with mails. """
+    @staticmethod
+    def fake_maildir(mails, md_path):
+        """ Create a fake maildir and populate it with mails.
+
+        TODO: wrap click's isolated_filesystem() context manager.
+        """
         # Create maildir structure.
         for subdir in MD_SUBDIRS:
             makedirs(path.join(md_path, subdir))
@@ -61,67 +93,15 @@ class TestSizeStrategy(TestDeduplicate):
 
     maildir_path = './strategy_smaller'
 
+    small_mail = TestDeduplicate.message_factory(
+        body="Hello I am a duplicate mail. With annoying ćĥäŖş."),
+    big_mail = TestDeduplicate.message_factory(
+        body="Hello I am a duplicate mail. With annoying ćĥäŖş.\nEOM"),
+
     mails = {
-        # Small mail #1.
-        'mail0:1,S': dedent(u"""\
-            Return-path: <none@nohost.com>
-            Envelope-to: me@host.com
-            Delivery-date: Fri, 11 Nov 2011 23:11:11 +1100
-            Received: from [11.11.11.11] (helo=nope.com)
-            \tby host.com with esmtp (Exim 4.80)
-            \t(envelope-from <noone@nohost.com>)
-            \tid 1CX8OJ-0014c9-Ii
-            \tfor me@host.com; Fri, 11 Nov 2011 23:11:11 +1100
-            Date: Fri, 11 Nov 2011 23:11:11 +1100
-            From: none@nohost.com
-            Message-Id: <201111231111.abcdef101@mail.nohost.com>
-            To: me@host.com
-            Subject: A duplicate mail
-            Content-Length: 60
-
-            Hello I am a duplicate mail. With annoying ćĥäŖş.
-            """).encode('utf-8'),
-        # Big mail.
-        'mail1:1,S': dedent(u"""\
-            Return-path: <none@nohost.com>
-            Envelope-to: me@host.com
-            Delivery-date: Fri, 11 Nov 2011 23:11:11 +1100
-            Received: from [11.11.11.11] (helo=nope.com)
-            \tby host.com with esmtp (Exim 4.80)
-            \t(envelope-from <noone@nohost.com>)
-            \tid 1CX8OJ-0014c9-Ii
-            \tfor me@host.com; Fri, 11 Nov 2011 23:11:11 +1100
-            Date: Fri, 11 Nov 2011 23:11:11 +1100
-            From: none@nohost.com
-            Message-Id: <201111231111.abcdef101@mail.nohost.com>
-            To: me@host.com
-            Subject: A duplicate mail
-            Content-Length: 60
-
-            Hello I am a duplicate mail. With annoying ćĥäŖş.
-
-            EOM
-            """).encode('utf-8'),
-        # Small mail #2.
-        'mail2:1,S': dedent(u"""\
-            Return-path: <none@nohost.com>
-            Envelope-to: me@host.com
-            Delivery-date: Fri, 11 Nov 2011 23:11:11 +1100
-            Received: from [11.11.11.11] (helo=nope.com)
-            \tby host.com with esmtp (Exim 4.80)
-            \t(envelope-from <noone@nohost.com>)
-            \tid 1CX8OJ-0014c9-Ii
-            \tfor me@host.com; Fri, 11 Nov 2011 23:11:11 +1100
-            Date: Fri, 11 Nov 2011 23:11:11 +1100
-            From: none@nohost.com
-            Message-Id: <201111231111.abcdef101@mail.nohost.com>
-            To: me@host.com
-            Subject: A duplicate mail
-            Content-Length: 60
-
-            Hello I am a duplicate Mail. With annoying ćĥäŖş.
-            """).encode('utf-8'),
-    }
+        'mail0:1,S': small_mail,
+        'mail1:1,S': big_mail,
+        'mail2:1,S': small_mail}
 
     def test_maildir_smaller_strategy_dry_run(self):
         """ Check nothing is removed in dry-run mode. """
@@ -165,65 +145,15 @@ class TestDateStrategy(TestDeduplicate):
 
     maildir_path = './strategy_date'
 
+    new_mail = TestDeduplicate.message_factory(
+        date="Wed, 31 Aug 2016 23:10:12 -0000"),
+    old_mail = TestDeduplicate.message_factory(
+        date="Wed, 31 Aug 2016 21:59:16 -0000"),
+
     mails = {
-        # New mail #1.
-        'mail0:1,S': dedent(u"""\
-            Return-path: <none@nohost.com>
-            Envelope-to: me@host.com
-            Delivery-date: Wed, 31 Aug 2016 23:10:12 -0000
-            Received: from [11.11.11.11] (helo=nope.com)
-            \tby host.com with esmtp (Exim 4.80)
-            \t(envelope-from <noone@nohost.com>)
-            \tid 1CX8OJ-0014c9-Ii
-            \tfor me@host.com; Wed, 31 Aug 2016 23:10:12 -0000
-            Date: Wed, 31 Aug 2016 23:10:12 -0000
-            From: none@nohost.com
-            Message-Id: <201111231111.abcdef101@mail.nohost.com>
-            To: me@host.com
-            Subject: A duplicate mail
-            Content-Length: 60
-
-            Hello I am a duplicate mail. With annoying ćĥäŖş.
-            """).encode('utf-8'),
-        # Old mail.
-        'mail1:1,S': dedent(u"""\
-            Return-path: <none@nohost.com>
-            Envelope-to: me@host.com
-            Delivery-date: Wed, 31 Aug 2016 21:59:16 -0000
-            Received: from [11.11.11.11] (helo=nope.com)
-            \tby host.com with esmtp (Exim 4.80)
-            \t(envelope-from <noone@nohost.com>)
-            \tid 1CX8OJ-0014c9-Ii
-            \tfor me@host.com; Wed, 31 Aug 2016 21:59:16 -0000
-            Date: Wed, 31 Aug 2016 21:59:16 -0000
-            From: none@nohost.com
-            Message-Id: <201111231111.abcdef101@mail.nohost.com>
-            To: me@host.com
-            Subject: A duplicate mail
-            Content-Length: 60
-
-            Hello I am a duplicate mail. With annoying ćĥäŖş.
-            """).encode('utf-8'),
-        # New mail #2.
-        'mail2:1,S': dedent(u"""\
-            Return-path: <none@nohost.com>
-            Envelope-to: me@host.com
-            Delivery-date: Wed, 31 Aug 2016 23:10:12 -0000
-            Received: from [11.11.11.11] (helo=nope.com)
-            \tby host.com with esmtp (Exim 4.80)
-            \t(envelope-from <noone@nohost.com>)
-            \tid 1CX8OJ-0014c9-Ii
-            \tfor me@host.com; Wed, 31 Aug 2016 23:10:12 -0000
-            Date: Wed, 31 Aug 2016 23:10:12 -0000
-            From: none@nohost.com
-            Message-Id: <201111231111.abcdef101@mail.nohost.com>
-            To: me@host.com
-            Subject: A duplicate mail
-            Content-Length: 60
-
-            Hello I am a duplicate mail. With annoying ćĥäŖş.
-            """).encode('utf-8'),
-    }
+        'mail0:1,S': new_mail,
+        'mail1:1,S': old_mail,
+        'mail2:1,S': new_mail}
 
     def test_maildir_newer_strategy_dry_run(self):
         """ Check nothing is removed in dry-run mode. """
