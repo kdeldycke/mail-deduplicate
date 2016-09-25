@@ -254,8 +254,6 @@ class TestDateStrategy(TestDeduplicate):
 
             self.assertEqual(result.exit_code, 0)
 
-            import pdb; pdb.set_trace()  # XXX BREAKPOINT
-
             # Oldest mail is kept but not the newer ones.
             self.assertTrue(
                 path.isfile(path.join(self.maildir_path, 'cur', 'mail1:1,S')))
