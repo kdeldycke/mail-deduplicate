@@ -236,9 +236,11 @@ class Deduplicate(object):
     def run(self):
         """ Run the deduplication process. """
         for hash_key, message_files in self.mails.items():
-            # Skip unique mails.
+
             if len(message_files) == 1:
+                logger.debug("Skip duplicate set with only one message.")
                 continue
+
             messages = [(mf, read_mailfile(mf)) for mf in message_files]
 
             subject = messages[0][1].get('Subject', '')
