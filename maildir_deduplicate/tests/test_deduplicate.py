@@ -99,9 +99,9 @@ class TestSizeStrategy(TestDeduplicate):
     maildir_path = './strategy_smaller'
 
     small_mail = TestDeduplicate.message_factory(
-        body="Hello I am a duplicate mail. With annoying ćĥäŖş."),
+        body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
     big_mail = TestDeduplicate.message_factory(
-        body="Hello I am a duplicate mail. With annoying ćĥäŖş.\nEOM"),
+        body="Hello I am a duplicate mail. With annoying ćĥäŖş.\nEOM")
 
     mails = {
         'mail0:1,S': small_mail,
@@ -151,9 +151,9 @@ class TestDateStrategy(TestDeduplicate):
     maildir_path = './strategy_date'
 
     new_mail = TestDeduplicate.message_factory(
-        date="Wed, 31 Aug 2016 23:10:12 -0000"),
+        date="Wed, 31 Aug 2016 23:10:12 -0000")
     old_mail = TestDeduplicate.message_factory(
-        date="Wed, 31 Aug 2016 21:59:16 -0000"),
+        date="Wed, 31 Aug 2016 21:59:16 -0000")
 
     mails = {
         'mail0:1,S': new_mail,
