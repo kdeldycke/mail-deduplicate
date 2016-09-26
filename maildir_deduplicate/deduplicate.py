@@ -108,10 +108,7 @@ class Deduplicate(object):
             else:
                 logger.debug(
                     "Hash is {} for mail {!r}.".format(mail_hash, mail_id))
-                if mail_hash not in self.mails:
-                    self.mails[mail_hash] = []
-
-                self.mails[mail_hash].append(mail_file)
+                self.mails.setdefault(mail_hash, []).append(mail_file)
                 self.mail_count += 1
 
     @classmethod
