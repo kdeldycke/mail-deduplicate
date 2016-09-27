@@ -112,36 +112,43 @@ class Deduplicate(object):
                 self.mail_count += 1
 
     @classmethod
-    def compute_hash(cls, mail_file, message, use_message_id):
+    def compute_hash(cls, mail_path, message, use_message_id):
+        """ Compute the canonical hash of a mail.
+
+        This hash will be used to group identical mails under the same unique
+        ID.
+
+        Return a tuple of the hash string and canonical headers.
+        """
         if use_message_id:
             message_id = message.get('Message-Id')
             if message_id:
                 return message_id.strip(), ''
             header_text = cls.header_text(message)
             logger.warning(
-                "No Message-ID in {}: {}".format(mail_file, header_text))
-        canonical_headers_text = cls.canonical_headers(mail_file, message)
+                "No Message-ID in {}: {}".format(mail_path, header_text))
+        canonical_headers_text = cls.canonical_headers(message)
         return (
             hashlib.sha224(canonical_headers_text.encode('utf-8')).hexdigest(),
             canonical_headers_text)
 
     @staticmethod
-    def header_text(mail):
+    def header_text(message):
         return ''.join(
-            '{}: {}\n'.format(header, mail[header])
+            '{}: {}\n'.format(header, message[header])
             for header in HEADERS
-            if mail[header] is not None)
+            if message[header] is not None)
 
     @classmethod
-    def canonical_headers(cls, mail_file, mail):
+    def canonical_headers(cls, message):
         """ Copy selected headers into a new string. """
         canonical_headers = ''
 
         for header in HEADERS:
-            if header not in mail:
+            if header not in message:
                 continue
 
-            for value in mail.get_all(header):
+            for value in message.get_all(header):
                 canonical_value = cls.canonical_header_value(header, value)
                 if re.search('\S', canonical_value):
                     canonical_headers += '{}: {}\n'.format(
