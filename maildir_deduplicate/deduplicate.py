@@ -98,17 +98,17 @@ class Deduplicate(object):
                 return x
 
         for mail_id, message in bar(maildir.iteritems()):
-            mail_file = os.path.join(maildir._path, maildir._lookup(mail_id))
+            mail_path = os.path.join(maildir._path, maildir._lookup(mail_id))
             try:
                 mail_hash, header_text = self.compute_hash(
-                    mail_file, message, self.use_message_id)
+                    mail_path, message, self.use_message_id)
             except InsufficientHeadersError as e:
                 logger.warning(
-                    "Ignoring problematic {}: {}".format(mail_file, e.args[0]))
+                    "Ignoring problematic {}: {}".format(mail_path, e.args[0]))
             else:
                 logger.debug(
                     "Hash is {} for mail {!r}.".format(mail_hash, mail_id))
-                self.mails.setdefault(mail_hash, []).append(mail_file)
+                self.mails.setdefault(mail_hash, [].add(mail_path)
                 self.mail_count += 1
 
     @classmethod
