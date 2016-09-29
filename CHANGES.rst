@@ -19,6 +19,8 @@ ChangeLog
 * Make wheels generated under Python 2 environnment available for Python 3 too.
 * Let unittests generates their own fake and temporary maildirs.
 * Use generic factory to produce mail fixtures in unittests.
+* Normalize and canonicalize all paths to deduplicate on the fly mails pointing
+  to the same file.
 
 
 `1.3.0 (2016-08-11) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.2.0...v1.3.0>`_
