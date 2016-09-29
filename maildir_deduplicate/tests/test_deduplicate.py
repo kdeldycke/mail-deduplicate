@@ -69,9 +69,8 @@ class TestDeduplicate(CLITestCase):
             Date: {date}
             From: foo@bar.com
             Message-Id: <201111231111.abcdef101@mail.nohost.com>
-            To: báz
-            Subject: Maintenant je vous présente mon collègue, le pouf célèbre
-            \tJean de Baddie
+            To: baz
+            Subject: A duplicate mail
             Mime-Version: 1.0
             Content-Length: 60
             Content-Type: text/plain; charset="utf-8"
