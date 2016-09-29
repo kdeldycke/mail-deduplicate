@@ -93,12 +93,14 @@ class Deduplicate(object):
             os.path.expanduser(path))))
 
     def add_maildir(self, maildir_path):
-        """ Load up a maildir add compute hash for each mail their contain. """
+        """ Load up a maildir and compute hash for each mail found. """
+        maildir_path = self.canonical_path(maildir_path)
+        logger.info("Opening maildir folder at {!r} ...".format(maildir_path))
         # Maildir parser requires a string, not a unicode, as path.
-        maildir = Maildir(str(self.canonical_path(maildir_path)), factory=None, create=False)
-        # Collate folders by hash.
-        logger.info(
-            "Processing {} mails in {}".format(len(maildir), maildir._path))
+        maildir = Maildir(str(maildir_path), factory=None, create=False)
+
+        # Group folders by hash.
+        logger.info("{} mails found.".format(len(maildir)))
         if self.progress:
             bar = ProgressBar(widgets=[Percentage(), Bar()],
                               max_value=len(maildir), redirect_stderr=True,
