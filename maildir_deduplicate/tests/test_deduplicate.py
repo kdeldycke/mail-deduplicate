@@ -33,6 +33,7 @@ from maildir_deduplicate.cli import cli
 
 from .test_cli import CLITestCase
 
+
 if PY3:
     basestring = (str, bytes)
 
