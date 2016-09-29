@@ -121,7 +121,8 @@ class Deduplicate(object):
             else:
                 logger.debug(
                     "Hash is {} for mail {!r}.".format(mail_hash, mail_id))
-                self.mails.setdefault(mail_hash, [].add(mail_path)
+                # Use a set to deduplicate entries pointing to the same file.
+                self.mails.setdefault(mail_hash, set()).add(mail_path)
                 self.mail_count += 1
 
     @classmethod
