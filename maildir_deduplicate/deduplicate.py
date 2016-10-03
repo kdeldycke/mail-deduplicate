@@ -625,7 +625,6 @@ class Deduplicate(object):
 
             getattr(duplicates, strategy_method_id)()
 
-
         #    too_dissimilar = self.messages_too_dissimilar(
         #        hash_key, sorted_messages_size)
         #    if too_dissimilar == 'size':

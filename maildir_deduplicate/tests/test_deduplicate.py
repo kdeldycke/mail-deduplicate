@@ -204,7 +204,7 @@ class TestDateStrategy(TestDeduplicate):
     newest_date = arrow.utcnow()
     newer_date = newest_date.replace(minutes=-1)
     older_date = newest_date.replace(hours=-2)
-    oldest_date =  newest_date.replace(days=-3)
+    oldest_date = newest_date.replace(days=-3)
 
     newest_mail = MailFactory(date=newest_date)
     newer_mail = MailFactory(date=newer_date)
