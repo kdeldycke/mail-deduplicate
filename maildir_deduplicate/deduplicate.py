@@ -31,20 +31,14 @@ import os
 import re
 import textwrap
 import time
+from collections import namedtuple
 from difflib import unified_diff
 from mailbox import Maildir
-from collections import namedtuple
 from operator import attrgetter
 
 from progressbar import Bar, Percentage, ProgressBar
 
-from . import (
-    HEADERS,
-    PY2, PY3,
-    InsufficientHeadersError,
-    logger
-)
-
+from . import HEADERS, PY2, PY3, InsufficientHeadersError, logger
 
 if PY3:
     basestring = (str, bytes)

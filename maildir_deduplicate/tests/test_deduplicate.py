@@ -26,17 +26,15 @@ from __future__ import (
 )
 
 import unittest
+from email.utils import formatdate as maildate
 from os import makedirs, path
 from textwrap import dedent
-from email.utils import formatdate as maildate
 
 import arrow
-
 from maildir_deduplicate import MD_SUBDIRS, PY3
 from maildir_deduplicate.cli import cli
 
 from .test_cli import CLITestCase
-
 
 if PY3:
     basestring = (str, bytes)
