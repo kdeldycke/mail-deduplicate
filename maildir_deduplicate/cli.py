@@ -30,9 +30,9 @@ import click_log
 from . import (
     DEFAULT_DIFF_THRESHOLD,
     DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
-    MATCHING,
+    DELETE_MATCHING_PATH,
     MD_SUBDIRS,
-    NOT_MATCHING,
+    DELETE_NON_MATCHING_PATH,
     STRATEGIES,
     __version__,
     logger
@@ -79,14 +79,14 @@ def validate_maildirs(ctx, param, value):
 @cli.command(short_help='Deduplicate maildirs content.')
 @click.option(
     '--strategy', type=click.Choice(STRATEGIES),
-    help='Removal strategy to apply on found duplicates.')
+    help='Deletion strategy to apply within a subset of duplicates.')
 @click.option(
     '-r', '--regexp', callback=validate_regexp, metavar='REGEXP',
-    help='Regular expression for file path. Required in matching and '
-    'not-matching strategies.')
+    help='Regular expression against a mail file path. Required in '
+    'delete-matching-path and delete-non-matching-path strategies.')
 @click.option(
     '-n', '--dry-run', is_flag=True, default=False,
-    help='Do not actually remove anything; just show what would be removed.')
+    help='Do not actually delete anything; just show what would be removed.')
 @click.option(
     '-s', '--show-diffs', count=True,
     help='Show diffs between duplicates even if they are within the '
@@ -116,14 +116,20 @@ def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
     """ Deduplicate mails from a set of maildir folders.
 
     \b
-    Removal strategies for each set of mail duplicates:
-        - older: remove all but the newest message (determined by ctime).
-        - newer: remove all but the oldest message (determined by ctime).
-        - smaller: Remove all but largest message.
-        - matching: Remove duplicates whose file path matches the regular
-          expression provided via the --regexp parameter.
-        - not-matching: Remove duplicates whose file path does not match the
-          regular expression provided via the --regexp parameter.
+    Removal strategies for subsets of duplicate mails sharing the same hash:
+        - delete-older:    Deletes the olders,    keeps the newests.
+        - delete-oldest:   Deletes the oldests,   keeps the newers.
+        - delete-newer:    Deletes the newers,    keeps the oldests.
+        - delete-newest:   Deletes the newests,   keeps the olders.
+        - delete-smaller:  Deletes the smallers,  keeps the biggests.
+        - delete-smallest: Deletes the smallests, keeps the biggers.
+        - delete-bigger:   Deletes the biggers,   keeps the smallests.
+        - delete-biggest:  Deletes the biggests,  keeps the smallers.
+        - delete-matching-path: Deletes all duplicates whose file path match
+        the regular expression provided via the --regexp parameter.
+        - delete-non-matching-path: Deletes all duplicates whose file path
+        doesn't match the regular expression provided via the --regexp
+        parameter.
     """
     # Print help screen and exit if no maildir folder provided.
     if not maildirs:
@@ -131,7 +137,7 @@ def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
         ctx.exit()
 
     # Validate options requirement depending on strategy.
-    if strategy in [MATCHING, NOT_MATCHING]:
+    if strategy in [DELETE_MATCHING_PATH, DELETE_NON_MATCHING_PATH]:
         if not regexp:
             raise click.BadParameter(
                 '{} strategy requires the --regexp parameter.'.format(

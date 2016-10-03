@@ -84,12 +84,25 @@ DEFAULT_DIFF_THRESHOLD = 768  # bytes
 
 
 # Use symbols to define removal strategies.
-OLDER = 'older'
-NEWER = 'newer'
-SMALLER = 'smaller'
-MATCHING = 'matching'
-NOT_MATCHING = 'not-matching'
-STRATEGIES = frozenset([OLDER, NEWER, SMALLER, MATCHING, NOT_MATCHING])
+DELETE_OLDER = 'delete-older'
+DELETE_OLDEST = 'delete-oldest'
+DELETE_NEWER = 'delete-newer'
+DELETE_NEWEST = 'delete-newest'
+
+DELETE_SMALLER = 'delete-smaller'
+DELETE_SMALLEST = 'delete-smallest'
+DELETE_BIGGER = 'delete-bigger'
+DELETE_BIGGEST = 'delete-biggest'
+
+DELETE_MATCHING_PATH = 'delete-matching-path'
+DELETE_NON_MATCHING_PATH = 'delete-non-matching-path'
+
+STRATEGIES = frozenset([
+    DELETE_OLDER, DELETE_OLDEST,
+    DELETE_NEWER, DELETE_NEWEST,
+    DELETE_SMALLER, DELETE_SMALLEST,
+    DELETE_BIGGER, DELETE_BIGGEST,
+    DELETE_MATCHING_PATH, DELETE_NON_MATCHING_PATH])
 
 
 # List of required sub-folders defining a properly structured maildir.

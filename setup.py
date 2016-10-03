@@ -48,6 +48,7 @@ EXTRA_DEPENDENCIES = {
         'sphinx >= 1.4',
         'sphinx_rtd_theme'],
     'tests': [
+        'arrow',
         'nose',
         'coverage',
         'pycodestyle',

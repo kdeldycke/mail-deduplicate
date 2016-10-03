@@ -25,8 +25,12 @@ from __future__ import (
     unicode_literals
 )
 
+import unittest
 from os import makedirs, path
 from textwrap import dedent
+from email.utils import formatdate as maildate
+
+import arrow
 
 from maildir_deduplicate import MD_SUBDIRS, PY3
 from maildir_deduplicate.cli import cli
@@ -38,35 +42,46 @@ if PY3:
     basestring = (str, bytes)
 
 
-class TestDeduplicate(CLITestCase):
+class MailFactory(object):
 
-    @staticmethod
-    def message_factory(**custom_fields):
-        """ Produce a random or customized mail message. """
+    """ Create fake mail messages to serve as unittest fixtures.
+
+    Help production of either random, customized or deterministic mail message.
+    """
+
+    def __init__(self, **custom_fields):
+        """ Init the mail with custom fields. """
         # Defaults fields values.
-        fields = {
+        self.fields = {
             'body': "Да, они летят.",
-            'date': "Fri, 11 Nov 2011 23:11:11 +1100"
-        }
+            'date': arrow.utcnow()}
 
-        # Check all custom fields are recognized and in the expected format.
-        assert set(custom_fields).issubset(fields)
-        for value in custom_fields.values():
-            assert isinstance(value, basestring)
+        # Check all custom fields are recognized and supported.
+        assert set(custom_fields).issubset(self.fields)
+
+        # Parse dates and normalize to Arrow instance.
+        if 'date' in custom_fields:
+            custom_fields['date'] = arrow.get(custom_fields['date'])
 
         # Update default values with custom ones.
-        fields.update(custom_fields)
+        self.fields.update(custom_fields)
 
+        # Add an extra rendered string in RFC2882 format.
+        self.fields['date_rfc2822'] = maildate(
+            self.fields['date'].float_timestamp)
+
+    def render(self):
+        """ Returns the full, rendered content of the mail. """
         return dedent("""\
             Return-path: <none@nohost.com>
             Envelope-to: me@host.com
-            Delivery-date: {date}
+            Delivery-date: {date_rfc2822}
             Received: from [11.11.11.11] (helo=nope.com)
             \tby host.com with esmtp (Exim 4.80)
             \t(envelope-from <noone@nohost.com>)
             \tid 1CX8OJ-0014c9-Ii
-            \tfor me@host.com; {date}
-            Date: {date}
+            \tfor me@host.com; {date_rfc2822}
+            Date: {date_rfc2822}
             From: foo@bar.com
             Message-Id: <201111231111.abcdef101@mail.nohost.com>
             To: baz
@@ -75,7 +90,17 @@ class TestDeduplicate(CLITestCase):
             Content-Length: 60
             Content-Type: text/plain; charset="utf-8"
             Content-Transfer-Encoding: 8bit
-            {body}""".format(**fields)).encode('utf-8')
+            {body}""".format(**self.fields)).encode('utf-8')
+
+    def save(self, filepath):
+        """ Save the mail to the filesystem. """
+        with open(filepath, 'wb') as mail_file:
+            mail_file.write(self.render())
+        # TODO: find a way to set ctime here so we can test for time-based
+        # deduplication strategies.
+
+
+class TestDeduplicate(CLITestCase):
 
     @staticmethod
     def fake_maildir(mails, md_path):
@@ -88,25 +113,30 @@ class TestDeduplicate(CLITestCase):
             makedirs(path.join(md_path, subdir))
 
         # Populate the 'cur' sub-folder with provided mails.
-        for filename, content in mails.items():
+        for filename, fake_mail in mails.items():
             filepath = path.join(md_path, 'cur', filename)
-            with open(filepath, 'wb') as mail_file:
-                mail_file.write(content)
+            assert isinstance(fake_mail, MailFactory)
+            fake_mail.save(filepath)
 
 
-class TestSizeStrategy(TestDeduplicate):
+class TestDryRun(TestDeduplicate):
 
-    maildir_path = './strategy_smaller'
+    maildir_path = './dry_run'
 
-    small_mail = TestDeduplicate.message_factory(
+    small_mail = MailFactory(
         body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
-    big_mail = TestDeduplicate.message_factory(
-        body="Hello I am a duplicate mail. With annoying ćĥäŖş.\nEOM")
+    medium_mail = MailFactory(
+        body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
+    big_mail = MailFactory(
+        body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++")
 
     mails = {
         'mail0:1,S': small_mail,
         'mail1:1,S': big_mail,
-        'mail2:1,S': small_mail}
+        'mail2:1,S': small_mail,
+        'mail3:1,S': medium_mail,
+        'mail4:1,S': medium_mail,
+        'mail5:1,S': big_mail}
 
     def test_maildir_smaller_strategy_dry_run(self):
         """ Check nothing is removed in dry-run mode. """
@@ -116,83 +146,105 @@ class TestSizeStrategy(TestDeduplicate):
                 md_path=self.maildir_path)
 
             result = self.runner.invoke(cli, [
-                'deduplicate', '--strategy=smaller', '--dry-run',
+                'deduplicate', '--strategy=delete-smaller', '--dry-run',
                 self.maildir_path])
 
             self.assertEqual(result.exit_code, 0)
 
-            for filename in self.mails.keys():
+            for mail_id in self.mails.keys():
                 self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, 'cur', filename)))
+                    path.isfile(path.join(self.maildir_path, 'cur', mail_id)))
+
+
+class TestSizeStrategy(TestDeduplicate):
+
+    maildir_path = './strategy_smaller'
+
+    small_mail = MailFactory(
+        body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
+    medium_mail = MailFactory(
+        body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
+    big_mail = MailFactory(
+        body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++")
+
+    mails = {
+        'mail0:1,S': small_mail,
+        'mail1:1,S': big_mail,
+        'mail2:1,S': small_mail,
+        'mail3:1,S': medium_mail,
+        'mail4:1,S': medium_mail,
+        'mail5:1,S': big_mail}
 
     def test_maildir_smaller_strategy(self):
-        """ Test strategy of smaller mail deletion for real. """
+        """ Test strategy of smaller mail deletion. """
         with self.runner.isolated_filesystem():
             self.fake_maildir(
                 mails=self.mails,
                 md_path=self.maildir_path)
 
             result = self.runner.invoke(cli, [
-                'deduplicate', '--strategy=smaller', self.maildir_path])
+                'deduplicate', '--strategy=delete-smaller', self.maildir_path])
 
             self.assertEqual(result.exit_code, 0)
 
-            # Biggest mail is kept but not the smaller ones.
-            self.assertTrue(
-                path.isfile(path.join(self.maildir_path, 'cur', 'mail1:1,S')))
-            self.assertFalse(
-                path.isfile(path.join(self.maildir_path, 'cur', 'mail0:1,S')))
-            self.assertFalse(
-                path.isfile(path.join(self.maildir_path, 'cur', 'mail2:1,S')))
+            # Biggest mails are kept but not the smaller ones.
+            kept = ['mail1:1,S', 'mail5:1,S']
+            deleted = ['mail0:1,S', 'mail2:1,S', 'mail3:1,S', 'mail4:1,S']
+
+            for mail_id in kept:
+                self.assertTrue(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+            for mail_id in deleted:
+                self.assertFalse(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
 
 
 class TestDateStrategy(TestDeduplicate):
 
     maildir_path = './strategy_date'
 
-    new_mail = TestDeduplicate.message_factory(
-        date="Wed, 31 Aug 2016 23:10:12 -0000")
-    old_mail = TestDeduplicate.message_factory(
-        date="Wed, 31 Aug 2016 21:59:16 -0000")
+    newest_date = arrow.utcnow()
+    newer_date = newest_date.replace(minutes=-1)
+    older_date = newest_date.replace(hours=-2)
+    oldest_date =  newest_date.replace(days=-3)
+
+    newest_mail = MailFactory(date=newest_date)
+    newer_mail = MailFactory(date=newer_date)
+    older_mail = MailFactory(date=older_date)
+    oldest_mail = MailFactory(date=oldest_date)
 
     mails = {
-        'mail0:1,S': new_mail,
-        'mail1:1,S': old_mail,
-        'mail2:1,S': new_mail}
+        'mail0:1,S': oldest_mail,
+        'mail1:1,S': newest_mail,
+        'mail2:1,S': oldest_mail,
+        'mail3:1,S': newer_mail,
+        'mail4:1,S': older_mail,
+        'mail5:1,S': older_mail,
+        'mail6:1,S': newer_mail,
+        'mail7:1,S': newest_mail}
 
-    def test_maildir_newer_strategy_dry_run(self):
-        """ Check nothing is removed in dry-run mode. """
+    @unittest.skip("Date-based deduplication tests needs us to set ctime.")
+    def test_maildir_older_strategy(self):
+        """ Test strategy of older mail deletion. """
         with self.runner.isolated_filesystem():
             self.fake_maildir(
                 mails=self.mails,
                 md_path=self.maildir_path)
 
             result = self.runner.invoke(cli, [
-                'deduplicate', '--strategy=newer', '--dry-run',
-                self.maildir_path])
+                'deduplicate', '--strategy=delete-older', self.maildir_path])
 
             self.assertEqual(result.exit_code, 0)
 
-            for filename in self.mails.keys():
-                self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, 'cur', filename)))
+            # Newest mails are kept but not the older ones.
+            kept = ['mail1:1,S', 'mail7:1,S']
+            deleted = [
+                'mail0:1,S', 'mail2:1,S', 'mail3:1,S', 'mail4:1,S',
+                'mail5:1,S', 'mail6:1,S']
 
-    def test_maildir_newer_strategy(self):
-        """ Test strategy of newer mail deletion for real. """
-        with self.runner.isolated_filesystem():
-            self.fake_maildir(
-                mails=self.mails,
-                md_path=self.maildir_path)
-
-            result = self.runner.invoke(cli, [
-                'deduplicate', '--strategy=newer', self.maildir_path])
-
-            self.assertEqual(result.exit_code, 0)
-
-            # Oldest mail is kept but not the newer ones.
-            self.assertTrue(
-                path.isfile(path.join(self.maildir_path, 'cur', 'mail1:1,S')))
-            self.assertFalse(
-                path.isfile(path.join(self.maildir_path, 'cur', 'mail0:1,S')))
-            self.assertFalse(
-                path.isfile(path.join(self.maildir_path, 'cur', 'mail2:1,S')))
+            for mail_id in kept:
+                self.assertTrue(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+            for mail_id in deleted:
+                self.assertFalse(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))

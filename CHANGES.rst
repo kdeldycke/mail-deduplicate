@@ -7,6 +7,7 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Refactor and redefine all removal strategies. Closes #40.
 * Add ``test`` and ``develop`` dependencies.
 * Move coverage config to ``setup.cfg``.
 * Build documentation via Sphinx.
