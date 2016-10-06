@@ -8,8 +8,8 @@ ChangeLog
 .. note:: This version is not yet released and is under active development.
 
 * Refactor and redefine all removal strategies. Closes #40.
-* Add a new ``--time-source`` parameter to select define the canonical
-  timestamp of a mail.
+* Add a new ``--time-source`` parameter to point to the canonical source of a
+  mail's timestamp.
 * Add ``test`` and ``develop`` dependencies.
 * Move coverage config to ``setup.cfg``.
 * Build documentation via Sphinx.
