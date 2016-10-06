@@ -203,8 +203,8 @@ class TestDateStrategy(TestDeduplicate):
 
     newest_date = arrow.utcnow()
     newer_date = newest_date.replace(minutes=-1)
-    older_date = newest_date.replace(hours=-2)
-    oldest_date = newest_date.replace(days=-3)
+    older_date = newest_date.replace(minutes=-2)
+    oldest_date = newest_date.replace(minutes=-3)
 
     newest_mail = MailFactory(date=newest_date)
     newer_mail = MailFactory(date=newer_date)
@@ -221,7 +221,6 @@ class TestDateStrategy(TestDeduplicate):
         'mail6:1,S': newer_mail,
         'mail7:1,S': newest_mail}
 
-    @unittest.skip("Date-based deduplication tests needs us to set ctime.")
     def test_maildir_older_strategy(self):
         """ Test strategy of older mail deletion. """
         with self.runner.isolated_filesystem():
@@ -230,7 +229,8 @@ class TestDateStrategy(TestDeduplicate):
                 md_path=self.maildir_path)
 
             result = self.runner.invoke(cli, [
-                'deduplicate', '--strategy=delete-older', self.maildir_path])
+                'deduplicate', '--time-source=date-header',
+                '--strategy=delete-older', self.maildir_path])
 
             self.assertEqual(result.exit_code, 0)
 
