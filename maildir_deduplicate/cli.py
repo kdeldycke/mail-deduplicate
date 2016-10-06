@@ -34,6 +34,7 @@ from . import (
     DELETE_NON_MATCHING_PATH,
     MD_SUBDIRS,
     STRATEGIES,
+    TIME_SOURCES,
     __version__,
     logger
 )
@@ -81,6 +82,10 @@ def validate_maildirs(ctx, param, value):
     '--strategy', type=click.Choice(STRATEGIES),
     help='Deletion strategy to apply within a subset of duplicates.')
 @click.option(
+    '-t', '--time-source', type=click.Choice(TIME_SOURCES),
+    help="Source of a mail's reference time. Required in time-sensitive "
+    'strategies.')
+@click.option(
     '-r', '--regexp', callback=validate_regexp, metavar='REGEXP',
     help='Regular expression against a mail file path. Required in '
     'delete-matching-path and delete-non-matching-path strategies.')
@@ -111,8 +116,9 @@ def validate_maildirs(ctx, param, value):
     'maildirs', nargs=-1, callback=validate_maildirs,
     type=click.Path(exists=True, file_okay=False, resolve_path=True))
 @click.pass_context
-def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
-                size_threshold, diff_threshold, maildirs):
+def deduplicate(
+        ctx, strategy, time_source, regexp, dry_run, show_diffs, message_id,
+        size_threshold, diff_threshold, maildirs):
     """ Deduplicate mails from a set of maildir folders.
 
     \b
@@ -147,7 +153,7 @@ def deduplicate(ctx, strategy, regexp, dry_run, show_diffs, message_id,
             '--regexp parameter not allowed in {} strategy.'.format(strategy))
 
     dedup = Deduplicate(
-        strategy, regexp, dry_run, show_diffs, message_id,
+        strategy, time_source, regexp, dry_run, show_diffs, message_id,
         size_threshold, diff_threshold)
     for maildir in maildirs:
         dedup.add_maildir(maildir)

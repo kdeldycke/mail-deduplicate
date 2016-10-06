@@ -38,7 +38,7 @@ from operator import attrgetter
 
 from progressbar import Bar, Percentage, ProgressBar
 
-from . import HEADERS, PY2, PY3, InsufficientHeadersError, logger
+from . import CTIME, HEADERS, PY2, PY3, InsufficientHeadersError, logger
 
 if PY3:
     basestring = (str, bytes)
@@ -66,8 +66,9 @@ class DuplicateSet(object):
         'timestamp',
     ])
 
-    def __init__(self, hash_key, regexp=None, dry_run=True):
+    def __init__(self, hash_key, time_source=None, regexp=None, dry_run=True):
         self.hash_key = hash_key
+        self.time_source = time_source
         self.regexp = regexp
         self.dry_run = dry_run
 
@@ -99,14 +100,16 @@ class DuplicateSet(object):
                 message = email.message_from_binary_file(mail_file)
 
         # Compute the normalized canonical timestamp of the mail.
-        # TODO: currently returns the creation date of the mail file (i.e.
-        # ctime) but might be changed in the future to get it from mail headers
-        # instead.
         # XXX ctime does not refer to creation time on POSIX systems, but
         # rather the last time the inode data changed. Source:
         # http://userprimary.net/posts/2007/11/18
         # /ctime-in-unix-means-last-change-time-not-create-time/
-        timestamp = os.path.getctime(mail_path)
+        if self.time_source == CTIME:
+            timestamp = os.path.getctime(mail_path)
+        # Fetch from the date header.
+        else:
+            timestamp = email.utils.mktime_tz(email.utils.parsedate_tz(
+                message.get('Date')))
 
         # Compute mail size. Size is computed as the lenght of the message
         # body, i.e. the payload of the mail stripped of all its headers, not
@@ -388,8 +391,9 @@ class Deduplicate(object):
     Messages are grouped together in a DuplicateSet
     """
 
-    def __init__(self, strategy, regexp, dry_run, show_diffs, use_message_id,
-                 size_threshold, diff_threshold, progress=True):
+    def __init__(
+            self, strategy, time_source, regexp, dry_run, show_diffs,
+            use_message_id, size_threshold, diff_threshold, progress=True):
         # All mails grouped by hashes.
         self.mails = {}
         # Total count of mails found in all maildirs.
@@ -397,6 +401,7 @@ class Deduplicate(object):
 
         # Global config.
         self.strategy = strategy
+        self.time_source = time_source
         self.regexp = regexp
         self.dry_run = dry_run
         self.use_message_id = use_message_id
@@ -615,7 +620,8 @@ class Deduplicate(object):
                 continue
 
             duplicates = DuplicateSet(
-                hash_key, regexp=self.regexp, dry_run=self.dry_run)
+                hash_key, time_source=self.time_source, regexp=self.regexp,
+                dry_run=self.dry_run)
             for mail_path in mail_path_set:
                 duplicates.add_from_file(mail_path)
 

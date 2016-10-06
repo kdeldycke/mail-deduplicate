@@ -105,6 +105,12 @@ STRATEGIES = frozenset([
     DELETE_MATCHING_PATH, DELETE_NON_MATCHING_PATH])
 
 
+# Sources frim which we compute a mail's canonical timestamp.
+DATE_HEADER = 'date-header'
+CTIME = 'ctime'
+TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
+
+
 # List of required sub-folders defining a properly structured maildir.
 MD_SUBDIRS = frozenset(('cur', 'new', 'tmp'))
 
