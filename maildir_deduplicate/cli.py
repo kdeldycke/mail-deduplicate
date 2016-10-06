@@ -36,7 +36,11 @@ from . import (
     STRATEGIES,
     TIME_SOURCES,
     __version__,
-    logger
+    logger,
+    DELETE_OLDER,
+    DELETE_OLDEST,
+    DELETE_NEWER,
+    DELETE_NEWEST,
 )
 from .deduplicate import Deduplicate
 
@@ -142,15 +146,22 @@ def deduplicate(
         click.echo(ctx.get_help())
         ctx.exit()
 
-    # Validate options requirement depending on strategy.
-    if strategy in [DELETE_MATCHING_PATH, DELETE_NON_MATCHING_PATH]:
-        if not regexp:
+    # Validate exclusive options requirement depending on strategy.
+    requirements = [
+        (time_source, '-t/--time-source', [
+            DELETE_OLDER, DELETE_OLDEST, DELETE_NEWER, DELETE_NEWEST]),
+        (regexp, '-r/--regexp', [
+            DELETE_MATCHING_PATH, DELETE_NON_MATCHING_PATH])]
+    for param_value, param_name, required_strategies in requirements:
+        if strategy in required_strategies:
+            if not param_value:
+                raise click.BadParameter(
+                    '{} strategy requires the {} parameter.'.format(
+                        strategy, param_name))
+        elif param_value:
             raise click.BadParameter(
-                '{} strategy requires the --regexp parameter.'.format(
-                    strategy))
-    elif regexp:
-        raise click.BadParameter(
-            '--regexp parameter not allowed in {} strategy.'.format(strategy))
+                '{} parameter not allowed in {} strategy.'.format(
+                    param_name, strategy))
 
     dedup = Deduplicate(
         strategy, time_source, regexp, dry_run, show_diffs, message_id,
