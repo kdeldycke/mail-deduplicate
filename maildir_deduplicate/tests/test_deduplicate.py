@@ -31,6 +31,7 @@ from os import makedirs, path
 from textwrap import dedent
 
 import arrow
+
 from maildir_deduplicate import MD_SUBDIRS, PY3
 from maildir_deduplicate.cli import cli
 

@@ -31,16 +31,16 @@ from . import (
     DEFAULT_DIFF_THRESHOLD,
     DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
     DELETE_MATCHING_PATH,
+    DELETE_NEWER,
+    DELETE_NEWEST,
     DELETE_NON_MATCHING_PATH,
+    DELETE_OLDER,
+    DELETE_OLDEST,
     MD_SUBDIRS,
     STRATEGIES,
     TIME_SOURCES,
     __version__,
-    logger,
-    DELETE_OLDER,
-    DELETE_OLDEST,
-    DELETE_NEWER,
-    DELETE_NEWEST,
+    logger
 )
 from .deduplicate import Deduplicate
 
