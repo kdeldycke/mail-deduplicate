@@ -159,23 +159,27 @@ class TestSizeStrategy(TestDeduplicate):
 
     maildir_path = './strategy_smaller'
 
-    small_mail = MailFactory(
+    smallest_mail = MailFactory(
         body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
-    medium_mail = MailFactory(
+    smaller_mail = MailFactory(
         body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
-    big_mail = MailFactory(
+    bigger_mail = MailFactory(
         body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++")
+    biggest_mail = MailFactory(
+        body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++++++")
 
     mails = {
-        'mail0:1,S': small_mail,
-        'mail1:1,S': big_mail,
-        'mail2:1,S': small_mail,
-        'mail3:1,S': medium_mail,
-        'mail4:1,S': medium_mail,
-        'mail5:1,S': big_mail}
+        'mail0:1,S': smallest_mail,
+        'mail1:1,S': biggest_mail,
+        'mail2:1,S': smallest_mail,
+        'mail3:1,S': bigger_mail,
+        'mail4:1,S': smaller_mail,
+        'mail5:1,S': smaller_mail,
+        'mail6:1,S': bigger_mail,
+        'mail7:1,S': biggest_mail}
 
     def test_maildir_smaller_strategy(self):
-        """ Test strategy of smaller mail deletion. """
+        """ Test strategy of small mail deletion. """
         with self.runner.isolated_filesystem():
             self.fake_maildir(
                 mails=self.mails,
@@ -187,8 +191,86 @@ class TestSizeStrategy(TestDeduplicate):
             self.assertEqual(result.exit_code, 0)
 
             # Biggest mails are kept but not the smaller ones.
-            kept = ['mail1:1,S', 'mail5:1,S']
-            deleted = ['mail0:1,S', 'mail2:1,S', 'mail3:1,S', 'mail4:1,S']
+            kept = ['mail1:1,S', 'mail7:1,S']
+            deleted = [
+                'mail0:1,S', 'mail2:1,S', 'mail3:1,S', 'mail4:1,S',
+                'mail5:1,S', 'mail6:1,S']
+
+            for mail_id in kept:
+                self.assertTrue(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+            for mail_id in deleted:
+                self.assertFalse(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+
+    def test_maildir_smallest_strategy(self):
+        """ Test strategy of smallest mail deletion. """
+        with self.runner.isolated_filesystem():
+            self.fake_maildir(
+                mails=self.mails,
+                md_path=self.maildir_path)
+
+            result = self.runner.invoke(cli, [
+                'deduplicate', '--strategy=delete-smallest',
+                self.maildir_path])
+
+            self.assertEqual(result.exit_code, 0)
+
+            # Bigger mails are kept but not the smallest ones.
+            kept = [
+                'mail1:1,S', 'mail3:1,S', 'mail4:1,S', 'mail5:1,S',
+                'mail6:1,S', 'mail7:1,S']
+            deleted = ['mail0:1,S', 'mail2:1,S']
+
+            for mail_id in kept:
+                self.assertTrue(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+            for mail_id in deleted:
+                self.assertFalse(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+
+    def test_maildir_bigger_strategy(self):
+        """ Test strategy of bigger mail deletion. """
+        with self.runner.isolated_filesystem():
+            self.fake_maildir(
+                mails=self.mails,
+                md_path=self.maildir_path)
+
+            result = self.runner.invoke(cli, [
+                'deduplicate', '--strategy=delete-bigger', self.maildir_path])
+
+            self.assertEqual(result.exit_code, 0)
+
+            # Smallest mails are kept but not the bigger ones.
+            kept = ['mail0:1,S', 'mail2:1,S']
+            deleted = [
+                'mail1:1,S', 'mail3:1,S', 'mail4:1,S', 'mail5:1,S',
+                'mail6:1,S', 'mail7:1,S']
+
+            for mail_id in kept:
+                self.assertTrue(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+            for mail_id in deleted:
+                self.assertFalse(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+
+    def test_maildir_biggest_strategy(self):
+        """ Test strategy of biggest mail deletion. """
+        with self.runner.isolated_filesystem():
+            self.fake_maildir(
+                mails=self.mails,
+                md_path=self.maildir_path)
+
+            result = self.runner.invoke(cli, [
+                'deduplicate', '--strategy=delete-biggest', self.maildir_path])
+
+            self.assertEqual(result.exit_code, 0)
+
+            # Smaller mails are kept but not the biggest ones.
+            kept = [
+                'mail0:1,S', 'mail2:1,S', 'mail3:1,S', 'mail4:1,S',
+                'mail5:1,S', 'mail6:1,S']
+            deleted = ['mail1:1,S', 'mail7:1,S']
 
             for mail_id in kept:
                 self.assertTrue(path.isfile(path.join(

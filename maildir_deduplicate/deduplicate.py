@@ -310,7 +310,7 @@ class DuplicateSet(object):
         smallest_size = min(map(attrgetter('size'), self.pool))
         logger.info(
             "Delete all mails strictly bigger than {} bytes...".format(
-                biggest_size))
+                smallest_size))
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if mail.size > smallest_size]
