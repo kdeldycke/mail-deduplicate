@@ -247,3 +247,81 @@ class TestDateStrategy(TestDeduplicate):
             for mail_id in deleted:
                 self.assertFalse(path.isfile(path.join(
                     self.maildir_path, 'cur', mail_id)))
+
+    def test_maildir_oldest_strategy(self):
+        """ Test strategy of oldest mail deletion. """
+        with self.runner.isolated_filesystem():
+            self.fake_maildir(
+                mails=self.mails,
+                md_path=self.maildir_path)
+
+            result = self.runner.invoke(cli, [
+                'deduplicate', '--time-source=date-header',
+                '--strategy=delete-oldest', self.maildir_path])
+
+            self.assertEqual(result.exit_code, 0)
+
+            # Newer mails are kept but not the oldest ones.
+            kept = [
+                'mail1:1,S', 'mail3:1,S', 'mail4:1,S', 'mail5:1,S',
+                'mail6:1,S', 'mail7:1,S']
+            deleted = ['mail0:1,S', 'mail2:1,S']
+
+            for mail_id in kept:
+                self.assertTrue(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+            for mail_id in deleted:
+                self.assertFalse(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+
+    def test_maildir_newer_strategy(self):
+        """ Test strategy of newer mail deletion. """
+        with self.runner.isolated_filesystem():
+            self.fake_maildir(
+                mails=self.mails,
+                md_path=self.maildir_path)
+
+            result = self.runner.invoke(cli, [
+                'deduplicate', '--time-source=date-header',
+                '--strategy=delete-newer', self.maildir_path])
+
+            self.assertEqual(result.exit_code, 0)
+
+            # Oldest mails are kept but not the newer ones.
+            kept = ['mail0:1,S', 'mail2:1,S']
+            deleted = [
+                'mail1:1,S', 'mail3:1,S', 'mail4:1,S', 'mail5:1,S',
+                'mail6:1,S', 'mail7:1,S']
+
+            for mail_id in kept:
+                self.assertTrue(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+            for mail_id in deleted:
+                self.assertFalse(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+
+    def test_maildir_newest_strategy(self):
+        """ Test strategy of newest mail deletion. """
+        with self.runner.isolated_filesystem():
+            self.fake_maildir(
+                mails=self.mails,
+                md_path=self.maildir_path)
+
+            result = self.runner.invoke(cli, [
+                'deduplicate', '--time-source=date-header',
+                '--strategy=delete-newest', self.maildir_path])
+
+            self.assertEqual(result.exit_code, 0)
+
+            # Older mails are kept but not the newest ones.
+            kept = [
+                'mail0:1,S', 'mail2:1,S', 'mail3:1,S', 'mail4:1,S',
+                'mail5:1,S', 'mail6:1,S']
+            deleted = ['mail1:1,S', 'mail7:1,S']
+
+            for mail_id in kept:
+                self.assertTrue(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
+            for mail_id in deleted:
+                self.assertFalse(path.isfile(path.join(
+                    self.maildir_path, 'cur', mail_id)))
