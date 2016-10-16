@@ -125,8 +125,12 @@ def deduplicate(
         size_threshold, diff_threshold, maildirs):
     """ Deduplicate mails from a set of maildir folders.
 
+    Run a first pass computing the canonical hash of each encountered mail,
+    then a second pass to apply the deletion strategy on each subset of
+    duplicate mails.
+
     \b
-    Removal strategies for subsets of duplicate mails sharing the same hash:
+    Removal strategies for each subsets of duplicate mails:
         - delete-older:    Deletes the olders,    keeps the newests.
         - delete-oldest:   Deletes the oldests,   keeps the newers.
         - delete-newer:    Deletes the newers,    keeps the oldests.
@@ -166,9 +170,14 @@ def deduplicate(
     dedup = Deduplicate(
         strategy, time_source, regexp, dry_run, show_diffs, message_id,
         size_threshold, diff_threshold)
+
+    logger.info('Start phase #1: load mails and compute hashes.')
     for maildir in maildirs:
         dedup.add_maildir(maildir)
+
+    logger.info('Start phase #2: deduplicate mails.')
     dedup.run()
+
     dedup.report()
 
 

@@ -165,10 +165,11 @@ class DuplicateSet(object):
             logger.info("Skip deletion of {!r}.".format(mail))
             return
 
-        logger.info("Deleting {!r}...".format(mail))
+        logger.debug("Deleting {!r}...".format(mail))
         # XXX Investigate the use of maildir's .remove instead. See: https:
         # //github.com/python/cpython/blob/origin/2.7/Lib/mailbox.py#L329-L331
         os.unlink(mail.path)
+        logger.info("{} deleted.".format(mail.path))
 
     # TODO: Factorize code structure common to all strategy.
 
@@ -179,8 +180,8 @@ class DuplicateSet(object):
         """
         newest_timestamp = max(map(attrgetter('timestamp'), self.pool))
         logger.info(
-            "Delete all mails strictly older than the {} timestamp...".format(
-                newest_timestamp))
+            "Deleting all mails strictly older than the {} timestamp..."
+            "".format(newest_timestamp))
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if mail.timestamp < newest_timestamp]
@@ -201,7 +202,7 @@ class DuplicateSet(object):
         """
         oldest_timestamp = min(map(attrgetter('timestamp'), self.pool))
         logger.info(
-            "Delete all mails sharing the oldest {} timestamp...".format(
+            "Deleting all mails sharing the oldest {} timestamp...".format(
                 oldest_timestamp))
         # Select candidates for deletion.
         candidates = [
@@ -223,8 +224,8 @@ class DuplicateSet(object):
         """
         oldest_timestamp = min(map(attrgetter('timestamp'), self.pool))
         logger.info(
-            "Delete all mails strictly newer than the {} timestamp...".format(
-                oldest_timestamp))
+            "Deleting all mails strictly newer than the {} timestamp..."
+            "".format(oldest_timestamp))
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if mail.timestamp > oldest_timestamp]
@@ -246,7 +247,7 @@ class DuplicateSet(object):
         """
         newest_timestamp = max(map(attrgetter('timestamp'), self.pool))
         logger.info(
-            "Delete all mails sharing the newest {} timestamp...".format(
+            "Deleting all mails sharing the newest {} timestamp...".format(
                 newest_timestamp))
         # Select candidates for deletion.
         candidates = [
@@ -268,7 +269,7 @@ class DuplicateSet(object):
         """
         biggest_size = max(map(attrgetter('size'), self.pool))
         logger.info(
-            "Delete all mails strictly smaller than {} bytes...".format(
+            "Deleting all mails strictly smaller than {} bytes...".format(
                 biggest_size))
         # Select candidates for deletion.
         candidates = [
@@ -290,8 +291,8 @@ class DuplicateSet(object):
         """
         smallest_size = min(map(attrgetter('size'), self.pool))
         logger.info(
-            "Delete all mails sharing the smallest size of {} bytes...".format(
-                smallest_size))
+            "Deleting all mails sharing the smallest size of {} bytes..."
+            "".format(smallest_size))
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if mail.size == smallest_size]
@@ -312,7 +313,7 @@ class DuplicateSet(object):
         """
         smallest_size = min(map(attrgetter('size'), self.pool))
         logger.info(
-            "Delete all mails strictly bigger than {} bytes...".format(
+            "Deleting all mails strictly bigger than {} bytes...".format(
                 smallest_size))
         # Select candidates for deletion.
         candidates = [
@@ -334,8 +335,8 @@ class DuplicateSet(object):
         """
         biggest_size = max(map(attrgetter('size'), self.pool))
         logger.info(
-            "Delete all mails sharing the biggest size of {} bytes...".format(
-                biggest_size))
+            "Deleting all mails sharing the biggest size of {} bytes..."
+            "".format(biggest_size))
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if mail.size == biggest_size]
@@ -352,8 +353,8 @@ class DuplicateSet(object):
     def delete_matching_path(self):
         """ Delete all duplicates whose file path match the regexp. """
         logger.info(
-            "Delete all mails with file path matching the {} regexp...".format(
-                self.regexp.pattern))
+            "Deleting all mails with file path matching the {} regexp..."
+            "".format(self.regexp.pattern))
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if re.search(self.regexp, mail.path)]
@@ -370,7 +371,7 @@ class DuplicateSet(object):
     def delete_non_matching_path(self):
         """ Delete all duplicates whose file path doesn't match the regexp. """
         logger.info(
-            "Delete all mails with file path not matching the {} regexp..."
+            "Deleting all mails with file path not matching the {} regexp..."
             "".format(self.regexp.pattern))
         # Select candidates for deletion.
         candidates = [
@@ -457,7 +458,7 @@ class Deduplicate(object):
     def add_maildir(self, maildir_path):
         """ Load up a maildir and compute hash for each mail found. """
         maildir_path = self.canonical_path(maildir_path)
-        logger.info("Opening maildir folder at {!r} ...".format(maildir_path))
+        logger.info("Opening maildir at {} ...".format(maildir_path))
         # Maildir parser requires a string, not a unicode, as path.
         maildir = Maildir(str(maildir_path), factory=None, create=False)
 
@@ -621,8 +622,6 @@ class Deduplicate(object):
         We apply the removal strategy one duplicate set at a time to keep
         memory footprint low and make the log of actions easier to read.
         """
-        logger.info("Start the deduplication process.")
-
         # Transform strategy keyword into its method ID, and check an
         # implementation is available.
         # TODO: move its check in unit-tests.
@@ -633,7 +632,7 @@ class Deduplicate(object):
                 "DuplicateSet.{}() method.".format(strategy_method_id))
 
         logger.info(
-            "Applyng the {} removal strategy on each duplicate set...".format(
+            "The {} strategy will be applied on each duplicate set.".format(
                 self.strategy))
 
         self.stats['set_total'] = len(self.mails)
@@ -659,6 +658,7 @@ class Deduplicate(object):
                 "".format(duplicates.size, duplicates.hash_key))
             self.stats['mail_duplicates'] += duplicates.size
 
+            # Call the deduplication strategy.
             getattr(duplicates, strategy_method_id)()
 
             # Merge stats resulting of actions on duplicate sets.
