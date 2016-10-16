@@ -435,7 +435,6 @@ class Deduplicate(object):
             'mail_duplicates': 0,
             # Number of mails removed.
             'mail_deleted': 0,
-
             # Total number of duplicate sets.
             'set_total': 0,
             # Total number of unprocessed sets because mail is unique.
