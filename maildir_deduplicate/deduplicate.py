@@ -31,13 +31,13 @@ import os
 import re
 import textwrap
 import time
-from collections import namedtuple, Counter
+from collections import Counter, namedtuple
 from difflib import unified_diff
 from mailbox import Maildir
 from operator import attrgetter
 
-from tabulate import tabulate
 from progressbar import Bar, Percentage, ProgressBar
+from tabulate import tabulate
 
 from . import CTIME, HEADERS, PY2, PY3, InsufficientHeadersError, logger
 
