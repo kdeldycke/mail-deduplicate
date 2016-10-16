@@ -10,6 +10,7 @@ ChangeLog
 * Refactor and redefine all removal strategies. Closes #40.
 * Add a new ``--time-source`` parameter to point to the canonical source of a
   mail's timestamp.
+* Re-implement statistics. Closes #42.
 * Add ``test`` and ``develop`` dependencies.
 * Move coverage config to ``setup.cfg``.
 * Build documentation via Sphinx.

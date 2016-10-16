@@ -31,11 +31,12 @@ import os
 import re
 import textwrap
 import time
-from collections import namedtuple
+from collections import namedtuple, Counter
 from difflib import unified_diff
 from mailbox import Maildir
 from operator import attrgetter
 
+from tabulate import tabulate
 from progressbar import Bar, Percentage, ProgressBar
 
 from . import CTIME, HEADERS, PY2, PY3, InsufficientHeadersError, logger
@@ -75,8 +76,8 @@ class DuplicateSet(object):
         # Pool referencing all duplicated mails and their attributes.
         self.pool = set()
 
-        # TODO: Keep a counter of action stats.
-        # self.stats = Counter()
+        # Keep set metrics.
+        self.stats = Counter()
 
         logger.debug("{!r} created.".format(self))
 
@@ -157,7 +158,9 @@ class DuplicateSet(object):
         return body.splitlines(True)
 
     def delete(self, mail):
-        """ Delete a mail fron the filesystem. """
+        """ Delete a mail from the filesystem. """
+        self.stats['mail_deleted'] += 1
+
         if self.dry_run:
             logger.info("Skip deletion of {!r}.".format(mail))
             return
@@ -396,8 +399,6 @@ class Deduplicate(object):
             use_message_id, size_threshold, diff_threshold, progress=True):
         # All mails grouped by hashes.
         self.mails = {}
-        # Total count of mails found in all maildirs.
-        self.mail_count = 0
 
         # Global config.
         self.strategy = strategy
@@ -414,12 +415,34 @@ class Deduplicate(object):
         self.diff_threshold = diff_threshold
 
         # Deduplication statistics.
-        # TODO: use a Counter
-        self.duplicates = 0
-        self.sets = 0
-        self.removed = 0
-        self.sizes_too_dissimilar = 0
-        self.diff_too_big = 0
+        self.stats = Counter({
+            # Total number of mails encountered in all maildirs.
+            'mail_found': 0,
+            # Number of mails skipped because of user options.
+            'mail_skipped': 0,
+            # Number of mails ignored because they were faulty.
+            'mail_rejected': 0,
+            # Number of valid mails ingested and retained for deduplication.
+            'mail_kept': 0,
+            # Number of unique mails (i.e. sets with one mail).
+            'mail_unique': 0,
+            # Number of duplicate mails (sum of mails in all duplicate sets).
+            'mail_duplicates': 0,
+            # Number of mails removed.
+            'mail_deleted': 0,
+
+            # Total number of duplicate sets.
+            'set_total': 0,
+            # Total number of unprocessed sets because mail is unique.
+            'set_ignored': 0,
+            # Total number of sets skipped as already deduplicated.
+            'set_skipped': 0,
+            # Number of sets ignored because they were faulty.
+            'set_rejected_size': 0,
+            'set_rejected_diff': 0,
+            # Number of valid sets successfuly deduplicated.
+            'set_deduplicated': 0,
+        })
 
     @staticmethod
     def canonical_path(path):
@@ -449,6 +472,7 @@ class Deduplicate(object):
                 return x
 
         for mail_id, message in bar(maildir.iteritems()):
+            self.stats['mail_found'] += 1
             mail_path = self.canonical_path(os.path.join(
                 maildir._path, maildir._lookup(mail_id)))
             try:
@@ -456,13 +480,14 @@ class Deduplicate(object):
                     mail_path, message, self.use_message_id)
             except InsufficientHeadersError as e:
                 logger.warning(
-                    "Ignoring problematic {}: {}".format(mail_path, e.args[0]))
+                    "Rejecting {}: {}".format(mail_path, e.args[0]))
+                self.stats['mail_rejected'] += 1
             else:
                 logger.debug(
                     "Hash is {} for mail {!r}.".format(mail_hash, mail_id))
                 # Use a set to deduplicate entries pointing to the same file.
                 self.mails.setdefault(mail_hash, set()).add(mail_path)
-                self.mail_count += 1
+                self.stats['mail_kept'] += 1
 
     @classmethod
     def compute_hash(cls, mail_path, message, use_message_id):
@@ -611,12 +636,16 @@ class Deduplicate(object):
             "Applyng the {} removal strategy on each duplicate set...".format(
                 self.strategy))
 
+        self.stats['set_total'] = len(self.mails)
+
         for hash_key, mail_path_set in self.mails.items():
 
             logger.debug("Loading duplicate set sharing the {} hash.".format(
                 hash_key))
             if len(mail_path_set) == 1:
-                logger.debug("Skip: only one message found.")
+                logger.debug("Ignore set: only one message found.")
+                self.stats['mail_unique'] += 1
+                self.stats['set_ignored'] += 1
                 continue
 
             duplicates = DuplicateSet(
@@ -628,8 +657,20 @@ class Deduplicate(object):
             logger.debug(
                 "Initialized duplicate set of {} mails sharing the {} hash."
                 "".format(duplicates.size, duplicates.hash_key))
+            self.stats['mail_duplicates'] += duplicates.size
 
             getattr(duplicates, strategy_method_id)()
+
+            # Merge stats resulting of actions on duplicate sets.
+            self.stats += duplicates.stats
+
+            # If no mails were deleted, the set is already deduplicated.
+            if not duplicates.stats['mail_deleted']:
+                logger.info("Skip set: already deduplicated.")
+                self.stats['set_skipped'] += 1
+                continue
+
+            self.stats['set_deduplicated'] += 1
 
         #    too_dissimilar = self.messages_too_dissimilar(
         #        hash_key, sorted_messages_size)
@@ -714,24 +755,48 @@ class Deduplicate(object):
             n=0, lineterm='\n')))
 
     def report(self):
-        total = " in {} set{} from a total of {} mails.".format(
-            self.sets, 's' if self.sets > 1 else '', self.mail_count)
-        if self.removed > 0:
-            results = "Removed {} of {} duplicates found".format(
-                self.removed, self.duplicates)
-            if self.dry_run:
-                results = "Would have {}".format(results)
-        else:
-            results = "Found {} duplicates".format(self.duplicates)
+        """ Print user-friendly statistics and metrics. """
+        table = [["Mails", "Metric"]]
+        table.append(["Found", self.stats['mail_found']])
+        table.append(["Skipped", self.stats['mail_skipped']])
+        table.append(["Rejected", self.stats['mail_rejected']])
+        table.append(["Kept", self.stats['mail_kept']])
+        table.append(["Unique", self.stats['mail_unique']])
+        table.append(["Duplicates", self.stats['mail_duplicates']])
+        table.append(["Deleted", self.stats['mail_deleted']])
+        logger.info(tabulate(table, tablefmt='fancy', headers='firstrow'))
 
-        logger.info("{}\n{}".format(results, total))
+        table = [["Duplicate sets", "Metric"]]
+        table.append(["Total", self.stats['set_total']])
+        table.append(["Ignored", self.stats['set_ignored']])
+        table.append(["Skipped", self.stats['set_skipped']])
+        table.append([
+            "Rejected (too dissimilar in size)",
+            self.stats['set_rejected_size']])
+        table.append([
+            "Rejected (too dissimilar in content)",
+            self.stats['set_rejected_diff']])
+        table.append(["Deduplicated", self.stats['set_deduplicated']])
+        logger.info(tabulate(table, tablefmt='fancy', headers='firstrow'))
 
-        if self.sizes_too_dissimilar > 0:
-            logger.info(
-                "{} potential duplicates were rejected as being too "
-                "dissimilar in size.".format(self.sizes_too_dissimilar))
+        # Perform some high-level consistency checks on metrics.
+        assert self.stats['mail_found'] == (
+            self.stats['mail_skipped'] +
+            self.stats['mail_rejected'] +
+            self.stats['mail_kept'])
+        assert self.stats['mail_kept'] >= self.stats['mail_unique']
+        assert self.stats['mail_kept'] >= self.stats['mail_duplicates']
+        assert self.stats['mail_kept'] >= self.stats['mail_deleted']
+        assert self.stats['mail_kept'] == (
+            self.stats['mail_unique'] +
+            self.stats['mail_duplicates'])
+        assert self.stats['mail_duplicates'] > self.stats['mail_deleted']
 
-        if self.diff_too_big > 0:
-            logger.info(
-                "{} potential duplicates were rejected as being too "
-                "dissimilar in contents.".format(self.diff_too_big))
+        assert self.stats['set_ignored'] == self.stats['mail_unique']
+
+        assert self.stats['set_total'] == (
+            self.stats['set_ignored'] +
+            self.stats['set_skipped'] +
+            self.stats['set_rejected_size'] +
+            self.stats['set_rejected_diff'] +
+            self.stats['set_deduplicated'])

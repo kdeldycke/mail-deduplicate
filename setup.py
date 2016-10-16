@@ -39,6 +39,7 @@ DEPENDENCIES = [
     'click >= 5.0',
     'click_log',
     'progressbar2',
+    'tabulate',
 ]
 
 EXTRA_DEPENDENCIES = {
