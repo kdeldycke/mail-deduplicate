@@ -108,14 +108,15 @@ def validate_maildirs(ctx, param, value):
 @click.option(
     '-S', '--size-threshold', type=int, metavar='BYTES',
     default=DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
-    help='Specify maximum allowed difference between size of duplicates. Set '
-    'to -1 for no threshold. Defaults to {}.'.format(
-        DEFAULT_SIZE_DIFFERENCE_THRESHOLD))
+    help='Maximum allowed difference in size between mails after which '
+    'duplicates are not considered as such. Set to -1 to not allow any '
+    'difference. Defaults to {}.'.format(DEFAULT_SIZE_DIFFERENCE_THRESHOLD))
 @click.option(
     '-D', '--diff-threshold', type=int, metavar='BYTES',
     default=DEFAULT_DIFF_THRESHOLD,
-    help='Specify maximum allowed difference between size of duplicates. Set '
-    'to -1 for no threshold. Defaults to {}.'.format(DEFAULT_DIFF_THRESHOLD))
+    help='Maximum allowed difference in content between mails after which '
+    'duplicates are not considered as such. Set to -1 to not allow any '
+    'difference. Defaults to {}.'.format(DEFAULT_DIFF_THRESHOLD))
 @click.argument(
     'maildirs', nargs=-1, callback=validate_maildirs,
     type=click.Path(exists=True, file_okay=False, resolve_path=True))

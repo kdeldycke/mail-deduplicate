@@ -415,6 +415,10 @@ class Deduplicate(object):
         self.size_threshold = size_threshold
         self.diff_threshold = diff_threshold
 
+        # Validates configuration.
+        assert self.size_threshold >= -1
+        assert self.diff_threshold >= -1
+
         # Deduplication statistics.
         self.stats = Counter({
             # Total number of mails encountered in all maildirs.
