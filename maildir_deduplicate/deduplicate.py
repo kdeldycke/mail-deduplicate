@@ -764,7 +764,7 @@ class Deduplicate(object):
         table.append(["Unique", self.stats['mail_unique']])
         table.append(["Duplicates", self.stats['mail_duplicates']])
         table.append(["Deleted", self.stats['mail_deleted']])
-        logger.info(tabulate(table, tablefmt='fancy', headers='firstrow'))
+        logger.info(tabulate(table, tablefmt='fancy_grid', headers='firstrow'))
 
         table = [["Duplicate sets", "Metric"]]
         table.append(["Total", self.stats['set_total']])
@@ -777,7 +777,7 @@ class Deduplicate(object):
             "Rejected (too dissimilar in content)",
             self.stats['set_rejected_diff']])
         table.append(["Deduplicated", self.stats['set_deduplicated']])
-        logger.info(tabulate(table, tablefmt='fancy', headers='firstrow'))
+        logger.info(tabulate(table, tablefmt='fancy_grid', headers='firstrow'))
 
         # Perform some high-level consistency checks on metrics.
         assert self.stats['mail_found'] == (
