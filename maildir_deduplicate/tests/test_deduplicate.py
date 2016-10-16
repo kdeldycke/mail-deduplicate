@@ -25,7 +25,6 @@ from __future__ import (
     unicode_literals
 )
 
-import unittest
 from email.utils import formatdate as maildate
 from os import makedirs, path
 from textwrap import dedent
