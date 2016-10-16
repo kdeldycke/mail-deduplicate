@@ -40,6 +40,10 @@ if PY3:
     basestring = (str, bytes)
 
 
+# TODO: Patch CLI invocation method to force output to STDOUT, so we can easily
+# debug in Travis' logs.
+
+
 class MailFactory(object):
 
     """ Create fake mail messages to serve as unittest fixtures.
