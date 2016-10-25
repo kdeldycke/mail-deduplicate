@@ -38,7 +38,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 nitpicky = True
 # We need a recent sphinx because of the last update format.
-# needs_sphinx = '1.4'
+needs_sphinx = '1.4'
 html_last_updated_fmt = 'YYYY-MM-dd'
 templates_path = ['templates']
 
