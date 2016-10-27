@@ -20,7 +20,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import email
 import os
 import re
 
@@ -43,6 +42,7 @@ from . import (
     logger
 )
 from .deduplicate import Deduplicate
+from .mail import Mail
 
 
 @click.group(invoke_without_command=True)
@@ -188,21 +188,16 @@ def deduplicate(
     help='Use Message-ID header as hash key. This is not recommended: the '
     'default is to compute a digest of the whole header with selected headers '
     'removed.')
-@click.argument('message', type=click.File('r'))
+@click.argument('message', type=click.Path(
+    exists=True, dir_okay=False, resolve_path=True))
 @click.pass_context
 def hash(ctx, message_id, message):
     """ Take a single mail message and show its canonicalised form and hash.
 
-    This is essentially provided for debugging why two messages do not have the
-    same hash when you expect them to (or vice-versa).
-
-    \b
-    To get the message from STDIN, use a dash in place of the filename:
-        cat mail.txt | mdedup hash -
+    Mainly used to debug message hashing.
     """
-    message = email.message_from_file(message)
-    mail_hash, header_text = Deduplicate.compute_hash(
-        None, message, message_id)
-    logger.info(header_text)
-    logger.info('_______________________________________')
-    logger.info('Hash: {}'.format(mail_hash))
+    mail = Mail(message, use_message_id=message_id)
+
+    logger.info(mail.header_text)
+    logger.info('-' * 70)
+    logger.info('Hash: {}'.format(mail.hash_key))
