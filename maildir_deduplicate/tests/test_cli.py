@@ -25,17 +25,13 @@ from click.testing import CliRunner
 
 from maildir_deduplicate.cli import cli
 
-
-class CLITestCase(unittest.TestCase):
-
-    def setUp(self):
-        self.runner = CliRunner()
+from .case import CLITestCase
 
 
 class TestCLI(CLITestCase):
 
     def test_main_help(self):
-        result = self.runner.invoke(cli, ['--help'])
+        result = self.invoke('--help')
         self.assertEqual(result.exit_code, 0)
         self.assertIn("--help", result.output)
 
@@ -43,24 +39,24 @@ class TestCLI(CLITestCase):
 class TestDeduplicateCLI(CLITestCase):
 
     def test_deduplicate_help(self):
-        result = self.runner.invoke(cli, ['deduplicate', '--help'])
+        result = self.invoke('deduplicate', '--help')
         self.assertEqual(result.exit_code, 0)
         self.assertIn("--help", result.output)
 
     def test_nonexistent_directory(self):
-        result = self.runner.invoke(cli, ['deduplicate', './dummy_maildir/'])
+        result = self.invoke('deduplicate', './dummy_maildir/')
         self.assertEqual(result.exit_code, 2)
         self.assertIn(
             """Directory "./dummy_maildir/" does not exist""", result.output)
 
     def test_invalid_maildir_as_file(self):
-        result = self.runner.invoke(cli, ['deduplicate', './__init__.py'])
+        result = self.invoke('deduplicate', './__init__.py')
         self.assertEqual(result.exit_code, 2)
         self.assertIn(
             """Directory "./__init__.py" does not exist""", result.output)
 
     def test_invalid_maildir_structure(self):
-        result = self.runner.invoke(cli, ['deduplicate', '.'])
+        result = self.invoke('deduplicate', '.')
         self.assertEqual(result.exit_code, 2)
         self.assertIn("is not a maildir", result.output)
 
@@ -68,7 +64,7 @@ class TestDeduplicateCLI(CLITestCase):
 class TestHashCLI(CLITestCase):
 
     def test_hash_help(self):
-        result = self.runner.invoke(cli, ['hash', '--help'])
+        result = self.invoke('hash', '--help')
         self.assertEqual(result.exit_code, 0)
         self.assertIn("--help", result.output)
 
@@ -87,7 +83,7 @@ class TestHashCLI(CLITestCase):
             with open('mail.txt', 'wb') as f:
                 f.write(message)
 
-            result = self.runner.invoke(cli, ['hash', 'mail.txt'])
+            result = self.invoke('hash', 'mail.txt')
             self.assertEqual(result.exit_code, 0)
             self.assertIn(
                 "Hash: "

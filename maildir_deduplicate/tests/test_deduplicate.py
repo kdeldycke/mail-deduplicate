@@ -34,14 +34,10 @@ import arrow
 from maildir_deduplicate import MD_SUBDIRS, PY3
 from maildir_deduplicate.cli import cli
 
-from .test_cli import CLITestCase
+from .case import CLITestCase
 
 if PY3:
     basestring = (str, bytes)
-
-
-# TODO: Patch CLI invocation method to force output to STDOUT, so we can easily
-# debug in Travis' logs.
 
 
 class MailFactory(object):
@@ -147,9 +143,9 @@ class TestDryRun(TestDeduplicate):
                 mails=self.mails,
                 md_path=self.maildir_path)
 
-            result = self.runner.invoke(cli, [
+            result = self.invoke(
                 'deduplicate', '--strategy=delete-smaller', '--dry-run',
-                self.maildir_path])
+                self.maildir_path)
 
             self.assertEqual(result.exit_code, 0)
 
@@ -188,8 +184,8 @@ class TestSizeStrategy(TestDeduplicate):
                 mails=self.mails,
                 md_path=self.maildir_path)
 
-            result = self.runner.invoke(cli, [
-                'deduplicate', '--strategy=delete-smaller', self.maildir_path])
+            result = self.invoke(
+                'deduplicate', '--strategy=delete-smaller', self.maildir_path)
 
             self.assertEqual(result.exit_code, 0)
 
@@ -213,9 +209,8 @@ class TestSizeStrategy(TestDeduplicate):
                 mails=self.mails,
                 md_path=self.maildir_path)
 
-            result = self.runner.invoke(cli, [
-                'deduplicate', '--strategy=delete-smallest',
-                self.maildir_path])
+            result = self.invoke(
+                'deduplicate', '--strategy=delete-smallest', self.maildir_path)
 
             self.assertEqual(result.exit_code, 0)
 
@@ -239,8 +234,8 @@ class TestSizeStrategy(TestDeduplicate):
                 mails=self.mails,
                 md_path=self.maildir_path)
 
-            result = self.runner.invoke(cli, [
-                'deduplicate', '--strategy=delete-bigger', self.maildir_path])
+            result = self.invoke(
+                'deduplicate', '--strategy=delete-bigger', self.maildir_path)
 
             self.assertEqual(result.exit_code, 0)
 
@@ -264,8 +259,8 @@ class TestSizeStrategy(TestDeduplicate):
                 mails=self.mails,
                 md_path=self.maildir_path)
 
-            result = self.runner.invoke(cli, [
-                'deduplicate', '--strategy=delete-biggest', self.maildir_path])
+            result = self.invoke(
+                'deduplicate', '--strategy=delete-biggest', self.maildir_path)
 
             self.assertEqual(result.exit_code, 0)
 
@@ -314,9 +309,9 @@ class TestDateStrategy(TestDeduplicate):
                 mails=self.mails,
                 md_path=self.maildir_path)
 
-            result = self.runner.invoke(cli, [
+            result = self.invoke(
                 'deduplicate', '--time-source=date-header',
-                '--strategy=delete-older', self.maildir_path])
+                '--strategy=delete-older', self.maildir_path)
 
             self.assertEqual(result.exit_code, 0)
 
@@ -340,9 +335,9 @@ class TestDateStrategy(TestDeduplicate):
                 mails=self.mails,
                 md_path=self.maildir_path)
 
-            result = self.runner.invoke(cli, [
+            result = self.invoke(
                 'deduplicate', '--time-source=date-header',
-                '--strategy=delete-oldest', self.maildir_path])
+                '--strategy=delete-oldest', self.maildir_path)
 
             self.assertEqual(result.exit_code, 0)
 
@@ -366,9 +361,9 @@ class TestDateStrategy(TestDeduplicate):
                 mails=self.mails,
                 md_path=self.maildir_path)
 
-            result = self.runner.invoke(cli, [
+            result = self.invoke(
                 'deduplicate', '--time-source=date-header',
-                '--strategy=delete-newer', self.maildir_path])
+                '--strategy=delete-newer', self.maildir_path)
 
             self.assertEqual(result.exit_code, 0)
 
@@ -392,9 +387,9 @@ class TestDateStrategy(TestDeduplicate):
                 mails=self.mails,
                 md_path=self.maildir_path)
 
-            result = self.runner.invoke(cli, [
+            result = self.invoke(
                 'deduplicate', '--time-source=date-header',
-                '--strategy=delete-newest', self.maildir_path])
+                '--strategy=delete-newest', self.maildir_path)
 
             self.assertEqual(result.exit_code, 0)
 

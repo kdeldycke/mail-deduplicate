@@ -22,6 +22,7 @@ ChangeLog
 * Move development and packaging documentation to Sphinx. Closes #22.
 * Make wheels generated under Python 2 environnment available for Python 3 too.
 * Let unittests generates their own fake and temporary maildirs.
+* Print CLI output in unittests.
 * Use generic factory to produce mail fixtures in unittests.
 * Normalize and canonicalize all paths to deduplicate on the fly mails pointing
   to the same file.
