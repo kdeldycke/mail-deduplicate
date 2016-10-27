@@ -25,13 +25,9 @@ from __future__ import (
     unicode_literals
 )
 
-import email
-import hashlib
 import os
 import re
-import textwrap
-import time
-from collections import Counter, namedtuple
+from collections import Counter
 from difflib import unified_diff
 from mailbox import Maildir
 from operator import attrgetter
@@ -39,10 +35,8 @@ from operator import attrgetter
 from progressbar import Bar, Percentage, ProgressBar
 from tabulate import tabulate
 
-from . import CTIME, HEADERS, PY2, PY3, InsufficientHeadersError, logger
-
-if PY3:
-    basestring = (str, bytes)
+from . import InsufficientHeadersError, logger
+from .mail import Mail
 
 
 class DuplicateSet(object):
@@ -52,24 +46,8 @@ class DuplicateSet(object):
     Implements all deletion strategies applicable to a set of duplicate mails.
     """
 
-    # A lightweight object-like structure to encapsulate a single mail and its
-    # metadata.
-    # TODO: Transform in a full object class to compute each field lazily and
-    # to cache them on the fly.
-    Mail = namedtuple('Mail', [
-        # File path of the mail.
-        'path',
-        # Parsed content of the mail file. Is a email.message.Message instance.
-        'message',
-        # Raw size of the mail.
-        'size',
-        # Canonical timestamp.
-        'timestamp',
-    ])
-
-    def __init__(self, hash_key, time_source=None, regexp=None, dry_run=True):
+    def __init__(self, hash_key, regexp=None, dry_run=True):
         self.hash_key = hash_key
-        self.time_source = time_source
         self.regexp = regexp
         self.dry_run = dry_run
 
@@ -91,71 +69,10 @@ class DuplicateSet(object):
         """ Return the size of the duplicate set. """
         return len(self.pool)
 
-    def add_from_file(self, mail_path):
-        """ Load a mail message from provided path and add it to the pool. """
-        # Parse mail file content.
-        with open(mail_path, 'rb') as mail_file:
-            if PY2:
-                message = email.message_from_file(mail_file)
-            else:
-                message = email.message_from_binary_file(mail_file)
-
-        # Compute the normalized canonical timestamp of the mail.
-        # XXX ctime does not refer to creation time on POSIX systems, but
-        # rather the last time the inode data changed. Source:
-        # http://userprimary.net/posts/2007/11/18
-        # /ctime-in-unix-means-last-change-time-not-create-time/
-        if self.time_source == CTIME:
-            timestamp = os.path.getctime(mail_path)
-        # Fetch from the date header.
-        else:
-            timestamp = email.utils.mktime_tz(email.utils.parsedate_tz(
-                message.get('Date')))
-
-        # Compute mail size. Size is computed as the lenght of the message
-        # body, i.e. the payload of the mail stripped of all its headers, not
-        # from the mail file persisting on the file-system.
-        body = self.body_lines(message)
-        size = len(''.join(body))
-
-        # TODO: Allow customization of the way the size is computed, by getting
-        # the file size instead for example.
-        # size = os.path.getsize(mail_file)
-
+    def add(self, mail):
+        """ Add provided message to the pool. """
         # Add mail to the pool.
-        self.pool.add(self.Mail(
-            path=mail_path, message=message, size=size, timestamp=timestamp))
-
-    @property
-    def subject(self):
-        """ Normalized subject shared by all mails in the set.
-
-        Only used for debugging and human-friendly logging.
-
-        TODO: Cache it?
-        """
-        # Fetch subject from first message.
-        subject = self.pool[0].message.get('Subject', '')
-        subject, _ = re.subn(r'\s+', ' ', subject)
-        return subject
-
-    @staticmethod
-    def body_lines(message):
-        """ Return a normalized list of lines from message's body. """
-        if not message.is_multipart():
-            body = message.get_payload(None, decode=True)
-        else:
-            _, _, body = message.as_string().partition("\n\n")
-        if isinstance(body, bytes):
-            for enc in ['ascii', 'utf-8']:
-                try:
-                    body = body.decode(enc)
-                    break
-                except UnicodeDecodeError:
-                    continue
-            else:
-                body = message.get_payload(None, decode=False)
-        return body.splitlines(True)
+        self.pool.add(mail)
 
     def delete(self, mail):
         """ Delete a mail from the filesystem. """
@@ -477,14 +394,16 @@ class Deduplicate(object):
 
         for mail_id, message in bar(maildir.iteritems()):
             self.stats['mail_found'] += 1
+
             mail_path = self.canonical_path(os.path.join(
                 maildir._path, maildir._lookup(mail_id)))
+            mail = Mail(mail_path, self.time_source, self.use_message_id)
+
             try:
-                mail_hash, header_text = self.compute_hash(
-                    mail_path, message, self.use_message_id)
-            except InsufficientHeadersError as e:
+                mail_hash = mail.hash_key
+            except InsufficientHeadersError as expt:
                 logger.warning(
-                    "Rejecting {}: {}".format(mail_path, e.args[0]))
+                    "Rejecting {}: {}".format(mail_path, expt.args[0]))
                 self.stats['mail_rejected'] += 1
             else:
                 logger.debug(
@@ -492,132 +411,6 @@ class Deduplicate(object):
                 # Use a set to deduplicate entries pointing to the same file.
                 self.mails.setdefault(mail_hash, set()).add(mail_path)
                 self.stats['mail_kept'] += 1
-
-    @classmethod
-    def compute_hash(cls, mail_path, message, use_message_id):
-        """ Compute the canonical hash of a mail.
-
-        This hash will be used to group identical mails under the same unique
-        ID.
-
-        Return a tuple of the hash string and canonical headers.
-        """
-        if use_message_id:
-            message_id = message.get('Message-Id')
-            if message_id:
-                return message_id.strip(), ''
-            header_text = cls.header_text(message)
-            logger.warning(
-                "No Message-ID in {}: {}".format(mail_path, header_text))
-        canonical_headers_text = cls.canonical_headers(message)
-        return (
-            hashlib.sha224(canonical_headers_text.encode('utf-8')).hexdigest(),
-            canonical_headers_text)
-
-    @staticmethod
-    def header_text(message):
-        return ''.join(
-            '{}: {}\n'.format(header, message[header])
-            for header in HEADERS
-            if message[header] is not None)
-
-    @classmethod
-    def canonical_headers(cls, message):
-        """ Copy selected headers into a new string. """
-        canonical_headers = ''
-
-        for header in HEADERS:
-            if header not in message:
-                continue
-
-            for value in message.get_all(header):
-                canonical_value = cls.canonical_header_value(header, value)
-                if re.search('\S', canonical_value):
-                    canonical_headers += '{}: {}\n'.format(
-                        header, canonical_value)
-
-        if len(canonical_headers) > 50:
-            return canonical_headers
-
-        # We should have at absolute minimum 3 or 4 headers, e.g.
-        # From/To/Date/Subject; if not, something went badly wrong.
-
-        if len(canonical_headers) == 0:
-            raise InsufficientHeadersError("No canonical headers found")
-
-        err = textwrap.dedent("""\
-            Not enough data from canonical headers to compute reliable hash!
-            Headers:
-            --------- 8< --------- 8< --------- 8< --------- 8< ---------
-            {}
-            --------- 8< --------- 8< --------- 8< --------- 8< ---------""")
-        raise InsufficientHeadersError(err.format(canonical_headers))
-
-    @classmethod
-    def canonical_header_value(cls, header, value):
-        header = header.lower()
-        # Problematic when reading utf8 emails
-        # this will ensure value is always string
-        if (not type(value) is str):
-            value = value.encode()
-        value = re.sub('\s+', ' ', value).strip()
-
-        # Trim Subject prefixes automatically added by mailing list software,
-        # since the mail could have been cc'd to multiple lists, in which case
-        # it will receive a different prefix for each, but this shouldn't be
-        # treated as a real difference between duplicate mails.
-        if header == 'subject':
-            subject = value
-            while True:
-                m = re.match("([Rr]e: )*(\[\w[\w_-]+\w\] )+(?s)(.+)", subject)
-                if not m:
-                    break
-                subject = m.group(3)
-                # show_progress("Trimmed Subject to %s" % subject)
-            return subject
-        elif header == 'content-type':
-            # Apparently list servers actually munge Content-Type
-            # e.g. by stripping the quotes from charset="us-ascii".
-            # Section 5.1 of RFC2045 says that either form is valid
-            # (and they are equivalent).
-            #
-            # Additionally, with multipart/mixed, boundary delimiters can
-            # vary by recipient.  We need to allow for duplicates coming
-            # from multiple recipients, since for example you could be
-            # signed up to the same list twice with different addresses.
-            # Or maybe someone bounces you a load of mail some of which is
-            # from a mailing list you're both subscribed to - then it's
-            # still useful to be able to eliminate duplicates.
-            return re.sub(';.*', '', value)
-        elif header == 'date':
-            # Date timestamps can differ by seconds or hours for various
-            # reasons, so let's only honour the date for now.
-            try:
-                parsed = email.utils.parsedate_tz(value)
-                if not parsed:
-                    raise TypeError
-            # If parsedate_tz cannot parse the date.
-            except (TypeError, ValueError):
-                return value
-            utc_timestamp = email.utils.mktime_tz(parsed)
-            try:
-                return time.strftime(
-                    '%Y/%m/%d UTC', time.gmtime(utc_timestamp))
-            except ValueError:
-                return value
-        elif header == 'to':
-            # Sometimes email.parser strips the <> brackets from a To:
-            # header which has a single address.  I have seen this happen
-            # for only one mail in a duplicate pair.  I'm not sure why
-            # (presumably the parser uses email.utils.unquote somewhere in
-            # its code path which was only triggered by that mail and not
-            # its sister mail), but to be safe, we should always strip the
-            # <> brackets to avoid this difference preventing duplicate
-            # detection.
-            if re.match("^<[^<>,]+>$", value):
-                return email.utils.unquote(value)
-
-        return value
 
     def run(self):
         """ Run the deduplication process.
@@ -651,10 +444,17 @@ class Deduplicate(object):
                 continue
 
             duplicates = DuplicateSet(
-                hash_key, time_source=self.time_source, regexp=self.regexp,
-                dry_run=self.dry_run)
+                hash_key, regexp=self.regexp, dry_run=self.dry_run)
+
+            # TODO: initialize the duplicate set at DuplicateSet instanciation
+            # and then freeze the pool right away. This means unexposing
+            # add_from_file() method. Freezing the pool will allow caching of
+            # lazy instance attributes depending on the pool content. This is
+            # necessary to pave the way to more expressive attributes like
+            # 'largest_message', 'oldest_mail' and so on.
             for mail_path in mail_path_set:
-                duplicates.add_from_file(mail_path)
+                duplicates.add(Mail(
+                    mail_path, self.time_source, self.use_message_id))
 
             logger.debug(
                 "Initialized duplicate set of {} mails sharing the {} hash."

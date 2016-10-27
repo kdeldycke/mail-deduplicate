@@ -36,6 +36,7 @@ MODULE_NAME = 'maildir_deduplicate'
 PACKAGE_NAME = MODULE_NAME.replace('_', '-')
 
 DEPENDENCIES = [
+    'boltons >= 16.3.0',
     'click >= 5.0',
     'click_log',
     'progressbar2',
