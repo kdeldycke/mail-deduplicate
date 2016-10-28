@@ -153,6 +153,7 @@ class Mail(object):
                     canonical_headers += '{}: {}\n'.format(
                         header, canonical_value)
 
+        canonical_headers = canonical_headers.encode('utf-8')
         if len(canonical_headers) > 50:
             return canonical_headers
 
