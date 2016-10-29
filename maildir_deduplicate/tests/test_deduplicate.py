@@ -31,7 +31,8 @@ from textwrap import dedent
 
 import arrow
 
-from maildir_deduplicate import MD_SUBDIRS, PY3
+from maildir_deduplicate import MD_SUBDIRS, PY3, STRATEGIES
+from maildir_deduplicate.deduplicate import DuplicateSet
 from maildir_deduplicate.cli import cli
 
 from .case import CLITestCase
@@ -115,6 +116,13 @@ class TestDeduplicate(CLITestCase):
             filepath = path.join(md_path, 'cur', filename)
             assert isinstance(fake_mail, MailFactory)
             fake_mail.save(filepath)
+
+    def test_strategy_definitions(self):
+        """ Test deduplication strategy definitions. """
+        for strategy_id in STRATEGIES:
+            method_id = strategy_id.replace('-', '_')
+            self.assertTrue(hasattr(DuplicateSet, method_id))
+            self.assertTrue(callable(getattr(DuplicateSet, method_id)))
 
 
 class TestDryRun(TestDeduplicate):

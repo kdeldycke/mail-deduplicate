@@ -88,6 +88,17 @@ class DuplicateSet(object):
         os.unlink(mail.path)
         logger.info("{} deleted.".format(mail.path))
 
+    def apply_strategy(self, strategy_id):
+        """ Apply deduplication on the mail subset with the provided strategy.
+
+        Transform strategy keyword into its method ID, and call it.
+        """
+        method_id = strategy_id.replace('-', '_')
+        if not hasattr(DuplicateSet, method_id):
+            raise NotImplementedError(
+                "DuplicateSet.{}() method.".format(method_id))
+        return getattr(self, method_id)()
+
     # TODO: Factorize code structure common to all strategy.
 
     def delete_older(self):
@@ -418,15 +429,6 @@ class Deduplicate(object):
         We apply the removal strategy one duplicate set at a time to keep
         memory footprint low and make the log of actions easier to read.
         """
-        # Transform strategy keyword into its method ID, and check an
-        # implementation is available.
-        # TODO: move its check in unit-tests.
-        # TODO: check it is a method.
-        strategy_method_id = self.strategy.replace('-', '_')
-        if not hasattr(DuplicateSet, strategy_method_id):
-            raise NotImplementedError(
-                "DuplicateSet.{}() method.".format(strategy_method_id))
-
         logger.info(
             "The {} strategy will be applied on each duplicate set.".format(
                 self.strategy))
@@ -462,7 +464,7 @@ class Deduplicate(object):
             self.stats['mail_duplicates'] += duplicates.size
 
             # Call the deduplication strategy.
-            getattr(duplicates, strategy_method_id)()
+            duplicates.apply_strategy(self.strategy)
 
             # Merge stats resulting of actions on duplicate sets.
             self.stats += duplicates.stats
