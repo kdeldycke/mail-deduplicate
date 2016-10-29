@@ -33,7 +33,6 @@ import arrow
 
 from maildir_deduplicate import MD_SUBDIRS, PY3, STRATEGIES
 from maildir_deduplicate.deduplicate import DuplicateSet
-from maildir_deduplicate.cli import cli
 
 from .case import CLITestCase
 
