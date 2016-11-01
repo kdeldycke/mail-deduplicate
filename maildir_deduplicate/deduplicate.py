@@ -46,13 +46,30 @@ class DuplicateSet(object):
     Implements all deletion strategies applicable to a set of duplicate mails.
     """
 
-    def __init__(self, hash_key, regexp=None, dry_run=True):
+    def __init__(
+            self, hash_key, mail_path_set, regexp=None, dry_run=True,
+            time_source=None, use_message_id=False):
+        """ Load-up the duplicate set from mail's path list and freeze pool.
+
+        Once loaded-up, the pool of parsed mails is considered frozen for the
+        rest of the duplicate set life. This allow aggressive caching of lazy
+        instance attributes depending on the pool content.
+        """
         self.hash_key = hash_key
+
+        # Global config.
         self.regexp = regexp
         self.dry_run = dry_run
+        self.time_source = time_source
+        self.use_message_id = use_message_id
 
         # Pool referencing all duplicated mails and their attributes.
         self.pool = set()
+        for mail_path in set(mail_path_set):
+            self.pool.add(Mail(
+                mail_path, self.time_source, self.use_message_id))
+        # Freeze pool.
+        self.pool = frozenset(self.pool)
 
         # Keep set metrics.
         self.stats = Counter()
@@ -68,11 +85,6 @@ class DuplicateSet(object):
     def size(self):
         """ Return the size of the duplicate set. """
         return len(self.pool)
-
-    def add(self, mail):
-        """ Add provided message to the pool. """
-        # Add mail to the pool.
-        self.pool.add(mail)
 
     def delete(self, mail):
         """ Delete a mail from the filesystem. """
@@ -446,17 +458,12 @@ class Deduplicate(object):
                 continue
 
             duplicates = DuplicateSet(
-                hash_key, regexp=self.regexp, dry_run=self.dry_run)
-
-            # TODO: initialize the duplicate set at DuplicateSet instanciation
-            # and then freeze the pool right away. This means unexposing
-            # add_from_file() method. Freezing the pool will allow caching of
-            # lazy instance attributes depending on the pool content. This is
-            # necessary to pave the way to more expressive attributes like
-            # 'largest_message', 'oldest_mail' and so on.
-            for mail_path in mail_path_set:
-                duplicates.add(Mail(
-                    mail_path, self.time_source, self.use_message_id))
+                hash_key,
+                mail_path_set,
+                regexp=self.regexp,
+                dry_run=self.dry_run,
+                time_source=self.time_source,
+                use_message_id=self.use_message_id)
 
             logger.debug(
                 "Initialized duplicate set of {} mails sharing the {} hash."
