@@ -28,7 +28,7 @@ import click_log
 
 from . import (
     DEFAULT_DIFF_THRESHOLD,
-    DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
+    DEFAULT_SIZE_THRESHOLD,
     DELETE_MATCHING_PATH,
     DELETE_NEWER,
     DELETE_NEWEST,
@@ -107,16 +107,18 @@ def validate_maildirs(ctx, param, value):
     'headers removed.')
 @click.option(
     '-S', '--size-threshold', type=int, metavar='BYTES',
-    default=DEFAULT_SIZE_DIFFERENCE_THRESHOLD,
-    help='Maximum allowed difference in size between mails after which '
-    'duplicates are not considered as such. Set to -1 to not allow any '
-    'difference. Defaults to {}.'.format(DEFAULT_SIZE_DIFFERENCE_THRESHOLD))
+    default=DEFAULT_SIZE_THRESHOLD,
+    help='Maximum allowed difference in size between mails. Whole subset of '
+    'duplicates will be rejected if threshold reached. Set to -1 to not allow '
+    'any difference. Defaults to {} bytes.'.format(DEFAULT_SIZE_THRESHOLD))
 @click.option(
     '-D', '--diff-threshold', type=int, metavar='BYTES',
     default=DEFAULT_DIFF_THRESHOLD,
-    help='Maximum allowed difference in content between mails after which '
-    'duplicates are not considered as such. Set to -1 to not allow any '
-    'difference. Defaults to {}.'.format(DEFAULT_DIFF_THRESHOLD))
+    help='Maximum allowed difference in content between mails. Whole subset '
+    'of duplicates will be rejected if threshold reached. Set to -1 to not '
+    'allow any difference. Defaults to {} bytes.'.format(
+        DEFAULT_DIFF_THRESHOLD))
+# TODO: add a show-progress option.
 @click.argument(
     'maildirs', nargs=-1, callback=validate_maildirs,
     type=click.Path(exists=True, file_okay=False, resolve_path=True))
@@ -126,9 +128,9 @@ def deduplicate(
         size_threshold, diff_threshold, maildirs):
     """ Deduplicate mails from a set of maildir folders.
 
-    Run a first pass computing the canonical hash of each encountered mail,
-    then a second pass to apply the deletion strategy on each subset of
-    duplicate mails.
+    Run a first pass computing the canonical hash of each encountered mail from
+    their headers, then a second pass to apply the deletion strategy on each
+    subset of duplicate mails.
 
     \b
     Removal strategies for each subsets of duplicate mails:

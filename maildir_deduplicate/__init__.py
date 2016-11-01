@@ -75,7 +75,7 @@ HEADERS = [
 # Received: headers, and another copy could be reflected back via a Cc-to-self
 # mechanism or mailing list server. But this threshold has to be at least large
 # enough to allow for footers added by mailing list servers.
-DEFAULT_SIZE_DIFFERENCE_THRESHOLD = 512  # bytes
+DEFAULT_SIZE_THRESHOLD = 512  # bytes
 
 
 # Similarly, we generated unified diffs of duplicates and ensure that the diff
