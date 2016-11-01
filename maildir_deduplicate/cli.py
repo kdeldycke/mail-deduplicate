@@ -185,6 +185,7 @@ def deduplicate(
 
 
 @cli.command(short_help='Hash a single mail.')
+# TODO: Deduplicate option definition.
 @click.option(
     '-i', '--message-id', is_flag=True, default=False,
     help='Only use the Message-ID header as a hash key. Not recommended. '
