@@ -102,9 +102,9 @@ def validate_maildirs(ctx, param, value):
     'thresholds.')
 @click.option(
     '-i', '--message-id', is_flag=True, default=False,
-    help='Use Message-ID header as hash key. This is not recommended: the '
-    'default is to compute a digest of the whole header with selected '
-    'headers removed.')
+    help='Only use the Message-ID header as a hash key. Not recommended. '
+    'Replace the default behavior consisting in deriving the hash from '
+    'several headers.')
 @click.option(
     '-S', '--size-threshold', type=int, metavar='BYTES',
     default=DEFAULT_SIZE_THRESHOLD,
@@ -187,9 +187,9 @@ def deduplicate(
 @cli.command(short_help='Hash a single mail.')
 @click.option(
     '-i', '--message-id', is_flag=True, default=False,
-    help='Use Message-ID header as hash key. This is not recommended: the '
-    'default is to compute a digest of the whole header with selected headers '
-    'removed.')
+    help='Only use the Message-ID header as a hash key. Not recommended. '
+    'Replace the default behavior consisting in deriving the hash from '
+    'several headers.')
 @click.argument('message', type=click.Path(
     exists=True, dir_okay=False, resolve_path=True))
 @click.pass_context
