@@ -32,6 +32,7 @@ from difflib import unified_diff
 from mailbox import Maildir
 from operator import attrgetter
 
+from boltons.cacheutils import cachedproperty
 from progressbar import Bar, Percentage, ProgressBar
 from tabulate import tabulate
 
@@ -81,10 +82,26 @@ class DuplicateSet(object):
         return "<{} hash={}, size={}, dry_run={}>".format(
             self.__class__.__name__, self.hash_key, self.size, self.dry_run)
 
-    @property
+    @cachedproperty
     def size(self):
         """ Return the size of the duplicate set. """
         return len(self.pool)
+
+    @cachedproperty
+    def newest_timestamp(self):
+        return max(map(attrgetter('timestamp'), self.pool))
+
+    @cachedproperty
+    def oldest_timestamp(self):
+        return min(map(attrgetter('timestamp'), self.pool))
+
+    @cachedproperty
+    def biggest_size(self):
+        return max(map(attrgetter('size'), self.pool))
+
+    @cachedproperty
+    def smallest_size(self):
+        return min(map(attrgetter('size'), self.pool))
 
     def delete(self, mail):
         """ Delete a mail from the filesystem. """
@@ -118,13 +135,13 @@ class DuplicateSet(object):
 
         Only keeps the subset sharing the most recent timestamp.
         """
-        newest_timestamp = max(map(attrgetter('timestamp'), self.pool))
         logger.info(
             "Deleting all mails strictly older than the {} timestamp..."
-            "".format(newest_timestamp))
+            "".format(self.newest_timestamp))
         # Select candidates for deletion.
         candidates = [
-            mail for mail in self.pool if mail.timestamp < newest_timestamp]
+            mail for mail in self.pool
+            if mail.timestamp < self.newest_timestamp]
         if len(candidates) == self.size:
             logger.warning(
                 "Skip deletion: all {} mails share the same timestamp."
@@ -140,13 +157,13 @@ class DuplicateSet(object):
         Keeps all mail of the duplicate set but those sharing the oldest
         timestamp.
         """
-        oldest_timestamp = min(map(attrgetter('timestamp'), self.pool))
         logger.info(
             "Deleting all mails sharing the oldest {} timestamp...".format(
-                oldest_timestamp))
+                self.oldest_timestamp))
         # Select candidates for deletion.
         candidates = [
-            mail for mail in self.pool if mail.timestamp == oldest_timestamp]
+            mail for mail in self.pool
+            if mail.timestamp == self.oldest_timestamp]
         if len(candidates) == self.size:
             logger.warning(
                 "Skip deletion: all {} mails share the same timestamp."
@@ -162,13 +179,13 @@ class DuplicateSet(object):
 
         Only keeps the subset sharing the most ancient timestamp.
         """
-        oldest_timestamp = min(map(attrgetter('timestamp'), self.pool))
         logger.info(
             "Deleting all mails strictly newer than the {} timestamp..."
-            "".format(oldest_timestamp))
+            "".format(self.oldest_timestamp))
         # Select candidates for deletion.
         candidates = [
-            mail for mail in self.pool if mail.timestamp > oldest_timestamp]
+            mail for mail in self.pool
+            if mail.timestamp > self.oldest_timestamp]
         if len(candidates) == self.size:
             logger.warning(
                 "Skip deletion: all {} mails share the same timestamp."
@@ -185,13 +202,13 @@ class DuplicateSet(object):
         Keeps all mail of the duplicate set but those sharing the newest
         timestamp.
         """
-        newest_timestamp = max(map(attrgetter('timestamp'), self.pool))
         logger.info(
             "Deleting all mails sharing the newest {} timestamp...".format(
-                newest_timestamp))
+                self.newest_timestamp))
         # Select candidates for deletion.
         candidates = [
-            mail for mail in self.pool if mail.timestamp == newest_timestamp]
+            mail for mail in self.pool
+            if mail.timestamp == self.newest_timestamp]
         if len(candidates) == self.size:
             logger.warning(
                 "Skip deletion: all {} mails share the same timestamp."
@@ -207,13 +224,13 @@ class DuplicateSet(object):
 
         Only keeps the subset sharing the biggest size.
         """
-        biggest_size = max(map(attrgetter('size'), self.pool))
         logger.info(
             "Deleting all mails strictly smaller than {} bytes...".format(
-                biggest_size))
+                self.biggest_size))
         # Select candidates for deletion.
         candidates = [
-            mail for mail in self.pool if mail.size < biggest_size]
+            mail for mail in self.pool
+            if mail.size < self.biggest_size]
         if len(candidates) == self.size:
             logger.warning(
                 "Skip deletion: all {} mails share the same size."
@@ -229,13 +246,13 @@ class DuplicateSet(object):
         Keeps all mail of the duplicate set but those sharing the smallest
         size.
         """
-        smallest_size = min(map(attrgetter('size'), self.pool))
         logger.info(
             "Deleting all mails sharing the smallest size of {} bytes..."
-            "".format(smallest_size))
+            "".format(self.smallest_size))
         # Select candidates for deletion.
         candidates = [
-            mail for mail in self.pool if mail.size == smallest_size]
+            mail for mail in self.pool
+            if mail.size == self.smallest_size]
         if len(candidates) == self.size:
             logger.warning(
                 "Skip deletion: all {} mails share the same size."
@@ -251,13 +268,13 @@ class DuplicateSet(object):
 
         Only keeps the subset sharing the smallest size.
         """
-        smallest_size = min(map(attrgetter('size'), self.pool))
         logger.info(
             "Deleting all mails strictly bigger than {} bytes...".format(
-                smallest_size))
+                self.smallest_size))
         # Select candidates for deletion.
         candidates = [
-            mail for mail in self.pool if mail.size > smallest_size]
+            mail for mail in self.pool
+            if mail.size > self.smallest_size]
         if len(candidates) == self.size:
             logger.warning(
                 "Skip deletion: all {} mails share the same size."
@@ -273,13 +290,13 @@ class DuplicateSet(object):
         Keeps all mail of the duplicate set but those sharing the biggest
         size.
         """
-        biggest_size = max(map(attrgetter('size'), self.pool))
         logger.info(
             "Deleting all mails sharing the biggest size of {} bytes..."
-            "".format(biggest_size))
+            "".format(self.biggest_size))
         # Select candidates for deletion.
         candidates = [
-            mail for mail in self.pool if mail.size == biggest_size]
+            mail for mail in self.pool
+            if mail.size == self.biggest_size]
         if len(candidates) == self.size:
             logger.warning(
                 "Skip deletion: all {} mails share the same size."
