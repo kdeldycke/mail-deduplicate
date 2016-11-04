@@ -53,7 +53,7 @@ EXTRA_DEPENDENCIES = {
         'arrow',
         'nose',
         'coverage',
-        'pycodestyle',
+        'pycodestyle >= 2.1.0',
         'pylint'],
     'develop': [
         'isort',
