@@ -27,7 +27,7 @@ import click
 import click_log
 
 from . import (
-    DEFAULT_DIFF_THRESHOLD,
+    DEFAULT_CONTENT_THRESHOLD,
     DEFAULT_SIZE_THRESHOLD,
     DELETE_MATCHING_PATH,
     DELETE_NEWER,
@@ -97,9 +97,8 @@ def validate_maildirs(ctx, param, value):
     '-n', '--dry-run', is_flag=True, default=False,
     help='Do not actually delete anything; just show what would be removed.')
 @click.option(
-    '-s', '--show-diffs', count=True,
-    help='Show diffs between duplicates even if they are within the '
-    'thresholds.')
+    '-d', '--show-diff', is_flag=True, default=False,
+    help='Show the unified diff of duplicates not within thresholds.')
 @click.option(
     '-i', '--message-id', is_flag=True, default=False,
     help='Only use the Message-ID header as a hash key. Not recommended. '
@@ -112,20 +111,20 @@ def validate_maildirs(ctx, param, value):
     'duplicates will be rejected if threshold reached. Set to -1 to not allow '
     'any difference. Defaults to {} bytes.'.format(DEFAULT_SIZE_THRESHOLD))
 @click.option(
-    '-D', '--diff-threshold', type=int, metavar='BYTES',
-    default=DEFAULT_DIFF_THRESHOLD,
+    '-D', '--content-threshold', type=int, metavar='BYTES',
+    default=DEFAULT_CONTENT_THRESHOLD,
     help='Maximum allowed difference in content between mails. Whole subset '
     'of duplicates will be rejected if threshold reached. Set to -1 to not '
     'allow any difference. Defaults to {} bytes.'.format(
-        DEFAULT_DIFF_THRESHOLD))
+        DEFAULT_CONTENT_THRESHOLD))
 # TODO: add a show-progress option.
 @click.argument(
     'maildirs', nargs=-1, callback=validate_maildirs,
     type=click.Path(exists=True, file_okay=False, resolve_path=True))
 @click.pass_context
 def deduplicate(
-        ctx, strategy, time_source, regexp, dry_run, show_diffs, message_id,
-        size_threshold, diff_threshold, maildirs):
+        ctx, strategy, time_source, regexp, dry_run, show_diff, message_id,
+        size_threshold, content_threshold, maildirs):
     """ Deduplicate mails from a set of maildir folders.
 
     Run a first pass computing the canonical hash of each encountered mail from
@@ -147,6 +146,10 @@ def deduplicate(
         - delete-non-matching-path: Deletes all duplicates whose file path
         doesn't match the regular expression provided via the --regexp
         parameter.
+
+    Deletion strategy on a duplicate set only applies if no major differences
+    between mails are uncovered during a fine-grained check differences during
+    the second pass. Limits can be set via the threshold options.
     """
     # Print help screen and exit if no maildir folder provided.
     if not maildirs:
@@ -171,8 +174,8 @@ def deduplicate(
                     param_name, strategy))
 
     dedup = Deduplicate(
-        strategy, time_source, regexp, dry_run, show_diffs, message_id,
-        size_threshold, diff_threshold)
+        strategy, time_source, regexp, dry_run, show_diff, message_id,
+        size_threshold, content_threshold)
 
     logger.info('Start phase #1: load mails and compute hashes.')
     for maildir in maildirs:

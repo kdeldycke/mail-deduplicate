@@ -80,7 +80,7 @@ DEFAULT_SIZE_THRESHOLD = 512  # bytes
 
 # Similarly, we generated unified diffs of duplicates and ensure that the diff
 # is not greater than a certain size.
-DEFAULT_DIFF_THRESHOLD = 768  # bytes
+DEFAULT_CONTENT_THRESHOLD = 768  # bytes
 
 
 # Use symbols to define removal strategies.
@@ -120,3 +120,13 @@ MD_SUBDIRS = frozenset(('cur', 'new', 'tmp'))
 class InsufficientHeadersError(Exception):
 
     """ Issue was encountered with email headers. """
+
+
+class SizeDiffAboveThreshold(Exception):
+
+    """ Difference in mail size is greater than threshold. """
+
+
+class ContentDiffAboveThreshold(Exception):
+
+    """ Difference in mail content is greater than threshold. """

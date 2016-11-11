@@ -29,6 +29,7 @@ import os
 import re
 from collections import Counter
 from difflib import unified_diff
+from itertools import combinations
 from mailbox import Maildir
 from operator import attrgetter
 
@@ -36,7 +37,14 @@ from boltons.cacheutils import cachedproperty
 from progressbar import Bar, Percentage, ProgressBar
 from tabulate import tabulate
 
-from . import InsufficientHeadersError, logger
+from . import (
+    DEFAULT_CONTENT_THRESHOLD,
+    DEFAULT_SIZE_THRESHOLD,
+    ContentDiffAboveThreshold,
+    InsufficientHeadersError,
+    SizeDiffAboveThreshold,
+    logger
+)
 from .mail import Mail
 
 
@@ -49,7 +57,9 @@ class DuplicateSet(object):
 
     def __init__(
             self, hash_key, mail_path_set, regexp=None, dry_run=True,
-            time_source=None, use_message_id=False):
+            time_source=None, use_message_id=False, show_diff=False,
+            size_threshold=DEFAULT_SIZE_THRESHOLD,
+            content_threshold=DEFAULT_CONTENT_THRESHOLD):
         """ Load-up the duplicate set from mail's path list and freeze pool.
 
         Once loaded-up, the pool of parsed mails is considered frozen for the
@@ -63,6 +73,9 @@ class DuplicateSet(object):
         self.dry_run = dry_run
         self.time_source = time_source
         self.use_message_id = use_message_id
+        self.show_diff = show_diff
+        self.size_threshold = size_threshold
+        self.content_threshold = content_threshold
 
         # Pool referencing all duplicated mails and their attributes.
         self.pool = set()
@@ -116,6 +129,67 @@ class DuplicateSet(object):
         # //github.com/python/cpython/blob/origin/2.7/Lib/mailbox.py#L329-L331
         os.unlink(mail.path)
         logger.info("{} deleted.".format(mail.path))
+
+    def check_differences(self):
+        """ In-depth check of mail differences.
+
+        Compare all mails of the duplicate set with each other, both in size
+        and content. Raise an error if we're not within the limits imposed by
+        the threshold setting.
+        """
+        logger.info("Check that mail differences are within the limits.")
+        if self.size_threshold < 0:
+            logger.info("Skip checking for size differences.")
+        if self.content_threshold < 0:
+            logger.info("Skip checking for content differences.")
+        if self.size_threshold < 0 and self.content_threshold < 0:
+            return
+
+        # Compute differences of mail against one another.
+        for mail_a, mail_b in combinations(self.pool, 2):
+
+            # Compare mails on size.
+            if self.size_threshold > -1:
+                size_difference = abs(mail_a.size - mail_b.size)
+                logger.debug("{} and {} differs by {} bytes in size.".format(
+                    mail_a, mail_b, size_difference))
+                if size_difference > self.size_threshold:
+                    raise SizeDiffAboveThreshold
+
+            # Compare mails on content.
+            if self.content_threshold > -1:
+                content_difference = self.diff(mail_a, mail_b)
+                logger.debug(
+                    "{} and {} differs by {} bytes in content.".format(
+                        mail_a, mail_b, content_difference))
+                if content_difference > self.content_threshold:
+                    if self.show_diff:
+                        logger.info(self.pretty_diff(mail_a, mail_b))
+                    raise ContentDiffAboveThreshold
+
+    def diff(self, mail_a, mail_b):
+        """ Return difference in bytes between two mails' normalized body.
+
+        TODO: rewrite the diff algorithm to not rely on naive unified diff
+        result parsing.
+        """
+        return len(''.join(unified_diff(
+            mail_a.body_lines, mail_b.body_lines,
+            # Ignore difference in filename lenghts and timestamps.
+            fromfile='a', tofile='b',
+            fromfiledate='', tofiledate='',
+            n=0, lineterm='\n')))
+
+    def pretty_diff(self, mail_a, mail_b):
+        """ Returns a verbose unified diff between two mails' normalized body.
+        """
+        return ''.join(unified_diff(
+            mail_a.body_lines, mail_b.body_lines,
+            fromfile='Normalized body of {}'.format(mail_a.path),
+            tofile='Normalized body of {}'.format(mail_b.path),
+            fromfiledate='{:0.2f}'.format(mail_a.timestamp),
+            tofiledate='{:0.2f}'.format(mail_b.timestamp),
+            n=0, lineterm='\n'))
 
     def apply_strategy(self, strategy_id):
         """ Apply deduplication on the mail subset with the provided strategy.
@@ -353,8 +427,8 @@ class Deduplicate(object):
     """
 
     def __init__(
-            self, strategy, time_source, regexp, dry_run, show_diffs,
-            use_message_id, size_threshold, diff_threshold, progress=True):
+            self, strategy, time_source, regexp, dry_run, show_diff,
+            use_message_id, size_threshold, content_threshold, progress=True):
         # All mails grouped by hashes.
         self.mails = {}
 
@@ -365,16 +439,13 @@ class Deduplicate(object):
         self.dry_run = dry_run
         self.use_message_id = use_message_id
         self.progress = progress
-
-        # XXX Unsupported options.
-        # TODO: re-integrate these options and features.
-        self.show_diffs = show_diffs
+        self.show_diff = show_diff
         self.size_threshold = size_threshold
-        self.diff_threshold = diff_threshold
+        self.content_threshold = content_threshold
 
         # Validates configuration.
         assert self.size_threshold >= -1
-        assert self.diff_threshold >= -1
+        assert self.content_threshold >= -1
 
         # Deduplication statistics.
         self.stats = Counter({
@@ -400,7 +471,7 @@ class Deduplicate(object):
             'set_skipped': 0,
             # Number of sets ignored because they were faulty.
             'set_rejected_size': 0,
-            'set_rejected_diff': 0,
+            'set_rejected_content': 0,
             # Number of valid sets successfuly deduplicated.
             'set_deduplicated': 0,
         })
@@ -487,6 +558,20 @@ class Deduplicate(object):
                 "".format(duplicates.size, duplicates.hash_key))
             self.stats['mail_duplicates'] += duplicates.size
 
+            # Fine-grained checks on mail differences.
+            try:
+                duplicates.check_differences()
+            except SizeDiffAboveThreshold:
+                self.stats['set_rejected_size'] += 1
+                logger.warning(
+                    "Reject set: mails are too dissimilar in size.")
+                continue
+            except ContentDiffAboveThreshold:
+                self.stats['set_rejected_content'] += 1
+                logger.warning(
+                    "Reject set: mails are too dissimilar in content.")
+                continue
+
             # Call the deduplication strategy.
             duplicates.apply_strategy(self.strategy)
 
@@ -500,88 +585,6 @@ class Deduplicate(object):
                 continue
 
             self.stats['set_deduplicated'] += 1
-
-        #    too_dissimilar = self.messages_too_dissimilar(
-        #        hash_key, sorted_messages_size)
-        #    if too_dissimilar == 'size':
-        #        self.sizes_too_dissimilar += 1
-        #        continue
-        #    elif too_dissimilar == 'diff':
-        #        self.diff_too_big += 1
-        #        continue
-        #    elif too_dissimilar is False:
-        #        pass
-        #    else:
-        #        raise ValueError(
-        #            "Unexpected value {!r} for too_dissimilar".format(
-        #                too_dissimilar))
-
-    def messages_too_dissimilar(self, hash_key, sizes):
-        largest_size, largest_file, largest_message = sizes[0]
-        largest_lines = self.body_lines(largest_message)
-
-        for size, mail_file, message in sizes[1:]:
-            size_difference = largest_size - size
-            lines = self.body_lines(message)
-
-            if (self.size_threshold >= 0) and (
-                    size_difference > self.size_threshold):
-                logger.info(
-                    "For hash key {}, sizes differ by {} > {} bytes:\n"
-                    "  {} {}\n  {} {}".format(
-                        hash_key, size_difference, self.size_threshold,
-                        size, mail_file,
-                        largest_size, largest_file))
-                if self.show_diffs:
-                    self.print_diff(
-                        lines, largest_lines, mail_file, largest_file)
-                return 'size'
-
-            text_difference = self.text_diff(lines, largest_lines)
-            if self.diff_threshold >= 0 and len(
-                    text_difference) > self.diff_threshold:
-                logger.info(
-                    "Diff between duplicate messages with hash key {} was "
-                    "{} > {} bytes.".format(
-                        hash_key, len(text_difference), self.diff_threshold))
-                if len(largest_lines) > 8192:
-                    logger.info("Not printing diff for this duplicate set, "
-                                "it is too large")
-                else:
-                    self.print_diff(lines, largest_lines, mail_file,
-                                    largest_file)
-                return 'diff'
-
-            elif len(text_difference) == 0:
-                if self.show_diffs:
-                    logger.info("Diff produced no differences")
-
-            else:
-                # Difference is inside threshold
-                if self.show_diffs:
-                    self.print_diff(
-                        lines, largest_lines, mail_file, largest_file)
-
-        return False
-
-    @staticmethod
-    def text_diff(lines, largest_lines):
-        return ''.join(unified_diff(
-            lines, largest_lines,
-            # Ignore difference in filename lenghts and timestamps.
-            fromfile='a', tofile='b',
-            fromfiledate='', tofiledate='',
-            n=0, lineterm='\n'))
-
-    @staticmethod
-    def print_diff(from_lines, to_lines, from_file, to_file):
-        logger.info(''.join(unified_diff(
-            from_lines, to_lines,
-            fromfile='Body of {}'.format(from_file),
-            tofile='Body of {}'.format(to_file),
-            fromfiledate='{:0.2f}'.format(os.path.getmtime(from_file)),
-            tofiledate='{:0.2f}'.format(os.path.getmtime(to_file)),
-            n=0, lineterm='\n')))
 
     def report(self):
         """ Print user-friendly statistics and metrics. """
@@ -604,7 +607,7 @@ class Deduplicate(object):
             self.stats['set_rejected_size']])
         table.append([
             "Rejected (too dissimilar in content)",
-            self.stats['set_rejected_diff']])
+            self.stats['set_rejected_content']])
         table.append(["Deduplicated", self.stats['set_deduplicated']])
         logger.info(tabulate(table, tablefmt='fancy_grid', headers='firstrow'))
 
@@ -627,5 +630,5 @@ class Deduplicate(object):
             self.stats['set_ignored'] +
             self.stats['set_skipped'] +
             self.stats['set_rejected_size'] +
-            self.stats['set_rejected_diff'] +
+            self.stats['set_rejected_content'] +
             self.stats['set_deduplicated'])
