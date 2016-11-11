@@ -31,9 +31,8 @@ from textwrap import dedent
 
 import arrow
 
-from maildir_deduplicate import MD_SUBDIRS, PY3, STRATEGIES
-from maildir_deduplicate.deduplicate import DuplicateSet
-
+from .. import MD_SUBDIRS, PY3, STRATEGIES
+from ..deduplicate import DuplicateSet
 from .case import CLITestCase
 
 if PY3:

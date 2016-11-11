@@ -23,8 +23,7 @@ import unittest
 
 from click.testing import CliRunner
 
-from maildir_deduplicate.cli import cli
-
+from ..cli import cli
 from .case import CLITestCase
 
 
