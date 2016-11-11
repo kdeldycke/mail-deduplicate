@@ -97,9 +97,6 @@ def validate_maildirs(ctx, param, value):
     '-n', '--dry-run', is_flag=True, default=False,
     help='Do not actually delete anything; just show what would be removed.')
 @click.option(
-    '-d', '--show-diff', is_flag=True, default=False,
-    help='Show the unified diff of duplicates not within thresholds.')
-@click.option(
     '-i', '--message-id', is_flag=True, default=False,
     help='Only use the Message-ID header as a hash key. Not recommended. '
     'Replace the default behavior consisting in deriving the hash from '
@@ -116,14 +113,17 @@ def validate_maildirs(ctx, param, value):
     help='Maximum allowed difference in content between mails. Whole subset '
     'of duplicates will be rejected above threshold. Set to -1 to not allow '
     'any difference. Defaults to {} bytes.'.format(DEFAULT_CONTENT_THRESHOLD))
+@click.option(
+    '-d', '--show-diff', is_flag=True, default=False,
+    help='Show the unified diff of duplicates not within thresholds.')
 # TODO: add a show-progress option.
 @click.argument(
     'maildirs', nargs=-1, callback=validate_maildirs,
     type=click.Path(exists=True, file_okay=False, resolve_path=True))
 @click.pass_context
 def deduplicate(
-        ctx, strategy, time_source, regexp, dry_run, show_diff, message_id,
-        size_threshold, content_threshold, maildirs):
+        ctx, strategy, time_source, regexp, dry_run, message_id,
+        size_threshold, content_threshold, show_diff, maildirs):
     """ Deduplicate mails from a set of maildir folders.
 
     Run a first pass computing the canonical hash of each encountered mail from
