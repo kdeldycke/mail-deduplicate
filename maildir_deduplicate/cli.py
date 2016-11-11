@@ -133,19 +133,18 @@ def deduplicate(
 
     \b
     Removal strategies for each subsets of duplicate mails:
-        - delete-older:    Deletes the olders,    keeps the newests.
-        - delete-oldest:   Deletes the oldests,   keeps the newers.
-        - delete-newer:    Deletes the newers,    keeps the oldests.
-        - delete-newest:   Deletes the newests,   keeps the olders.
-        - delete-smaller:  Deletes the smallers,  keeps the biggests.
-        - delete-smallest: Deletes the smallests, keeps the biggers.
-        - delete-bigger:   Deletes the biggers,   keeps the smallests.
-        - delete-biggest:  Deletes the biggests,  keeps the smallers.
-        - delete-matching-path: Deletes all duplicates whose file path match
-        the regular expression provided via the --regexp parameter.
-        - delete-non-matching-path: Deletes all duplicates whose file path
-        doesn't match the regular expression provided via the --regexp
-        parameter.
+      - delete-older:    Deletes the olders,    keeps the newests.
+      - delete-oldest:   Deletes the oldests,   keeps the newers.
+      - delete-newer:    Deletes the newers,    keeps the oldests.
+      - delete-newest:   Deletes the newests,   keeps the olders.
+      - delete-smaller:  Deletes the smallers,  keeps the biggests.
+      - delete-smallest: Deletes the smallests, keeps the biggers.
+      - delete-bigger:   Deletes the biggers,   keeps the smallests.
+      - delete-biggest:  Deletes the biggests,  keeps the smallers.
+      - delete-matching-path: Deletes all duplicates whose file path match the
+      regular expression provided via the --regexp parameter.
+      - delete-non-matching-path: Deletes all duplicates whose file path
+      doesn't match the regular expression provided via the --regexp parameter.
 
     Deletion strategy on a duplicate set only applies if no major differences
     between mails are uncovered during a fine-grained check differences during
