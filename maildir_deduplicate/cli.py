@@ -83,7 +83,7 @@ def validate_maildirs(ctx, param, value):
 
 @cli.command(short_help='Deduplicate maildirs content.')
 @click.option(
-    '--strategy', type=click.Choice(STRATEGIES),
+    '-s', '--strategy', type=click.Choice(STRATEGIES),
     help='Deletion strategy to apply within a subset of duplicates.')
 @click.option(
     '-t', '--time-source', type=click.Choice(TIME_SOURCES),
@@ -111,7 +111,7 @@ def validate_maildirs(ctx, param, value):
     'duplicates will be rejected if threshold reached. Set to -1 to not allow '
     'any difference. Defaults to {} bytes.'.format(DEFAULT_SIZE_THRESHOLD))
 @click.option(
-    '-D', '--content-threshold', type=int, metavar='BYTES',
+    '-C', '--content-threshold', type=int, metavar='BYTES',
     default=DEFAULT_CONTENT_THRESHOLD,
     help='Maximum allowed difference in content between mails. Whole subset '
     'of duplicates will be rejected if threshold reached. Set to -1 to not '
