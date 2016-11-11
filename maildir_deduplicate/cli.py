@@ -108,15 +108,14 @@ def validate_maildirs(ctx, param, value):
     '-S', '--size-threshold', type=int, metavar='BYTES',
     default=DEFAULT_SIZE_THRESHOLD,
     help='Maximum allowed difference in size between mails. Whole subset of '
-    'duplicates will be rejected if threshold reached. Set to -1 to not allow '
-    'any difference. Defaults to {} bytes.'.format(DEFAULT_SIZE_THRESHOLD))
+    'duplicates will be rejected above threshold. Set to -1 to not allow any '
+    'difference. Defaults to {} bytes.'.format(DEFAULT_SIZE_THRESHOLD))
 @click.option(
     '-C', '--content-threshold', type=int, metavar='BYTES',
     default=DEFAULT_CONTENT_THRESHOLD,
     help='Maximum allowed difference in content between mails. Whole subset '
-    'of duplicates will be rejected if threshold reached. Set to -1 to not '
-    'allow any difference. Defaults to {} bytes.'.format(
-        DEFAULT_CONTENT_THRESHOLD))
+    'of duplicates will be rejected above threshold. Set to -1 to not allow '
+    'any difference. Defaults to {} bytes.'.format(DEFAULT_CONTENT_THRESHOLD))
 # TODO: add a show-progress option.
 @click.argument(
     'maildirs', nargs=-1, callback=validate_maildirs,
