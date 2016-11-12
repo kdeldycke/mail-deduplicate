@@ -30,7 +30,6 @@ import io
 import re
 from os import path
 
-
 from setuptools import find_packages, setup
 
 MODULE_NAME = 'maildir_deduplicate'
