@@ -9,6 +9,7 @@ Contents:
    maildir_deduplicate
    development
    changelog
+   history
 
 
 Indices and tables
