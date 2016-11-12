@@ -132,6 +132,24 @@ The documentation you're currently reading can be built locally with `Sphinx
     $ sphinx-build -b html ./docs ./docs/html
 
 
+Stability policy
+----------------
+
+Here is a bunch of rules we're trying to follow regarding stability:
+
+* Patch releases (``0.x.n`` → ``0.x.(n+1)`` upgrades) are bug-fix only. These
+  releases must not break anything and keeps backward-compatibility with
+  ``0.x.*`` and ``0.(x-1).*`` series.
+
+* Minor releases (``0.n.*`` → ``0.(n+1).0`` upgrades) includes any non-bugfix
+  changes. These releases must be backward-compatible with any ``0.n.*``
+  version but are allowed to drop compatibility with the ``0.(n-1).*`` series
+  and below.
+
+* Major releases (``n.*.*`` → ``(n+1).0.0`` upgrades) are not planned yet,
+  unless we introduce huge changes to the project.
+
+
 Release process
 ---------------
 
