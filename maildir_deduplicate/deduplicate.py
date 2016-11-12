@@ -536,6 +536,8 @@ class Deduplicate(object):
         self.stats['set_total'] = len(self.mails)
 
         for hash_key, mail_path_set in self.mails.items():
+            # Print visual clue to separate duplicate sets.
+            logger.info('---')
 
             logger.debug("Loading duplicate set sharing the {} hash.".format(
                 hash_key))
