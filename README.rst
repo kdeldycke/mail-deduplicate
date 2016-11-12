@@ -171,21 +171,6 @@ the contents.  If the sizes or contents differ by more than a threshold, they
 are not counted as duplicates.
 
 
-Contributors
-------------
-
-* `Kevin Deldycke <https://github.com/kdeldycke>`_
-* `Adam Spiers <https://github.com/aspiers>`_
-* `Ben Reser <https://github.com/breser>`_
-* `Marcel Martin <https://github.com/marcelm>`_
-* `reedog117 <https://github.com/reedog117>`_
-* `Tristan Henderson <https://github.com/tnhh>`_
-* `Matija Nalis <https://github.com/mnalis>`_
-* `Painted-Fox <https://github.com/Painted-Fox>`_
-* `Juan Diego Tascón <https://github.com/juantascon>`_
-* `Kevin Murray <https://github.com/kdmurray91>`_
-
-
 License
 -------
 
