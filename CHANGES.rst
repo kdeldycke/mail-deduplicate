@@ -27,6 +27,8 @@ ChangeLog
 * Use generic factory to produce mail fixtures in unittests.
 * Normalize and canonicalize all paths to deduplicate on the fly mails pointing
   to the same file.
+* Only show latest changes in the long description of the package instead of
+  the full changelog.
 
 
 `1.3.0 (2016-08-11) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.2.0...v1.3.0>`_

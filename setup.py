@@ -26,9 +26,10 @@ from __future__ import (
     unicode_literals
 )
 
-import codecs
-import os
+import io
 import re
+from os import path
+
 
 from setuptools import find_packages, setup
 
@@ -63,32 +64,62 @@ EXTRA_DEPENDENCIES = {
 }
 
 
-def read_file(*args):
+def read_file(*relative_path_elements):
     """ Return content of a file relative to this ``setup.py``. """
-    file_path = os.path.join(os.path.dirname(__file__), *args)
-    return codecs.open(file_path, encoding='utf-8').read()
+    file_path = path.join(path.dirname(__file__), *relative_path_elements)
+    return io.open(file_path, encoding='utf8').read().strip()
 
 
-def get_version():
+# Cache fetched version.
+_version = None  # noqa
+
+
+def version():
     """ Extracts version from the ``__init__.py`` file at the module's root.
+
+    Inspired by: https://packaging.python.org/single_source_version/
     """
+    global _version
+    if _version:
+        return _version
     init_file = read_file(MODULE_NAME, '__init__.py')
     matches = re.search(
         r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', init_file, re.M)
-    if matches:
-        return matches.group(1)
-    raise RuntimeError("Unable to find version string in __init__.py .")
+    if not matches:
+        raise RuntimeError("Unable to find version string in __init__.py .")
+    _version = matches.group(1)  # noqa
+    return _version
 
 
-def get_long_description():
-    return "{}\n{}".format(read_file('README.rst'), read_file('CHANGES.rst'))
+def latest_changes():
+    """ Extract part of changelog pertaining to version. """
+    lines = []
+    for line in read_file('CHANGES.rst').splitlines():
+        if line.startswith('-------'):
+            if len(lines) > 1:
+                lines = lines[:-1]
+                break
+        if lines:
+            lines.append(line)
+        elif line.startswith("`{} (".format(version())):
+            lines.append(line)
+    if not lines:
+        raise RuntimeError(
+            "Unable to find changelog for the {} release.".format(version()))
+    return "\n".join(lines).strip()
+
+
+def long_description():
+    """ Collates project README and latest changes. """
+    return "{}\n\n\nChanges for v{}".format(
+        read_file('README.rst'), latest_changes())
 
 
 setup(
     name=PACKAGE_NAME,
-    version=get_version(),
+    version=version(),
     description="Deduplicate mails from a set of maildir folders.",
-    long_description=get_long_description(),
+    long_description=long_description(),
     keywords=['CLI', 'mail', 'email', 'maildir', 'deduplicate'],
 
     author='Kevin Deldycke',
