@@ -169,11 +169,3 @@ For added protection against accidentally removing mails due to false
 positives, duplicates are verified by comparing body sizes and also diff'ing
 the contents.  If the sizes or contents differ by more than a threshold, they
 are not counted as duplicates.
-
-
-License
--------
-
-This software is licensed under the `GNU General Public License v2 or later
-(GPLv2+)
-<https://github.com/kdeldycke/maildir-deduplicate/blob/master/LICENSE>`_.

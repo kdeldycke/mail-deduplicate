@@ -11,6 +11,7 @@ Contents
    development
    changelog
    history
+   license
 
 
 Indices and tables
