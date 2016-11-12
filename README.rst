@@ -53,7 +53,7 @@ Usage
 
 List global options and commands:
 
-.. code-block::
+.. code-block:: bash
 
     $ mdedup --help
     Usage: mdedup [OPTIONS] COMMAND [ARGS]...
