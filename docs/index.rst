@@ -8,6 +8,7 @@ Contents
 
    readme
    install
+   usage
    maildir_deduplicate
    development
    changelog
