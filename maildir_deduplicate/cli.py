@@ -184,6 +184,8 @@ def deduplicate(
         # progress=progress,
     )
 
+    dedup = Deduplicate(conf)
+
     logger.info('Start phase #1: load mails and compute hashes.')
     for maildir in maildirs:
         dedup.add_maildir(maildir)
