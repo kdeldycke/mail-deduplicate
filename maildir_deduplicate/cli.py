@@ -38,6 +38,7 @@ from . import (
     MD_SUBDIRS,
     STRATEGIES,
     TIME_SOURCES,
+    Config,
     __version__,
     logger
 )
@@ -171,9 +172,17 @@ def deduplicate(
                 '{} parameter not allowed in {} strategy.'.format(
                     param_name, strategy))
 
-    dedup = Deduplicate(
-        strategy, time_source, regexp, dry_run, show_diff, message_id,
-        size_threshold, content_threshold)
+    conf = Config(
+        strategy=strategy,
+        time_source=time_source,
+        regexp=regexp,
+        dry_run=dry_run,
+        show_diff=show_diff,
+        message_id=message_id,
+        size_threshold=size_threshold,
+        content_threshold=content_threshold,
+        # progress=progress,
+    )
 
     logger.info('Start phase #1: load mails and compute hashes.')
     for maildir in maildirs:
@@ -200,7 +209,9 @@ def hash(ctx, message_id, message):
 
     Mainly used to debug message hashing.
     """
-    mail = Mail(message, use_message_id=message_id)
+    conf = Config(message_id=message_id)
+
+    mail = Mail(message, conf)
 
     logger.info(mail.header_text)
     logger.info('-' * 70)

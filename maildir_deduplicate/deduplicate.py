@@ -38,8 +38,6 @@ from progressbar import Bar, Percentage, ProgressBar
 from tabulate import tabulate
 
 from . import (
-    DEFAULT_CONTENT_THRESHOLD,
-    DEFAULT_SIZE_THRESHOLD,
     ContentDiffAboveThreshold,
     InsufficientHeadersError,
     MissingMessageID,
@@ -56,11 +54,7 @@ class DuplicateSet(object):
     Implements all deletion strategies applicable to a set of duplicate mails.
     """
 
-    def __init__(
-            self, hash_key, mail_path_set, regexp=None, dry_run=True,
-            time_source=None, use_message_id=False, show_diff=False,
-            size_threshold=DEFAULT_SIZE_THRESHOLD,
-            content_threshold=DEFAULT_CONTENT_THRESHOLD):
+    def __init__(self, hash_key, mail_path_set, conf):
         """ Load-up the duplicate set from mail's path list and freeze pool.
 
         Once loaded-up, the pool of parsed mails is considered frozen for the
@@ -70,19 +64,12 @@ class DuplicateSet(object):
         self.hash_key = hash_key
 
         # Global config.
-        self.regexp = regexp
-        self.dry_run = dry_run
-        self.time_source = time_source
-        self.use_message_id = use_message_id
-        self.show_diff = show_diff
-        self.size_threshold = size_threshold
-        self.content_threshold = content_threshold
+        self.conf = conf
 
         # Pool referencing all duplicated mails and their attributes.
         self.pool = set()
         for mail_path in set(mail_path_set):
-            self.pool.add(Mail(
-                mail_path, self.time_source, self.use_message_id))
+            self.pool.add(Mail(mail_path, self.conf))
         # Freeze pool.
         self.pool = frozenset(self.pool)
 
@@ -93,8 +80,8 @@ class DuplicateSet(object):
 
     def __repr__(self):
         """ Print internal raw states for debugging. """
-        return "<{} hash={}, size={}, dry_run={}>".format(
-            self.__class__.__name__, self.hash_key, self.size, self.dry_run)
+        return "<{} hash={}, size={}, conf={!r}>".format(
+            self.__class__.__name__, self.hash_key, self.size, self.conf)
 
     @cachedproperty
     def size(self):
@@ -121,7 +108,7 @@ class DuplicateSet(object):
         """ Delete a mail from the filesystem. """
         self.stats['mail_deleted'] += 1
 
-        if self.dry_run:
+        if self.conf.dry_run:
             logger.info("Skip deletion of {!r}.".format(mail))
             return
 
@@ -139,32 +126,32 @@ class DuplicateSet(object):
         the threshold setting.
         """
         logger.info("Check that mail differences are within the limits.")
-        if self.size_threshold < 0:
+        if self.conf.size_threshold < 0:
             logger.info("Skip checking for size differences.")
-        if self.content_threshold < 0:
+        if self.conf.content_threshold < 0:
             logger.info("Skip checking for content differences.")
-        if self.size_threshold < 0 and self.content_threshold < 0:
+        if self.conf.size_threshold < 0 and self.conf.content_threshold < 0:
             return
 
         # Compute differences of mail against one another.
         for mail_a, mail_b in combinations(self.pool, 2):
 
             # Compare mails on size.
-            if self.size_threshold > -1:
+            if self.conf.size_threshold > -1:
                 size_difference = abs(mail_a.size - mail_b.size)
                 logger.debug("{} and {} differs by {} bytes in size.".format(
                     mail_a, mail_b, size_difference))
-                if size_difference > self.size_threshold:
+                if size_difference > self.conf.size_threshold:
                     raise SizeDiffAboveThreshold
 
             # Compare mails on content.
-            if self.content_threshold > -1:
+            if self.conf.content_threshold > -1:
                 content_difference = self.diff(mail_a, mail_b)
                 logger.debug(
                     "{} and {} differs by {} bytes in content.".format(
                         mail_a, mail_b, content_difference))
-                if content_difference > self.content_threshold:
-                    if self.show_diff:
+                if content_difference > self.conf.content_threshold:
+                    if self.conf.show_diff:
                         logger.info(self.pretty_diff(mail_a, mail_b))
                     raise ContentDiffAboveThreshold
 
@@ -386,10 +373,11 @@ class DuplicateSet(object):
         """ Delete all duplicates whose file path match the regexp. """
         logger.info(
             "Deleting all mails with file path matching the {} regexp..."
-            "".format(self.regexp.pattern))
+            "".format(self.conf.regexp.pattern))
         # Select candidates for deletion.
         candidates = [
-            mail for mail in self.pool if re.search(self.regexp, mail.path)]
+            mail for mail in self.pool
+            if re.search(self.conf.regexp, mail.path)]
         if len(candidates) == self.size:
             logger.warning(
                 "Skip deletion: all {} mails matches the rexexp.".format(
@@ -404,11 +392,11 @@ class DuplicateSet(object):
         """ Delete all duplicates whose file path doesn't match the regexp. """
         logger.info(
             "Deleting all mails with file path not matching the {} regexp..."
-            "".format(self.regexp.pattern))
+            "".format(self.conf.regexp.pattern))
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool
-            if not re.search(self.regexp, mail.path)]
+            if not re.search(self.conf.regexp, mail.path)]
         if len(candidates) == self.size:
             logger.warning(
                 "Skip deletion: all {} mails matches the rexexp.".format(
@@ -427,26 +415,12 @@ class Deduplicate(object):
     Messages are grouped together in a DuplicateSet
     """
 
-    def __init__(
-            self, strategy, time_source, regexp, dry_run, show_diff,
-            use_message_id, size_threshold, content_threshold, progress=True):
+    def __init__(self, conf):
         # All mails grouped by hashes.
         self.mails = {}
 
         # Global config.
-        self.strategy = strategy
-        self.time_source = time_source
-        self.regexp = regexp
-        self.dry_run = dry_run
-        self.use_message_id = use_message_id
-        self.progress = progress
-        self.show_diff = show_diff
-        self.size_threshold = size_threshold
-        self.content_threshold = content_threshold
-
-        # Validates configuration.
-        assert self.size_threshold >= -1
-        assert self.content_threshold >= -1
+        self.conf = conf
 
         # Deduplication statistics.
         self.stats = Counter({
@@ -532,7 +506,7 @@ class Deduplicate(object):
         """
         logger.info(
             "The {} strategy will be applied on each duplicate set.".format(
-                self.strategy))
+                self.conf.strategy))
 
         self.stats['set_total'] = len(self.mails)
 
@@ -548,13 +522,7 @@ class Deduplicate(object):
                 self.stats['set_ignored'] += 1
                 continue
 
-            duplicates = DuplicateSet(
-                hash_key,
-                mail_path_set,
-                regexp=self.regexp,
-                dry_run=self.dry_run,
-                time_source=self.time_source,
-                use_message_id=self.use_message_id)
+            duplicates = DuplicateSet(hash_key, mail_path_set, self.conf)
 
             logger.debug(
                 "Initialized duplicate set of {} mails sharing the {} hash."
@@ -576,7 +544,7 @@ class Deduplicate(object):
                 continue
 
             # Call the deduplication strategy.
-            duplicates.apply_strategy(self.strategy)
+            duplicates.apply_strategy(self.conf.strategy)
 
             # Merge stats resulting of actions on duplicate sets.
             self.stats += duplicates.stats

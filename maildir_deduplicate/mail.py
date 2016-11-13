@@ -48,15 +48,13 @@ class Mail(object):
 
     """ Encapsulate a single mail and its metadata. """
 
-    def __init__(self, path, time_source=None, use_message_id=None):
+    def __init__(self, path, conf):
         """ Build a mail from either a file. """
         # File path of the mail.
         self.path = path
 
         # Global config.
-        # TODO; set a global dict somewhere to serve as config holder.
-        self.time_source = time_source
-        self.use_message_id = use_message_id
+        self.conf = conf
 
     @cachedproperty
     def message(self):
@@ -76,7 +74,7 @@ class Mail(object):
         # rather the last time the inode data changed. Source:
         # http://userprimary.net/posts/2007/11/18
         # /ctime-in-unix-means-last-change-time-not-create-time/
-        if self.time_source == CTIME:
+        if self.conf.time_source == CTIME:
             return os.path.getctime(self.path)
 
         # Fetch from the date header.
@@ -129,7 +127,7 @@ class Mail(object):
     @cachedproperty
     def hash_key(self):
         """ Returns the canonical hash of a mail. """
-        if self.use_message_id:
+        if self.conf.message_id:
             message_id = self.message.get('Message-Id')
             if message_id:
                 return message_id.strip()

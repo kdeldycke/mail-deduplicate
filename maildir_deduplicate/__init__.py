@@ -135,3 +135,40 @@ class SizeDiffAboveThreshold(Exception):
 class ContentDiffAboveThreshold(Exception):
 
     """ Difference in mail content is greater than threshold. """
+
+
+class Config(object):
+    """ Holds global configuration. """
+
+    # Keep these defaults in sync with CLI option definitions.
+    default_conf = {
+        'strategy': None,
+        'time_source': None,
+        'regexp': None,
+        'dry_run': False,
+        'show_diff': False,
+        'message_id': False,
+        'size_threshold': DEFAULT_SIZE_THRESHOLD,
+        'content_threshold': DEFAULT_CONTENT_THRESHOLD,
+        'progress': True,
+    }
+
+    def __init__(self, **kwargs):
+        # Load default values.
+        self.conf = self.default_conf.copy()
+
+        for param, value in kwargs.items():
+            if param not in self.default_conf:
+                raise ValueError(
+                    "Unrecognized {} configuration option.".format(param))
+            self.conf[param] = value
+
+        # Validates configuration.
+        assert self.size_threshold >= -1
+        assert self.content_threshold >= -1
+
+    def __getattr__(self, attr_id):
+        """ Expose configuration entries as properties. """
+        if attr_id in self.conf:
+            return self.conf[attr_id]
+        return super(Config, self).__getattr__(attr_id)
