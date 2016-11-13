@@ -2,6 +2,14 @@ ChangeLog
 =========
 
 
+`2.0.1 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.0...develop>`_
+-------------------------------------------------------------------------------------------------
+
+.. note:: This version is not yet released and is under active development.
+
+* No changes yet.
+
+
 `2.0.0 (2016-11-13) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.3.0...v2.0.0>`_
 ------------------------------------------------------------------------------------------------
 
