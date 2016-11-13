@@ -487,7 +487,7 @@ class Deduplicate(object):
 
             try:
                 mail_hash = mail.hash_key
-            except InsufficientHeadersError as expt:
+            except (InsufficientHeadersError, MissingMessageID) as expt:
                 logger.warning(
                     "Rejecting {}: {}".format(mail_path, expt.args[0]))
                 self.stats['mail_rejected'] += 1
