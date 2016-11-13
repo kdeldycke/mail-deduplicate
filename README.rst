@@ -28,7 +28,7 @@ Development: |build| |docs| |coverage| |quality|
 .. |coverage| image:: https://codecov.io/github/kdeldycke/maildir-deduplicate/coverage.svg?branch=develop
     :target: https://codecov.io/github/kdeldycke/maildir-deduplicate?branch=develop
     :alt: Coverage Status
-.. |quality| image:: https://img.shields.io/scrutinizer/g/kdeldycke/maildir-deduplicate.svg
+.. |quality| image:: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/badges/quality-score.png?b=develop
     :target: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/?branch=develop
     :alt: Code Quality
 
