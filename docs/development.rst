@@ -65,10 +65,10 @@ __ https://github.com/kdeldycke/maildir-deduplicate/tree/develop
     :target: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/develop
     :alt: Coverage Status
 
-.. |quality-stable| image:: https://img.shields.io/scrutinizer/g/kdeldycke/maildir-deduplicate.svg?style=flat
+.. |quality-stable| image:: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/badges/quality-score.png?b=master
     :target: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/?branch=master
     :alt: Code Quality
-.. |quality-dev| image:: https://img.shields.io/scrutinizer/g/kdeldycke/maildir-deduplicate.svg?style=flat
+.. |quality-dev| image:: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/badges/quality-score.png?b=develop
     :target: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/?branch=develop
     :alt: Code Quality
 
