@@ -503,7 +503,7 @@ class Deduplicate(object):
             def bar(x):
                 return x
 
-        for mail_id, message in bar(maildir.iteritems()):
+        for mail_id in bar(maildir.iterkeys()):
             self.stats['mail_found'] += 1
 
             mail_path = self.canonical_path(os.path.join(
