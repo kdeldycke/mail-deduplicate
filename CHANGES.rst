@@ -12,9 +12,11 @@ ChangeLog
   mail's timestamp.
 * Re-implement diff threshold options. Closes #43.
 * Re-implement statistics. Closes #42.
+* Normalize and canonicalize all paths to deduplicate on the fly mails pointing
+  to the same file.
+* Build documentation via Sphinx.
 * Add ``test`` and ``develop`` dependencies.
 * Move coverage config to ``setup.cfg``.
-* Build documentation via Sphinx.
 * Replace ``pep8`` package by ``pycodestyle``.
 * Enforce ``pycodestyle`` checks in Travis CI jobs.
 * Remove popularity badge: PyPI download counters are broken and no longer
@@ -25,8 +27,6 @@ ChangeLog
 * Let unittests generates their own fake and temporary maildirs.
 * Print CLI output in unittests.
 * Use generic factory to produce mail fixtures in unittests.
-* Normalize and canonicalize all paths to deduplicate on the fly mails pointing
-  to the same file.
 * Only show latest changes in the long description of the package instead of
   the full changelog.
 
