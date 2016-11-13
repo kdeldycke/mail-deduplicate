@@ -58,10 +58,10 @@ __ https://github.com/kdeldycke/maildir-deduplicate/tree/develop
     :target: https://travis-ci.org/kdeldycke/maildir-deduplicate
     :alt: Unit-tests status
 
-.. |coverage-stable| image:: https://codecov.io/github/kdeldycke/maildir-deduplicate/coverage.svg?branch=master
+.. |coverage-stable| image:: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/master/graph/badge.svg
     :target: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/master
     :alt: Coverage Status
-.. |coverage-dev| image:: https://codecov.io/github/kdeldycke/maildir-deduplicate/coverage.svg?branch=develop
+.. |coverage-dev| image:: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/develop/graph/badge.svg
     :target: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/develop
     :alt: Coverage Status
 

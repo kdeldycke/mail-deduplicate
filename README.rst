@@ -25,7 +25,7 @@ Development: |build| |docs| |coverage| |quality|
 .. |docs| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=develop
     :target: http://maildir-deduplicate.readthedocs.io/en/develop/
     :alt: Documentation Status
-.. |coverage| image:: https://codecov.io/github/kdeldycke/maildir-deduplicate/coverage.svg?branch=develop
+.. |coverage| image:: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/develop/graph/badge.svg
     :target: https://codecov.io/github/kdeldycke/maildir-deduplicate?branch=develop
     :alt: Coverage Status
 .. |quality| image:: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/badges/quality-score.png?b=develop
