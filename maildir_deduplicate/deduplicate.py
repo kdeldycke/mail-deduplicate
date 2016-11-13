@@ -470,7 +470,7 @@ class Deduplicate(object):
 
         # Group folders by hash.
         logger.info("{} mails found.".format(len(maildir)))
-        if self.progress:
+        if self.conf.progress:
             bar = ProgressBar(widgets=[Percentage(), Bar()],
                               max_value=len(maildir), redirect_stderr=True,
                               redirect_stdout=True)
