@@ -483,7 +483,7 @@ class Deduplicate(object):
 
             mail_path = self.canonical_path(os.path.join(
                 maildir._path, maildir._lookup(mail_id)))
-            mail = Mail(mail_path, self.time_source, self.use_message_id)
+            mail = Mail(mail_path, self.conf)
 
             try:
                 mail_hash = mail.hash_key
