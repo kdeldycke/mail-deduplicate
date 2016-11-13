@@ -1,8 +1,8 @@
 Usage
 =====
 
-`mdedup`
---------
+``mdedup``
+----------
 
 List global options and commands:
 
@@ -23,8 +23,8 @@ List global options and commands:
       hash         Hash a single mail.
 
 
-`mdedup deduplicate`
---------------------
+``mdedup deduplicate``
+----------------------
 
 Deduplication command specific options:
 
@@ -67,8 +67,8 @@ Deduplication command specific options:
       --help                          Show this message and exit.
 
 
-`mdedup hash`
--------------
+``mdedup hash``
+---------------
 
 Hashing command specific options:
 
