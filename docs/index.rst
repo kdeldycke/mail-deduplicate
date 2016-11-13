@@ -7,6 +7,7 @@ Contents
    :maxdepth: 2
 
    readme
+   install
    maildir_deduplicate
    development
    changelog
