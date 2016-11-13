@@ -51,10 +51,10 @@ __ https://github.com/kdeldycke/maildir-deduplicate/tree/master
    ``develop``
 __ https://github.com/kdeldycke/maildir-deduplicate/tree/develop
 
-.. |build-stable| image:: https://img.shields.io/travis/kdeldycke/maildir-deduplicate/master.svg?style=flat
+.. |build-stable| image:: https://travis-ci.org/kdeldycke/maildir-deduplicate.svg?branch=master
     :target: https://travis-ci.org/kdeldycke/maildir-deduplicate
     :alt: Unit-tests status
-.. |build-dev| image:: https://img.shields.io/travis/kdeldycke/maildir-deduplicate/master.svg?style=flat
+.. |build-dev| image:: https://travis-ci.org/kdeldycke/maildir-deduplicate.svg?branch=develop
     :target: https://travis-ci.org/kdeldycke/maildir-deduplicate
     :alt: Unit-tests status
 

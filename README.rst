@@ -19,7 +19,7 @@ Development: |build| |docs| |coverage| |quality|
 .. |dependencies| image:: https://img.shields.io/requires/github/kdeldycke/maildir-deduplicate/master.svg
     :target: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements/?branch=master
     :alt: Requirements freshness
-.. |build| image:: https://img.shields.io/travis/kdeldycke/maildir-deduplicate/develop.svg
+.. |build| image:: https://travis-ci.org/kdeldycke/maildir-deduplicate.svg?branch=develop
     :target: https://travis-ci.org/kdeldycke/maildir-deduplicate
     :alt: Unit-tests status
 .. |docs| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=develop
