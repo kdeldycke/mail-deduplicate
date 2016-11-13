@@ -34,7 +34,7 @@ import time
 
 from boltons.cacheutils import cachedproperty
 
-from . import CTIME, HEADERS, PY2, InsufficientHeadersError, logger
+from . import CTIME, HEADERS, PY2, InsufficientHeadersError, MissingMessageID, logger
 
 
 class Mail(object):
@@ -126,8 +126,9 @@ class Mail(object):
             message_id = self.message.get('Message-Id')
             if message_id:
                 return message_id.strip()
-            logger.warning(
+            logger.error(
                 "No Message-ID in {}: {}".format(self.path, self.header_text))
+            raise MissingMessageID
 
         return hashlib.sha224(self.canonical_headers).hexdigest()
 

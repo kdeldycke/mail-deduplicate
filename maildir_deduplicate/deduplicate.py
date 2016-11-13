@@ -43,6 +43,7 @@ from . import (
     ContentDiffAboveThreshold,
     InsufficientHeadersError,
     SizeDiffAboveThreshold,
+    MissingMessageID,
     logger
 )
 from .mail import Mail

@@ -122,6 +122,11 @@ class InsufficientHeadersError(Exception):
     """ Issue was encountered with email headers. """
 
 
+class MissingMessageID(Exception):
+
+    """ No Message-ID header found in email headers. """
+
+
 class SizeDiffAboveThreshold(Exception):
 
     """ Difference in mail size is greater than threshold. """
