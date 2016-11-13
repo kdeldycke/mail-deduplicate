@@ -9,6 +9,7 @@ ChangeLog
 
 * Reject mails without ``Message-ID`` headers if ``--message-id`` option is
   active.
+* Print more debug info in unittests when CLI produce tracebacks.
 
 
 `2.0.0 (2016-11-13) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.3.0...v2.0.0>`_

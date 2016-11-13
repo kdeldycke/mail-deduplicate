@@ -20,6 +20,7 @@
 
 import unittest
 
+from boltons.tbutils import ExceptionInfo
 from click.testing import CliRunner
 
 from ..cli import cli
@@ -41,5 +42,11 @@ class CLITestCase(unittest.TestCase):
         print("$ mdedupe {}".format(' '.join(args)))
         print(result.output)
         print('-' * 70)
+
+        # Print some more debug info.
+        print(result)
+        if result.exception:
+            print(ExceptionInfo.from_exc_info(
+                *result.exc_info).get_formatted())
 
         return result
