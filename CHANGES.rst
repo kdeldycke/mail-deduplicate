@@ -8,8 +8,12 @@ ChangeLog
 .. note:: This version is not yet released and is under active development.
 
 * Refactor and redefine all removal strategies. Closes #40.
-* Add a new ``--time-source`` parameter to point to the canonical source of a
-  mail's timestamp.
+* Add a new ``-t``/``--time-source`` CLI parameter to point to the canonical
+  source of a mail's timestamp.
+* Rename ``-s``/``--show-diffs`` parameter to ``-d``/``--show-diff``.
+* Rename ``-D``/``--diff-threshold`` parameter to
+  ``-C``/``--content-threshold``.
+* Add new ``-s`` shorthand to ``--strategy`` parameter.
 * Re-implement diff threshold options. Closes #43.
 * Re-implement statistics. Closes #42.
 * Normalize and canonicalize all paths to deduplicate on the fly mails pointing
