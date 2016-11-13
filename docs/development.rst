@@ -72,10 +72,10 @@ __ https://github.com/kdeldycke/maildir-deduplicate/tree/develop
     :target: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/?branch=develop
     :alt: Code Quality
 
-.. |deps-stable| image:: https://img.shields.io/requires/github/kdeldycke/maildir-deduplicate/master.svg?style=flat
+.. |deps-stable| image:: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements.svg?branch=master
     :target: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements/?branch=master
     :alt: Requirements freshness
-.. |deps-dev| image:: https://img.shields.io/requires/github/kdeldycke/maildir-deduplicate/develop.svg?style=flat
+.. |deps-dev| image:: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements.svg?branch=develop
     :target: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements/?branch=develop
     :alt: Requirements freshness
 
