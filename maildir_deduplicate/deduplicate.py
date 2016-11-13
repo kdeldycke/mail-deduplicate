@@ -42,8 +42,8 @@ from . import (
     DEFAULT_SIZE_THRESHOLD,
     ContentDiffAboveThreshold,
     InsufficientHeadersError,
-    SizeDiffAboveThreshold,
     MissingMessageID,
+    SizeDiffAboveThreshold,
     logger
 )
 from .mail import Mail

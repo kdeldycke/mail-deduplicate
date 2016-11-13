@@ -34,7 +34,14 @@ import time
 
 from boltons.cacheutils import cachedproperty
 
-from . import CTIME, HEADERS, PY2, InsufficientHeadersError, MissingMessageID, logger
+from . import (
+    CTIME,
+    HEADERS,
+    PY2,
+    InsufficientHeadersError,
+    MissingMessageID,
+    logger
+)
 
 
 class Mail(object):
