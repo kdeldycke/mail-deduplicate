@@ -27,6 +27,14 @@ maildir_deduplicate.deduplicate module
     :undoc-members:
     :show-inheritance:
 
+maildir_deduplicate.mail module
+-------------------------------
+
+.. automodule:: maildir_deduplicate.mail
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 Module contents
 ---------------

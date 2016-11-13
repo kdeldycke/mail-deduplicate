@@ -4,6 +4,14 @@ maildir_deduplicate.tests package
 Submodules
 ----------
 
+maildir_deduplicate.tests.case module
+-------------------------------------
+
+.. automodule:: maildir_deduplicate.tests.case
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 maildir_deduplicate.tests.test_cli module
 -----------------------------------------
 
