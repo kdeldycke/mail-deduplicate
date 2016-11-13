@@ -5,7 +5,7 @@ This package is `available on PyPi
 <https://pypi.python.org/pypi/maildir-deduplicate>`_, so you can install the
 latest stable release and its dependencies with a simple ``pip`` call:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
     $ pip install maildir-deduplicate
 

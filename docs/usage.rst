@@ -6,7 +6,7 @@ Usage
 
 List global options and commands:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
     $ mdedup --help
     Usage: mdedup [OPTIONS] COMMAND [ARGS]...
@@ -28,7 +28,7 @@ List global options and commands:
 
 Deduplication command specific options:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
     $ mdedup deduplicate --help
     Usage: mdedup deduplicate [OPTIONS] [MAILDIRS]...
@@ -92,7 +92,7 @@ Deduplication command specific options:
 
 Hashing command specific options:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
     $ mdedup hash --help
     Usage: mdedup hash [OPTIONS] MESSAGE
