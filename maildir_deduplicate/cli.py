@@ -186,11 +186,11 @@ def deduplicate(
 
     dedup = Deduplicate(conf)
 
-    logger.info('Start phase #1: load mails and compute hashes.')
+    logger.info('=== Start phase #1: load mails and compute hashes.')
     for maildir in maildirs:
         dedup.add_maildir(maildir)
 
-    logger.info('Start phase #2: deduplicate mails.')
+    logger.info('=== Start phase #2: deduplicate mails.')
     dedup.run()
 
     dedup.report()
