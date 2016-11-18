@@ -105,13 +105,16 @@ def latest_changes():
     if not lines:
         raise RuntimeError(
             "Unable to find changelog for the {} release.".format(version()))
-    return "\n".join(lines).strip()
+    # Renormalize and clean lines.
+    return '\n'.join(lines).strip().split('\n')
 
 
 def long_description():
     """ Collates project README and latest changes. """
-    return "{}\n\n\nChanges for v{}".format(
-        read_file('README.rst'), latest_changes())
+    changes = latest_changes()
+    changes[0] = "Changes for v{}".format(changes[0])
+    changes[1] = '-' * len(changes[0])
+    return "{}\n\n\n{}".format(read_file('README.rst'), '\n'.join(changes))
 
 
 setup(
