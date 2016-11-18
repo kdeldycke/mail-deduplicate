@@ -51,15 +51,15 @@ EXTRA_DEPENDENCIES = {
         'sphinx_rtd_theme'],
     'tests': [
         'arrow',
-        'nose',
         'coverage',
+        'nose',
         'pycodestyle >= 2.1.0',
         'pylint'],
     'develop': [
+        'bumpversion',
         'isort',
-        'wheel',
-        'setuptools >= 24.2.1',
-        'bumpversion'],
+        'setuptools >= 24.2.1'
+        'wheel'],
 }
 
 
