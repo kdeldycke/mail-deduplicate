@@ -12,6 +12,7 @@ ChangeLog
 * Print more debug info in unittests when CLI produce tracebacks.
 * Always check for package metadata in Travis CI jobs.
 * Fix package's long description against PyPi rendering constraints.
+* Add link to full changelog in package's long description.
 
 
 `2.0.0 (2016-11-13) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.3.0...v2.0.0>`_

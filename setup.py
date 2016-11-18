@@ -115,7 +115,12 @@ def long_description():
     changes = latest_changes()
     changes[0] = "Changes for v{}".format(changes[0])
     changes[1] = '-' * len(changes[0])
-    return "{}\n\n\n{}".format(read_file('README.rst'), '\n'.join(changes))
+    return "\n\n\n".join([
+        read_file('README.rst'),
+        '\n'.join(changes),
+        "`Full changelog <https://{}.readthedocs.io/en/develop/changelog.html"
+        "#changelog>`_.".format(PACKAGE_NAME),
+    ])
 
 
 setup(
