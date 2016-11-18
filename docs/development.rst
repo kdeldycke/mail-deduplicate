@@ -151,6 +151,14 @@ The documentation you're currently reading can be built locally with `Sphinx
     $ sphinx-apidoc -f -o ./docs .
     $ sphinx-build -b html ./docs ./docs/html
 
+For a smooth release, you also need to validate the rendering of package's long
+description on PyPi, as well as metadata:
+
+.. code-block:: bash
+
+    $ pip install -e .[develop]
+    $ ./setup.py check -m -r -s
+
 
 Release process
 ---------------

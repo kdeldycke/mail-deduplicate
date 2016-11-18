@@ -10,6 +10,7 @@ ChangeLog
 * Reject mails without ``Message-ID`` headers if ``--message-id`` option is
   active.
 * Print more debug info in unittests when CLI produce tracebacks.
+* Always check for package metadata in Travis CI jobs.
 * Fix package's long description against PyPi rendering constraints.
 
 
