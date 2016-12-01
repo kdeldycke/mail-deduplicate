@@ -113,7 +113,7 @@ def latest_changes():
 def long_description():
     """ Collates project README and latest changes. """
     changes = latest_changes()
-    changes[0] = "Changes for v{}".format(changes[0])
+    changes[0] = "`Changes for v{}".format(changes[0][1:])
     changes[1] = '-' * len(changes[0])
     return "\n\n\n".join([
         read_file('README.rst'),
