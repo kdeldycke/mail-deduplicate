@@ -20,6 +20,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import logging
 import os
 import re
 
@@ -48,15 +49,27 @@ from .mail import Mail
 
 @click.group(invoke_without_command=True)
 @click_log.init(logger)
-@click_log.simple_verbosity_option(default='INFO', metavar='LEVEL')
+@click_log.simple_verbosity_option(
+    default='INFO', metavar='LEVEL',
+    help='Either CRITICAL, ERROR, WARNING, INFO or DEBUG. Defaults to INFO.')
 @click.version_option(__version__)
 @click.pass_context
 def cli(ctx):
     """ CLI for maildirs content analysis and deletion. """
+    level = click_log.get_level()
+    try:
+        level_to_name = logging._levelToName
+    # Fallback to pre-Python 3.4 internals.
+    except AttributeError:
+        level_to_name = logging._levelNames
+    level_name = level_to_name.get(level, level)
+    logger.debug('Verbosity set to {}.'.format(level_name))
+
     # Print help screen and exit if no sub-commands provided.
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
         ctx.exit()
+
     # Load up global options to the context.
     ctx.obj = {}
 

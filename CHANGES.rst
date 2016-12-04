@@ -8,6 +8,7 @@ ChangeLog
 .. note:: This version is not yet released and is under active development.
 
 * Fix rendering of changelog link in RST.
+* Show selected log level in debug mode.
 
 
 `2.0.1 (2016-11-28) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.0...v2.0.1>`_
