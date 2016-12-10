@@ -11,6 +11,7 @@ ChangeLog
 * Show selected log level in debug mode.
 * Test builds against Python 3.6 and 3.7-dev, and most recent PyPy targetting
   Python 2.7 and 3.3.
+* Bump requirement to ``readme_renderer >= 16.0``.
 
 
 `2.0.1 (2016-11-28) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.0...v2.0.1>`_
