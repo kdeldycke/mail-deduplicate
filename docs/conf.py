@@ -30,7 +30,7 @@ author = "Kevin Deldycke"
 # HTML content.
 html_show_copyright = False
 copyright = (
-    "2010-{}, <a href='https://kevin.deldycke.com'>{}</a> and <a
+    "2010-{}, <a href='https://kevin.deldycke.com'>{}</a> and <a "
     "href='https://github.com/kdeldycke/maildir-deduplicate/graphs/"
     "contributors'>contributors</a>").format(time.strftime('%Y'), author)
 
