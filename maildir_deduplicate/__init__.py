@@ -138,6 +138,7 @@ class ContentDiffAboveThreshold(Exception):
 
 
 class Config(object):
+
     """ Holds global configuration. """
 
     # Keep these defaults in sync with CLI option definitions.

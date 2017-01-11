@@ -107,7 +107,6 @@ class DuplicateSet(object):
     def delete(self, mail):
         """ Delete a mail from the filesystem. """
         self.stats['mail_deleted'] += 1
-
         if self.conf.dry_run:
             logger.info("Skip deletion of {!r}.".format(mail))
             return
