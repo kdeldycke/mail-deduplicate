@@ -445,6 +445,7 @@ class Deduplicate(object):
             # Total number of sets skipped as already deduplicated.
             'set_skipped': 0,
             # Number of sets ignored because they were faulty.
+            'set_rejected_encoding': 0,
             'set_rejected_size': 0,
             'set_rejected_content': 0,
             # Number of valid sets successfuly deduplicated.
@@ -532,6 +533,11 @@ class Deduplicate(object):
             # Fine-grained checks on mail differences.
             try:
                 duplicates.check_differences()
+            except UnicodeDecodeError as err:
+                self.stats['set_rejected_encoding'] += 1
+                logger.warning(
+                        "Reject set: Bad encoding: {}\n{}".format(str(err), ", ".join(mail_path_set)))
+                continue
             except SizeDiffAboveThreshold:
                 self.stats['set_rejected_size'] += 1
                 logger.warning(
@@ -579,6 +585,9 @@ class Deduplicate(object):
         table.append([
             "Rejected (too dissimilar in content)",
             self.stats['set_rejected_content']])
+        table.append([
+            "Rejected (bad encoding)",
+            self.stats['set_rejected_encoding']])
         table.append(["Deduplicated", self.stats['set_deduplicated']])
         logger.info(tabulate(table, tablefmt='fancy_grid', headers='firstrow'))
 
@@ -602,4 +611,5 @@ class Deduplicate(object):
             self.stats['set_skipped'] +
             self.stats['set_rejected_size'] +
             self.stats['set_rejected_content'] +
+            self.stats['set_rejected_encoding'] +
             self.stats['set_deduplicated'])
