@@ -23,7 +23,7 @@ Development: |build| |docs| |coverage| |quality|
     :target: https://travis-ci.org/kdeldycke/maildir-deduplicate
     :alt: Unit-tests status
 .. |docs| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=develop
-    :target: http://maildir-deduplicate.readthedocs.io/en/develop/
+    :target: https://maildir-deduplicate.readthedocs.io/en/develop/
     :alt: Documentation Status
 .. |coverage| image:: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/develop/graph/badge.svg
     :target: https://codecov.io/github/kdeldycke/maildir-deduplicate?branch=develop

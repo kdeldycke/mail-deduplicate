@@ -14,7 +14,7 @@ Philosophy
 Stability policy
 ----------------
 
-This project follows `Semantic Versioning <http://semver.org/>`_.
+This project follows `Semantic Versioning <https://semver.org/>`_.
 
 Which boils down to the following rules of thumb regarding stability:
 
@@ -80,10 +80,10 @@ __ https://github.com/kdeldycke/maildir-deduplicate/tree/develop
     :alt: Requirements freshness
 
 .. |docs-stable| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=stable
-    :target: http://maildir-deduplicate.readthedocs.io/en/stable/
+    :target: https://maildir-deduplicate.readthedocs.io/en/stable/
     :alt: Documentation Status
 .. |docs-dev| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=develop
-    :target: http://maildir-deduplicate.readthedocs.io/en/develop/
+    :target: https://maildir-deduplicate.readthedocs.io/en/develop/
     :alt: Documentation Status
 
 
@@ -130,7 +130,7 @@ imports:
     $ isort --apply
 
 Then run `pycodestyle <https://pycodestyle.readthedocs.io>`_ and `Pylint
-<http://docs.pylint.org>`_ code style checks:
+<https://docs.pylint.org>`_ code style checks:
 
 .. code-block:: bash
 
@@ -143,7 +143,7 @@ Build documentation
 -------------------
 
 The documentation you're currently reading can be built locally with `Sphinx
-<http://www.sphinx-doc.org>`_:
+<https://www.sphinx-doc.org>`_:
 
 .. code-block:: bash
 

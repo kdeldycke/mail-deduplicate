@@ -41,7 +41,7 @@ HEADERS = [
     'To',
 
     # No Cc since mailman apparently sometimes trims list members from the Cc
-    # header to avoid sending duplicates: http://mail.python.org/pipermail
+    # header to avoid sending duplicates: https://mail.python.org/pipermail
     # /mailman-developers/2002-September/013233.html . But this means that
     # copies of mail reflected back from the list server will have a different
     # Cc to the copy saved by the MUA at send-time.

@@ -121,7 +121,7 @@ ChangeLog
 * First external contribution.
 
 
-`0.0.0 (2010-06-08) <http://github.com/kdeldycke/maildir-deduplicate/compare/init...v0.0.0>`_
----------------------------------------------------------------------------------------------
+`0.0.0 (2010-06-08) <https://github.com/kdeldycke/maildir-deduplicate/compare/init...v0.0.0>`_
+----------------------------------------------------------------------------------------------
 
 * First commit.

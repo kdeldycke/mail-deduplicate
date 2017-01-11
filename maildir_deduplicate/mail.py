@@ -72,7 +72,7 @@ class Mail(object):
         """ Compute the normalized canonical timestamp of the mail. """
         # XXX ctime does not refer to creation time on POSIX systems, but
         # rather the last time the inode data changed. Source:
-        # http://userprimary.net/posts/2007/11/18
+        # https://userprimary.net/posts/2007/11/18
         # /ctime-in-unix-means-last-change-time-not-create-time/
         if self.conf.time_source == CTIME:
             return os.path.getctime(self.path)

@@ -1,4 +1,4 @@
-# After changing this file, check it on: http://lint.travis-ci.org/
+# After changing this file, check it on: https://lint.travis-ci.org/
 language: python
 sudo: false
 
@@ -15,14 +15,14 @@ python:
   - "3.6-dev"
   - "3.7-dev"  # a.k.a "nightly"
 
-  # PyPy2.7: http://doc.pypy.org/en/latest
+  # PyPy2.7: https://doc.pypy.org/en/latest
   # /index-of-release-notes.html#cpython-2-7-compatible-versions
   - pypy  # PyPy2.7 2.5.0
   - pypy-5.1
   - pypy-5.3
   - pypy-5.4
 
-  # PyPy3.3: http://doc.pypy.org/en/latest
+  # PyPy3.3: https://doc.pypy.org/en/latest
   # /index-of-release-notes.html#cpython-3-3-compatible-versions
   - pypy3.3-5.2-alpha1
 
