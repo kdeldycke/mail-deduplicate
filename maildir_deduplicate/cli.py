@@ -97,7 +97,7 @@ def validate_maildirs(ctx, param, value):
 
 @cli.command(short_help='Deduplicate maildirs content.')
 @click.option(
-    '-s', '--strategy', type=click.Choice(STRATEGIES),
+    '-s', '--strategy', type=click.Choice(STRATEGIES), required=True,
     help='Deletion strategy to apply within a subset of duplicates.')
 @click.option(
     '-t', '--time-source', type=click.Choice(TIME_SOURCES),

@@ -14,6 +14,7 @@ ChangeLog
 * Bump requirement to ``readme_renderer >= 16.0``.
 * Skip sets with unparseable mails because of incorrect encoding. Closes #47,
   #41 and #39.
+* Require the ``-s``/``--strategy`` CLI parameter to be set. Closes #44.
 
 
 `2.0.1 (2016-11-28) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.0...v2.0.1>`_
