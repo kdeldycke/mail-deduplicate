@@ -37,7 +37,6 @@ from boltons.cacheutils import cachedproperty
 from . import (
     CTIME,
     HEADERS,
-    PY2,
     InsufficientHeadersError,
     MissingMessageID,
     logger
@@ -48,24 +47,44 @@ class Mail(object):
 
     """ Encapsulate a single mail and its metadata. """
 
-    def __init__(self, path, conf):
-        """ Build a mail from either a file. """
-        # File path of the mail.
-        self.path = path
+    def __init__(self, source_path, mail_id, conf):
+        """ Create mail proxy pointing to its source path and unique ID. """
+        # Path to the mail's source.
+        self.source_path = source_path
+
+        # Mail ID used to uniquely refers to it in the context of its source.
+        self.mail_id = mail_id
 
         # Global config.
         self.conf = conf
 
     @cachedproperty
+    def source(self):
+        """ Return mail's source object. """
+        # Import here to avoid circular imports.
+        from .deduplicate import Deduplicate  # noqa
+        return Deduplicate.sources[self.source_path]
+
+    @cachedproperty
     def message(self):
-        """ Read mail, parse it and return a Message instance. """
-        logger.debug("Parsing mail at {} ...".format(self.path))
-        with open(self.path, 'rb') as mail_file:
-            if PY2:
-                message = email.message_from_file(mail_file)
-            else:
-                message = email.message_from_binary_file(mail_file)
-        return message
+        """ Fetch message from its source. """
+        logger.debug("Fetching {!r} from {} ...".format(
+            self.mail_id, self.source_path))
+        return self.source.get_message(self.mail_id)
+
+    @cachedproperty
+    def path(self):
+        """ Real filesystem path of the mail originating from maildirs.
+
+        For mailbox mails, returns a fake path composed with mail's internal
+        ID.
+        """
+        filename = self.message.get_filename()
+        if filename:
+            filepath = os.path.join(self.source_path, filename)
+        else:
+            filepath = ':'.join([self.source_path, self.mail_id])
+        return filepath
 
     @cachedproperty
     def timestamp(self):
@@ -80,6 +99,9 @@ class Mail(object):
         # Fetch from the date header.
         return email.utils.mktime_tz(email.utils.parsedate_tz(
             self.message.get('Date')))
+
+        # XXX Also investigate what https://docs.python.org/2/library
+        # /mailbox.html#mailbox.MaildirMessage.get_date does.
 
     @cachedproperty
     def size(self):
@@ -132,7 +154,7 @@ class Mail(object):
             if message_id:
                 return message_id.strip()
             logger.error(
-                "No Message-ID in {}: {}".format(self.path, self.header_text))
+                "No Message-ID found: {}".format(self.header_text))
             raise MissingMessageID
 
         return hashlib.sha224(self.canonical_headers).hexdigest()
@@ -243,3 +265,8 @@ class Mail(object):
                 return email.utils.unquote(value)
 
         return value
+
+    def delete(self):
+        logger.debug("Deleting {!r}...".format(self))
+        self.source.remove(self.mail_id)
+        logger.info("{} deleted.".format(self.path))

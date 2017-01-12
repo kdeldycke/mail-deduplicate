@@ -127,9 +127,9 @@ def long_description():
 setup(
     name=PACKAGE_NAME,
     version=version(),
-    description="Deduplicate mails from a set of maildir folders.",
+    description=("Deduplicate mails from mbox files and maildir folders."),
     long_description=long_description(),
-    keywords=['CLI', 'mail', 'email', 'maildir', 'deduplicate'],
+    keywords=['CLI', 'mail', 'email', 'maildir', 'mbox', 'deduplicate'],
 
     author='Kevin Deldycke',
     author_email='kevin@deldycke.com',
