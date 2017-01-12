@@ -516,6 +516,8 @@ class Deduplicate(object):
 
             logger.debug("Loading duplicate set sharing the {} hash.".format(
                 hash_key))
+            logger.debug("Set composed of: {}".format(
+                ', '.join(mail_path_set)))
             if len(mail_path_set) == 1:
                 logger.debug("Ignore set: only one message found.")
                 self.stats['mail_unique'] += 1
@@ -532,10 +534,11 @@ class Deduplicate(object):
             # Fine-grained checks on mail differences.
             try:
                 duplicates.check_differences()
-            except UnicodeDecodeError as err:
+            except UnicodeDecodeError as expt:
                 self.stats['set_rejected_encoding'] += 1
                 logger.warning(
-                        "Reject set: Bad encoding: {}\n{}".format(str(err), ", ".join(mail_path_set)))
+                    "Reject set: unparseable mails due to bad encoding.")
+                logger.debug(str(expt))
                 continue
             except SizeDiffAboveThreshold:
                 self.stats['set_rejected_size'] += 1
