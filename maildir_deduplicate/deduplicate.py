@@ -579,14 +579,14 @@ class Deduplicate(object):
         table.append(["Ignored", self.stats['set_ignored']])
         table.append(["Skipped", self.stats['set_skipped']])
         table.append([
+            "Rejected (bad encoding)",
+            self.stats['set_rejected_encoding']])
+        table.append([
             "Rejected (too dissimilar in size)",
             self.stats['set_rejected_size']])
         table.append([
             "Rejected (too dissimilar in content)",
             self.stats['set_rejected_content']])
-        table.append([
-            "Rejected (bad encoding)",
-            self.stats['set_rejected_encoding']])
         table.append(["Deduplicated", self.stats['set_deduplicated']])
         logger.info(tabulate(table, tablefmt='fancy_grid', headers='firstrow'))
 
@@ -608,7 +608,7 @@ class Deduplicate(object):
         assert self.stats['set_total'] == (
             self.stats['set_ignored'] +
             self.stats['set_skipped'] +
+            self.stats['set_rejected_encoding'] +
             self.stats['set_rejected_size'] +
             self.stats['set_rejected_content'] +
-            self.stats['set_rejected_encoding'] +
             self.stats['set_deduplicated'])
