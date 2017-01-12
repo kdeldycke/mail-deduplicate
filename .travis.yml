@@ -12,7 +12,7 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
-  - "3.6-dev"
+  - "3.6"
   - "3.7-dev"  # a.k.a "nightly"
 
   # PyPy2.7: https://doc.pypy.org/en/latest
