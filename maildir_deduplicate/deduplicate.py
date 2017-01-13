@@ -526,9 +526,8 @@ class Deduplicate(object):
 
             duplicates = DuplicateSet(hash_key, mail_path_set, self.conf)
 
-            logger.debug(
-                "Initialized duplicate set of {} mails sharing the {} hash."
-                "".format(duplicates.size, duplicates.hash_key))
+            logger.debug("Initialized duplicate set of {} mails.".format(
+                duplicates.size))
             self.stats['mail_duplicates'] += duplicates.size
 
             # Fine-grained checks on mail differences.
