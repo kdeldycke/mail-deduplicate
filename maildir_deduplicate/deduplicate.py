@@ -217,7 +217,7 @@ class DuplicateSet(object):
         else:
             # Count duplicate sets without deletion as skipped.
             if not self.stats['mail_deleted']:
-                logger.info("Skip set: already deduplicated.")
+                logger.info("Skip set: no deletion happened.")
                 self.stats['set_skipped'] += 1
             else:
                 self.stats['set_deduplicated'] += 1
