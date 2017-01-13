@@ -176,6 +176,9 @@ class DuplicateSet(object):
 
         Transform strategy keyword into its method ID, and call it.
         """
+        if not self.conf.strategy:
+            logger.warning("No strategy selected, skip deduplication.")
+
         method_id = self.conf.strategy.replace('-', '_')
         if not hasattr(DuplicateSet, method_id):
             raise NotImplementedError(
