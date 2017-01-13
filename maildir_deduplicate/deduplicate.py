@@ -527,7 +527,7 @@ class Deduplicate(object):
                 max_value=len(mail_source),
                 redirect_stderr=True, redirect_stdout=True)
 
-        # Group folders by hash.
+        # Group mails by hash.
         for mail_id in bar(mail_source.iterkeys()):
             self.stats['mail_found'] += 1
 
