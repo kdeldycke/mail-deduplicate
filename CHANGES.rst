@@ -25,6 +25,7 @@ ChangeLog
 * Skip sets with unparseable mails because of incorrect encoding. Closes #47,
   #41 and #39.
 * Require the ``-s``/``--strategy`` CLI parameter to be set. Closes #44.
+* Add support for mboxes. Closes #48.
 
 
 `2.0.1 (2016-11-28) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.0...v2.0.1>`_
