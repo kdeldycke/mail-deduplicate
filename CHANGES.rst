@@ -2,10 +2,16 @@ ChangeLog
 =========
 
 
-`2.1.0 (2017-01-13) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.1...v2.1.0>`_
-------------------------------------------------------------------------------------------------
+`2.1.1 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.1.0...develop>`_
+-------------------------------------------------------------------------------------------------
 
 .. note:: This version is not yet released and is under active development.
+
+* No changes yet.
+
+
+`2.1.0 (2017-01-13) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.1...v2.1.0>`_
+------------------------------------------------------------------------------------------------
 
 * Fix rendering of changelog link in RST.
 * Show selected log level in debug mode.
