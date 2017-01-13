@@ -565,16 +565,10 @@ class Deduplicate(object):
 
         for hash_key, mail_set in self.mails.items():
 
-            if len(mail_set) == 1:
-                logger.debug("--- {} mails sharing hash {}".format(
-                    len(mail_set), hash_key))
-                logger.debug("Ignore set: only one message found.")
-                self.stats['mail_unique'] += 1
-                self.stats['set_ignored'] += 1
-                continue
-            else:
-                logger.info("--- {} mails sharing hash {}".format(
-                    len(mail_set), hash_key))
+            # Alter log level depending on set lenght.
+            log_level = logger.debug if len(mail_set) == 1 else logger.info
+            log_level("--- {} mails sharing hash {}".format(
+                len(mail_set), hash_key))
 
             duplicates = DuplicateSet(hash_key, mail_set, self.conf)
 
