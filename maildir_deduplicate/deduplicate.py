@@ -75,6 +75,7 @@ class DuplicateSet(object):
 
         # Keep set metrics.
         self.stats = Counter()
+        self.stats['mail_duplicates'] += self.size
 
         logger.debug("{!r} created.".format(self))
 
@@ -189,6 +190,37 @@ class DuplicateSet(object):
             raise NotImplementedError(
                 "DuplicateSet.{}() method.".format(method_id))
         return getattr(self, method_id)()
+
+    def dedupe(self):
+        """ Performs the deduplication and its preliminary checks. """
+        if len(self.pool) == 1:
+            logger.debug("Ignore set: only one message found.")
+            self.stats['mail_unique'] += 1
+            self.stats['set_ignored'] += 1
+            return
+
+        try:
+            # Fine-grained checks on mail differences.
+            self.check_differences()
+            # Call the deduplication strategy.
+            self.apply_strategy()
+        except UnicodeDecodeError as expt:
+            self.stats['set_rejected_encoding'] += 1
+            logger.warning("Reject set: unparseable mails due to bad encoding.")
+            logger.debug(str(expt))
+        except SizeDiffAboveThreshold:
+            self.stats['set_rejected_size'] += 1
+            logger.warning("Reject set: mails are too dissimilar in size.")
+        except ContentDiffAboveThreshold:
+            self.stats['set_rejected_content'] += 1
+            logger.warning("Reject set: mails are too dissimilar in content.")
+        else:
+            # Count duplicate sets without deletion as skipped.
+            if not self.stats['mail_deleted']:
+                logger.info("Skip set: already deduplicated.")
+                self.stats['set_skipped'] += 1
+            else:
+                self.stats['set_deduplicated'] += 1
 
     # TODO: Factorize code structure common to all strategy.
 
@@ -515,55 +547,13 @@ class Deduplicate(object):
             # Print visual clue to separate duplicate sets.
             logger.info('---')
 
-            logger.debug("Loading duplicate set sharing the {} hash.".format(
-                hash_key))
-            logger.debug("Set composed of: {}".format(
-                ', '.join(mail_path_set)))
-            if len(mail_path_set) == 1:
-                logger.debug("Ignore set: only one message found.")
-                self.stats['mail_unique'] += 1
-                self.stats['set_ignored'] += 1
-                continue
-
             duplicates = DuplicateSet(hash_key, mail_path_set, self.conf)
 
-            logger.debug("Initialized duplicate set of {} mails.".format(
-                duplicates.size))
-            self.stats['mail_duplicates'] += duplicates.size
-
-            # Fine-grained checks on mail differences.
-            try:
-                duplicates.check_differences()
-            except UnicodeDecodeError as expt:
-                self.stats['set_rejected_encoding'] += 1
-                logger.warning(
-                    "Reject set: unparseable mails due to bad encoding.")
-                logger.debug(str(expt))
-                continue
-            except SizeDiffAboveThreshold:
-                self.stats['set_rejected_size'] += 1
-                logger.warning(
-                    "Reject set: mails are too dissimilar in size.")
-                continue
-            except ContentDiffAboveThreshold:
-                self.stats['set_rejected_content'] += 1
-                logger.warning(
-                    "Reject set: mails are too dissimilar in content.")
-                continue
-
-            # Call the deduplication strategy.
-            duplicates.apply_strategy()
+            # Perfom the deduplication.
+            duplicates.dedupe()
 
             # Merge stats resulting of actions on duplicate sets.
             self.stats += duplicates.stats
-
-            # If no mails were deleted, the set is already deduplicated.
-            if not duplicates.stats['mail_deleted']:
-                logger.info("Skip set: already deduplicated.")
-                self.stats['set_skipped'] += 1
-                continue
-
-            self.stats['set_deduplicated'] += 1
 
     def report(self):
         """ Print user-friendly statistics and metrics. """
