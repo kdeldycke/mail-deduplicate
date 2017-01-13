@@ -178,12 +178,12 @@ class DuplicateSet(object):
             tofiledate='{:0.2f}'.format(mail_b.timestamp),
             n=0, lineterm='\n'))
 
-    def apply_strategy(self, strategy_id):
-        """ Apply deduplication on the mail subset with the provided strategy.
+    def apply_strategy(self):
+        """ Apply deduplication on the mail subset with the configured strategy.
 
         Transform strategy keyword into its method ID, and call it.
         """
-        method_id = strategy_id.replace('-', '_')
+        method_id = self.conf.strategy.replace('-', '_')
         if not hasattr(DuplicateSet, method_id):
             raise NotImplementedError(
                 "DuplicateSet.{}() method.".format(method_id))
@@ -551,7 +551,7 @@ class Deduplicate(object):
                 continue
 
             # Call the deduplication strategy.
-            duplicates.apply_strategy(self.conf.strategy)
+            duplicates.apply_strategy()
 
             # Merge stats resulting of actions on duplicate sets.
             self.stats += duplicates.stats
