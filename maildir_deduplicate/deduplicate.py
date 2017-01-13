@@ -70,8 +70,6 @@ class DuplicateSet(object):
         self.pool = frozenset(mail_set)
 
         # Keep set metrics.
-        # TODO: no need for a full counter. just return the number of deleted
-        # mails once a strategy is applied.
         self.stats = Counter()
         self.stats['mail_duplicates'] += self.size
 
