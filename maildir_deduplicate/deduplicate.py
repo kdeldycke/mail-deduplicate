@@ -183,7 +183,7 @@ class DuplicateSet(object):
         if not hasattr(DuplicateSet, method_id):
             raise NotImplementedError(
                 "DuplicateSet.{}() method.".format(method_id))
-        return getattr(self, method_id)()
+        getattr(self, method_id)()
 
     def dedupe(self):
         """ Performs the deduplication and its preliminary checks. """
