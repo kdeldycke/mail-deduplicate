@@ -181,7 +181,7 @@ class DuplicateSet(object):
             n=0, lineterm='\n'))
 
     def apply_strategy(self):
-        """ Apply deduplication on the mail subset with the configured strategy.
+        """ Apply deduplication with the configured strategy.
 
         Transform strategy keyword into its method ID, and call it.
         """
@@ -206,7 +206,8 @@ class DuplicateSet(object):
             self.apply_strategy()
         except UnicodeDecodeError as expt:
             self.stats['set_rejected_encoding'] += 1
-            logger.warning("Reject set: unparseable mails due to bad encoding.")
+            logger.warning(
+                "Reject set: unparseable mails due to bad encoding.")
             logger.debug(str(expt))
         except SizeDiffAboveThreshold:
             self.stats['set_rejected_size'] += 1
