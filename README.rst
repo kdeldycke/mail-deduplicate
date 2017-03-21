@@ -42,3 +42,15 @@ Features
 * Dry-run mode.
 * Protection against false-positives by checking for size and content
   differences.
+
+
+Installation
+------------
+
+This package is `available on PyPi
+<https://pypi.python.org/pypi/maildir-deduplicate>`_, so you can install the
+latest stable release and its dependencies with a simple ``pip`` call:
+
+.. code-block:: shell-session
+
+    $ pip install maildir-deduplicate
