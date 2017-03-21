@@ -54,3 +54,10 @@ latest stable release and its dependencies with a simple ``pip`` call:
 .. code-block:: shell-session
 
     $ pip install maildir-deduplicate
+
+
+Documentation
+-------------
+
+Docs are `hosted on Read the Docs
+<https://maildir-deduplicate.readthedocs.io>`_.
