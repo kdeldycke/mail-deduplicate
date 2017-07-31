@@ -182,8 +182,8 @@ class Mail(object):
         header = header.lower()
         # Problematic when reading utf8 emails
         # this will ensure value is always string
-        if not type(value) is str:
-            value = value.encode()
+        if isinstance(value, bytes):
+            value = value.decode('utf-8', 'replace')
         value = re.sub(r'\s+', ' ', value).strip()
 
         # Trim Subject prefixes automatically added by mailing list software,
