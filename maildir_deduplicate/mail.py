@@ -221,14 +221,10 @@ class Mail(object):
                 parsed = email.utils.parsedate_tz(value)
                 if not parsed:
                     raise TypeError
-            # If parsedate_tz cannot parse the date.
-            except (TypeError, ValueError):
-                return value
-            utc_timestamp = email.utils.mktime_tz(parsed)
-            try:
+                utc_timestamp = email.utils.mktime_tz(parsed)
                 return time.strftime(
                     '%Y/%m/%d UTC', time.gmtime(utc_timestamp))
-            except ValueError:
+            except (TypeError, ValueError):
                 return value
         elif header == 'to':
             # Sometimes email.parser strips the <> brackets from a To:
