@@ -78,8 +78,12 @@ class Mail(object):
             return os.path.getctime(self.path)
 
         # Fetch from the date header.
-        return email.utils.mktime_tz(email.utils.parsedate_tz(
-            self.message.get('Date')))
+        value = self.message.get('Date')
+        try:
+            value = email.utils.mktime_tz(email.utils.parsedate_tz(value))
+        except ValueError:
+            pass
+        return value
 
     @cachedproperty
     def size(self):
