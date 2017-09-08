@@ -27,6 +27,8 @@ from __future__ import (
 
 import os
 import re
+import logging
+import click_log
 from collections import Counter
 from difflib import unified_diff
 from itertools import combinations
@@ -42,10 +44,11 @@ from . import (
     InsufficientHeadersError,
     MissingMessageID,
     SizeDiffAboveThreshold,
-    logger
 )
 from .mail import Mail
 
+logger = click_log.basic_config('mdedup')
+logger.setLevel(logging.INFO)
 
 class DuplicateSet(object):
 
@@ -205,6 +208,11 @@ class DuplicateSet(object):
             # Call the deduplication strategy.
             self.apply_strategy()
         except UnicodeDecodeError as expt:
+            self.stats['set_rejected_encoding'] += 1
+            logger.warning(
+                "Reject set: unparseable mails due to bad encoding.")
+            logger.debug(str(expt))
+        except UnicodeEncodeError as expt:
             self.stats['set_rejected_encoding'] += 1
             logger.warning(
                 "Reject set: unparseable mails due to bad encoding.")
