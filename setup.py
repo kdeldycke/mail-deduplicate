@@ -38,7 +38,7 @@ PACKAGE_NAME = MODULE_NAME.replace('_', '-')
 DEPENDENCIES = [
     'boltons >= 16.3.0',
     'click >= 5.0',
-    'click_log',
+    'click_log >= 0.2.0, < 0.3.0',
     'progressbar2',
     'tabulate',
 ]
