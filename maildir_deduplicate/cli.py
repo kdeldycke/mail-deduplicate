@@ -45,18 +45,19 @@ from . import (
 )
 from .deduplicate import Deduplicate
 from .mail import Mail
+click_log.basic_config(logger)
 
 
 @click.group(invoke_without_command=True)
-@click_log.init(logger)
 @click_log.simple_verbosity_option(
+    logger,
     default='INFO', metavar='LEVEL',
     help='Either CRITICAL, ERROR, WARNING, INFO or DEBUG. Defaults to INFO.')
 @click.version_option(__version__)
 @click.pass_context
 def cli(ctx):
     """ CLI for maildirs content analysis and deletion. """
-    level = click_log.get_level()
+    level = logger.level
     try:
         level_to_name = logging._levelToName
     # Fallback to pre-Python 3.4 internals.
