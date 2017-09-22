@@ -22,6 +22,8 @@ python:
   - pypy-5.4
 
 before_install:
+  # Show environment variables for debugging.
+  - env
   # Check default Python version installed.
   - python --version
 
