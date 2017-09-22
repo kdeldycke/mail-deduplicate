@@ -46,13 +46,13 @@ class TestDeduplicateCLI(CLITestCase):
         result = self.invoke('deduplicate', './dummy_maildir/')
         self.assertEqual(result.exit_code, 2)
         self.assertIn(
-            """Directory "./dummy_maildir/" does not exist""", result.output)
+            """Path "./dummy_maildir/" does not exist""", result.output)
 
     def test_invalid_maildir_as_file(self):
         result = self.invoke('deduplicate', './__init__.py')
         self.assertEqual(result.exit_code, 2)
         self.assertIn(
-            """Directory "./__init__.py" does not exist""", result.output)
+            """Path "./__init__.py" does not exist""", result.output)
 
     def test_invalid_maildir_structure(self):
         result = self.invoke('deduplicate', '.')
