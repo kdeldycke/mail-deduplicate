@@ -9,6 +9,7 @@ ChangeLog
 
 * Fix ``UnicodeDecodeError``. Closes #53 and #55.
 * Bump requirement to ``click_log >= 0.2.0``. Closes #59 and #60.
+* Only notify by mail of test failures.
 
 
 `2.1.0 (2017-01-13) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.1...v2.1.0>`_
