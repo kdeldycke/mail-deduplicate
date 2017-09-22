@@ -115,7 +115,7 @@ Install test dependencies and run unit-tests:
 .. code-block:: bash
 
     $ pip install -e .[tests]
-    $ nosetests
+    $ pytest
 
 
 Coding style

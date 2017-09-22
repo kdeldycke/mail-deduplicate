@@ -9,6 +9,7 @@ ChangeLog
 
 * Fix ``UnicodeDecodeError``. Closes #53 and #55.
 * Bump requirement to ``click_log >= 0.2.0``. Closes #59 and #60.
+* Replace ``nose`` by ``pytest``.
 * Only notify by mail of test failures.
 
 

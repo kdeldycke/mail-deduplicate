@@ -51,10 +51,11 @@ EXTRA_DEPENDENCIES = {
         'sphinx_rtd_theme'],
     'tests': [
         'arrow',
-        'coverage',
-        'nose',
         'pycodestyle >= 2.1.0',
-        'pylint'],
+        'pylint',
+        'pytest',
+        # More pytest plugins at: http://plugincompat.herokuapp.com .
+        'pytest-cov'],
     'develop': [
         'bumpversion',
         'isort',
