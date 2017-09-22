@@ -45,13 +45,14 @@ from . import (
 )
 from .deduplicate import Deduplicate
 from .mail import Mail
+
+
 click_log.basic_config(logger)
 
 
 @click.group(invoke_without_command=True)
 @click_log.simple_verbosity_option(
-    logger,
-    default='INFO', metavar='LEVEL',
+    logger, default='INFO', metavar='LEVEL',
     help='Either CRITICAL, ERROR, WARNING, INFO or DEBUG. Defaults to INFO.')
 @click.version_option(__version__)
 @click.pass_context
