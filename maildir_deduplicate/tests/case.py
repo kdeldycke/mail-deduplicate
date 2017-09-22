@@ -38,10 +38,8 @@ class CLITestCase(unittest.TestCase):
         result = self.runner.invoke(cli, args)
 
         # Simulate CLI output.
-        print('-' * 70)
         print("$ mdedupe {}".format(' '.join(args)))
         print(result.output)
-        print('-' * 70)
 
         # Print some more debug info.
         print(result)
