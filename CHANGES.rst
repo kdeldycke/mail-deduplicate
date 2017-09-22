@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-`2.1.1 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.1.0...develop>`_
+`2.2.0 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.1.0...develop>`_
 -------------------------------------------------------------------------------------------------
 
 .. note:: This version is not yet released and is under active development.
