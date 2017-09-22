@@ -26,6 +26,10 @@ before_install:
   - env
   # Check default Python version installed.
   - python --version
+  # Install missing dependencies from Travis distributions.
+  - if [[ ("$TRAVIS_PYTHON_VERSION" == "pypy-5.1") || ("$TRAVIS_PYTHON_VERSION" == "pypy-5.3") ]]; then
+      pip install python-logilab-common;
+    fi
 
 before_script:
   - pip install codecov
