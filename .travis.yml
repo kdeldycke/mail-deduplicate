@@ -39,7 +39,7 @@ before_script:
 script:
   # Launch unittests.
   - pip install -e .[tests]
-  - pytest
+  - python -m pytest
   # Check coding style.
   - pycodestyle
   # Test that building packages works.
