@@ -184,6 +184,8 @@ class Mail(object):
         # this will ensure value is always string
         if isinstance(value, bytes):
             value = value.decode('utf-8', 'replace')
+        elif isinstance(value, email.header.Header):
+            value = str(value)
         value = re.sub(r'\s+', ' ', value).strip()
 
         # Trim Subject prefixes automatically added by mailing list software,
