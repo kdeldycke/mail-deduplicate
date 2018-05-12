@@ -255,7 +255,7 @@ class Mail(object):
                     '%Y/%m/%d UTC', time.gmtime(utc_timestamp))
             except ValueError:
                 return value
-        elif header == 'to':
+        elif header in ['to', 'message-id']:
             # Sometimes email.parser strips the <> brackets from a To:
             # header which has a single address.  I have seen this happen
             # for only one mail in a duplicate pair.  I'm not sure why
