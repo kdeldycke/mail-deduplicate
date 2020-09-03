@@ -2,10 +2,8 @@ ChangeLog
 =========
 
 
-`2.2.0 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.1.0...develop>`_
--------------------------------------------------------------------------------------------------
-
-.. note:: This version is not yet released and is under active development.
+`2.2.0 (2020-09-03) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.1.0...v2.2.0>`_
+------------------------------------------------------------------------------------------------
 
 * Add disclaimer to prepare project name change.
 * Fix Header being object instead of string (#61).
