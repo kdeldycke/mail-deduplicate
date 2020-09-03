@@ -16,6 +16,7 @@ ChangeLog
 * Regularly run unittests against Windows, Linux and macOS.
 * Auto-publish package on tagging events via ``twine``.
 * Always run test build and check resulting package on each commits.
+* Use declarative JSON to maintain list of GitHub labels for issues and PRs.
 
 
 `3.0.0 (2020-09-03) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.2.0...v3.0.0>`_

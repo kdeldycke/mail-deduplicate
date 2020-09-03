@@ -1,0 +1,57 @@
+[
+  {
+    "name": "CI/CD",
+    "color": "#dbca13",
+    "description": "Tests, automation and management of the project"
+  },
+  {
+    "name": "bug",
+    "color": "#d73a4a",
+    "description": "Something isn't working, or a fix is proposed"
+  },
+  {
+    "name": "can't reproduce",
+    "color": "#fec1c1",
+    "description": "Root cause unlikely to come from the project"
+  },
+  {
+    "name": "documentation",
+    "color": "#006b75",
+    "description": "Update to non-code (manual, readme, tutorial, docstrings, ...) and its generation"
+  },
+  {
+    "name": "duplicate",
+    "color": "#cfd3d7",
+    "description": "This issue or pull request already exists"
+  },
+  {
+    "name": "enhancement",
+    "color": "#84b6eb",
+    "description": "Improvement or change of an existing feature"
+  },
+  {
+    "name": "feature request",
+    "color": "#fbca04",
+    "description": "Something not existing yet that need to be implemented"
+  },
+  {
+    "name": "good first issue",
+    "color": "#7057ff",
+    "description": "A place for newcomers to start contributing"
+  },
+  {
+    "name": "help wanted",
+    "color": "#008672",
+    "description": "Extra attention is needed"
+  },
+  {
+    "name": "question",
+    "color": "#d876e3",
+    "description": "Further information is requested"
+  },
+  {
+    "name": "wont do/fix",
+    "color": "#eeeeee",
+    "description": "This will not be worked on"
+  }
+]
