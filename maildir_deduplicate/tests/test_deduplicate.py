@@ -290,9 +290,9 @@ class TestDateStrategy(TestDeduplicate):
     maildir_path = './strategy_date'
 
     newest_date = arrow.utcnow()
-    newer_date = newest_date.replace(minutes=-1)
-    older_date = newest_date.replace(minutes=-2)
-    oldest_date = newest_date.replace(minutes=-3)
+    newer_date = newest_date.shift(minutes=-1)
+    older_date = newest_date.shift(minutes=-2)
+    oldest_date = newest_date.shift(minutes=-3)
 
     newest_mail = MailFactory(date=newest_date)
     newer_mail = MailFactory(date=newer_date)
