@@ -14,6 +14,8 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Rename project from ``maildir-deduplicate`` to ``mail-deduplicate``.
+* Rename ``master`` branch to ``main``.
 * Add support for mboxes. Closes #48.
 * Remove requirement on ``-s``/``--strategy`` parameter, to let mails being
   grouped into duplicate sets without any removal action, effectively acting as
