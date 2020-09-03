@@ -5,10 +5,22 @@ ChangeLog
 `3.0.0 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.2.0...develop>`_
 -------------------------------------------------------------------------------------------------
 
+.. DANGER::
+   As of ``v3.0.0``, the project has been renamed to *Mail Deduplicate* and is
+   now available on:
+
+   * Github at https://github.com/kdeldycke/mail-deduplicate
+   * PyPi at https://pypi.org/project/mail-deduplicate
+
 .. note:: This version is not yet released and is under active development.
+
 
 `2.2.0 (2020-09-03) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.1.0...v2.2.0>`_
 ------------------------------------------------------------------------------------------------
+
+.. warning::
+   This is the last version of the project known under the name *Maildir
+   Deduplicate* (a.k.a. ``maildir-deduplicate``).
 
 * Add disclaimer to prepare project name change.
 * Fix Header being object instead of string (#61).
