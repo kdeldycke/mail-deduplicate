@@ -7,6 +7,7 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Add disclaimer to prepare project name change.
 * Fix Header being object instead of string (#61).
 * Make body_lines conversion more reliable.
 * Fix bugs in counter statistics (#45, #57).
