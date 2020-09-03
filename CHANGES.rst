@@ -14,6 +14,11 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Add support for mboxes. Closes #48.
+* Remove requirement on ``-s``/``--strategy`` parameter, to let mails being
+  grouped into duplicate sets without any removal action, effectively acting as
+  a second-level dry-run.
+
 
 `2.2.0 (2020-09-03) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.1.0...v2.2.0>`_
 ------------------------------------------------------------------------------------------------
@@ -45,10 +50,6 @@ ChangeLog
 * Skip sets with unparseable mails because of incorrect encoding. Closes #47,
   #41 and #39.
 * Require the ``-s``/``--strategy`` CLI parameter to be set. Closes #44.
-* Add support for mboxes. Closes #48.
-* Remove requirement on ``-s``/``--strategy`` parameter, to let mails being
-  grouped into duplicate sets without any removal action, effectively acting as
-  a second-level dry-run.
 
 
 `2.0.1 (2016-11-28) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.0...v2.0.1>`_
