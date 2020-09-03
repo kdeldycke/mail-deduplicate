@@ -78,8 +78,12 @@ class Mail(object):
             return os.path.getctime(self.path)
 
         # Fetch from the date header.
-        return email.utils.mktime_tz(email.utils.parsedate_tz(
-            self.message.get('Date')))
+        value = self.message.get('Date')
+        try:
+            value = email.utils.mktime_tz(email.utils.parsedate_tz(value))
+        except ValueError:
+            pass
+        return value
 
     @cachedproperty
     def size(self):
@@ -246,14 +250,10 @@ class Mail(object):
                 parsed = email.utils.parsedate_tz(value)
                 if not parsed:
                     raise TypeError
-            # If parsedate_tz cannot parse the date.
-            except (TypeError, ValueError):
-                return value
-            utc_timestamp = email.utils.mktime_tz(parsed)
-            try:
+                utc_timestamp = email.utils.mktime_tz(parsed)
                 return time.strftime(
                     '%Y/%m/%d UTC', time.gmtime(utc_timestamp))
-            except ValueError:
+            except (TypeError, ValueError):
                 return value
         elif header in ['to', 'message-id']:
             # Sometimes email.parser strips the <> brackets from a To:
