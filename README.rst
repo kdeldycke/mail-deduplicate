@@ -23,8 +23,8 @@ Development: |build| |docs| |coverage| |quality|
 .. |build| image:: https://travis-ci.org/kdeldycke/mail-deduplicate.svg?branch=develop
     :target: https://travis-ci.org/kdeldycke/mail-deduplicate
     :alt: Unit-tests status
-.. |docs| image:: https://readthedocs.org/projects/mail-deduplicate/badge/?version=develop
-    :target: https://mail-deduplicate.readthedocs.io/en/develop/
+.. |docs| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=develop
+    :target: https://maildir-deduplicate.readthedocs.io/en/develop/
     :alt: Documentation Status
 .. |coverage| image:: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/develop/graph/badge.svg
     :target: https://codecov.io/github/kdeldycke/mail-deduplicate?branch=develop
@@ -61,4 +61,4 @@ Documentation
 -------------
 
 Docs are `hosted on Read the Docs
-<https://mail-deduplicate.readthedocs.io>`_.
+<https://maildir-deduplicate.readthedocs.io>`_.
