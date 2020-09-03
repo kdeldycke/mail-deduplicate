@@ -129,7 +129,8 @@ setup(
     version=version(),
     description=("Deduplicate mails from mbox files and maildir folders."),
     long_description=long_description(),
-    keywords=['CLI', 'mail', 'email', 'maildir', 'mbox', 'deduplicate'],
+    keywords=['CLI', 'mail', 'email', 'maildir', 'mbox', 'deduplication',
+              'dedupe', 'cleanup', 'mailbox'],
 
     author='Kevin Deldycke',
     author_email='kevin@deldycke.com',
