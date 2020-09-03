@@ -182,13 +182,13 @@ released date in the changelog:
 
 .. code-block:: bash
 
-    $ vi ./CHANGES.rst
+    $ vi ./changelog.rst
 
 Create a release commit, tag it and merge it back to ``main`` branch:
 
 .. code-block:: bash
 
-    $ git add ./mail_deduplicate/__init__.py ./CHANGES.rst
+    $ git add ./mail_deduplicate/__init__.py ./changelog.rst
     $ git commit -m "Release vX.Y.Z"
     $ git tag "vX.Y.Z"
     $ git push
@@ -222,7 +222,7 @@ and set it back to development state by increasing the ``patch`` level.
 
     $ git checkout develop
     $ bumpversion --verbose patch
-    $ git add ./mail_deduplicate/__init__.py ./CHANGES.rst
+    $ git add ./mail_deduplicate/__init__.py ./changelog.rst
     $ git commit -m "Post release version bump."
     $ git push
 
@@ -232,6 +232,6 @@ revision level instead:
 .. code-block:: bash
 
     $ bumpversion --verbose minor
-    $ git add ./mail_deduplicate/__init__.py ./CHANGES.rst
+    $ git add ./mail_deduplicate/__init__.py ./changelog.rst
     $ git commit -m "Next release no longer bug-fix only. Bump revision."
     $ git push

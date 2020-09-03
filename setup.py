@@ -88,7 +88,7 @@ def version():
 def latest_changes():
     """ Extract part of changelog pertaining to version. """
     lines = []
-    for line in read_file('CHANGES.rst').splitlines():
+    for line in read_file('changelog.rst').splitlines():
         if line.startswith('-------'):
             if len(lines) > 1:
                 lines = lines[:-1]
@@ -105,12 +105,12 @@ def latest_changes():
 
 
 def long_description():
-    """ Collates project README and latest changes. """
+    """ Collates project readme and latest changes. """
     changes = latest_changes()
     changes[0] = "`Changes for v{}".format(changes[0][1:])
     changes[1] = '-' * len(changes[0])
     return "\n\n\n".join([
-        read_file('README.rst'),
+        read_file('readme.rst'),
         '\n'.join(changes),
         "`Full changelog "
         "<https://maildir-deduplicate.readthedocs.io/en/develop/changelog.html"
