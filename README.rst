@@ -1,6 +1,16 @@
 Maildir Deduplicate
 ===================
 
+
+.. DANGER::
+   This is an **old version**. The project has been renamed to *Mail
+   Deduplicate* and is now available on:
+   
+   * Github at https://github.com/kdeldycke/mail-deduplicate
+   * PyPi at https://pypi.org/project/mail-deduplicate
+
+
+
 Command-line tool to deduplicate mails from a set of maildir folders.
 
 Stable release: |release| |versions| |license| |dependencies|
