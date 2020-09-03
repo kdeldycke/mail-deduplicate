@@ -8,15 +8,11 @@ sudo: false
 python:
   # Standard release https://docs.travis-ci.com/user/languages
   # /python#choosing-python-versions-to-test-against
-  - "2.7"
   - "3.4"
   - "3.5"
   - "3.6"
   - "3.7-dev"  # a.k.a "nightly"
 
-  # PyPy2.7: https://doc.pypy.org/en/latest
-  # /index-of-release-notes.html#cpython-2-7-compatible-versions
-  - pypy  # PyPy2.7 2.5.0
   - pypy-5.1
   - pypy-5.3
   - pypy-5.4

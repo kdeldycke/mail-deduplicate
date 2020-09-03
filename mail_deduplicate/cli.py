@@ -18,8 +18,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-from __future__ import absolute_import, division, print_function
-
 import logging
 import os
 import re
@@ -58,11 +56,7 @@ click_log.basic_config(logger)
 def cli(ctx):
     """ CLI for mbox and maildir content analysis and deletion. """
     level = logger.level
-    try:
-        level_to_name = logging._levelToName
-    # Fallback to pre-Python 3.4 internals.
-    except AttributeError:
-        level_to_name = logging._levelNames
+    level_to_name = logging._levelToName
     level_name = level_to_name.get(level, level)
     logger.debug('Verbosity set to {}.'.format(level_name))
 

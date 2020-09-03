@@ -7,6 +7,8 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Drop support for Python 2.
+
 
 `3.0.0 (2020-09-03) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.2.0...v3.0.0>`_
 ------------------------------------------------------------------------------------------------

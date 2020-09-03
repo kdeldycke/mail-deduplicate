@@ -19,13 +19,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-from __future__ import (
-    absolute_import,
-    division,
-    print_function,
-    unicode_literals
-)
-
 import io
 import re
 from os import path
@@ -140,7 +133,7 @@ setup(
 
     packages=find_packages(),
     # https://www.python.org/dev/peps/pep-0345/#version-specifiers
-    python_requires='>= 2.7, != 3.0.*, != 3.1.*, != 3.2.*, != 3.3.*',
+    python_requires='>= 3.4',
     install_requires=DEPENDENCIES,
     tests_require=DEPENDENCIES + EXTRA_DEPENDENCIES['tests'],
     extras_require=EXTRA_DEPENDENCIES,
@@ -160,8 +153,6 @@ setup(
         # List of python versions and their support status:
         # https://en.wikipedia.org/wiki/CPython#Version_history
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
