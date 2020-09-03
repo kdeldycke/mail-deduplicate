@@ -2,8 +2,14 @@ ChangeLog
 =========
 
 
-`3.0.0 (2020-09-03) <https://github.com/kdeldycke/mail-deduplicate/compare/v2.2.0...v3.0.0>`_
----------------------------------------------------------------------------------------------
+`3.0.1 (unreleased) <https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...develop>`_
+----------------------------------------------------------------------------------------------
+
+.. note:: This version is not yet released and is under active development.
+
+
+`3.0.0 (2020-09-03) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.2.0...v3.0.0>`
+-----------------------------------------------------------------------------------------------
 
 .. DANGER::
    As of ``v3.0.0``, the project has been renamed to *Mail Deduplicate* and is
@@ -11,8 +17,6 @@ ChangeLog
 
    * Github at https://github.com/kdeldycke/mail-deduplicate
    * PyPi at https://pypi.org/project/mail-deduplicate
-
-.. note:: This version is not yet released and is under active development.
 
 * Rename project from ``maildir-deduplicate`` to ``mail-deduplicate``.
 * Rename ``master`` branch to ``main``.
