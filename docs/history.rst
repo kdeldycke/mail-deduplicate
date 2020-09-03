@@ -13,4 +13,8 @@ in 2013 to its own repository
 It then continued to be updated as a stand-alone script before being properly
 packaged into the current form. The last known working version of the
 stand-alone script is available in the `legacy branch
-<https://github.com/kdeldycke/maildir-deduplicate/tree/legacy>`_.
+<https://github.com/kdeldycke/mail-deduplicate/tree/legacy>`_.
+
+The project lived under the name ``maildir-deduplicate`` from 2014 to 2020. It
+was renamed to ``mail-deduplicate`` in 2020 following the addition of ``mbox``
+support alongside ``maildir`` sources.

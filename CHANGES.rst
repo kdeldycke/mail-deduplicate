@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-`3.0.0 (unreleased) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.2.0...develop>`_
+`3.0.0 (unreleased) <https://github.com/kdeldycke/mail-deduplicate/compare/v2.2.0...develop>`_
 -------------------------------------------------------------------------------------------------
 
 .. DANGER::
@@ -20,7 +20,7 @@ ChangeLog
   a second-level dry-run.
 
 
-`2.2.0 (2020-09-03) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.1.0...v2.2.0>`_
+`2.2.0 (2020-09-03) <https://github.com/kdeldycke/mail-deduplicate/compare/v2.1.0...v2.2.0>`_
 ------------------------------------------------------------------------------------------------
 
 .. warning::
@@ -39,7 +39,7 @@ ChangeLog
 * Drop support of Python 3.3.
 
 
-`2.1.0 (2017-01-13) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.1...v2.1.0>`_
+`2.1.0 (2017-01-13) <https://github.com/kdeldycke/mail-deduplicate/compare/v2.0.1...v2.1.0>`_
 ------------------------------------------------------------------------------------------------
 
 * Fix rendering of changelog link in RST.
@@ -52,7 +52,7 @@ ChangeLog
 * Require the ``-s``/``--strategy`` CLI parameter to be set. Closes #44.
 
 
-`2.0.1 (2016-11-28) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.0.0...v2.0.1>`_
+`2.0.1 (2016-11-28) <https://github.com/kdeldycke/mail-deduplicate/compare/v2.0.0...v2.0.1>`_
 ------------------------------------------------------------------------------------------------
 
 * Reject mails without ``Message-ID`` headers if ``--message-id`` option is
@@ -64,7 +64,7 @@ ChangeLog
 * Add link to full changelog in package's long description.
 
 
-`2.0.0 (2016-11-13) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.3.0...v2.0.0>`_
+`2.0.0 (2016-11-13) <https://github.com/kdeldycke/mail-deduplicate/compare/v1.3.0...v2.0.0>`_
 ------------------------------------------------------------------------------------------------
 
 * Refactor and redefine all removal strategies. Closes #40.
@@ -95,7 +95,7 @@ ChangeLog
   the full changelog.
 
 
-`1.3.0 (2016-08-11) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.2.0...v1.3.0>`_
+`1.3.0 (2016-08-11) <https://github.com/kdeldycke/mail-deduplicate/compare/v1.2.0...v1.3.0>`_
 ------------------------------------------------------------------------------------------------
 
 * User-friendly progress bar.
@@ -105,7 +105,7 @@ ChangeLog
 * Add a set of basic deduplication unittests.
 
 
-`1.2.0 (2016-03-29) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.1.0...v1.2.0>`_
+`1.2.0 (2016-03-29) <https://github.com/kdeldycke/mail-deduplicate/compare/v1.1.0...v1.2.0>`_
 ------------------------------------------------------------------------------------------------
 
 * Use logger to output messages to the user.
@@ -114,7 +114,7 @@ ChangeLog
 * Fix decoding of unicode header value. Closes #24 and #32.
 
 
-`1.1.0 (2016-01-10) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.0.2...v1.1.0>`_
+`1.1.0 (2016-01-10) <https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.2...v1.1.0>`_
 ------------------------------------------------------------------------------------------------
 
 * Add Python 3.4 and 3.5 support. Closes #30.
@@ -122,7 +122,7 @@ ChangeLog
 * Remove hackish default encoding forcing in main code.
 
 
-`1.0.2 (2015-12-22) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.0.1...v1.0.2>`_
+`1.0.2 (2015-12-22) <https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.1...v1.0.2>`_
 ------------------------------------------------------------------------------------------------
 
 * Fix ``AttributeError`` on message instance. Closes #28.
@@ -131,13 +131,13 @@ ChangeLog
 * Remove ``Message-ID`` from the list of default canonical headers.
 
 
-`1.0.1 (2015-11-23) <https://github.com/kdeldycke/maildir-deduplicate/compare/v1.0.0...v1.0.1>`_
+`1.0.1 (2015-11-23) <https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.0...v1.0.1>`_
 ------------------------------------------------------------------------------------------------
 
 * Switch from coveralls.io to codecov.io.
 
 
-`1.0.0 (2015-10-03) <https://github.com/kdeldycke/maildir-deduplicate/compare/v0.1.0...v1.0.0>`_
+`1.0.0 (2015-10-03) <https://github.com/kdeldycke/mail-deduplicate/compare/v0.1.0...v1.0.0>`_
 ------------------------------------------------------------------------------------------------
 
 * Fix package version parsing.
@@ -147,19 +147,19 @@ ChangeLog
 * Rework CLI around click framework. Closes #26.
 
 
-`0.1.0 (2014-12-15) <https://github.com/kdeldycke/maildir-deduplicate/compare/v0.0.1...v0.1.0>`_
+`0.1.0 (2014-12-15) <https://github.com/kdeldycke/mail-deduplicate/compare/v0.0.1...v0.1.0>`_
 ------------------------------------------------------------------------------------------------
 
 * Package the script for proper distribution.
 
 
-`0.0.1 (2011-04-27) <https://github.com/kdeldycke/maildir-deduplicate/compare/v0.0.0...v0.0.1>`_
+`0.0.1 (2011-04-27) <https://github.com/kdeldycke/mail-deduplicate/compare/v0.0.0...v0.0.1>`_
 ------------------------------------------------------------------------------------------------
 
 * First external contribution.
 
 
-`0.0.0 (2010-06-08) <https://github.com/kdeldycke/maildir-deduplicate/compare/init...v0.0.0>`_
+`0.0.0 (2010-06-08) <https://github.com/kdeldycke/mail-deduplicate/compare/init...v0.0.0>`_
 ----------------------------------------------------------------------------------------------
 
 * First commit.

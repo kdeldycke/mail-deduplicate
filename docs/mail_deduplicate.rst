@@ -1,4 +1,4 @@
-maildir_deduplicate package
+mail_deduplicate package
 ===========================
 
 Subpackages
@@ -6,31 +6,31 @@ Subpackages
 
 .. toctree::
 
-    maildir_deduplicate.tests
+    mail_deduplicate.tests
 
 Submodules
 ----------
 
-maildir_deduplicate.cli module
+mail_deduplicate.cli module
 ------------------------------
 
-.. automodule:: maildir_deduplicate.cli
+.. automodule:: mail_deduplicate.cli
     :members:
     :undoc-members:
     :show-inheritance:
 
-maildir_deduplicate.deduplicate module
+mail_deduplicate.deduplicate module
 --------------------------------------
 
-.. automodule:: maildir_deduplicate.deduplicate
+.. automodule:: mail_deduplicate.deduplicate
     :members:
     :undoc-members:
     :show-inheritance:
 
-maildir_deduplicate.mail module
+mail_deduplicate.mail module
 -------------------------------
 
-.. automodule:: maildir_deduplicate.mail
+.. automodule:: mail_deduplicate.mail
     :members:
     :undoc-members:
     :show-inheritance:
@@ -39,7 +39,7 @@ maildir_deduplicate.mail module
 Module contents
 ---------------
 
-.. automodule:: maildir_deduplicate
+.. automodule:: mail_deduplicate
     :members:
     :undoc-members:
     :show-inheritance:

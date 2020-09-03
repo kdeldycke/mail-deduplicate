@@ -46,44 +46,44 @@ Documentation   |docs-stable|       |docs-dev|
 
 .. |master-branch| replace::
    ``master``
-__ https://github.com/kdeldycke/maildir-deduplicate/tree/master
+__ https://github.com/kdeldycke/mail-deduplicate/tree/master
 .. |develop-branch| replace::
    ``develop``
-__ https://github.com/kdeldycke/maildir-deduplicate/tree/develop
+__ https://github.com/kdeldycke/mail-deduplicate/tree/develop
 
-.. |build-stable| image:: https://travis-ci.org/kdeldycke/maildir-deduplicate.svg?branch=master
-    :target: https://travis-ci.org/kdeldycke/maildir-deduplicate
+.. |build-stable| image:: https://travis-ci.org/kdeldycke/mail-deduplicate.svg?branch=master
+    :target: https://travis-ci.org/kdeldycke/mail-deduplicate
     :alt: Unit-tests status
-.. |build-dev| image:: https://travis-ci.org/kdeldycke/maildir-deduplicate.svg?branch=develop
-    :target: https://travis-ci.org/kdeldycke/maildir-deduplicate
+.. |build-dev| image:: https://travis-ci.org/kdeldycke/mail-deduplicate.svg?branch=develop
+    :target: https://travis-ci.org/kdeldycke/mail-deduplicate
     :alt: Unit-tests status
 
-.. |coverage-stable| image:: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/master
+.. |coverage-stable| image:: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/master
     :alt: Coverage Status
-.. |coverage-dev| image:: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/develop/graph/badge.svg
-    :target: https://codecov.io/gh/kdeldycke/maildir-deduplicate/branch/develop
+.. |coverage-dev| image:: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/develop/graph/badge.svg
+    :target: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/develop
     :alt: Coverage Status
 
-.. |quality-stable| image:: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/badges/quality-score.png?b=master
-    :target: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/?branch=master
+.. |quality-stable| image:: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/badges/quality-score.png?b=master
+    :target: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/?branch=master
     :alt: Code Quality
-.. |quality-dev| image:: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/badges/quality-score.png?b=develop
-    :target: https://scrutinizer-ci.com/g/kdeldycke/maildir-deduplicate/?branch=develop
+.. |quality-dev| image:: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/badges/quality-score.png?b=develop
+    :target: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/?branch=develop
     :alt: Code Quality
 
-.. |deps-stable| image:: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements.svg?branch=master
-    :target: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements/?branch=master
+.. |deps-stable| image:: https://requires.io/github/kdeldycke/mail-deduplicate/requirements.svg?branch=master
+    :target: https://requires.io/github/kdeldycke/mail-deduplicate/requirements/?branch=master
     :alt: Requirements freshness
-.. |deps-dev| image:: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements.svg?branch=develop
-    :target: https://requires.io/github/kdeldycke/maildir-deduplicate/requirements/?branch=develop
+.. |deps-dev| image:: https://requires.io/github/kdeldycke/mail-deduplicate/requirements.svg?branch=develop
+    :target: https://requires.io/github/kdeldycke/mail-deduplicate/requirements/?branch=develop
     :alt: Requirements freshness
 
-.. |docs-stable| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=stable
-    :target: https://maildir-deduplicate.readthedocs.io/en/stable/
+.. |docs-stable| image:: https://readthedocs.org/projects/mail-deduplicate/badge/?version=stable
+    :target: https://mail-deduplicate.readthedocs.io/en/stable/
     :alt: Documentation Status
-.. |docs-dev| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=develop
-    :target: https://maildir-deduplicate.readthedocs.io/en/develop/
+.. |docs-dev| image:: https://readthedocs.org/projects/mail-deduplicate/badge/?version=develop
+    :target: https://mail-deduplicate.readthedocs.io/en/develop/
     :alt: Documentation Status
 
 
@@ -94,8 +94,8 @@ Check out latest development branch:
 
 .. code-block:: bash
 
-    $ git clone git@github.com:kdeldycke/maildir-deduplicate.git
-    $ cd ./maildir-deduplicate
+    $ git clone git@github.com:kdeldycke/mail-deduplicate.git
+    $ cd ./mail-deduplicate
     $ git checkout develop
 
 Install package in editable mode with all development dependencies:
@@ -135,8 +135,8 @@ Then run `pycodestyle <https://pycodestyle.readthedocs.io>`_ and `Pylint
 .. code-block:: bash
 
     $ pip install -e .[tests]
-    $ pycodestyle maildir_deduplicate
-    $ pylint --rcfile=setup.cfg maildir_deduplicate
+    $ pycodestyle mail_deduplicate
+    $ pylint --rcfile=setup.cfg mail_deduplicate
 
 
 Build documentation
@@ -167,8 +167,8 @@ Start from the ``develop`` branch:
 
 .. code-block:: bash
 
-    $ git clone git@github.com:kdeldycke/maildir-deduplicate.git
-    $ cd ./maildir-deduplicate
+    $ git clone git@github.com:kdeldycke/mail-deduplicate.git
+    $ cd ./mail-deduplicate
     $ git checkout develop
 
 Install development dependencies:
@@ -188,7 +188,7 @@ Create a release commit, tag it and merge it back to ``master`` branch:
 
 .. code-block:: bash
 
-    $ git add ./maildir_deduplicate/__init__.py ./CHANGES.rst
+    $ git add ./mail_deduplicate/__init__.py ./CHANGES.rst
     $ git commit -m "Release vX.Y.Z"
     $ git tag "vX.Y.Z"
     $ git push
@@ -222,7 +222,7 @@ and set it back to development state by increasing the ``patch`` level.
 
     $ git checkout develop
     $ bumpversion --verbose patch
-    $ git add ./maildir_deduplicate/__init__.py ./CHANGES.rst
+    $ git add ./mail_deduplicate/__init__.py ./CHANGES.rst
     $ git commit -m "Post release version bump."
     $ git push
 
@@ -232,6 +232,6 @@ revision level instead:
 .. code-block:: bash
 
     $ bumpversion --verbose minor
-    $ git add ./maildir_deduplicate/__init__.py ./CHANGES.rst
+    $ git add ./mail_deduplicate/__init__.py ./CHANGES.rst
     $ git commit -m "Next release no longer bug-fix only. Bump revision."
     $ git push

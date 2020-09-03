@@ -1,29 +1,29 @@
-maildir_deduplicate.tests package
+mail_deduplicate.tests package
 =================================
 
 Submodules
 ----------
 
-maildir_deduplicate.tests.case module
+mail_deduplicate.tests.case module
 -------------------------------------
 
-.. automodule:: maildir_deduplicate.tests.case
+.. automodule:: mail_deduplicate.tests.case
     :members:
     :undoc-members:
     :show-inheritance:
 
-maildir_deduplicate.tests.test_cli module
+mail_deduplicate.tests.test_cli module
 -----------------------------------------
 
-.. automodule:: maildir_deduplicate.tests.test_cli
+.. automodule:: mail_deduplicate.tests.test_cli
     :members:
     :undoc-members:
     :show-inheritance:
 
-maildir_deduplicate.tests.test_deduplicate module
+mail_deduplicate.tests.test_deduplicate module
 -------------------------------------------------
 
-.. automodule:: maildir_deduplicate.tests.test_deduplicate
+.. automodule:: mail_deduplicate.tests.test_deduplicate
     :members:
     :undoc-members:
     :show-inheritance:
@@ -32,7 +32,7 @@ maildir_deduplicate.tests.test_deduplicate module
 Module contents
 ---------------
 
-.. automodule:: maildir_deduplicate.tests
+.. automodule:: mail_deduplicate.tests
     :members:
     :undoc-members:
     :show-inheritance:

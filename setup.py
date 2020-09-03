@@ -32,7 +32,7 @@ from os import path
 
 from setuptools import find_packages, setup
 
-MODULE_NAME = 'maildir_deduplicate'
+MODULE_NAME = 'mail_deduplicate'
 PACKAGE_NAME = MODULE_NAME.replace('_', '-')
 
 DEPENDENCIES = [
@@ -133,7 +133,7 @@ setup(
 
     author='Kevin Deldycke',
     author_email='kevin@deldycke.com',
-    url='https://github.com/kdeldycke/maildir-deduplicate',
+    url='https://github.com/kdeldycke/mail-deduplicate',
     license='GPLv2+',
 
     packages=find_packages(),

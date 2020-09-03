@@ -1,8 +1,8 @@
-maildir-deduplicate
-===================
+mail-deduplicate
+================
 
 .. toctree::
    :maxdepth: 4
 
-   maildir_deduplicate
+   mail_deduplicate
    setup

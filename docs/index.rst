@@ -10,7 +10,7 @@ Contents
    design
    install
    usage
-   maildir_deduplicate
+   mail_deduplicate
    development
    changelog
    history

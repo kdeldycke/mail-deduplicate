@@ -13,7 +13,7 @@ import time
 
 # Expose package to autodoc.
 sys.path.insert(0, os.path.abspath('..'))
-import maildir_deduplicate  # noqa  # isort:skip
+import mail_deduplicate  # noqa  # isort:skip
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -23,7 +23,7 @@ extensions = [
 
 master_doc = 'index'
 
-project = "Maildir Deduplicate"
+project = "Mail Deduplicate"
 author = "Kevin Deldycke"
 
 # We use our own copyright template instead of the default as the latter strip
@@ -31,10 +31,10 @@ author = "Kevin Deldycke"
 html_show_copyright = False
 copyright = (
     "2010-{}, <a href='https://kevin.deldycke.com'>{}</a> and <a "
-    "href='https://github.com/kdeldycke/maildir-deduplicate/graphs/"
+    "href='https://github.com/kdeldycke/mail-deduplicate/graphs/"
     "contributors'>contributors</a>").format(time.strftime('%Y'), author)
 
-version = release = maildir_deduplicate.__version__
+version = release = mail_deduplicate.__version__
 
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
