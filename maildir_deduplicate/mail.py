@@ -98,20 +98,43 @@ class Mail(object):
     @cachedproperty
     def body_lines(self):
         """ Return a normalized list of lines from message's body. """
-        if not self.message.is_multipart():
-            body = self.message.get_payload(None, decode=True)
-        else:
-            _, _, body = self.message.as_string().partition("\n\n")
-        if isinstance(body, bytes):
-            for enc in ['ascii', 'utf-8']:
-                try:
-                    body = body.decode(enc)
-                    break
-                except UnicodeDecodeError:
-                    continue
+        body = []
+        if self.message.preamble is not None:
+            body.extend(self.message.preamble.splitlines(keepends=True))
+
+        for part in self.message.walk():
+            if part.is_multipart():
+                continue
+
+            ctype = part.get_content_type()
+            cte = part.get_params(header='Content-Transfer-Encoding')
+            if (ctype is not None and not ctype.startswith('text')) or \
+               (cte is not None and cte[0][0].lower() == '8bit'):
+                part_body = part.get_payload(decode=False)
             else:
-                body = self.message.get_payload(None, decode=False)
-        return body.splitlines(True)
+                charset = part.get_content_charset()
+                if charset is None or len(charset) == 0:
+                    charsets = ['ascii', 'utf-8']
+                else:
+                    charsets = [charset]
+
+                part_body = part.get_payload(decode=True)
+                for enc in charsets:
+                    try:
+                        part_body = part_body.decode(enc)
+                        break
+                    except UnicodeDecodeError as ex:
+                        continue
+                    except LookupError as ex:
+                        continue
+                else:
+                    part_body = part.get_payload(decode=False)
+
+            body.extend(part_body.splitlines(keepends=True))
+
+        if self.message.epilogue is not None:
+            body.extend(self.message.epilogue.splitlines(keepends=True))
+        return body
 
     @cachedproperty
     def subject(self):
@@ -184,6 +207,8 @@ class Mail(object):
         # this will ensure value is always string
         if isinstance(value, bytes):
             value = value.decode('utf-8', 'replace')
+        elif isinstance(value, email.header.Header):
+            value = str(value)
         value = re.sub(r'\s+', ' ', value).strip()
 
         # Trim Subject prefixes automatically added by mailing list software,
@@ -230,7 +255,7 @@ class Mail(object):
                     '%Y/%m/%d UTC', time.gmtime(utc_timestamp))
             except ValueError:
                 return value
-        elif header == 'to':
+        elif header in ['to', 'message-id']:
             # Sometimes email.parser strips the <> brackets from a To:
             # header which has a single address.  I have seen this happen
             # for only one mail in a duplicate pair.  I'm not sure why
