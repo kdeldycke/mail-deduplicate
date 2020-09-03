@@ -27,7 +27,7 @@ ChangeLog
 
 
 `2.2.0 (2020-09-03) <https://github.com/kdeldycke/mail-deduplicate/compare/v2.1.0...v2.2.0>`_
-------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
 
 .. warning::
    This is the last version of the project known under the name *Maildir
