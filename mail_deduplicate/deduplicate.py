@@ -147,7 +147,7 @@ class DuplicateSet(object):
         """
         return len(''.join(unified_diff(
             mail_a.body_lines, mail_b.body_lines,
-            # Ignore difference in filename lenghts and timestamps.
+            # Ignore difference in filename lengths and timestamps.
             fromfile='a', tofile='b',
             fromfiledate='', tofiledate='',
             n=0, lineterm='\n')))
@@ -558,7 +558,7 @@ class Deduplicate(object):
 
         for hash_key, mail_set in self.mails.items():
 
-            # Alter log level depending on set lenght.
+            # Alter log level depending on set length.
             log_level = logger.debug if len(mail_set) == 1 else logger.info
             log_level("--- {} mails sharing hash {}".format(
                 len(mail_set), hash_key))
