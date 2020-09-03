@@ -52,7 +52,9 @@ pylint = "^2.6"
 pytest = "^6.0"
 # More pytest plugins at: http://plugincompat.herokuapp.com .
 pytest-cov = "^2.10.1"
+pyyaml = "^5.3.1"
 twine = "^3.1"
+yamllint = "^1.24.2"
 
 [tool.poetry.extras]
 # Workaround lacks of Poetry support by RTD: https://stackoverflow.com/a/58163431
