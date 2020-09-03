@@ -233,7 +233,7 @@ def deduplicate(
 def hash(ctx, message_id, message):
     """ Take a single mail message and show its canonicalised form and hash.
 
-    Mainly used to debug message hashing.
+    Mainly used to debug message hashing. Only works with maildirs, not mboxes.
     """
     conf = Config(message_id=message_id)
 
