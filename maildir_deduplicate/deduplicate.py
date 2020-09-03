@@ -71,7 +71,6 @@ class DuplicateSet(object):
 
         # Keep set metrics.
         self.stats = Counter()
-        self.stats['mail_duplicates'] += self.size
 
         logger.debug("{!r} created.".format(self))
 
@@ -193,6 +192,7 @@ class DuplicateSet(object):
             self.stats['set_ignored'] += 1
             return
 
+        self.stats['mail_duplicates'] += self.size
         try:
             # Fine-grained checks on mail differences.
             self.check_differences()
@@ -634,7 +634,8 @@ class Deduplicate(object):
         assert self.stats['mail_kept'] == (
             self.stats['mail_unique'] +
             self.stats['mail_duplicates'])
-        assert self.stats['mail_duplicates'] > self.stats['mail_deleted']
+        assert ((self.stats['mail_duplicates'] == 0) or
+                (self.stats['mail_duplicates'] > self.stats['mail_deleted']))
 
         assert self.stats['set_ignored'] == self.stats['mail_unique']
 

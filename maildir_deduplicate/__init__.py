@@ -61,6 +61,7 @@ HEADERS = [
     'Content-Disposition',
     'User-Agent',
     'X-Priority',
+    'Message-ID',
 ]
 
 

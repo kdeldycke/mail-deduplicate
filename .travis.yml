@@ -22,8 +22,16 @@ python:
   - pypy-5.4
 
 before_install:
+  # Show environment variables for debugging.
+  - env
   # Check default Python version installed.
   - python --version
+  - pip --version
+  - pip freeze
+  # Install missing dependencies from Travis distributions.
+  - if [[ ("$TRAVIS_PYTHON_VERSION" == "pypy-5.1") || ("$TRAVIS_PYTHON_VERSION" == "pypy-5.3") ]]; then
+      pip install logilab-common;
+    fi
 
 before_script:
   - pip install codecov
@@ -31,7 +39,7 @@ before_script:
 script:
   # Launch unittests.
   - pip install -e .[tests]
-  - pytest
+  - python -m pytest
   # Check coding style.
   - pycodestyle
   # Test that building packages works.

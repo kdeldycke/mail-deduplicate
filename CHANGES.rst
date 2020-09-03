@@ -7,8 +7,13 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Add disclaimer to prepare project name change.
+* Fix Header being object instead of string (#61).
+* Make body_lines conversion more reliable.
+* Fix bugs in counter statistics (#45, #57).
+* Add Message-ID as a header to check.
 * Fix ``UnicodeDecodeError``. Closes #53 and #55.
-* Bump requirement to ``click_log >= 0.2.0``. Closes #59 and #60.
+* Bump requirement to ``click_log >= 0.2.0``. Closes #58, #59 and #60.
 * Replace ``nose`` by ``pytest``.
 * Only notify by mail of test failures.
 * Drop support of Python 3.3.

@@ -47,11 +47,16 @@ class MailFactory(object):
     """
 
     def __init__(self, **custom_fields):
-        """ Init the mail with custom fields. """
+        """ Init the mail with custom fields.
+
+        You can bypass data normalization by passing the pre-formated date
+        string with ``date_rfc2822`` custom field instead of ``date``.
+        """
         # Defaults fields values.
         self.fields = {
             'body': "Да, они летят.",
-            'date': arrow.utcnow()}
+            'date': arrow.utcnow(),
+            'date_rfc2822': None}
 
         # Check all custom fields are recognized and supported.
         assert set(custom_fields).issubset(self.fields)
@@ -63,9 +68,10 @@ class MailFactory(object):
         # Update default values with custom ones.
         self.fields.update(custom_fields)
 
-        # Add an extra rendered string in RFC2882 format.
-        self.fields['date_rfc2822'] = maildate(
-            self.fields['date'].float_timestamp)
+        # Derive RFC-2822 date from arrow object if not set.
+        if not self.fields.get('date_rfc2822'):
+            self.fields['date_rfc2822'] = maildate(
+                self.fields['date'].float_timestamp)
 
     def render(self):
         """ Returns the full, rendered content of the mail. """
@@ -289,14 +295,15 @@ class TestDateStrategy(TestDeduplicate):
     maildir_path = './strategy_date'
 
     newest_date = arrow.utcnow()
-    newer_date = newest_date.replace(minutes=-1)
-    older_date = newest_date.replace(minutes=-2)
-    oldest_date = newest_date.replace(minutes=-3)
+    newer_date = newest_date.shift(minutes=-1)
+    older_date = newest_date.shift(minutes=-2)
+    oldest_date = newest_date.shift(minutes=-3)
 
     newest_mail = MailFactory(date=newest_date)
     newer_mail = MailFactory(date=newer_date)
     older_mail = MailFactory(date=older_date)
     oldest_mail = MailFactory(date=oldest_date)
+    invaliddate_mail = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 
     mails = {
         'mail0:1,S': oldest_mail,
@@ -306,7 +313,8 @@ class TestDateStrategy(TestDeduplicate):
         'mail4:1,S': older_mail,
         'mail5:1,S': older_mail,
         'mail6:1,S': newer_mail,
-        'mail7:1,S': newest_mail}
+        'mail7:1,S': newest_mail,
+        'mail8:1,S': invaliddate_mail}
 
     def test_maildir_older_strategy(self):
         """ Test strategy of older mail deletion. """
