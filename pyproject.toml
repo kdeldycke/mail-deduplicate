@@ -18,7 +18,9 @@ classifiers = [
     'Environment :: Console',
     'Intended Audience :: Developers',
     'Intended Audience :: Information Technology',
-    'Operating System :: OS Independent',
+    'Operating System :: MacOS',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: POSIX',
     'Programming Language :: Python :: Implementation :: CPython',
     'Topic :: Communications :: Email',
     'Topic :: Utilities']
