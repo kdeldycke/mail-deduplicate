@@ -2,8 +2,8 @@ ChangeLog
 =========
 
 
-`3.0.0 (unreleased) <https://github.com/kdeldycke/mail-deduplicate/compare/v2.2.0...develop>`_
--------------------------------------------------------------------------------------------------
+`3.0.0 (2020-09-03) <https://github.com/kdeldycke/mail-deduplicate/compare/v2.2.0...v3.0.0>`_
+---------------------------------------------------------------------------------------------
 
 .. DANGER::
    As of ``v3.0.0``, the project has been renamed to *Mail Deduplicate* and is
