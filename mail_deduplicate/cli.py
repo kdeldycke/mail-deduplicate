@@ -46,7 +46,6 @@ from . import (
 from .deduplicate import Deduplicate
 from .mail import Mail
 
-
 click_log.basic_config(logger)
 
 
