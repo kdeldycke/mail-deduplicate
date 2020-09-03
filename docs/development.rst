@@ -35,7 +35,7 @@ Build status
 ------------
 
 ==============  ==================  ===================
-Branch          |master-branch|__   |develop-branch|__
+Branch          |main-branch|__     |develop-branch|__
 ==============  ==================  ===================
 Unittests       |build-stable|      |build-dev|
 Coverage        |coverage-stable|   |coverage-dev|
@@ -44,36 +44,36 @@ Dependencies    |deps-stable|       |deps-dev|
 Documentation   |docs-stable|       |docs-dev|
 ==============  ==================  ===================
 
-.. |master-branch| replace::
-   ``master``
-__ https://github.com/kdeldycke/mail-deduplicate/tree/master
+.. |main-branch| replace::
+   ``main``
+__ https://github.com/kdeldycke/mail-deduplicate/tree/main
 .. |develop-branch| replace::
    ``develop``
 __ https://github.com/kdeldycke/mail-deduplicate/tree/develop
 
-.. |build-stable| image:: https://travis-ci.org/kdeldycke/mail-deduplicate.svg?branch=master
+.. |build-stable| image:: https://travis-ci.org/kdeldycke/mail-deduplicate.svg?branch=main
     :target: https://travis-ci.org/kdeldycke/mail-deduplicate
     :alt: Unit-tests status
 .. |build-dev| image:: https://travis-ci.org/kdeldycke/mail-deduplicate.svg?branch=develop
     :target: https://travis-ci.org/kdeldycke/mail-deduplicate
     :alt: Unit-tests status
 
-.. |coverage-stable| image:: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/master
+.. |coverage-stable| image:: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/main/graph/badge.svg
+    :target: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/main
     :alt: Coverage Status
 .. |coverage-dev| image:: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/develop/graph/badge.svg
     :target: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/develop
     :alt: Coverage Status
 
-.. |quality-stable| image:: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/badges/quality-score.png?b=master
-    :target: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/?branch=master
+.. |quality-stable| image:: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/badges/quality-score.png?b=main
+    :target: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/?branch=main
     :alt: Code Quality
 .. |quality-dev| image:: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/badges/quality-score.png?b=develop
     :target: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/?branch=develop
     :alt: Code Quality
 
-.. |deps-stable| image:: https://requires.io/github/kdeldycke/mail-deduplicate/requirements.svg?branch=master
-    :target: https://requires.io/github/kdeldycke/mail-deduplicate/requirements/?branch=master
+.. |deps-stable| image:: https://requires.io/github/kdeldycke/mail-deduplicate/requirements.svg?branch=main
+    :target: https://requires.io/github/kdeldycke/mail-deduplicate/requirements/?branch=main
     :alt: Requirements freshness
 .. |deps-dev| image:: https://requires.io/github/kdeldycke/mail-deduplicate/requirements.svg?branch=develop
     :target: https://requires.io/github/kdeldycke/mail-deduplicate/requirements/?branch=develop
@@ -184,7 +184,7 @@ released date in the changelog:
 
     $ vi ./CHANGES.rst
 
-Create a release commit, tag it and merge it back to ``master`` branch:
+Create a release commit, tag it and merge it back to ``main`` branch:
 
 .. code-block:: bash
 
@@ -193,7 +193,7 @@ Create a release commit, tag it and merge it back to ``master`` branch:
     $ git tag "vX.Y.Z"
     $ git push
     $ git push --tags
-    $ git checkout master
+    $ git checkout main
     $ git pull
     $ git merge "vX.Y.Z"
     $ git push

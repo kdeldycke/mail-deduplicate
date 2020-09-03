@@ -17,8 +17,8 @@ Development: |build| |docs| |coverage| |quality|
 .. |license| image:: https://img.shields.io/pypi/l/mail-deduplicate.svg
     :target: https://www.gnu.org/licenses/gpl-2.0.html
     :alt: Software license
-.. |dependencies| image:: https://requires.io/github/kdeldycke/mail-deduplicate/requirements.svg?branch=master
-    :target: https://requires.io/github/kdeldycke/mail-deduplicate/requirements/?branch=master
+.. |dependencies| image:: https://requires.io/github/kdeldycke/mail-deduplicate/requirements.svg?branch=main
+    :target: https://requires.io/github/kdeldycke/mail-deduplicate/requirements/?branch=main
     :alt: Requirements freshness
 .. |build| image:: https://travis-ci.org/kdeldycke/mail-deduplicate.svg?branch=develop
     :target: https://travis-ci.org/kdeldycke/mail-deduplicate
