@@ -1,7 +1,6 @@
 Maildir Deduplicate
 ===================
 
-
 .. DANGER::
    This is an **old version**. The project has been renamed to *Mail
    Deduplicate* and is now available on:
@@ -9,9 +8,8 @@ Maildir Deduplicate
    * Github at https://github.com/kdeldycke/mail-deduplicate
    * PyPi at https://pypi.org/project/mail-deduplicate
 
-
-
-Command-line tool to deduplicate mails from a set of maildir folders.
+Command-line tool to deduplicate mails from a set of mbox files and/or maildir
+folders.
 
 Stable release: |release| |versions| |license| |dependencies|
 
@@ -47,7 +45,7 @@ Features
 --------
 
 * Duplicate detection based on cherry-picked mail headers.
-* Source mails from multiple maildirs.
+* Source mails from multiple mbox files and/or maildir folders.
 * Multiple removal strategies based on size, timestamp or file path.
 * Dry-run mode.
 * Protection against false-positives by checking for size and content

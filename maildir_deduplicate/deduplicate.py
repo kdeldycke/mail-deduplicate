@@ -30,7 +30,7 @@ import re
 from collections import Counter
 from difflib import unified_diff
 from itertools import combinations
-from mailbox import Maildir
+from mailbox import Maildir, mbox
 from operator import attrgetter
 
 from boltons.cacheutils import cachedproperty
@@ -54,8 +54,8 @@ class DuplicateSet(object):
     Implements all deletion strategies applicable to a set of duplicate mails.
     """
 
-    def __init__(self, hash_key, mail_path_set, conf):
-        """ Load-up the duplicate set from mail's path list and freeze pool.
+    def __init__(self, hash_key, mail_set, conf):
+        """ Load-up the duplicate set of mail and freeze pool.
 
         Once loaded-up, the pool of parsed mails is considered frozen for the
         rest of the duplicate set life. This allow aggressive caching of lazy
@@ -67,11 +67,7 @@ class DuplicateSet(object):
         self.conf = conf
 
         # Pool referencing all duplicated mails and their attributes.
-        self.pool = set()
-        for mail_path in set(mail_path_set):
-            self.pool.add(Mail(mail_path, self.conf))
-        # Freeze pool.
-        self.pool = frozenset(self.pool)
+        self.pool = frozenset(mail_set)
 
         # Keep set metrics.
         self.stats = Counter()
@@ -111,12 +107,7 @@ class DuplicateSet(object):
         if self.conf.dry_run:
             logger.info("Skip deletion of {!r}.".format(mail))
             return
-
-        logger.debug("Deleting {!r}...".format(mail))
-        # XXX Investigate the use of maildir's .remove instead. See: https:
-        # //github.com/python/cpython/blob/origin/2.7/Lib/mailbox.py#L329-L331
-        os.unlink(mail.path)
-        logger.info("{} deleted.".format(mail.path))
+        mail.delete()
 
     def check_differences(self):
         """ In-depth check of mail differences.
@@ -184,11 +175,14 @@ class DuplicateSet(object):
 
         Transform strategy keyword into its method ID, and call it.
         """
+        if not self.conf.strategy:
+            logger.warning("No strategy selected, skip deduplication.")
+
         method_id = self.conf.strategy.replace('-', '_')
         if not hasattr(DuplicateSet, method_id):
             raise NotImplementedError(
                 "DuplicateSet.{}() method.".format(method_id))
-        return getattr(self, method_id)()
+        getattr(self, method_id)()
 
     def dedupe(self):
         """ Performs the deduplication and its preliminary checks. """
@@ -448,6 +442,13 @@ class Deduplicate(object):
     Messages are grouped together in a DuplicateSet
     """
 
+    # Index of mail sources by their full, normalized path. So we can refer
+    # to them in Mail instances. Also have the nice side effect of natural
+    # deduplication of sources themselves.
+    # TODO: Lock, unlock, flush and close mboxes and maildirs. See:
+    # https://docs.python.org/2/library/mailbox.html#mailbox.Mailbox.flush
+    sources = {}
+
     def __init__(self, conf):
         # All mails grouped by hashes.
         self.mails = {}
@@ -495,41 +496,56 @@ class Deduplicate(object):
         return os.path.normcase(os.path.realpath(os.path.abspath(
             os.path.expanduser(path))))
 
-    def add_maildir(self, maildir_path):
-        """ Load up a maildir and compute hash for each mail found. """
-        maildir_path = self.canonical_path(maildir_path)
-        logger.info("Opening maildir at {} ...".format(maildir_path))
-        # Maildir parser requires a string, not a unicode, as path.
-        maildir = Maildir(str(maildir_path), factory=None, create=False)
+    def add_source(self, source_path):
+        """ Load up a mail source and compute hash for each mail found.
 
-        # Group folders by hash.
-        logger.info("{} mails found.".format(len(maildir)))
-        if self.conf.progress:
-            bar = ProgressBar(widgets=[Percentage(), Bar()],
-                              max_value=len(maildir), redirect_stderr=True,
-                              redirect_stdout=True)
+        If the path is a file, then it is considered as an ``mbox``. Else, if
+        the provided path is a folder, it is parsed as a ``maildir``.
+        """
+        source_path = self.canonical_path(source_path)
+
+        if os.path.isdir(source_path):
+            logger.info("Opening {} as a maildir...".format(source_path))
+            # Maildir parser requires a string, not a unicode, as path.
+            mail_source = Maildir(str(source_path), factory=None, create=False)
+
         else:
-            def bar(x):
-                return x
+            logger.info("Opening {} as an mbox...".format(source_path))
+            mail_source = mbox(source_path, factory=None, create=False)
 
-        for mail_id in bar(maildir.iterkeys()):
+        logger.info("{} mails found.".format(len(mail_source)))
+
+        # Register the mail source.
+        self.sources[source_path] = mail_source
+
+        # Setup the progress bar.
+        def bar(iterable=None):
+            """ Identity function to silence the progress bar. """
+            return iterable
+
+        # Override the pass-through bar() method with the progress bar widget.
+        if self.conf.progress:
+            bar = ProgressBar(
+                widgets=[Percentage(), Bar()],
+                max_value=len(mail_source),
+                redirect_stderr=True, redirect_stdout=True)
+
+        # Group mails by hash.
+        for mail_id in bar(mail_source.iterkeys()):
             self.stats['mail_found'] += 1
 
-            mail_path = self.canonical_path(os.path.join(
-                maildir._path, maildir._lookup(mail_id)))
-            mail = Mail(mail_path, self.conf)
+            mail = Mail(source_path, mail_id, self.conf)
 
             try:
                 mail_hash = mail.hash_key
             except (InsufficientHeadersError, MissingMessageID) as expt:
                 logger.warning(
-                    "Rejecting {}: {}".format(mail_path, expt.args[0]))
+                    "Rejecting {}: {}".format(mail.path, expt.args[0]))
                 self.stats['mail_rejected'] += 1
             else:
-                logger.debug(
-                    "Hash is {} for mail {!r}.".format(mail_hash, mail_id))
+                logger.debug("Hash is {} for {}.".format(mail_hash, mail.path))
                 # Use a set to deduplicate entries pointing to the same file.
-                self.mails.setdefault(mail_hash, set()).add(mail_path)
+                self.mails.setdefault(mail_hash, set()).add(mail)
                 self.stats['mail_kept'] += 1
 
     def run(self):
@@ -538,20 +554,43 @@ class Deduplicate(object):
         We apply the removal strategy one duplicate set at a time to keep
         memory footprint low and make the log of actions easier to read.
         """
-        logger.info(
-            "The {} strategy will be applied on each duplicate set.".format(
-                self.conf.strategy))
+        if self.conf.strategy:
+            logger.info(
+                "The {} strategy will be applied on each duplicate set."
+                "".format(self.conf.strategy))
+        else:
+            logger.warning("No removal strategy will be applied.")
 
         self.stats['set_total'] = len(self.mails)
 
-        for hash_key, mail_path_set in self.mails.items():
-            # Print visual clue to separate duplicate sets.
-            logger.info('---')
+        for hash_key, mail_set in self.mails.items():
 
-            duplicates = DuplicateSet(hash_key, mail_path_set, self.conf)
+            # Alter log level depending on set lenght.
+            log_level = logger.debug if len(mail_set) == 1 else logger.info
+            log_level("--- {} mails sharing hash {}".format(
+                len(mail_set), hash_key))
 
-            # Perfom the deduplication.
-            duplicates.dedupe()
+            duplicates = DuplicateSet(hash_key, mail_set, self.conf)
+
+            self.stats['mail_duplicates'] += duplicates.size
+
+            # Fine-grained checks on mail differences.
+            try:
+                duplicates.check_differences()
+            except SizeDiffAboveThreshold:
+                self.stats['set_rejected_size'] += 1
+                logger.warning(
+                    "Reject set: mails are too dissimilar in size.")
+                continue
+            except ContentDiffAboveThreshold:
+                self.stats['set_rejected_content'] += 1
+                logger.warning(
+                    "Reject set: mails are too dissimilar in content.")
+                continue
+
+            # Call the deduplication strategy.
+            if self.conf.strategy:
+                duplicates.apply_strategy(self.conf.strategy)
 
             # Merge stats resulting of actions on duplicate sets.
             self.stats += duplicates.stats

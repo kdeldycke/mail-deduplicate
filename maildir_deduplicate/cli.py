@@ -57,7 +57,7 @@ click_log.basic_config(logger)
 @click.version_option(__version__)
 @click.pass_context
 def cli(ctx):
-    """ CLI for maildirs content analysis and deletion. """
+    """ CLI for mbox and maildir content analysis and deletion. """
     level = logger.level
     try:
         level_to_name = logging._levelToName
@@ -86,21 +86,30 @@ def validate_regexp(ctx, param, value):
     return value
 
 
-def validate_maildirs(ctx, param, value):
-    """ Check that folders are maildirs. """
+def validate_mail_sources(ctx, param, value):
+    """ Check that files are mboxes and folders are maildirs. """
     for path in value:
-        for subdir in MD_SUBDIRS:
-            if not os.path.isdir(os.path.join(path, subdir)):
+        # Validates folder is a maildir.
+        if os.path.isdir(path):
+            for subdir in MD_SUBDIRS:
+                if not os.path.isdir(os.path.join(path, subdir)):
+                    raise click.BadParameter(
+                        '{} is not a maildir folder (missing {!r} '
+                        'sub-directory).'.format(path, subdir))
+        # Validates file is an mbox.
+        else:
+            if not os.path.isfile(path):
                 raise click.BadParameter(
-                    '{} is not a maildir (missing {!r} sub-directory).'.format(
-                        path, subdir))
+                    '{} is not an mbox file.'.format(path))
+            # TODO: Insert here early checks on mbox file format.
     return value
 
 
-@cli.command(short_help='Deduplicate maildirs content.')
+@cli.command(short_help='Deduplicate mboxes and/or maildirs content.')
 @click.option(
-    '-s', '--strategy', type=click.Choice(STRATEGIES), required=True,
-    help='Deletion strategy to apply within a subset of duplicates.')
+    '-s', '--strategy', type=click.Choice(STRATEGIES),
+    help='Deletion strategy to apply within a subset of duplicates. If not '
+    'set duplicates will be grouped and counted but no removal will happens.')
 @click.option(
     '-t', '--time-source', type=click.Choice(TIME_SOURCES),
     help="Source of a mail's reference time. Required in time-sensitive "
@@ -134,13 +143,13 @@ def validate_maildirs(ctx, param, value):
     help='Show the unified diff of duplicates not within thresholds.')
 # TODO: add a show-progress option.
 @click.argument(
-    'maildirs', nargs=-1, callback=validate_maildirs,
-    type=click.Path(exists=True, file_okay=False, resolve_path=True))
+    'mail_sources', nargs=-1, callback=validate_mail_sources,
+    metavar='MBOXES/MAILDIRS', type=click.Path(exists=True, resolve_path=True))
 @click.pass_context
 def deduplicate(
         ctx, strategy, time_source, regexp, dry_run, message_id,
-        size_threshold, content_threshold, show_diff, maildirs):
-    """ Deduplicate mails from a set of maildir folders.
+        size_threshold, content_threshold, show_diff, mail_sources):
+    """ Deduplicate mails from a set of either mbox files or maildir folders.
 
     Run a first pass computing the canonical hash of each encountered mail from
     their headers, then a second pass to apply the deletion strategy on each
@@ -165,8 +174,8 @@ def deduplicate(
     between mails are uncovered during a fine-grained check differences during
     the second pass. Limits can be set via the threshold options.
     """
-    # Print help screen and exit if no maildir folder provided.
-    if not maildirs:
+    # Print help screen and exit if no mail source provided.
+    if not mail_sources:
         click.echo(ctx.get_help())
         ctx.exit()
 
@@ -201,11 +210,11 @@ def deduplicate(
 
     dedup = Deduplicate(conf)
 
-    logger.info('=== Start phase #1: load mails and compute hashes.')
-    for maildir in maildirs:
-        dedup.add_maildir(maildir)
+    logger.info('=== Phase #1: load mails and compute hashes.')
+    for source in mail_sources:
+        dedup.add_source(source)
 
-    logger.info('=== Start phase #2: deduplicate mails.')
+    logger.info('=== Phase #2: deduplicate mails.')
     dedup.run()
 
     dedup.report()
@@ -228,6 +237,7 @@ def hash(ctx, message_id, message):
     """
     conf = Config(message_id=message_id)
 
+    # TODO: Update with new mail API.
     mail = Mail(message, conf)
 
     logger.info(mail.header_text)

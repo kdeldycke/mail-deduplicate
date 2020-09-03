@@ -1,8 +1,9 @@
 Design
 ------
 
-This CLI reads all mails in a given list of maildir folders and subfolders,
-then automatically detects, lists, and optionally deletes any duplicate mails.
+This CLI reads all mails in a list of mbox files and/or maildir folders and
+subfolders, then automatically detects, lists, and optionally deletes any
+duplicate mails.
 
 Duplicate detection is done by cherry-picking certain headers, in some cases
 doing some minor tweaking of the values to reduce them to a canonical form, and
