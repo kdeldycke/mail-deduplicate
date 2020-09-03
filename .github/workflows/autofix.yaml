@@ -55,3 +55,57 @@ jobs:
           labels: CI/CD, documentation
           assignees: kdeldycke
           branch: autofix-typo
+
+  gitignore:
+    name: Generate .gitignore and create a PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.2
+      - name: Install git-extras package
+        run: |
+          sudo apt install -y git-extras
+      - name: Generate .gitignore
+        run: >
+          git ignore-io --replace emacs git linux macos nohup python vim
+          virtualenv visualstudiocode windows
+      - uses: peter-evans/create-pull-request@v3
+        with:
+          author: "Kevin Deldycke <kevin@deldycke.com>"
+          commit-message: "[autofix] Regenerate .gitignore"
+          title: "[autofix] Regenerate .gitignore"
+          body: >
+            [Auto-generated on run
+            #${{ github.run_id }}](https://github.com/${{ github.repository
+            }}/actions/runs/${{ github.run_id }}) as defined by [workflow
+            action](https://github.com/${{ github.repository
+            }}/blob/${{ github.base_ref }}/.github/workflows/autofix.yaml).
+          labels: CI/CD
+          assignees: kdeldycke
+          branch: update-gitignore
+
+  mailmap:
+    name: Update .mailmap and create a PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.2
+        with:
+          # Fetch all history to extract all contributors.
+          fetch-depth: 0
+      - uses: actions/setup-python@v2.1.2
+      - name: Generate .mailmap
+        run: |
+          python ./.github/update_mailmap.py
+      - uses: peter-evans/create-pull-request@v3
+        with:
+          author: "Kevin Deldycke <kevin@deldycke.com>"
+          commit-message: "[autofix] Regenerate .mailmap"
+          title: "[autofix] Regenerate .mailmap"
+          body: >
+            [Auto-generated on run
+            #${{ github.run_id }}](https://github.com/${{ github.repository
+            }}/actions/runs/${{ github.run_id }}) as defined by [workflow
+            action](https://github.com/${{ github.repository
+            }}/blob/${{ github.base_ref }}/.github/workflows/autofix.yaml).
+          labels: CI/CD, documentation
+          assignees: kdeldycke
+          branch: update-mailmap

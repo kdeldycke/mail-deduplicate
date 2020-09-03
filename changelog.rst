@@ -15,6 +15,7 @@ ChangeLog
 * Switch from Travis to GitHub Actions for all CI/CD jobs.
 * Regularly run unittests against Windows, Linux and macOS.
 * Auto-fix typos and JSON content.
+* Keep ``.gitignore`` and ``.mailmap`` up to date and in sync.
 * Auto-publish package on tagging events via ``twine``.
 * Always run test build and check resulting package on each commits.
 * Use declarative JSON to maintain list of GitHub labels for issues and PRs.
