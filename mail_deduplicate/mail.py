@@ -104,7 +104,7 @@ class Mail(object):
     def size(self):
         """ Returns canonical mail size.
 
-        Size is computed as the lenght of the message body, i.e. the payload of
+        Size is computed as the length of the message body, i.e. the payload of
         the mail stripped of all its headers, not from the mail file
         persisting on the file-system.
         """
