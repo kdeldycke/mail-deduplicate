@@ -38,13 +38,12 @@ class CLITestCase(unittest.TestCase):
         result = self.runner.invoke(cli, args)
 
         # Simulate CLI output.
-        print("$ mdedupe {}".format(' '.join(args)))
+        print("$ mdedupe {}".format(" ".join(args)))
         print(result.output)
 
         # Print some more debug info.
         print(result)
         if result.exception:
-            print(ExceptionInfo.from_exc_info(
-                *result.exc_info).get_formatted())
+            print(ExceptionInfo.from_exc_info(*result.exc_info).get_formatted())
 
         return result
