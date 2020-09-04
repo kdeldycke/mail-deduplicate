@@ -44,6 +44,7 @@ sphinx_rtd_theme = {version = "^0.5.0", optional = true}
 
 [tool.poetry.dev-dependencies]
 arrow = "^0.16.0"
+black = "^20.8b1"
 bump2version = "^1.0.0"
 check-wheel-contents = "^0.1.0"
 coverage = {extras = ["toml"], version = "^5.2.1"}
@@ -64,6 +65,9 @@ docs = ["sphinx", "sphinx_rtd_theme"]
 [tool.poetry.scripts]
 mdedup = 'mail_deduplicate.cli:cli'
 
+[tool.black]
+target-version = ['py37', 'py38']
+
 [tool.pylint.MASTER]
 # http://pylint.pycqa.org/en/latest/technical_reference/features.html
 output-format = "colorized"
@@ -78,6 +82,9 @@ disable = "C0114, W0511, W1203"
 # The type of string formatting that logging methods do. `old` means using %
 # formatting, `new` is for `{}` formatting.
 logging-format-style = "new"
+[tool.pylint.FORMAT]
+# Aligns to black's config: https://github.com/psf/black/blob/master/docs/compatible_configs.md#pylint
+max-line-length = "88"
 
 [tool.pytest.ini_options]
 # https://docs.pytest.org/en/latest/customize.html#pyproject-toml
