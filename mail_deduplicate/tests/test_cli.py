@@ -28,47 +28,43 @@ from .case import CLITestCase
 
 
 class TestCLI(CLITestCase):
-
     def test_main_help(self):
-        result = self.invoke('--help')
+        result = self.invoke("--help")
         self.assertEqual(result.exit_code, 0)
         self.assertIn("--help", result.output)
 
 
 class TestDeduplicateCLI(CLITestCase):
-
     def test_deduplicate_help(self):
-        result = self.invoke('deduplicate', '--help')
+        result = self.invoke("deduplicate", "--help")
         self.assertEqual(result.exit_code, 0)
         self.assertIn("--help", result.output)
 
     def test_nonexistent_directory(self):
-        result = self.invoke('deduplicate', './dummy_maildir/')
+        result = self.invoke("deduplicate", "./dummy_maildir/")
         self.assertEqual(result.exit_code, 2)
-        self.assertIn(
-            """Path './dummy_maildir/' does not exist""", result.output)
+        self.assertIn("""Path './dummy_maildir/' does not exist""", result.output)
 
     def test_invalid_maildir_as_file(self):
-        result = self.invoke('deduplicate', './__init__.py')
+        result = self.invoke("deduplicate", "./__init__.py")
         self.assertEqual(result.exit_code, 2)
-        self.assertIn(
-            """Path './__init__.py' does not exist""", result.output)
+        self.assertIn("""Path './__init__.py' does not exist""", result.output)
 
     def test_invalid_maildir_structure(self):
-        result = self.invoke('deduplicate', '.')
+        result = self.invoke("deduplicate", ".")
         self.assertEqual(result.exit_code, 2)
         self.assertIn("is not a maildir", result.output)
 
 
 class TestHashCLI(CLITestCase):
-
     def test_hash_help(self):
-        result = self.invoke('hash', '--help')
+        result = self.invoke("hash", "--help")
         self.assertEqual(result.exit_code, 0)
         self.assertIn("--help", result.output)
 
     def test_stdin_hashing(self):
-        message = textwrap.dedent(u"""\
+        message = textwrap.dedent(
+            """\
             From: foo@bar.com
             To: iTrue@dslk.com
             Subject: Test
@@ -76,15 +72,16 @@ class TestHashCLI(CLITestCase):
             Content-Type: text/plain; charset="utf-8"
             Content-Transfer-Encoding: 8bit
             Да, они летят.
-            """).encode('utf-8')
+            """
+        ).encode("utf-8")
 
         with self.runner.isolated_filesystem():
-            with open('mail.txt', 'wb') as f:
+            with open("mail.txt", "wb") as f:
                 f.write(message)
 
-            result = self.invoke('hash', 'mail.txt')
+            result = self.invoke("hash", "mail.txt")
             self.assertEqual(result.exit_code, 0)
             self.assertIn(
-                "Hash: "
-                "39e40845b3548dc4bb6d0b8d7c7018eef8497363a62c195c8f49236a",
-                result.output)
+                "Hash: " "39e40845b3548dc4bb6d0b8d7c7018eef8497363a62c195c8f49236a",
+                result.output,
+            )

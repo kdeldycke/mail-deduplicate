@@ -27,13 +27,7 @@ import time
 
 from boltons.cacheutils import cachedproperty
 
-from . import (
-    CTIME,
-    HEADERS,
-    InsufficientHeadersError,
-    MissingMessageID,
-    logger
-)
+from . import CTIME, HEADERS, InsufficientHeadersError, MissingMessageID, logger
 
 
 class Mail(object):
@@ -56,18 +50,18 @@ class Mail(object):
         """ Return mail's source object. """
         # Import here to avoid circular imports.
         from .deduplicate import Deduplicate  # noqa
+
         return Deduplicate.sources[self.source_path]
 
     @cachedproperty
     def message(self):
         """ Fetch message from its source. """
-        logger.debug("Fetching {!r} from {} ...".format(
-            self.mail_id, self.source_path))
+        logger.debug("Fetching {!r} from {} ...".format(self.mail_id, self.source_path))
         return self.source.get_message(self.mail_id)
 
     @cachedproperty
     def path(self):
-        """ Real filesystem path of the mail originating from maildirs.
+        """Real filesystem path of the mail originating from maildirs.
 
         For mailbox mails, returns a fake path composed with mail's internal
         ID.
@@ -76,7 +70,7 @@ class Mail(object):
         if filename:
             filepath = os.path.join(self.source_path, filename)
         else:
-            filepath = ':'.join([self.source_path, self.mail_id])
+            filepath = ":".join([self.source_path, self.mail_id])
         return filepath
 
     @cachedproperty
@@ -90,7 +84,7 @@ class Mail(object):
             return os.path.getctime(self.path)
 
         # Fetch from the date header.
-        value = self.message.get('Date')
+        value = self.message.get("Date")
         try:
             value = email.utils.mktime_tz(email.utils.parsedate_tz(value))
         except ValueError:
@@ -102,13 +96,13 @@ class Mail(object):
 
     @cachedproperty
     def size(self):
-        """ Returns canonical mail size.
+        """Returns canonical mail size.
 
         Size is computed as the length of the message body, i.e. the payload of
         the mail stripped of all its headers, not from the mail file
         persisting on the file-system.
         """
-        return len(''.join(self.body_lines))
+        return len("".join(self.body_lines))
 
         # TODO: Allow customization of the way the size is computed, by getting
         # the file size instead for example.
@@ -126,14 +120,15 @@ class Mail(object):
                 continue
 
             ctype = part.get_content_type()
-            cte = part.get_params(header='Content-Transfer-Encoding')
-            if (ctype is not None and not ctype.startswith('text')) or \
-               (cte is not None and cte[0][0].lower() == '8bit'):
+            cte = part.get_params(header="Content-Transfer-Encoding")
+            if (ctype is not None and not ctype.startswith("text")) or (
+                cte is not None and cte[0][0].lower() == "8bit"
+            ):
                 part_body = part.get_payload(decode=False)
             else:
                 charset = part.get_content_charset()
                 if charset is None or len(charset) == 0:
-                    charsets = ['ascii', 'utf-8']
+                    charsets = ["ascii", "utf-8"]
                 else:
                     charsets = [charset]
 
@@ -157,39 +152,39 @@ class Mail(object):
 
     @cachedproperty
     def subject(self):
-        """ Normalized subject.
+        """Normalized subject.
 
         Only used for debugging and human-friendly logging.
         """
         # Fetch subject from first message.
-        subject = self.message.get('Subject', '')
-        subject, _ = re.subn(r'\s+', ' ', subject)
+        subject = self.message.get("Subject", "")
+        subject, _ = re.subn(r"\s+", " ", subject)
         return subject
 
     @cachedproperty
     def hash_key(self):
         """ Returns the canonical hash of a mail. """
         if self.conf.message_id:
-            message_id = self.message.get('Message-Id')
+            message_id = self.message.get("Message-Id")
             if message_id:
                 return message_id.strip()
-            logger.error(
-                "No Message-ID found: {}".format(self.header_text))
+            logger.error("No Message-ID found: {}".format(self.header_text))
             raise MissingMessageID
 
         return hashlib.sha224(self.canonical_headers).hexdigest()
 
     @cachedproperty
     def header_text(self):
-        return ''.join(
-            '{}: {}\n'.format(header, self.message[header])
+        return "".join(
+            "{}: {}\n".format(header, self.message[header])
             for header in HEADERS
-            if self.message[header] is not None)
+            if self.message[header] is not None
+        )
 
     @cachedproperty
     def canonical_headers(self):
         """ Copy selected headers into a new string. """
-        canonical_headers = ''
+        canonical_headers = ""
 
         for header in HEADERS:
             if header not in self.message:
@@ -197,11 +192,10 @@ class Mail(object):
 
             for value in self.message.get_all(header):
                 canonical_value = self.canonical_header_value(header, value)
-                if re.search(r'\S', canonical_value):
-                    canonical_headers += '{}: {}\n'.format(
-                        header, canonical_value)
+                if re.search(r"\S", canonical_value):
+                    canonical_headers += "{}: {}\n".format(header, canonical_value)
 
-        canonical_headers = canonical_headers.encode('utf-8')
+        canonical_headers = canonical_headers.encode("utf-8")
         if len(canonical_headers) > 50:
             return canonical_headers
 
@@ -211,12 +205,14 @@ class Mail(object):
         if len(canonical_headers) == 0:
             raise InsufficientHeadersError("No canonical headers found")
 
-        err = textwrap.dedent("""\
+        err = textwrap.dedent(
+            """\
             Not enough data from canonical headers to compute reliable hash!
             Headers:
             --------- 8< --------- 8< --------- 8< --------- 8< ---------
             {}
-            --------- 8< --------- 8< --------- 8< --------- 8< ---------""")
+            --------- 8< --------- 8< --------- 8< --------- 8< ---------"""
+        )
         raise InsufficientHeadersError(err.format(canonical_headers))
 
     @staticmethod
@@ -225,26 +221,25 @@ class Mail(object):
         # Problematic when reading utf8 emails
         # this will ensure value is always string
         if isinstance(value, bytes):
-            value = value.decode('utf-8', 'replace')
+            value = value.decode("utf-8", "replace")
         elif isinstance(value, email.header.Header):
             value = str(value)
-        value = re.sub(r'\s+', ' ', value).strip()
+        value = re.sub(r"\s+", " ", value).strip()
 
         # Trim Subject prefixes automatically added by mailing list software,
         # since the mail could have been cc'd to multiple lists, in which case
         # it will receive a different prefix for each, but this shouldn't be
         # treated as a real difference between duplicate mails.
-        if header == 'subject':
+        if header == "subject":
             subject = value
             while True:
-                matching = re.match(
-                    r"([Rr]e: )*(\[\w[\w_-]+\w\] )+(?s)(.+)", subject)
+                matching = re.match(r"([Rr]e: )*(\[\w[\w_-]+\w\] )+(?s)(.+)", subject)
                 if not matching:
                     break
                 subject = matching.group(3)
                 # show_progress("Trimmed Subject to %s" % subject)
             return subject
-        elif header == 'content-type':
+        elif header == "content-type":
             # Apparently list servers actually munge Content-Type
             # e.g. by stripping the quotes from charset="us-ascii".
             # Section 5.1 of RFC2045 says that either form is valid
@@ -257,8 +252,8 @@ class Mail(object):
             # Or maybe someone bounces you a load of mail some of which is
             # from a mailing list you're both subscribed to - then it's
             # still useful to be able to eliminate duplicates.
-            return re.sub(';.*', '', value)
-        elif header == 'date':
+            return re.sub(";.*", "", value)
+        elif header == "date":
             # Date timestamps can differ by seconds or hours for various
             # reasons, so let's only honour the date for now.
             try:
@@ -266,11 +261,10 @@ class Mail(object):
                 if not parsed:
                     raise TypeError
                 utc_timestamp = email.utils.mktime_tz(parsed)
-                return time.strftime(
-                    '%Y/%m/%d UTC', time.gmtime(utc_timestamp))
+                return time.strftime("%Y/%m/%d UTC", time.gmtime(utc_timestamp))
             except (TypeError, ValueError):
                 return value
-        elif header in ['to', 'message-id']:
+        elif header in ["to", "message-id"]:
             # Sometimes email.parser strips the <> brackets from a To:
             # header which has a single address.  I have seen this happen
             # for only one mail in a duplicate pair.  I'm not sure why

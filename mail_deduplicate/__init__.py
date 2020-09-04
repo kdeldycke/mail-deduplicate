@@ -23,7 +23,7 @@
 import logging
 import sys
 
-__version__ = '4.0.0'
+__version__ = "4.0.0"
 
 
 logger = logging.getLogger(__name__)
@@ -31,32 +31,28 @@ logger = logging.getLogger(__name__)
 
 # List of mail headers to use when computing the hash of a mail.
 HEADERS = [
-    'Date',
-    'From',
-    'To',
-
+    "Date",
+    "From",
+    "To",
     # No Cc since mailman apparently sometimes trims list members from the Cc
     # header to avoid sending duplicates: https://mail.python.org/pipermail
     # /mailman-developers/2002-September/013233.html . But this means that
     # copies of mail reflected back from the list server will have a different
     # Cc to the copy saved by the MUA at send-time.
     # 'Cc',
-
     # No Bcc either since copies of the mail saved by the MUA at send-time
     # will have Bcc, but copies reflected back from the list server won't.
     # 'Bcc',
-
     # No Reply-To since a mail could be Cc'd to two lists with different
     # Reply-To munging options set.
     # 'Reply-To',
-
-    'Subject',
-    'MIME-Version',
-    'Content-Type',
-    'Content-Disposition',
-    'User-Agent',
-    'X-Priority',
-    'Message-ID',
+    "Subject",
+    "MIME-Version",
+    "Content-Type",
+    "Content-Disposition",
+    "User-Agent",
+    "X-Priority",
+    "Message-ID",
 ]
 
 
@@ -80,38 +76,47 @@ DEFAULT_CONTENT_THRESHOLD = 768  # bytes
 
 
 # Use symbols to define removal strategies.
-DELETE_OLDER = 'delete-older'
-DELETE_OLDEST = 'delete-oldest'
-DELETE_NEWER = 'delete-newer'
-DELETE_NEWEST = 'delete-newest'
+DELETE_OLDER = "delete-older"
+DELETE_OLDEST = "delete-oldest"
+DELETE_NEWER = "delete-newer"
+DELETE_NEWEST = "delete-newest"
 
-DELETE_SMALLER = 'delete-smaller'
-DELETE_SMALLEST = 'delete-smallest'
-DELETE_BIGGER = 'delete-bigger'
-DELETE_BIGGEST = 'delete-biggest'
+DELETE_SMALLER = "delete-smaller"
+DELETE_SMALLEST = "delete-smallest"
+DELETE_BIGGER = "delete-bigger"
+DELETE_BIGGEST = "delete-biggest"
 
-DELETE_MATCHING_PATH = 'delete-matching-path'
-DELETE_NON_MATCHING_PATH = 'delete-non-matching-path'
+DELETE_MATCHING_PATH = "delete-matching-path"
+DELETE_NON_MATCHING_PATH = "delete-non-matching-path"
 
-STRATEGIES = frozenset([
-    DELETE_OLDER, DELETE_OLDEST,
-    DELETE_NEWER, DELETE_NEWEST,
-    DELETE_SMALLER, DELETE_SMALLEST,
-    DELETE_BIGGER, DELETE_BIGGEST,
-    DELETE_MATCHING_PATH, DELETE_NON_MATCHING_PATH])
+STRATEGIES = frozenset(
+    [
+        DELETE_OLDER,
+        DELETE_OLDEST,
+        DELETE_NEWER,
+        DELETE_NEWEST,
+        DELETE_SMALLER,
+        DELETE_SMALLEST,
+        DELETE_BIGGER,
+        DELETE_BIGGEST,
+        DELETE_MATCHING_PATH,
+        DELETE_NON_MATCHING_PATH,
+    ]
+)
 
 
 # Sources from which we compute a mail's canonical timestamp.
-DATE_HEADER = 'date-header'
-CTIME = 'ctime'
+DATE_HEADER = "date-header"
+CTIME = "ctime"
 TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
 
 
 # List of required sub-folders defining a properly structured maildir.
-MD_SUBDIRS = frozenset(('cur', 'new', 'tmp'))
+MD_SUBDIRS = frozenset(("cur", "new", "tmp"))
 
 
 # Defines custom exception first to avoid circular imports.
+
 
 class InsufficientHeadersError(Exception):
 
@@ -139,15 +144,15 @@ class Config(object):
 
     # Keep these defaults in sync with CLI option definitions.
     default_conf = {
-        'strategy': None,
-        'time_source': None,
-        'regexp': None,
-        'dry_run': False,
-        'show_diff': False,
-        'message_id': False,
-        'size_threshold': DEFAULT_SIZE_THRESHOLD,
-        'content_threshold': DEFAULT_CONTENT_THRESHOLD,
-        'progress': True,
+        "strategy": None,
+        "time_source": None,
+        "regexp": None,
+        "dry_run": False,
+        "show_diff": False,
+        "message_id": False,
+        "size_threshold": DEFAULT_SIZE_THRESHOLD,
+        "content_threshold": DEFAULT_CONTENT_THRESHOLD,
+        "progress": True,
     }
 
     def __init__(self, **kwargs):
@@ -156,8 +161,7 @@ class Config(object):
 
         for param, value in kwargs.items():
             if param not in self.default_conf:
-                raise ValueError(
-                    "Unrecognized {} configuration option.".format(param))
+                raise ValueError("Unrecognized {} configuration option.".format(param))
             self.conf[param] = value
 
         # Validates configuration.
