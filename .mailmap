@@ -1,0 +1,21 @@
+# Format is:
+#   Prefered Name <preferred e-mail>  Other Name <other e-mail>
+#
+# Reference: https://git-scm.com/docs/git-blame#_mapping_authors
+
+Adam Spiers <adam@spiers.net>  Adam Spiers <adam@atlantic.linksys.moosehall>  Adam Spiers <aspiers@novell.com>  Adam Spiers <github@adamspiers.org>  Adam Spiers <maildir-dedupe@adamspiers.org>
+Ben Reser <ben@reser.org>
+Daiji Fukagawa <dfukagaw28@gmail.com>
+Florian Joerg <florian@arvendo-media.com>
+GitHub <noreply@github.com>
+Jeff Epler <jepler@unpythonic.net>
+Juan Tascon <juantascon@horlux.org>
+Kevin Deldycke <kevin@deldycke.com>  Kevin Deldycke <kdeldycke@users.noreply.github.com>  Kevin Deldycke <kdeldycke@scaleway.com>
+Kevin Murray <spam@kdmurray.id.au>
+Kristoffer Grönlund <krig@koru.se>
+Marcel Martin <marcel.martin@tu-dortmund.de>
+Matija Nalis <mnalis-git@voyager.hr>
+Peng Bai <peng@bai.com>
+Ryan Seto <mr.werewolf@gmail.com>
+Tristan Henderson <tnhh@st-andrews.ac.uk>
+reedog117 <patrickc81@gmail.com>  reedog117 <reedog117@users.noreply.github.com>
