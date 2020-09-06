@@ -86,14 +86,14 @@ def validate_regexp(ctx, param, value):
     "-s",
     "--strategy",
     type=click.Choice(STRATEGIES),
-    help="Deletion strategy to apply within a subset of duplicates. If not "
-    "set duplicates will be grouped and counted but no removal will happens.",
+    help="Deletion strategy to apply within a subset of duplicates. If not set "
+    "duplicates will be grouped and counted but no removal will happens.",
 )
 @click.option(
     "-t",
     "--time-source",
     type=click.Choice(TIME_SOURCES),
-    help="Source of a mail's reference time. Required in time-sensitive " "strategies.",
+    help="Source of a mail's reference time. Required in time-sensitive strategies.",
 )
 @click.option(
     "-r",
@@ -115,9 +115,8 @@ def validate_regexp(ctx, param, value):
     "--message-id",
     is_flag=True,
     default=False,
-    help="Only use the Message-ID header as a hash key. Not recommended. "
-    "Replace the default behavior consisting in deriving the hash from "
-    "several headers.",
+    help="Only use the Message-ID header as a hash key. Not recommended. Replace the "
+    "default behavior consisting in deriving the hash from several headers.",
 )
 @click.option(
     "-S",
@@ -135,9 +134,9 @@ def validate_regexp(ctx, param, value):
     type=int,
     metavar="BYTES",
     default=DEFAULT_CONTENT_THRESHOLD,
-    help="Maximum allowed difference in content between mails. Whole subset "
-    "of duplicates will be rejected above threshold. Set to -1 to not allow "
-    "any difference. Defaults to {} bytes.".format(DEFAULT_CONTENT_THRESHOLD),
+    help="Maximum allowed difference in content between mails. Whole subset of "
+    "duplicates will be rejected above threshold. Set to -1 to not allow any "
+    "difference. Defaults to {} bytes.".format(DEFAULT_CONTENT_THRESHOLD),
 )
 @click.option(
     "-d",
