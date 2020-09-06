@@ -509,26 +509,40 @@ class Deduplicate(object):
         )
 
     def add_source(self, source_path):
-        """Load up a mail source and compute hash for each mail found.
+        """Registers a source of mails, validates and opens it.
 
-        If the path is a file, then it is considered as an ``mbox``. Else, if
-        the provided path is a folder, it is parsed as a ``maildir``.
+        Autodetects the kind of source. If the path is a file, then it is
+        considered as an ``mbox``. Else, if the provided path is a folder, it
+        is parsed as a ``maildir``.
         """
         source_path = self.canonical_path(source_path)
 
         if os.path.isdir(source_path):
             logger.info("Opening {} as a maildir...".format(source_path))
-            # Maildir parser requires a string, not a unicode, as path.
-            mail_source = Maildir(str(source_path), factory=None, create=False)
+            mail_source = Maildir(source_path, factory=None, create=False)
 
-        else:
+        elif os.path.isfile(source_path):
             logger.info("Opening {} as an mbox...".format(source_path))
             mail_source = mbox(source_path, factory=None, create=False)
 
-        logger.info("{} mails found.".format(len(mail_source)))
+        else:
+            raise ValueError(
+                "Unrecognized mail source at {}".format(source_path))
 
         # Register the mail source.
         self.sources[source_path] = mail_source
+
+        # Keep track of global mail count.
+        mail_found = len(mail_source)
+        logger.info("{} mails found.".format(mail_found))
+        self.stats["mail_found"] += mail_found
+
+    def hash_all(self):
+        """Browse all mails from all registered sources, compute hashes and
+        group mails by hash.
+
+        Displays a progress bar as the operation might be slow.
+        """
 
         # Setup the progress bar.
         def bar(iterable=None):
@@ -539,27 +553,29 @@ class Deduplicate(object):
         if self.conf.progress:
             bar = ProgressBar(
                 widgets=[Percentage(), Bar()],
-                max_value=len(mail_source),
+                max_value=self.stats["mail_found"],
                 redirect_stderr=True,
                 redirect_stdout=True,
             )
 
-        # Group mails by hash.
-        for mail_id in bar(mail_source.iterkeys()):
-            self.stats["mail_found"] += 1
+        # Browse all mails from all sources, compute hashes and group mails by
+        # hash.
+        for source_path, mail_source in self.sources.items():
 
-            mail = Mail(source_path, mail_id, self.conf)
+            for mail_id in bar(mail_source.iterkeys()):
 
-            try:
-                mail_hash = mail.hash_key
-            except (InsufficientHeadersError, MissingMessageID) as expt:
-                logger.warning("Rejecting {}: {}".format(mail.path, expt.args[0]))
-                self.stats["mail_rejected"] += 1
-            else:
-                logger.debug("Hash is {} for {}.".format(mail_hash, mail.path))
-                # Use a set to deduplicate entries pointing to the same file.
-                self.mails.setdefault(mail_hash, set()).add(mail)
-                self.stats["mail_kept"] += 1
+                mail = Mail(source_path, mail_id, self.conf)
+
+                try:
+                    mail_hash = mail.hash_key
+                except (InsufficientHeadersError, MissingMessageID) as expt:
+                    logger.warning("Rejecting {}: {}".format(mail.path, expt.args[0]))
+                    self.stats["mail_rejected"] += 1
+                else:
+                    logger.debug("Hash is {} for {}.".format(mail_hash, mail.path))
+                    # Use a set to deduplicate entries pointing to the same file.
+                    self.mails.setdefault(mail_hash, set()).add(mail)
+                    self.stats["mail_kept"] += 1
 
     def run(self):
         """Run the deduplication process.

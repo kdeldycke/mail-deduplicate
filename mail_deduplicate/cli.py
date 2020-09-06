@@ -256,6 +256,7 @@ def deduplicate(
     logger.info("=== Phase #1: load mails and compute hashes.")
     for source in mail_sources:
         dedup.add_source(source)
+    dedup.hash_all()
 
     logger.info("=== Phase #2: deduplicate mails.")
     dedup.run()
