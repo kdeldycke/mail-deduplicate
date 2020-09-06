@@ -634,7 +634,8 @@ class Deduplicate(object):
         ]
         logger.info(tabulate(table, tablefmt="fancy_grid", headers="firstrow"))
 
-        # Perform some high-level consistency checks on metrics.
+        # Perform some high-level consistency checks on metrics. Helps users
+        # reports tricky edge-cases.
         assert self.stats["mail_found"] == (
             self.stats["mail_skipped"]
             + self.stats["mail_rejected"]
