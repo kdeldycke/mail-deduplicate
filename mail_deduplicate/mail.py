@@ -56,7 +56,7 @@ class Mail(object):
     @cachedproperty
     def message(self):
         """ Fetch message from its source. """
-        logger.debug("Fetching {!r} from {} ...".format(self.mail_id, self.source_path))
+        logger.debug(f"Fetching {self.mail_id!r} from {self.source_path} ...")
         return self.source.get_message(self.mail_id)
 
     @cachedproperty
@@ -168,7 +168,7 @@ class Mail(object):
             message_id = self.message.get("Message-Id")
             if message_id:
                 return message_id.strip()
-            logger.error("No Message-ID found: {}".format(self.header_text))
+            logger.error(f"No Message-ID found: {self.header_text}")
             raise MissingMessageID
 
         return hashlib.sha224(self.canonical_headers).hexdigest()
@@ -279,6 +279,6 @@ class Mail(object):
         return value
 
     def delete(self):
-        logger.debug("Deleting {!r}...".format(self))
+        logger.debug(f"Deleting {self!r}...")
         self.source.remove(self.mail_id)
-        logger.info("{} deleted.".format(self.path))
+        logger.info(f"{self.path} deleted.")

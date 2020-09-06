@@ -65,7 +65,7 @@ class DuplicateSet(object):
         # Keep set metrics.
         self.stats = Counter()
 
-        logger.debug("{!r} created.".format(self))
+        logger.debug(f"{self!r} created.")
 
     def __repr__(self):
         """ Print internal raw states for debugging. """
@@ -98,7 +98,7 @@ class DuplicateSet(object):
         """ Delete a mail from the filesystem. """
         self.stats["mail_deleted"] += 1
         if self.conf.dry_run:
-            logger.info("Skip deletion of {!r}.".format(mail))
+            logger.info(f"Skip deletion of {mail!r}.")
             return
         mail.delete()
 
@@ -124,10 +124,7 @@ class DuplicateSet(object):
             if self.conf.size_threshold > -1:
                 size_difference = abs(mail_a.size - mail_b.size)
                 logger.debug(
-                    "{} and {} differs by {} bytes in size.".format(
-                        mail_a, mail_b, size_difference
-                    )
-                )
+                    f"{mail_a} and {mail_b} differs by {size_difference} bytes in size.")
                 if size_difference > self.conf.size_threshold:
                     raise SizeDiffAboveThreshold
 
@@ -135,10 +132,7 @@ class DuplicateSet(object):
             if self.conf.content_threshold > -1:
                 content_difference = self.diff(mail_a, mail_b)
                 logger.debug(
-                    "{} and {} differs by {} bytes in content.".format(
-                        mail_a, mail_b, content_difference
-                    )
-                )
+                    f"{mail_a} and {mail_b} differs by {content_difference} bytes in content.")
                 if content_difference > self.conf.content_threshold:
                     if self.conf.show_diff:
                         logger.info(self.pretty_diff(mail_a, mail_b))
@@ -211,7 +205,7 @@ class DuplicateSet(object):
         except UnicodeDecodeError as expt:
             self.stats["set_rejected_encoding"] += 1
             logger.warning("Reject set: unparseable mails due to bad encoding.")
-            logger.debug(str(expt))
+            logger.debug(f"{expt}")
         except SizeDiffAboveThreshold:
             self.stats["set_rejected_size"] += 1
             logger.warning("Reject set: mails are too dissimilar in size.")
@@ -234,19 +228,18 @@ class DuplicateSet(object):
         Only keeps the subset sharing the most recent timestamp.
         """
         logger.info(
-            "Deleting all mails strictly older than the {} timestamp..."
-            "".format(self.newest_timestamp)
+            f"Deleting all mails strictly older than the {self.newest_timestamp} timestamp..."
         )
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if mail.timestamp < self.newest_timestamp
         ]
-        if len(candidates) == self.size:
+        candidate_count = len(candidates)
+        if candidate_count == self.size:
             logger.warning(
-                "Skip deletion: all {} mails share the same timestamp."
-                "".format(self.size)
+                f"Skip deletion: all {candidate_count} mails share the same timestamp."
             )
-        logger.info("{} candidates found for deletion.".format(len(candidates)))
+        logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
 
@@ -257,21 +250,19 @@ class DuplicateSet(object):
         timestamp.
         """
         logger.info(
-            "Deleting all mails sharing the oldest {} timestamp...".format(
-                self.oldest_timestamp
-            )
+            f"Deleting all mails sharing the oldest {self.oldest_timestamp} timestamp..."
         )
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if mail.timestamp == self.oldest_timestamp
         ]
-        if len(candidates) == self.size:
+        candidate_count = len(candidates)
+        if candidate_count == self.size:
             logger.warning(
-                "Skip deletion: all {} mails share the same timestamp."
-                "".format(self.size)
+                f"Skip deletion: all {candidate_count} mails share the same timestamp."
             )
             return
-        logger.info("{} candidates found for deletion.".format(len(candidates)))
+        logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
 
@@ -281,20 +272,19 @@ class DuplicateSet(object):
         Only keeps the subset sharing the most ancient timestamp.
         """
         logger.info(
-            "Deleting all mails strictly newer than the {} timestamp..."
-            "".format(self.oldest_timestamp)
+            f"Deleting all mails strictly newer than the {self.oldest_timestamp} timestamp..."
         )
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if mail.timestamp > self.oldest_timestamp
         ]
-        if len(candidates) == self.size:
+        candidate_count = len(candidates)
+        if candidate_count == self.size:
             logger.warning(
-                "Skip deletion: all {} mails share the same timestamp."
-                "".format(self.size)
+                f"Skip deletion: all {candidate_count} mails share the same timestamp."
             )
             return
-        logger.info("{} candidates found for deletion.".format(len(candidates)))
+        logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
 
@@ -305,21 +295,19 @@ class DuplicateSet(object):
         timestamp.
         """
         logger.info(
-            "Deleting all mails sharing the newest {} timestamp...".format(
-                self.newest_timestamp
-            )
+            f"Deleting all mails sharing the newest {self.newest_timestamp} timestamp..."
         )
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if mail.timestamp == self.newest_timestamp
         ]
-        if len(candidates) == self.size:
+        candidate_count = len(candidates)
+        if candidate_count == self.size:
             logger.warning(
-                "Skip deletion: all {} mails share the same timestamp."
-                "".format(self.size)
+                f"Skip deletion: all {candidate_count} mails share the same timestamp."
             )
             return
-        logger.info("{} candidates found for deletion.".format(len(candidates)))
+        logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
 
@@ -329,17 +317,16 @@ class DuplicateSet(object):
         Only keeps the subset sharing the biggest size.
         """
         logger.info(
-            "Deleting all mails strictly smaller than {} bytes...".format(
-                self.biggest_size
-            )
+            f"Deleting all mails strictly smaller than {self.biggest_size} bytes..."
         )
         # Select candidates for deletion.
         candidates = [mail for mail in self.pool if mail.size < self.biggest_size]
-        if len(candidates) == self.size:
+        candidate_count = len(candidates)
+        if candidate_count == self.size:
             logger.warning(
-                "Skip deletion: all {} mails share the same size." "".format(self.size)
+                f"Skip deletion: all {candidate_count} mails share the same size."
             )
-        logger.info("{} candidates found for deletion.".format(len(candidates)))
+        logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
 
@@ -350,17 +337,17 @@ class DuplicateSet(object):
         size.
         """
         logger.info(
-            "Deleting all mails sharing the smallest size of {} bytes..."
-            "".format(self.smallest_size)
+            f"Deleting all mails sharing the smallest size of {self.smallest_size} bytes..."
         )
         # Select candidates for deletion.
         candidates = [mail for mail in self.pool if mail.size == self.smallest_size]
-        if len(candidates) == self.size:
+        candidate_count = len(candidates)
+        if candidate_count == self.size:
             logger.warning(
-                "Skip deletion: all {} mails share the same size." "".format(self.size)
+                f"Skip deletion: all {candidate_count} mails share the same size."
             )
             return
-        logger.info("{} candidates found for deletion.".format(len(candidates)))
+        logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
 
@@ -370,17 +357,16 @@ class DuplicateSet(object):
         Only keeps the subset sharing the smallest size.
         """
         logger.info(
-            "Deleting all mails strictly bigger than {} bytes...".format(
-                self.smallest_size
-            )
+            f"Deleting all mails strictly bigger than {self.smallest_size} bytes..."
         )
         # Select candidates for deletion.
         candidates = [mail for mail in self.pool if mail.size > self.smallest_size]
-        if len(candidates) == self.size:
+        candidate_count = len(candidates)
+        if candidate_count == self.size:
             logger.warning(
-                "Skip deletion: all {} mails share the same size." "".format(self.size)
+                f"Skip deletion: all {candidate_count} mails share the same size."
             )
-        logger.info("{} candidates found for deletion.".format(len(candidates)))
+        logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
 
@@ -391,55 +377,55 @@ class DuplicateSet(object):
         size.
         """
         logger.info(
-            "Deleting all mails sharing the biggest size of {} bytes..."
-            "".format(self.biggest_size)
+            f"Deleting all mails sharing the biggest size of {self.biggest_size} bytes..."
         )
         # Select candidates for deletion.
         candidates = [mail for mail in self.pool if mail.size == self.biggest_size]
-        if len(candidates) == self.size:
+        candidate_count = len(candidates)
+        if candidate_count == self.size:
             logger.warning(
-                "Skip deletion: all {} mails share the same size." "".format(self.size)
+                f"Skip deletion: all {candidate_count} mails share the same size."
             )
             return
-        logger.info("{} candidates found for deletion.".format(len(candidates)))
+        logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
 
     def delete_matching_path(self):
         """ Delete all duplicates whose file path match the regexp. """
         logger.info(
-            "Deleting all mails with file path matching the {} regexp..."
-            "".format(self.conf.regexp.pattern)
+            f"Deleting all mails with file path matching the {self.conf.regexp.pattern} regexp..."
         )
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if re.search(self.conf.regexp, mail.path)
         ]
-        if len(candidates) == self.size:
+        candidate_count = len(candidates)
+        if candidate_count == self.size:
             logger.warning(
-                "Skip deletion: all {} mails matches the rexexp.".format(self.size)
+                f"Skip deletion: all {candidate_count} mails matches the rexexp."
             )
             return
-        logger.info("{} candidates found for deletion.".format(len(candidates)))
+        logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
 
     def delete_non_matching_path(self):
         """ Delete all duplicates whose file path doesn't match the regexp. """
         logger.info(
-            "Deleting all mails with file path not matching the {} regexp..."
-            "".format(self.conf.regexp.pattern)
+            f"Deleting all mails with file path not matching the {self.conf.regexp.pattern} regexp..."
         )
         # Select candidates for deletion.
         candidates = [
             mail for mail in self.pool if not re.search(self.conf.regexp, mail.path)
         ]
-        if len(candidates) == self.size:
+        candidate_count = len(candidates)
+        if candidate_count == self.size:
             logger.warning(
-                "Skip deletion: all {} mails matches the rexexp.".format(self.size)
+                f"Skip deletion: all {candidate_count} mails matches the rexexp."
             )
             return
-        logger.info("{} candidates found for deletion.".format(len(candidates)))
+        logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
 
@@ -518,11 +504,11 @@ class Deduplicate(object):
         source_path = self.canonical_path(source_path)
 
         if os.path.isdir(source_path):
-            logger.info("Opening {} as a maildir...".format(source_path))
+            logger.info(f"Opening {source_path} as a maildir...")
             mail_source = Maildir(source_path, factory=None, create=False)
 
         elif os.path.isfile(source_path):
-            logger.info("Opening {} as an mbox...".format(source_path))
+            logger.info(f"Opening {source_path} as an mbox...")
             mail_source = mbox(source_path, factory=None, create=False)
 
         else:
@@ -533,7 +519,7 @@ class Deduplicate(object):
 
         # Keep track of global mail count.
         mail_found = len(mail_source)
-        logger.info("{} mails found.".format(mail_found))
+        logger.info(f"{mail_found} mails found.")
         self.stats["mail_found"] += mail_found
 
     def hash_all(self):
@@ -568,10 +554,10 @@ class Deduplicate(object):
                 try:
                     mail_hash = mail.hash_key
                 except (InsufficientHeadersError, MissingMessageID) as expt:
-                    logger.warning("Rejecting {}: {}".format(mail.path, expt.args[0]))
+                    logger.warning(f"Rejecting {mail.path}: {expt.args[0]}")
                     self.stats["mail_rejected"] += 1
                 else:
-                    logger.debug("Hash is {} for {}.".format(mail_hash, mail.path))
+                    logger.debug(f"Hash is {mail_hash} for {mail.path}.")
                     # Use a set to deduplicate entries pointing to the same file.
                     self.mails.setdefault(mail_hash, set()).add(mail)
                     self.stats["mail_kept"] += 1
@@ -584,8 +570,7 @@ class Deduplicate(object):
         """
         if self.conf.strategy:
             logger.info(
-                "The {} strategy will be applied on each duplicate set."
-                "".format(self.conf.strategy)
+                f"The {self.conf.strategy} strategy will be applied on each duplicate set."
             )
         else:
             logger.warning("No removal strategy will be applied.")
@@ -595,8 +580,9 @@ class Deduplicate(object):
         for hash_key, mail_set in self.mails.items():
 
             # Alter log level depending on set length.
-            log_level = logger.debug if len(mail_set) == 1 else logger.info
-            log_level("--- {} mails sharing hash {}".format(len(mail_set), hash_key))
+            mail_count = len(mail_set)
+            log_level = logger.debug if mail_count == 1 else logger.info
+            log_level(f"--- {mail_count} mails sharing hash {hash_key}")
 
             duplicates = DuplicateSet(hash_key, mail_set, self.conf)
 
