@@ -16,6 +16,7 @@ ChangeLog
 * Replace unmaintained ``bumpversion`` by ``bump2version``.
 * Switch from Travis to GitHub Actions for all CI/CD jobs.
 * Regularly run unittests against Windows, Linux and macOS.
+* Removes all copyright dates.
 * Auto-fix Python format, typos and JSON content.
 * Let dependabot check for dependencies and update them.
 * Keep ``.gitignore`` and ``.mailmap`` up to date and in sync.

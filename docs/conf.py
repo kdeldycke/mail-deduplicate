@@ -2,7 +2,6 @@
 
 import os
 import sys
-import time
 
 # Expose package to autodoc.
 sys.path.insert(0, os.path.abspath(".."))
@@ -23,10 +22,9 @@ author = "Kevin Deldycke"
 # HTML content.
 html_show_copyright = False
 copyright = (
-    "2010-{}, <a href='https://kevin.deldycke.com'>{}</a> and <a "
-    "href='https://github.com/kdeldycke/mail-deduplicate/graphs/"
-    "contributors'>contributors</a>"
-).format(time.strftime("%Y"), author)
+    "<a href='https://kevin.deldycke.com'>{}</a> and <a href='{}"
+    "/graphs/contributors'>contributors</a>"
+).format(author, url)
 
 version = release = mail_deduplicate.__version__
 
