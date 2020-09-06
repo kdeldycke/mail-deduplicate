@@ -526,8 +526,7 @@ class Deduplicate(object):
             mail_source = mbox(source_path, factory=None, create=False)
 
         else:
-            raise ValueError(
-                "Unrecognized mail source at {}".format(source_path))
+            raise ValueError("Unrecognized mail source at {}".format(source_path))
 
         # Register the mail source.
         self.sources[source_path] = mail_source
@@ -642,10 +641,11 @@ class Deduplicate(object):
             ["Ignored", self.stats["set_ignored"]],
             ["Skipped", self.stats["set_skipped"]],
             ["Rejected (bad encoding)", self.stats["set_rejected_encoding"]],
-            ["Rejected (too dissimilar in size)",
-             self.stats["set_rejected_size"]],
-            ["Rejected (too dissimilar in content)",
-             self.stats["set_rejected_content"]],
+            ["Rejected (too dissimilar in size)", self.stats["set_rejected_size"]],
+            [
+                "Rejected (too dissimilar in content)",
+                self.stats["set_rejected_content"],
+            ],
             ["Deduplicated", self.stats["set_deduplicated"]],
         ]
         logger.info(tabulate(table, tablefmt="fancy_grid", headers="firstrow"))
