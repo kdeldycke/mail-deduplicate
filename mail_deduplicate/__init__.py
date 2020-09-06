@@ -137,7 +137,7 @@ class ContentDiffAboveThreshold(Exception):
     """ Difference in mail content is greater than threshold. """
 
 
-class Config(object):
+class Config:
 
     """ Holds global configuration. """
 

@@ -28,7 +28,7 @@ from ..deduplicate import DuplicateSet
 from .case import CLITestCase
 
 
-class MailFactory(object):
+class MailFactory:
 
     """Create fake mail messages to serve as unittest fixtures.
 

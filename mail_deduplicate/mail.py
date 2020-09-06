@@ -29,7 +29,7 @@ from boltons.cacheutils import cachedproperty
 from . import CTIME, HEADERS, InsufficientHeadersError, MissingMessageID, logger
 
 
-class Mail(object):
+class Mail:
 
     """ Encapsulate a single mail and its metadata. """
 

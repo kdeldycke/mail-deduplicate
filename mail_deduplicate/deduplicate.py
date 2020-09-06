@@ -39,7 +39,7 @@ from . import (
 from .mail import Mail
 
 
-class DuplicateSet(object):
+class DuplicateSet:
 
     """A duplicate set of mails sharing the same hash.
 
@@ -429,7 +429,7 @@ class DuplicateSet(object):
             self.delete(mail)
 
 
-class Deduplicate(object):
+class Deduplicate:
 
     """Read messages from maildirs and perform a deduplication.
 
