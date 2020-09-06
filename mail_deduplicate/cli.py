@@ -34,7 +34,6 @@ from . import (
     DELETE_NON_MATCHING_PATH,
     DELETE_OLDER,
     DELETE_OLDEST,
-    MD_SUBDIRS,
     STRATEGIES,
     TIME_SOURCES,
     Config,
@@ -79,25 +78,6 @@ def validate_regexp(ctx, param, value):
             value = re.compile(value)
         except ValueError:
             raise click.BadParameter("invalid regular expression.")
-    return value
-
-
-def validate_mail_sources(ctx, param, value):
-    """ Check that files are mboxes and folders are maildirs. """
-    for path in value:
-        # Validates folder is a maildir.
-        if os.path.isdir(path):
-            for subdir in MD_SUBDIRS:
-                if not os.path.isdir(os.path.join(path, subdir)):
-                    raise click.BadParameter(
-                        "{} is not a maildir folder (missing {!r} "
-                        "sub-directory).".format(path, subdir)
-                    )
-        # Validates file is an mbox.
-        else:
-            if not os.path.isfile(path):
-                raise click.BadParameter("{} is not an mbox file.".format(path))
-            # TODO: Insert here early checks on mbox file format.
     return value
 
 
@@ -170,7 +150,6 @@ def validate_mail_sources(ctx, param, value):
 @click.argument(
     "mail_sources",
     nargs=-1,
-    callback=validate_mail_sources,
     metavar="MBOXES/MAILDIRS",
     type=click.Path(exists=True, resolve_path=True),
 )
