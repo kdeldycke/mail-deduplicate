@@ -608,28 +608,30 @@ class Deduplicate(object):
 
     def report(self):
         """ Print user-friendly statistics and metrics. """
-        table = [["Mails", "Metric"]]
-        table.append(["Found", self.stats["mail_found"]])
-        table.append(["Skipped", self.stats["mail_skipped"]])
-        table.append(["Rejected", self.stats["mail_rejected"]])
-        table.append(["Kept", self.stats["mail_kept"]])
-        table.append(["Unique", self.stats["mail_unique"]])
-        table.append(["Duplicates", self.stats["mail_duplicates"]])
-        table.append(["Deleted", self.stats["mail_deleted"]])
+        table = [
+            ["Mails", "Metric"],
+            ["Found", self.stats["mail_found"]],
+            ["Skipped", self.stats["mail_skipped"]],
+            ["Rejected", self.stats["mail_rejected"]],
+            ["Kept", self.stats["mail_kept"]],
+            ["Unique", self.stats["mail_unique"]],
+            ["Duplicates", self.stats["mail_duplicates"]],
+            ["Deleted", self.stats["mail_deleted"]],
+        ]
         logger.info(tabulate(table, tablefmt="fancy_grid", headers="firstrow"))
 
-        table = [["Duplicate sets", "Metric"]]
-        table.append(["Total", self.stats["set_total"]])
-        table.append(["Ignored", self.stats["set_ignored"]])
-        table.append(["Skipped", self.stats["set_skipped"]])
-        table.append(["Rejected (bad encoding)", self.stats["set_rejected_encoding"]])
-        table.append(
-            ["Rejected (too dissimilar in size)", self.stats["set_rejected_size"]]
-        )
-        table.append(
-            ["Rejected (too dissimilar in content)", self.stats["set_rejected_content"]]
-        )
-        table.append(["Deduplicated", self.stats["set_deduplicated"]])
+        table = [
+            ["Duplicate sets", "Metric"],
+            ["Total", self.stats["set_total"]],
+            ["Ignored", self.stats["set_ignored"]],
+            ["Skipped", self.stats["set_skipped"]],
+            ["Rejected (bad encoding)", self.stats["set_rejected_encoding"]],
+            ["Rejected (too dissimilar in size)",
+             self.stats["set_rejected_size"]],
+            ["Rejected (too dissimilar in content)",
+             self.stats["set_rejected_content"]],
+            ["Deduplicated", self.stats["set_deduplicated"]],
+        ]
         logger.info(tabulate(table, tablefmt="fancy_grid", headers="firstrow"))
 
         # Perform some high-level consistency checks on metrics.
