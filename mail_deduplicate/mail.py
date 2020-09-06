@@ -70,7 +70,7 @@ class Mail(object):
         if filename:
             filepath = os.path.join(self.source_path, filename)
         else:
-            filepath = ":".join([self.source_path, self.mail_id])
+            filepath = "{}:{}".format(self.source_path, self.mail_id)
         return filepath
 
     @cachedproperty
