@@ -18,16 +18,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import textwrap
-import unittest
-
-from click.testing import CliRunner
-
-from ..cli import cli
 from .case import CLITestCase
 
 
 class TestCLI(CLITestCase):
+
     def test_main_help(self):
         result = self.invoke("--help")
         self.assertEqual(result.exit_code, 0)
@@ -35,6 +30,7 @@ class TestCLI(CLITestCase):
 
 
 class TestDeduplicateCLI(CLITestCase):
+
     def test_deduplicate_help(self):
         result = self.invoke("deduplicate", "--help")
         self.assertEqual(result.exit_code, 0)
@@ -54,34 +50,3 @@ class TestDeduplicateCLI(CLITestCase):
         result = self.invoke("deduplicate", ".")
         self.assertEqual(result.exit_code, 2)
         self.assertIn("is not a maildir", result.output)
-
-
-class TestHashCLI(CLITestCase):
-    def test_hash_help(self):
-        result = self.invoke("hash", "--help")
-        self.assertEqual(result.exit_code, 0)
-        self.assertIn("--help", result.output)
-
-    def test_stdin_hashing(self):
-        message = textwrap.dedent(
-            """\
-            From: foo@bar.com
-            To: iTrue@dslk.com
-            Subject: Test
-            Mime-Version: 1.0
-            Content-Type: text/plain; charset="utf-8"
-            Content-Transfer-Encoding: 8bit
-            Да, они летят.
-            """
-        ).encode("utf-8")
-
-        with self.runner.isolated_filesystem():
-            with open("mail.txt", "wb") as f:
-                f.write(message)
-
-            result = self.invoke("hash", "mail.txt")
-            self.assertEqual(result.exit_code, 0)
-            self.assertIn(
-                "Hash: " "39e40845b3548dc4bb6d0b8d7c7018eef8497363a62c195c8f49236a",
-                result.output,
-            )

@@ -7,6 +7,8 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Removes the ``hash`` subcommand. Replaced it with a ``--hash-only`` parameter
+  to the main dedupe command.
 * Drop support for Python 2.
 * Bump minimal Python requirement to 3.7.
 * Repackage project around Poetry and ``pyproject.toml``. Get rid of

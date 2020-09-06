@@ -20,7 +20,6 @@ List global options and commands:
 
     Commands:
       deduplicate  Deduplicate maildirs content.
-      hash         Hash a single mail.
 
 
 ``mdedup deduplicate``
@@ -85,24 +84,3 @@ Deduplication command specific options:
       -d, --show-diff                 Show the unified diff of duplicates not
                                       within thresholds.
       --help                          Show this message and exit.
-
-
-``mdedup hash``
----------------
-
-Hashing command specific options:
-
-.. code-block:: shell-session
-
-    $ mdedup hash --help
-    Usage: mdedup hash [OPTIONS] MESSAGE
-
-      Take a single mail message and show its canonicalised form and hash.
-
-      Mainly used to debug message hashing.
-
-    Options:
-      -i, --message-id  Only use the Message-ID header as a hash key. Not
-                        recommended. Replace the default behavior consisting in
-                        deriving the hash from several headers.
-      --help            Show this message and exit.

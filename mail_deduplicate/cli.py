@@ -19,7 +19,6 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import logging
-import os
 import re
 
 import click
@@ -41,7 +40,6 @@ from . import (
     logger,
 )
 from .deduplicate import Deduplicate
-from .mail import Mail
 
 click_log.basic_config(logger)
 
@@ -83,6 +81,21 @@ def validate_regexp(ctx, param, value):
 
 @cli.command(short_help="Deduplicate mboxes and/or maildirs content.")
 @click.option(
+    "-h",
+    "--hash-only",
+    is_flag=True,
+    default=False,
+    help="Only compute the internal hashes used to deduplicate mails. Do not performs "
+    "deduplication itself.",
+)
+@click.option(
+    "-n",
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Do not actually delete anything; just show which mails would be removed.",
+)
+@click.option(
     "-s",
     "--strategy",
     type=click.Choice(STRATEGIES),
@@ -102,13 +115,6 @@ def validate_regexp(ctx, param, value):
     metavar="REGEXP",
     help="Regular expression against a mail file path. Required in "
     "delete-matching-path and delete-non-matching-path strategies.",
-)
-@click.option(
-    "-n",
-    "--dry-run",
-    is_flag=True,
-    default=False,
-    help="Do not actually delete anything; just show what would be removed.",
 )
 @click.option(
     "-i",
@@ -155,10 +161,11 @@ def validate_regexp(ctx, param, value):
 @click.pass_context
 def deduplicate(
     ctx,
+    hash_only,
+    dry_run,
     strategy,
     time_source,
     regexp,
-    dry_run,
     message_id,
     size_threshold,
     content_threshold,
@@ -231,42 +238,21 @@ def deduplicate(
 
     dedup = Deduplicate(conf)
 
-    logger.info("=== Phase #1: load mails and compute hashes.")
+    logger.info("=== Phase #1: load mails.")
     for source in mail_sources:
         dedup.add_source(source)
-    dedup.hash_all()
 
-    logger.info("=== Phase #2: deduplicate mails.")
+    logger.info("=== Phase #2: compute mail hashes.")
+    dedup.hash_all()
+    if hash_only:
+        for all_mails in dedup.mails.values():
+            for mail in all_mails:
+                click.echo(mail.header_text)
+                click.echo("-" * 70)
+                click.echo("Hash: {}".format(mail.hash_key))
+        ctx.exit()
+
+    logger.info("=== Phase #3: deduplicate mails.")
     dedup.run()
 
     dedup.report()
-
-
-@cli.command(short_help="Hash a single mail.")
-# TODO: Deduplicate option definition.
-@click.option(
-    "-i",
-    "--message-id",
-    is_flag=True,
-    default=False,
-    help="Only use the Message-ID header as a hash key. Not recommended. "
-    "Replace the default behavior consisting in deriving the hash from "
-    "several headers.",
-)
-@click.argument(
-    "message", type=click.Path(exists=True, dir_okay=False, resolve_path=True)
-)
-@click.pass_context
-def hash(ctx, message_id, message):
-    """Take a single mail message and show its canonicalised form and hash.
-
-    Mainly used to debug message hashing. Only works with maildirs, not mboxes.
-    """
-    conf = Config(message_id=message_id)
-
-    # TODO: Update with new mail API.
-    mail = Mail(message, conf)
-
-    logger.info(mail.header_text)
-    logger.info("-" * 70)
-    logger.info("Hash: {}".format(mail.hash_key))
