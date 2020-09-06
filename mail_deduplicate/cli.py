@@ -44,7 +44,7 @@ from .deduplicate import Deduplicate
 click_log.basic_config(logger)
 
 
-@click.group(invoke_without_command=True)
+@click.group()
 @click_log.simple_verbosity_option(
     logger,
     default="INFO",
@@ -56,14 +56,8 @@ click_log.basic_config(logger)
 def cli(ctx):
     """ CLI for mbox and maildir content analysis and deletion. """
     level = logger.level
-    level_to_name = logging._levelToName
-    level_name = level_to_name.get(level, level)
-    logger.debug("Verbosity set to {}.".format(level_name))
-
-    # Print help screen and exit if no sub-commands provided.
-    if ctx.invoked_subcommand is None:
-        click.echo(ctx.get_help())
-        ctx.exit()
+    level_name = logging._levelToName.get(level, level)
+    logger.debug(f"Verbosity set to {level_name}.")
 
     # Load up global options to the context.
     ctx.obj = {}
