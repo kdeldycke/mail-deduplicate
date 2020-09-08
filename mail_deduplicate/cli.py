@@ -54,9 +54,7 @@ def validate_regexp(ctx, param, value):
     return value
 
 
-@click.command(
-    short_help="Deduplicate mail boxes content.",
-    no_args_is_help=True)
+@click.command(short_help="Deduplicate mail boxes content.", no_args_is_help=True)
 @click.option(
     "-h",
     "--hash-only",

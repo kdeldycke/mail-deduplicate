@@ -127,7 +127,8 @@ class DuplicateSet:
             if self.conf.size_threshold > -1:
                 size_difference = abs(mail_a.size - mail_b.size)
                 logger.debug(
-                    f"{mail_a} and {mail_b} differs by {size_difference} bytes in size.")
+                    f"{mail_a} and {mail_b} differs by {size_difference} bytes in size."
+                )
                 if size_difference > self.conf.size_threshold:
                     raise SizeDiffAboveThreshold
 
@@ -135,7 +136,8 @@ class DuplicateSet:
             if self.conf.content_threshold > -1:
                 content_difference = self.diff(mail_a, mail_b)
                 logger.debug(
-                    f"{mail_a} and {mail_b} differs by {content_difference} bytes in content.")
+                    f"{mail_a} and {mail_b} differs by {content_difference} bytes in content."
+                )
                 if content_difference > self.conf.content_threshold:
                     if self.conf.show_diff:
                         logger.info(self.pretty_diff(mail_a, mail_b))
@@ -504,7 +506,8 @@ class Deduplicate:
                 if not source_path.joinpath(subdir).is_dir():
                     raise ValueError(
                         f"{source_path} is not a maildir folder (missing {subdir!r} "
-                        "sub-directory).")
+                        "sub-directory)."
+                    )
 
             mail_source = Maildir(source_path, factory=None, create=False)
 
@@ -634,7 +637,7 @@ class Deduplicate:
             ],
             ["Deduplicated", self.stats["set_deduplicated"]],
         ]
-        output += '\n'
+        output += "\n"
         output += tabulate(table, tablefmt="fancy_grid", headers="firstrow")
 
         # Perform some high-level consistency checks on metrics. Helps users
