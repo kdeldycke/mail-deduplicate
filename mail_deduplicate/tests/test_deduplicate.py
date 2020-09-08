@@ -132,7 +132,7 @@ def make_box(tmp_path):
 
 
 def check_box(box_path, box_type, kept=None, deleted=None):
-    """ Check the content of a mail box (in any of maildir of mbox format).
+    """Check the content of a mail box (in any of maildir of mbox format).
 
     Does not use ``set()`` types internally to avoid silent deduplication.
     Translates all mails provided to ``mailbox.Message`` instances to provide
@@ -158,9 +158,13 @@ def check_box(box_path, box_type, kept=None, deleted=None):
 
 # Collections of pre-defined fixtures to use in the deduplication tests below.
 smallest_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
-smaller_mail  = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
-bigger_mail   = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++")
-biggest_mail  = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++++++")
+smaller_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
+bigger_mail = MailFactory(
+    body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++"
+)
+biggest_mail = MailFactory(
+    body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++++++"
+)
 
 
 def test_strategy_definitions():
@@ -173,40 +177,50 @@ def test_strategy_definitions():
 
 def test_maildir_smaller_strategy_dry_run(invoke, make_box):
     """ Check no mail is removed in dry-run mode. """
-    box_path = make_box(Maildir, [
-        smallest_mail,
-        bigger_mail,
-        smallest_mail,
-        smaller_mail,
-        smaller_mail,
-        bigger_mail,
-    ])
+    box_path = make_box(
+        Maildir,
+        [
+            smallest_mail,
+            bigger_mail,
+            smallest_mail,
+            smaller_mail,
+            smaller_mail,
+            bigger_mail,
+        ],
+    )
 
     result = invoke("--strategy=delete-smaller", "--dry-run", box_path)
 
     assert result.exit_code == 0
-    check_box(box_path, Maildir, kept=[
-        smallest_mail,
-        bigger_mail,
-        smallest_mail,
-        smaller_mail,
-        smaller_mail,
-        bigger_mail,
-    ])
+    check_box(
+        box_path,
+        Maildir,
+        kept=[
+            smallest_mail,
+            bigger_mail,
+            smallest_mail,
+            smaller_mail,
+            smaller_mail,
+            bigger_mail,
+        ],
+    )
 
 
 def test_maildir_smaller_strategy(invoke, make_box):
     """ Test strategy of small mail deletion. """
-    box_path = make_box(Maildir, [
-        smallest_mail,
-        biggest_mail,
-        smallest_mail,
-        bigger_mail,
-        smaller_mail,
-        smaller_mail,
-        bigger_mail,
-        biggest_mail,
-    ])
+    box_path = make_box(
+        Maildir,
+        [
+            smallest_mail,
+            biggest_mail,
+            smallest_mail,
+            bigger_mail,
+            smaller_mail,
+            smaller_mail,
+            bigger_mail,
+            biggest_mail,
+        ],
+    )
 
     result = invoke("--strategy=delete-smaller", box_path)
 
@@ -215,31 +229,33 @@ def test_maildir_smaller_strategy(invoke, make_box):
     check_box(
         box_path,
         Maildir,
-        kept=[
-            biggest_mail,
-            biggest_mail],
+        kept=[biggest_mail, biggest_mail],
         deleted=[
             smallest_mail,
             smallest_mail,
             bigger_mail,
             smaller_mail,
             smaller_mail,
-            bigger_mail]
+            bigger_mail,
+        ],
     )
 
 
 def test_maildir_smallest_strategy(invoke, make_box):
     """ Test strategy of smallest mail deletion. """
-    box_path = make_box(Maildir, [
-        smallest_mail,
-        biggest_mail,
-        smallest_mail,
-        bigger_mail,
-        smaller_mail,
-        smaller_mail,
-        bigger_mail,
-        biggest_mail,
-    ])
+    box_path = make_box(
+        Maildir,
+        [
+            smallest_mail,
+            biggest_mail,
+            smallest_mail,
+            bigger_mail,
+            smaller_mail,
+            smaller_mail,
+            bigger_mail,
+            biggest_mail,
+        ],
+    )
 
     result = invoke("--strategy=delete-smallest", box_path)
 
@@ -254,25 +270,27 @@ def test_maildir_smallest_strategy(invoke, make_box):
             smaller_mail,
             smaller_mail,
             bigger_mail,
-            biggest_mail],
-        deleted=[
-            smallest_mail,
-            smallest_mail],
+            biggest_mail,
+        ],
+        deleted=[smallest_mail, smallest_mail],
     )
 
 
 def test_maildir_bigger_strategy(invoke, make_box):
     """ Test strategy of bigger mail deletion. """
-    box_path = make_box(Maildir, [
-        smallest_mail,
-        biggest_mail,
-        smallest_mail,
-        bigger_mail,
-        smaller_mail,
-        smaller_mail,
-        bigger_mail,
-        biggest_mail,
-    ])
+    box_path = make_box(
+        Maildir,
+        [
+            smallest_mail,
+            biggest_mail,
+            smallest_mail,
+            bigger_mail,
+            smaller_mail,
+            smaller_mail,
+            bigger_mail,
+            biggest_mail,
+        ],
+    )
 
     result = invoke("--strategy=delete-bigger", box_path)
 
@@ -281,31 +299,33 @@ def test_maildir_bigger_strategy(invoke, make_box):
     check_box(
         box_path,
         Maildir,
-        kept=[
-            smallest_mail,
-            smallest_mail],
+        kept=[smallest_mail, smallest_mail],
         deleted=[
             biggest_mail,
             bigger_mail,
             smaller_mail,
             smaller_mail,
             bigger_mail,
-            biggest_mail],
+            biggest_mail,
+        ],
     )
 
 
 def test_maildir_biggest_strategy(invoke, make_box):
     """ Test strategy of biggest mail deletion. """
-    box_path = make_box(Maildir, [
-        smallest_mail,
-        biggest_mail,
-        smallest_mail,
-        bigger_mail,
-        smaller_mail,
-        smaller_mail,
-        bigger_mail,
-        biggest_mail,
-    ])
+    box_path = make_box(
+        Maildir,
+        [
+            smallest_mail,
+            biggest_mail,
+            smallest_mail,
+            bigger_mail,
+            smaller_mail,
+            smaller_mail,
+            bigger_mail,
+            biggest_mail,
+        ],
+    )
 
     result = invoke("--strategy=delete-biggest", box_path)
 
@@ -320,10 +340,9 @@ def test_maildir_biggest_strategy(invoke, make_box):
             bigger_mail,
             smaller_mail,
             smaller_mail,
-            bigger_mail],
-        deleted=[
-            biggest_mail,
-            biggest_mail],
+            bigger_mail,
+        ],
+        deleted=[biggest_mail, biggest_mail],
     )
 
 
@@ -342,17 +361,20 @@ invalid_date_mail = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 
 def test_maildir_older_strategy(invoke, make_box):
     """ Test strategy of older mail deletion. """
-    box_path = make_box(Maildir, [
-        oldest_mail,
-        newest_mail,
-        oldest_mail,
-        newer_mail,
-        older_mail,
-        older_mail,
-        newer_mail,
-        newest_mail,
-        invalid_date_mail,
-    ])
+    box_path = make_box(
+        Maildir,
+        [
+            oldest_mail,
+            newest_mail,
+            oldest_mail,
+            newer_mail,
+            older_mail,
+            older_mail,
+            newer_mail,
+            newest_mail,
+            invalid_date_mail,
+        ],
+    )
 
     result = invoke("--time-source=date-header", "--strategy=delete-older", box_path)
 
@@ -361,9 +383,7 @@ def test_maildir_older_strategy(invoke, make_box):
     check_box(
         box_path,
         Maildir,
-        kept=[
-            newest_mail,
-            newest_mail],
+        kept=[newest_mail, newest_mail],
         deleted=[
             oldest_mail,
             oldest_mail,
@@ -371,23 +391,27 @@ def test_maildir_older_strategy(invoke, make_box):
             older_mail,
             older_mail,
             newer_mail,
-            invalid_date_mail],
+            invalid_date_mail,
+        ],
     )
 
 
 def test_maildir_oldest_strategy(invoke, make_box):
     """ Test strategy of oldest mail deletion. """
-    box_path = make_box(Maildir, [
-        oldest_mail,
-        newest_mail,
-        oldest_mail,
-        newer_mail,
-        older_mail,
-        older_mail,
-        newer_mail,
-        newest_mail,
-        invalid_date_mail,
-    ])
+    box_path = make_box(
+        Maildir,
+        [
+            oldest_mail,
+            newest_mail,
+            oldest_mail,
+            newer_mail,
+            older_mail,
+            older_mail,
+            newer_mail,
+            newest_mail,
+            invalid_date_mail,
+        ],
+    )
 
     result = invoke("--time-source=date-header", "--strategy=delete-oldest", box_path)
 
@@ -405,25 +429,26 @@ def test_maildir_oldest_strategy(invoke, make_box):
             newest_mail,
             invalid_date_mail,
         ],
-        deleted=[
-            oldest_mail,
-            oldest_mail],
+        deleted=[oldest_mail, oldest_mail],
     )
 
 
 def test_maildir_newer_strategy(invoke, make_box):
     """ Test strategy of newer mail deletion. """
-    box_path = make_box(Maildir, [
-        oldest_mail,
-        newest_mail,
-        oldest_mail,
-        newer_mail,
-        older_mail,
-        older_mail,
-        newer_mail,
-        newest_mail,
-        invalid_date_mail,
-    ])
+    box_path = make_box(
+        Maildir,
+        [
+            oldest_mail,
+            newest_mail,
+            oldest_mail,
+            newer_mail,
+            older_mail,
+            older_mail,
+            newer_mail,
+            newest_mail,
+            invalid_date_mail,
+        ],
+    )
 
     result = invoke("--time-source=date-header", "--strategy=delete-newer", box_path)
 
@@ -432,9 +457,7 @@ def test_maildir_newer_strategy(invoke, make_box):
     check_box(
         box_path,
         Maildir,
-        kept=[
-            oldest_mail,
-            oldest_mail],
+        kept=[oldest_mail, oldest_mail],
         deleted=[
             newest_mail,
             newer_mail,
@@ -449,17 +472,20 @@ def test_maildir_newer_strategy(invoke, make_box):
 
 def test_maildir_newest_strategy(invoke, make_box):
     """ Test strategy of newest mail deletion. """
-    box_path = make_box(Maildir, [
-        oldest_mail,
-        newest_mail,
-        oldest_mail,
-        newer_mail,
-        older_mail,
-        older_mail,
-        newer_mail,
-        newest_mail,
-        invalid_date_mail,
-    ])
+    box_path = make_box(
+        Maildir,
+        [
+            oldest_mail,
+            newest_mail,
+            oldest_mail,
+            newer_mail,
+            older_mail,
+            older_mail,
+            newer_mail,
+            newest_mail,
+            invalid_date_mail,
+        ],
+    )
 
     result = invoke("--time-source=date-header", "--strategy=delete-newest", box_path)
 
@@ -475,8 +501,7 @@ def test_maildir_newest_strategy(invoke, make_box):
             older_mail,
             older_mail,
             newer_mail,
-            invalid_date_mail],
-        deleted=[
-            newest_mail,
-            newest_mail],
+            invalid_date_mail,
+        ],
+        deleted=[newest_mail, newest_mail],
     )
