@@ -22,6 +22,9 @@
 import logging
 import sys
 
+# Canonical name of the CLI.
+CLI_NAME = "mdedup"
+
 __version__ = "4.0.0"
 
 

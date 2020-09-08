@@ -17,35 +17,93 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-from .case import CLITestCase
+from pathlib import Path
+
+import pytest
+
+from .. import __version__, logger
 
 
-class TestCLI(CLITestCase):
-
-    def test_main_help(self):
-        result = self.invoke("--help")
-        self.assertEqual(result.exit_code, 0)
-        self.assertIn("--help", result.output)
+def test_real_fs():
+    """Check a simple test is not caught into the CLI runner fixture which is
+    encapsulating all filesystem access into temporary directory structure."""
+    assert str(Path(__file__)).startswith(str(Path.cwd()))
 
 
-class TestDeduplicateCLI(CLITestCase):
+def test_temporary_fs(runner):
+    """Check the CLI runner fixture properly encapsulated the filesystem in
+    temporary directory."""
+    assert not str(Path(__file__)).startswith(str(Path.cwd()))
 
-    def test_deduplicate_help(self):
-        result = self.invoke("deduplicate", "--help")
-        self.assertEqual(result.exit_code, 0)
-        self.assertIn("--help", result.output)
 
-    def test_nonexistent_directory(self):
-        result = self.invoke("deduplicate", "./dummy_maildir/")
-        self.assertEqual(result.exit_code, 2)
-        self.assertIn("""Path './dummy_maildir/' does not exist""", result.output)
+def test_bare_call(invoke):
+    result = invoke()
+    assert result.exit_code == 0
+    assert "Usage: " in result.stdout
+    assert not result.stderr
 
-    def test_invalid_maildir_as_file(self):
-        result = self.invoke("deduplicate", "./__init__.py")
-        self.assertEqual(result.exit_code, 2)
-        self.assertIn("""Path './__init__.py' does not exist""", result.output)
 
-    def test_invalid_maildir_structure(self):
-        result = self.invoke("deduplicate", ".")
-        self.assertEqual(result.exit_code, 2)
-        self.assertIn("is not a maildir", result.output)
+def test_main_help(invoke):
+    result = invoke("--help")
+    assert result.exit_code == 0
+    assert "Usage: " in result.stdout
+    assert not result.stderr
+
+
+def test_version(invoke):
+    result = invoke("--version")
+    assert result.exit_code == 0
+    assert __version__ in result.stdout
+    assert not result.stderr
+
+
+def test_unknown_option(invoke):
+    result = invoke("--blah")
+    assert result.exit_code == 2
+    assert not result.stdout
+    assert "Error: no such option: --blah" in result.stderr
+
+
+def test_unknown_command(invoke):
+    result = invoke("blah")
+    assert result.exit_code == 2
+    assert not result.stdout
+    assert "Error: No such command 'blah'." in result.stderr
+
+
+def test_required_command(invoke):
+    result = invoke("--verbosity", "DEBUG")
+    assert result.exit_code == 2
+    assert not result.stdout
+    assert "Error: Missing command." in result.stderr
+
+
+def test_unrecognized_verbosity(invoke):
+    result = invoke("--verbosity", "random")
+    assert result.exit_code == 2
+    assert not result.stdout
+    assert "Error: Invalid value for '--verbosity' / '-v'" in result.stderr
+
+
+def test_deduplicate_help(invoke):
+    result = invoke("deduplicate", "--help")
+    assert result.exit_code == 0
+    assert "--help" in result.output
+
+
+def test_nonexistent_directory(invoke):
+    result = invoke("deduplicate", "./dummy_maildir/")
+    assert result.exit_code == 2
+    assert "Path './dummy_maildir/' does not exist" in result.stderr
+
+
+def test_invalid_maildir_as_file(invoke):
+    result = invoke("deduplicate", "./__init__.py")
+    assert result.exit_code == 2
+    assert "Path './__init__.py' does not exist" in result.stderr
+
+
+def test_invalid_maildir_structure(invoke):
+    result = invoke("deduplicate", ".")
+    assert result.exit_code == 1
+    assert "is not a maildir" in str(result.exc_info[1])

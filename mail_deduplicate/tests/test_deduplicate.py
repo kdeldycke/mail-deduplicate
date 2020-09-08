@@ -18,14 +18,17 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 from email.utils import formatdate as maildate
-from os import makedirs, path
 from textwrap import dedent
+from uuid import uuid4
 
+from mailbox import Mailbox, Message, Maildir, mbox
+from pathlib import Path
+
+import pytest
 import arrow
 
-from .. import MD_SUBDIRS, STRATEGIES
+from .. import STRATEGIES
 from ..deduplicate import DuplicateSet
-from .case import CLITestCase
 
 
 class MailFactory:
@@ -88,6 +91,10 @@ class MailFactory:
             )
         ).encode("utf-8")
 
+    def as_message(self):
+        """Returns the mail as an instance of ``mailbox.Message``."""
+        return Message(self.render())
+
     def save(self, filepath):
         """ Save the mail to the filesystem. """
         with open(filepath, "wb") as mail_file:
@@ -96,384 +103,401 @@ class MailFactory:
         # deduplication strategies.
 
 
-class TestDeduplicate(CLITestCase):
-    @staticmethod
-    def fake_maildir(mails, md_path):
-        """Create a fake maildir and populate it with mails.
+@pytest.fixture
+def make_box(tmp_path):
+    """A generic fixture to produce a temporary box of mails.
 
-        TODO: wrap click's isolated_filesystem() context manager.
-        """
-        # Create maildir structure.
-        for subdir in MD_SUBDIRS:
-            makedirs(path.join(md_path, subdir))
+    The container can be created in any format support by Python standard
+    library, by the way of the ``container_type`` parameter. Supported values:
+    ``Maildir``, ``mbox``, etc.
+    """
 
-        # Populate the 'cur' sub-folder with provided mails.
-        for filename, fake_mail in mails.items():
-            filepath = path.join(md_path, "cur", filename)
-            assert isinstance(fake_mail, MailFactory)
-            fake_mail.save(filepath)
+    def _make_mailbox(box_type, mails):
+        """Create a fake maildir and populate it with mails."""
+        # Check parameters.
+        assert box_type in (Maildir, mbox)
+        assert issubclass(box_type, Mailbox)
+        assert {isinstance(m, MailFactory) for m in mails} == {True}
 
-    def test_strategy_definitions(self):
-        """ Test deduplication strategy definitions. """
-        for strategy_id in STRATEGIES:
-            method_id = strategy_id.replace("-", "_")
-            self.assertTrue(hasattr(DuplicateSet, method_id))
-            self.assertTrue(callable(getattr(DuplicateSet, method_id)))
+        # Create the container under a random name and put all provided mails there.
+        box = box_type(tmp_path.joinpath(uuid4().hex), create=True)
+        box.lock()
+        for fake_mail in mails:
+            box.add(fake_mail.render())
+
+        box.close()
+        return box._path
+
+    return _make_mailbox
 
 
-class TestDryRun(TestDeduplicate):
+def check_box(box_path, box_type, kept=None, deleted=None):
+    """ Check the content of a mail box (in any of maildir of mbox format).
 
-    maildir_path = "./dry_run"
+    Does not use ``set()`` types internally to avoid silent deduplication.
+    Translates all mails provided to ``mailbox.Message`` instances to provide
+    fair comparison in a normalized space.
+    """
+    # Check provided parameters.
+    assert isinstance(box_path, Path)
+    assert box_type in (Maildir, mbox)
+    for mail_list in (kept, deleted):
+        if mail_list:
+            assert not isinstance(mail_list, set)
+            assert {isinstance(m, MailFactory) for m in mail_list} == {True}
 
-    small_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
-    medium_mail = MailFactory(
-        body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++"
+    # Compares the content of the box.
+    box = box_type(box_path, create=False)
+    assert len(box) == len(kept)
+    mails_found = sorted([str(m) for m in box])
+    assert sorted([str(m.as_message()) for m in kept]) == mails_found
+    for mail in deleted:
+        assert str(mail.as_message()) not in mails_found
+    box.close()
+
+
+# Collections of pre-defined fixtures to use in the deduplication tests below.
+smallest_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
+smaller_mail  = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
+bigger_mail   = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++")
+biggest_mail  = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++++++")
+
+
+def test_strategy_definitions():
+    """ Test deduplication strategy definitions. """
+    for strategy_id in STRATEGIES:
+        method_id = strategy_id.replace("-", "_")
+        assert hasattr(DuplicateSet, method_id)
+        assert callable(getattr(DuplicateSet, method_id))
+
+
+def test_maildir_smaller_strategy_dry_run(invoke, make_box):
+    """ Check no mail is removed in dry-run mode. """
+    box_path = make_box(Maildir, [
+        smallest_mail,
+        bigger_mail,
+        smallest_mail,
+        smaller_mail,
+        smaller_mail,
+        bigger_mail,
+    ])
+
+    result = invoke(
+        "deduplicate", "--strategy=delete-smaller", "--dry-run", box_path)
+
+    assert result.exit_code == 0
+    check_box(box_path, Maildir, kept=[
+        smallest_mail,
+        bigger_mail,
+        smallest_mail,
+        smaller_mail,
+        smaller_mail,
+        bigger_mail,
+    ])
+
+
+def test_maildir_smaller_strategy(invoke, make_box):
+    """ Test strategy of small mail deletion. """
+    box_path = make_box(Maildir, [
+        smallest_mail,
+        biggest_mail,
+        smallest_mail,
+        bigger_mail,
+        smaller_mail,
+        smaller_mail,
+        bigger_mail,
+        biggest_mail,
+    ])
+
+    result = invoke(
+        "deduplicate", "--strategy=delete-smaller", box_path)
+
+    assert result.exit_code == 0
+    # Biggest mails are kept but not the smaller ones.
+    check_box(
+        box_path,
+        Maildir,
+        kept=[
+            biggest_mail,
+            biggest_mail],
+        deleted=[
+            smallest_mail,
+            smallest_mail,
+            bigger_mail,
+            smaller_mail,
+            smaller_mail,
+            bigger_mail]
     )
-    big_mail = MailFactory(
-        body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++"
+
+
+def test_maildir_smallest_strategy(invoke, make_box):
+    """ Test strategy of smallest mail deletion. """
+    box_path = make_box(Maildir, [
+        smallest_mail,
+        biggest_mail,
+        smallest_mail,
+        bigger_mail,
+        smaller_mail,
+        smaller_mail,
+        bigger_mail,
+        biggest_mail,
+    ])
+
+    result = invoke(
+        "deduplicate", "--strategy=delete-smallest", box_path)
+
+    assert result.exit_code == 0
+    # Bigger mails are kept but not the smallest ones.
+    check_box(
+        box_path,
+        Maildir,
+        kept=[
+            biggest_mail,
+            bigger_mail,
+            smaller_mail,
+            smaller_mail,
+            bigger_mail,
+            biggest_mail],
+        deleted=[
+            smallest_mail,
+            smallest_mail],
     )
 
-    mails = {
-        "mail0:1,S": small_mail,
-        "mail1:1,S": big_mail,
-        "mail2:1,S": small_mail,
-        "mail3:1,S": medium_mail,
-        "mail4:1,S": medium_mail,
-        "mail5:1,S": big_mail,
-    }
 
-    def test_maildir_smaller_strategy_dry_run(self):
-        """ Check nothing is removed in dry-run mode. """
-        with self.runner.isolated_filesystem():
-            self.fake_maildir(mails=self.mails, md_path=self.maildir_path)
+def test_maildir_bigger_strategy(invoke, make_box):
+    """ Test strategy of bigger mail deletion. """
+    box_path = make_box(Maildir, [
+        smallest_mail,
+        biggest_mail,
+        smallest_mail,
+        bigger_mail,
+        smaller_mail,
+        smaller_mail,
+        bigger_mail,
+        biggest_mail,
+    ])
 
-            result = self.invoke(
-                "deduplicate",
-                "--strategy=delete-smaller",
-                "--dry-run",
-                self.maildir_path,
-            )
+    result = invoke(
+        "deduplicate", "--strategy=delete-bigger", box_path)
 
-            self.assertEqual(result.exit_code, 0)
-
-            for mail_id in self.mails.keys():
-                self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-
-
-class TestSizeStrategy(TestDeduplicate):
-
-    maildir_path = "./strategy_smaller"
-
-    smallest_mail = MailFactory(
-        body="Hello I am a duplicate mail. With annoying ćĥäŖş."
-    )
-    smaller_mail = MailFactory(
-        body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++"
-    )
-    bigger_mail = MailFactory(
-        body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++"
-    )
-    biggest_mail = MailFactory(
-        body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++++++"
+    assert result.exit_code == 0
+    # Smallest mails are kept but not the bigger ones.
+    check_box(
+        box_path,
+        Maildir,
+        kept=[
+            smallest_mail,
+            smallest_mail],
+        deleted=[
+            biggest_mail,
+            bigger_mail,
+            smaller_mail,
+            smaller_mail,
+            bigger_mail,
+            biggest_mail],
     )
 
-    mails = {
-        "mail0:1,S": smallest_mail,
-        "mail1:1,S": biggest_mail,
-        "mail2:1,S": smallest_mail,
-        "mail3:1,S": bigger_mail,
-        "mail4:1,S": smaller_mail,
-        "mail5:1,S": smaller_mail,
-        "mail6:1,S": bigger_mail,
-        "mail7:1,S": biggest_mail,
-    }
 
-    def test_maildir_smaller_strategy(self):
-        """ Test strategy of small mail deletion. """
-        with self.runner.isolated_filesystem():
-            self.fake_maildir(mails=self.mails, md_path=self.maildir_path)
+def test_maildir_biggest_strategy(invoke, make_box):
+    """ Test strategy of biggest mail deletion. """
+    box_path = make_box(Maildir, [
+        smallest_mail,
+        biggest_mail,
+        smallest_mail,
+        bigger_mail,
+        smaller_mail,
+        smaller_mail,
+        bigger_mail,
+        biggest_mail,
+    ])
 
-            result = self.invoke(
-                "deduplicate", "--strategy=delete-smaller", self.maildir_path
-            )
+    result = invoke(
+        "deduplicate", "--strategy=delete-biggest", box_path)
 
-            self.assertEqual(result.exit_code, 0)
-
-            # Biggest mails are kept but not the smaller ones.
-            kept = ["mail1:1,S", "mail7:1,S"]
-            deleted = [
-                "mail0:1,S",
-                "mail2:1,S",
-                "mail3:1,S",
-                "mail4:1,S",
-                "mail5:1,S",
-                "mail6:1,S",
-            ]
-
-            for mail_id in kept:
-                self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-            for mail_id in deleted:
-                self.assertFalse(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-
-    def test_maildir_smallest_strategy(self):
-        """ Test strategy of smallest mail deletion. """
-        with self.runner.isolated_filesystem():
-            self.fake_maildir(mails=self.mails, md_path=self.maildir_path)
-
-            result = self.invoke(
-                "deduplicate", "--strategy=delete-smallest", self.maildir_path
-            )
-
-            self.assertEqual(result.exit_code, 0)
-
-            # Bigger mails are kept but not the smallest ones.
-            kept = [
-                "mail1:1,S",
-                "mail3:1,S",
-                "mail4:1,S",
-                "mail5:1,S",
-                "mail6:1,S",
-                "mail7:1,S",
-            ]
-            deleted = ["mail0:1,S", "mail2:1,S"]
-
-            for mail_id in kept:
-                self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-            for mail_id in deleted:
-                self.assertFalse(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-
-    def test_maildir_bigger_strategy(self):
-        """ Test strategy of bigger mail deletion. """
-        with self.runner.isolated_filesystem():
-            self.fake_maildir(mails=self.mails, md_path=self.maildir_path)
-
-            result = self.invoke(
-                "deduplicate", "--strategy=delete-bigger", self.maildir_path
-            )
-
-            self.assertEqual(result.exit_code, 0)
-
-            # Smallest mails are kept but not the bigger ones.
-            kept = ["mail0:1,S", "mail2:1,S"]
-            deleted = [
-                "mail1:1,S",
-                "mail3:1,S",
-                "mail4:1,S",
-                "mail5:1,S",
-                "mail6:1,S",
-                "mail7:1,S",
-            ]
-
-            for mail_id in kept:
-                self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-            for mail_id in deleted:
-                self.assertFalse(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-
-    def test_maildir_biggest_strategy(self):
-        """ Test strategy of biggest mail deletion. """
-        with self.runner.isolated_filesystem():
-            self.fake_maildir(mails=self.mails, md_path=self.maildir_path)
-
-            result = self.invoke(
-                "deduplicate", "--strategy=delete-biggest", self.maildir_path
-            )
-
-            self.assertEqual(result.exit_code, 0)
-
-            # Smaller mails are kept but not the biggest ones.
-            kept = [
-                "mail0:1,S",
-                "mail2:1,S",
-                "mail3:1,S",
-                "mail4:1,S",
-                "mail5:1,S",
-                "mail6:1,S",
-            ]
-            deleted = ["mail1:1,S", "mail7:1,S"]
-
-            for mail_id in kept:
-                self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-            for mail_id in deleted:
-                self.assertFalse(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
+    assert result.exit_code == 0
+    # Smaller mails are kept but not the biggest ones.
+    check_box(
+        box_path,
+        Maildir,
+        kept=[
+            smallest_mail,
+            smallest_mail,
+            bigger_mail,
+            smaller_mail,
+            smaller_mail,
+            bigger_mail],
+        deleted=[
+            biggest_mail,
+            biggest_mail],
+    )
 
 
-class TestDateStrategy(TestDeduplicate):
+newest_date = arrow.utcnow()
+newer_date = newest_date.shift(minutes=-1)
+older_date = newest_date.shift(minutes=-2)
+oldest_date = newest_date.shift(minutes=-3)
 
-    maildir_path = "./strategy_date"
 
-    newest_date = arrow.utcnow()
-    newer_date = newest_date.shift(minutes=-1)
-    older_date = newest_date.shift(minutes=-2)
-    oldest_date = newest_date.shift(minutes=-3)
+newest_mail = MailFactory(date=newest_date)
+newer_mail = MailFactory(date=newer_date)
+older_mail = MailFactory(date=older_date)
+oldest_mail = MailFactory(date=oldest_date)
+invalid_date_mail = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 
-    newest_mail = MailFactory(date=newest_date)
-    newer_mail = MailFactory(date=newer_date)
-    older_mail = MailFactory(date=older_date)
-    oldest_mail = MailFactory(date=oldest_date)
-    invaliddate_mail = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 
-    mails = {
-        "mail0:1,S": oldest_mail,
-        "mail1:1,S": newest_mail,
-        "mail2:1,S": oldest_mail,
-        "mail3:1,S": newer_mail,
-        "mail4:1,S": older_mail,
-        "mail5:1,S": older_mail,
-        "mail6:1,S": newer_mail,
-        "mail7:1,S": newest_mail,
-        "mail8:1,S": invaliddate_mail,
-    }
+def test_maildir_older_strategy(invoke, make_box):
+    """ Test strategy of older mail deletion. """
+    box_path = make_box(Maildir, [
+        oldest_mail,
+        newest_mail,
+        oldest_mail,
+        newer_mail,
+        older_mail,
+        older_mail,
+        newer_mail,
+        newest_mail,
+        invalid_date_mail,
+    ])
 
-    def test_maildir_older_strategy(self):
-        """ Test strategy of older mail deletion. """
-        with self.runner.isolated_filesystem():
-            self.fake_maildir(mails=self.mails, md_path=self.maildir_path)
+    result = invoke(
+        "deduplicate", "--time-source=date-header", "--strategy=delete-older", box_path)
 
-            result = self.invoke(
-                "deduplicate",
-                "--time-source=date-header",
-                "--strategy=delete-older",
-                self.maildir_path,
-            )
+    assert result.exit_code == 0
+    # Newest mails are kept but not the older ones.
+    check_box(
+        box_path,
+        Maildir,
+        kept=[
+            newest_mail,
+            newest_mail],
+        deleted=[
+            oldest_mail,
+            oldest_mail,
+            newer_mail,
+            older_mail,
+            older_mail,
+            newer_mail,
+            invalid_date_mail],
+    )
 
-            self.assertEqual(result.exit_code, 0)
 
-            # Newest mails are kept but not the older ones.
-            kept = ["mail1:1,S", "mail7:1,S"]
-            deleted = [
-                "mail0:1,S",
-                "mail2:1,S",
-                "mail3:1,S",
-                "mail4:1,S",
-                "mail5:1,S",
-                "mail6:1,S",
-            ]
+def test_maildir_oldest_strategy(invoke, make_box):
+    """ Test strategy of oldest mail deletion. """
+    box_path = make_box(Maildir, [
+        oldest_mail,
+        newest_mail,
+        oldest_mail,
+        newer_mail,
+        older_mail,
+        older_mail,
+        newer_mail,
+        newest_mail,
+        invalid_date_mail,
+    ])
 
-            for mail_id in kept:
-                self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-            for mail_id in deleted:
-                self.assertFalse(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
+    result = invoke(
+        "deduplicate",
+        "--time-source=date-header",
+        "--strategy=delete-oldest",
+        box_path
+    )
 
-    def test_maildir_oldest_strategy(self):
-        """ Test strategy of oldest mail deletion. """
-        with self.runner.isolated_filesystem():
-            self.fake_maildir(mails=self.mails, md_path=self.maildir_path)
+    assert result.exit_code == 0
+    # Newer mails are kept but not the oldest ones.
+    check_box(
+        box_path,
+        Maildir,
+        kept=[
+            newest_mail,
+            newer_mail,
+            older_mail,
+            older_mail,
+            newer_mail,
+            newest_mail,
+            invalid_date_mail,
+        ],
+        deleted=[
+            oldest_mail,
+            oldest_mail],
+    )
 
-            result = self.invoke(
-                "deduplicate",
-                "--time-source=date-header",
-                "--strategy=delete-oldest",
-                self.maildir_path,
-            )
 
-            self.assertEqual(result.exit_code, 0)
+def test_maildir_newer_strategy(invoke, make_box):
+    """ Test strategy of newer mail deletion. """
+    box_path = make_box(Maildir, [
+        oldest_mail,
+        newest_mail,
+        oldest_mail,
+        newer_mail,
+        older_mail,
+        older_mail,
+        newer_mail,
+        newest_mail,
+        invalid_date_mail,
+    ])
 
-            # Newer mails are kept but not the oldest ones.
-            kept = [
-                "mail1:1,S",
-                "mail3:1,S",
-                "mail4:1,S",
-                "mail5:1,S",
-                "mail6:1,S",
-                "mail7:1,S",
-            ]
-            deleted = ["mail0:1,S", "mail2:1,S"]
+    result = invoke(
+        "deduplicate",
+        "--time-source=date-header",
+        "--strategy=delete-newer",
+        box_path
+    )
 
-            for mail_id in kept:
-                self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-            for mail_id in deleted:
-                self.assertFalse(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
+    assert result.exit_code == 0
+    # Oldest mails are kept but not the newer ones.
+    check_box(
+        box_path,
+        Maildir,
+        kept=[
+            oldest_mail,
+            oldest_mail],
+        deleted=[
+            newest_mail,
+            newer_mail,
+            older_mail,
+            older_mail,
+            newer_mail,
+            newest_mail,
+            invalid_date_mail,
+        ],
+    )
 
-    def test_maildir_newer_strategy(self):
-        """ Test strategy of newer mail deletion. """
-        with self.runner.isolated_filesystem():
-            self.fake_maildir(mails=self.mails, md_path=self.maildir_path)
 
-            result = self.invoke(
-                "deduplicate",
-                "--time-source=date-header",
-                "--strategy=delete-newer",
-                self.maildir_path,
-            )
+def test_maildir_newest_strategy(invoke, make_box):
+    """ Test strategy of newest mail deletion. """
+    box_path = make_box(Maildir, [
+        oldest_mail,
+        newest_mail,
+        oldest_mail,
+        newer_mail,
+        older_mail,
+        older_mail,
+        newer_mail,
+        newest_mail,
+        invalid_date_mail,
+    ])
 
-            self.assertEqual(result.exit_code, 0)
+    result = invoke(
+        "deduplicate",
+        "--time-source=date-header",
+        "--strategy=delete-newest",
+        box_path
+    )
 
-            # Oldest mails are kept but not the newer ones.
-            kept = ["mail0:1,S", "mail2:1,S"]
-            deleted = [
-                "mail1:1,S",
-                "mail3:1,S",
-                "mail4:1,S",
-                "mail5:1,S",
-                "mail6:1,S",
-                "mail7:1,S",
-            ]
-
-            for mail_id in kept:
-                self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-            for mail_id in deleted:
-                self.assertFalse(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-
-    def test_maildir_newest_strategy(self):
-        """ Test strategy of newest mail deletion. """
-        with self.runner.isolated_filesystem():
-            self.fake_maildir(mails=self.mails, md_path=self.maildir_path)
-
-            result = self.invoke(
-                "deduplicate",
-                "--time-source=date-header",
-                "--strategy=delete-newest",
-                self.maildir_path,
-            )
-
-            self.assertEqual(result.exit_code, 0)
-
-            # Older mails are kept but not the newest ones.
-            kept = [
-                "mail0:1,S",
-                "mail2:1,S",
-                "mail3:1,S",
-                "mail4:1,S",
-                "mail5:1,S",
-                "mail6:1,S",
-            ]
-            deleted = ["mail1:1,S", "mail7:1,S"]
-
-            for mail_id in kept:
-                self.assertTrue(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
-            for mail_id in deleted:
-                self.assertFalse(
-                    path.isfile(path.join(self.maildir_path, "cur", mail_id))
-                )
+    assert result.exit_code == 0
+    # Older mails are kept but not the newest ones.
+    check_box(
+        box_path,
+        Maildir,
+        kept=[
+            oldest_mail,
+            oldest_mail,
+            newer_mail,
+            older_mail,
+            older_mail,
+            newer_mail,
+            invalid_date_mail],
+        deleted=[
+            newest_mail,
+            newest_mail],
+    )
