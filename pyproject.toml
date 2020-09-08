@@ -63,7 +63,7 @@ yamllint = "^1.24.2"
 docs = ["sphinx", "sphinx_rtd_theme"]
 
 [tool.poetry.scripts]
-mdedup = 'mail_deduplicate.cli:cli'
+mdedup = 'mail_deduplicate.cli:mdedup'
 
 [tool.black]
 target-version = ['py37', 'py38']

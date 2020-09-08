@@ -85,25 +85,21 @@ def test_unrecognized_verbosity(invoke):
     assert "Error: Invalid value for '--verbosity' / '-v'" in result.stderr
 
 
-def test_deduplicate_help(invoke):
-    result = invoke("deduplicate", "--help")
-    assert result.exit_code == 0
-    assert "--help" in result.output
 
 
 def test_nonexistent_directory(invoke):
-    result = invoke("deduplicate", "./dummy_maildir/")
+    result = invoke("./dummy_maildir/")
     assert result.exit_code == 2
     assert "Path './dummy_maildir/' does not exist" in result.stderr
 
 
 def test_invalid_maildir_as_file(invoke):
-    result = invoke("deduplicate", "./__init__.py")
+    result = invoke("./__init__.py")
     assert result.exit_code == 2
     assert "Path './__init__.py' does not exist" in result.stderr
 
 
 def test_invalid_maildir_structure(invoke):
-    result = invoke("deduplicate", ".")
+    result = invoke(".")
     assert result.exit_code == 1
     assert "is not a maildir" in str(result.exc_info[1])

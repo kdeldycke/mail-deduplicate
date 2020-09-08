@@ -182,8 +182,7 @@ def test_maildir_smaller_strategy_dry_run(invoke, make_box):
         bigger_mail,
     ])
 
-    result = invoke(
-        "deduplicate", "--strategy=delete-smaller", "--dry-run", box_path)
+    result = invoke("--strategy=delete-smaller", "--dry-run", box_path)
 
     assert result.exit_code == 0
     check_box(box_path, Maildir, kept=[
@@ -209,8 +208,7 @@ def test_maildir_smaller_strategy(invoke, make_box):
         biggest_mail,
     ])
 
-    result = invoke(
-        "deduplicate", "--strategy=delete-smaller", box_path)
+    result = invoke("--strategy=delete-smaller", box_path)
 
     assert result.exit_code == 0
     # Biggest mails are kept but not the smaller ones.
@@ -243,8 +241,7 @@ def test_maildir_smallest_strategy(invoke, make_box):
         biggest_mail,
     ])
 
-    result = invoke(
-        "deduplicate", "--strategy=delete-smallest", box_path)
+    result = invoke("--strategy=delete-smallest", box_path)
 
     assert result.exit_code == 0
     # Bigger mails are kept but not the smallest ones.
@@ -277,8 +274,7 @@ def test_maildir_bigger_strategy(invoke, make_box):
         biggest_mail,
     ])
 
-    result = invoke(
-        "deduplicate", "--strategy=delete-bigger", box_path)
+    result = invoke("--strategy=delete-bigger", box_path)
 
     assert result.exit_code == 0
     # Smallest mails are kept but not the bigger ones.
@@ -311,8 +307,7 @@ def test_maildir_biggest_strategy(invoke, make_box):
         biggest_mail,
     ])
 
-    result = invoke(
-        "deduplicate", "--strategy=delete-biggest", box_path)
+    result = invoke("--strategy=delete-biggest", box_path)
 
     assert result.exit_code == 0
     # Smaller mails are kept but not the biggest ones.
@@ -359,8 +354,7 @@ def test_maildir_older_strategy(invoke, make_box):
         invalid_date_mail,
     ])
 
-    result = invoke(
-        "deduplicate", "--time-source=date-header", "--strategy=delete-older", box_path)
+    result = invoke("--time-source=date-header", "--strategy=delete-older", box_path)
 
     assert result.exit_code == 0
     # Newest mails are kept but not the older ones.
@@ -395,12 +389,7 @@ def test_maildir_oldest_strategy(invoke, make_box):
         invalid_date_mail,
     ])
 
-    result = invoke(
-        "deduplicate",
-        "--time-source=date-header",
-        "--strategy=delete-oldest",
-        box_path
-    )
+    result = invoke("--time-source=date-header", "--strategy=delete-oldest", box_path)
 
     assert result.exit_code == 0
     # Newer mails are kept but not the oldest ones.
@@ -436,12 +425,7 @@ def test_maildir_newer_strategy(invoke, make_box):
         invalid_date_mail,
     ])
 
-    result = invoke(
-        "deduplicate",
-        "--time-source=date-header",
-        "--strategy=delete-newer",
-        box_path
-    )
+    result = invoke("--time-source=date-header", "--strategy=delete-newer", box_path)
 
     assert result.exit_code == 0
     # Oldest mails are kept but not the newer ones.
@@ -477,12 +461,7 @@ def test_maildir_newest_strategy(invoke, make_box):
         invalid_date_mail,
     ])
 
-    result = invoke(
-        "deduplicate",
-        "--time-source=date-header",
-        "--strategy=delete-newest",
-        box_path
-    )
+    result = invoke("--time-source=date-header", "--strategy=delete-newest", box_path)
 
     assert result.exit_code == 0
     # Older mails are kept but not the newest ones.

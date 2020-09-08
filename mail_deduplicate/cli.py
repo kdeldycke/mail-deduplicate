@@ -44,25 +44,6 @@ from .deduplicate import Deduplicate
 click_log.basic_config(logger)
 
 
-@click.group()
-@click_log.simple_verbosity_option(
-    logger,
-    default="INFO",
-    metavar="LEVEL",
-    help="Either CRITICAL, ERROR, WARNING, INFO or DEBUG. Defaults to INFO.",
-)
-@click.version_option(__version__)
-@click.pass_context
-def cli(ctx):
-    """ CLI for mbox and maildir content analysis and deletion. """
-    level = logger.level
-    level_name = logging._levelToName.get(level, level)
-    logger.debug(f"Verbosity set to {level_name}.")
-
-    # Load up global options to the context.
-    ctx.obj = {}
-
-
 def validate_regexp(ctx, param, value):
     """ Validate and compile regular expression. """
     if value:
@@ -73,14 +54,16 @@ def validate_regexp(ctx, param, value):
     return value
 
 
-@cli.command(short_help="Deduplicate mboxes and/or maildirs content.")
+@click.command(
+    short_help="Deduplicate mail boxes content.",
+    no_args_is_help=True)
 @click.option(
     "-h",
     "--hash-only",
     is_flag=True,
     default=False,
-    help="Only compute the internal hashes used to deduplicate mails. Do not performs "
-    "deduplication itself.",
+    help="Compute and display the internal hashes used to identify duplicates. Do not "
+    "performs any deduplication operation.",
 )
 @click.option(
     "-n",
@@ -100,7 +83,7 @@ def validate_regexp(ctx, param, value):
     "-t",
     "--time-source",
     type=click.Choice(TIME_SOURCES),
-    help="Source of a mail's reference time. Required in time-sensitive strategies.",
+    help="Source of a mail's time reference. Required in time-sensitive strategies.",
 )
 @click.option(
     "-r",
@@ -152,8 +135,15 @@ def validate_regexp(ctx, param, value):
     metavar="MBOXES/MAILDIRS",
     type=click.Path(exists=True, resolve_path=True),
 )
+@click_log.simple_verbosity_option(
+    logger,
+    default="INFO",
+    metavar="LEVEL",
+    help="Either CRITICAL, ERROR, WARNING, INFO or DEBUG. Defaults to INFO.",
+)
+@click.version_option(__version__)
 @click.pass_context
-def deduplicate(
+def mdedup(
     ctx,
     hash_only,
     dry_run,
@@ -191,6 +181,10 @@ def deduplicate(
     between mails are uncovered during a fine-grained check differences during
     the second pass. Limits can be set via the threshold options.
     """
+    level = logger.level
+    level_name = logging._levelToName.get(level, level)
+    logger.debug(f"Verbosity set to {level_name}.")
+
     # Print help screen and exit if no mail source provided.
     if not mail_sources:
         click.echo(ctx.get_help())
