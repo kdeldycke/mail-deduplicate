@@ -36,6 +36,7 @@ from . import (
     MissingMessageID,
     SizeDiffAboveThreshold,
     logger,
+    MD_SUBDIRS,
 )
 from .mail import Mail
 
@@ -496,6 +497,14 @@ class Deduplicate:
 
         if source_path.is_dir():
             logger.info(f"Opening {source_path} as a maildir...")
+
+            # Validates folder is a maildir.
+            for subdir in MD_SUBDIRS:
+                if not source_path.joinpath(subdir).is_dir():
+                    raise ValueError(
+                        f"{source_path} is not a maildir folder (missing {subdir!r} "
+                        "sub-directory).")
+
             mail_source = Maildir(source_path, factory=None, create=False)
 
         elif source_path.is_file():
