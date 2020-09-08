@@ -46,6 +46,8 @@ class DuplicateSet:
     Implements all deletion strategies applicable to a set of duplicate mails.
     """
 
+    dry_run_label = click.style("DRY_RUN", fg="yellow")
+
     def __init__(self, hash_key, mail_set, conf):
         """Load-up the duplicate set of mail and freeze pool.
 
@@ -97,7 +99,7 @@ class DuplicateSet:
         """ Delete a mail from the filesystem. """
         self.stats["mail_deleted"] += 1
         if self.conf.dry_run:
-            logger.info(f"Skip deletion of {mail!r}.")
+            logger.warning(f"{self.dry_run_label}: skip deletion of {mail.path!r}.")
             return
         mail.delete()
 
@@ -483,17 +485,6 @@ class Deduplicate:
             }
         )
 
-    @staticmethod
-    def canonical_path(path):
-        """Return a normalized, canonical path to a file or folder.
-
-        Removes all symbolic links encountered in the path to detect natural
-        mail and maildir duplicates on the fly.
-        """
-        return os.path.normcase(
-            os.path.realpath(os.path.abspath(os.path.expanduser(path)))
-        )
-
     def add_source(self, source_path):
         """Registers a source of mails, validates and opens it.
 
@@ -501,18 +492,17 @@ class Deduplicate:
         considered as an ``mbox``. Else, if the provided path is a folder, it
         is parsed as a ``maildir``.
         """
-        source_path = self.canonical_path(source_path)
 
-        if os.path.isdir(source_path):
+        if source_path.is_dir():
             logger.info(f"Opening {source_path} as a maildir...")
             mail_source = Maildir(source_path, factory=None, create=False)
 
-        elif os.path.isfile(source_path):
+        elif source_path.is_file():
             logger.info(f"Opening {source_path} as an mbox...")
             mail_source = mbox(source_path, factory=None, create=False)
 
         else:
-            raise ValueError("Unrecognized mail source at {}".format(source_path))
+            raise ValueError(f"Unrecognized mail source at {source_path}")
 
         # Register the mail source.
         self.sources[source_path] = mail_source

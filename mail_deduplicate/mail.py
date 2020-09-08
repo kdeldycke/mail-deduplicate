@@ -67,7 +67,7 @@ class Mail:
         """
         filename = self.message.get_filename()
         if filename:
-            filepath = os.path.join(self.source_path, filename)
+            filepath = self.source_path.joinpath(filename)
         else:
             filepath = "{}:{}".format(self.source_path, self.mail_id)
         return filepath

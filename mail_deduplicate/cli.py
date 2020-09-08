@@ -19,6 +19,7 @@
 
 import logging
 import re
+from pathlib import Path
 
 import click
 import click_log
@@ -233,7 +234,7 @@ def deduplicate(
 
     logger.info("=== Phase #1: load mails.")
     for source in mail_sources:
-        dedup.add_source(source)
+        dedup.add_source(Path(source).resolve())
 
     logger.info("=== Phase #2: compute mail hashes.")
     dedup.hash_all()
