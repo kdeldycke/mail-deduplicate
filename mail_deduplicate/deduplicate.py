@@ -28,6 +28,7 @@ from operator import attrgetter
 from boltons.cacheutils import cachedproperty
 from progressbar import Bar, Percentage, ProgressBar
 from tabulate import tabulate
+import click
 
 from . import (
     ContentDiffAboveThreshold,
