@@ -226,11 +226,11 @@ def mdedup(
 
     dedup = Deduplicate(conf)
 
-    logger.info("=== Phase #1: load mails.")
+    click.echo("=== Phase #1: load mails.")
     for source in mail_sources:
         dedup.add_source(Path(source).resolve())
 
-    logger.info("=== Phase #2: compute mail hashes.")
+    click.echo("=== Phase #2: compute mail hashes.")
     dedup.hash_all()
     if hash_only:
         for all_mails in dedup.mails.values():
@@ -240,7 +240,7 @@ def mdedup(
                 click.echo("Hash: {}".format(mail.hash_key))
         ctx.exit()
 
-    logger.info("=== Phase #3: deduplicate mails.")
+    click.echo("=== Phase #3: deduplicate mails.")
     dedup.run()
 
     # Print deduplication statistics.

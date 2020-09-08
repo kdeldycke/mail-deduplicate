@@ -17,6 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -64,20 +65,6 @@ def test_unknown_option(invoke):
     assert "Error: no such option: --blah" in result.stderr
 
 
-def test_unknown_command(invoke):
-    result = invoke("blah")
-    assert result.exit_code == 2
-    assert not result.stdout
-    assert "Error: No such command 'blah'." in result.stderr
-
-
-def test_required_command(invoke):
-    result = invoke("--verbosity", "DEBUG")
-    assert result.exit_code == 2
-    assert not result.stdout
-    assert "Error: Missing command." in result.stderr
-
-
 def test_unrecognized_verbosity(invoke):
     result = invoke("--verbosity", "random")
     assert result.exit_code == 2
@@ -85,21 +72,30 @@ def test_unrecognized_verbosity(invoke):
     assert "Error: Invalid value for '--verbosity' / '-v'" in result.stderr
 
 
+@pytest.mark.parametrize("level", ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"])
+def test_verbosity(invoke, level):
+    result = invoke("--verbosity", level)
+    assert result.exit_code == 0
+    assert "Usage: " in result.stdout
+
+    assert logger.level == getattr(logging, level)
+    if level == "DEBUG":
+        assert "debug: " in result.stderr
+    else:
+        assert "debug: " not in result.stderr
 
 
-def test_nonexistent_directory(invoke):
-    result = invoke("./dummy_maildir/")
+@pytest.mark.parametrize("source", ["./dummy_maildir/", "./__init__.py"])
+def test_nonexistent_path(invoke, source):
+    result = invoke(source)
     assert result.exit_code == 2
-    assert "Path './dummy_maildir/' does not exist" in result.stderr
-
-
-def test_invalid_maildir_as_file(invoke):
-    result = invoke("./__init__.py")
-    assert result.exit_code == 2
-    assert "Path './__init__.py' does not exist" in result.stderr
+    assert not result.stdout
+    assert "Path '{}' does not exist".format(source) in result.stderr
 
 
 def test_invalid_maildir_structure(invoke):
     result = invoke(".")
     assert result.exit_code == 1
+    assert "Phase #1" in result.stdout
+    assert "Opening " in result.stderr
     assert "is not a maildir" in str(result.exc_info[1])
