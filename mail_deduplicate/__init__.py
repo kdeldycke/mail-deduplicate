@@ -119,7 +119,6 @@ MD_SUBDIRS = frozenset(("cur", "new", "tmp"))
 
 # Defines custom exception first to avoid circular imports.
 
-
 class InsufficientHeadersError(Exception):
 
     """ Issue was encountered with email headers. """

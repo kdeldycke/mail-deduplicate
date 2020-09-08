@@ -243,6 +243,7 @@ class DuplicateSet:
             logger.warning(
                 f"Skip deletion: all {candidate_count} mails share the same timestamp."
             )
+
         logger.info(f"{candidate_count} candidates found for deletion.")
         for mail in candidates:
             self.delete(mail)
