@@ -26,7 +26,7 @@ from boltons.strutils import strip_ansi
 from boltons.tbutils import ExceptionInfo
 from click.testing import CliRunner
 
-from ..cli import cli
+from ..cli import mdedup
 from .. import CLI_NAME
 
 """ Fixtures, configuration and helpers for tests. """
@@ -57,7 +57,7 @@ def invoke(runner):
         if args:
             assert set(map(type, args)) == {str}
 
-        result = runner.invoke(cli, args, color=color)
+        result = runner.invoke(mdedup, args, color=color)
 
         # Strip colors out of results.
         result.stdout_bytes = strip_ansi(result.stdout_bytes)
