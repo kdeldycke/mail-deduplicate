@@ -181,6 +181,7 @@ class DuplicateSet:
         """
         if not self.conf.strategy:
             logger.warning("No strategy selected, skip deduplication.")
+            return
 
         method_id = self.conf.strategy.replace("-", "_")
         if not hasattr(DuplicateSet, method_id):
@@ -600,8 +601,7 @@ class Deduplicate:
                 continue
 
             # Call the deduplication strategy.
-            if self.conf.strategy:
-                duplicates.apply_strategy(self.conf.strategy)
+            duplicates.apply_strategy()
 
             # Merge stats resulting of actions on duplicate sets.
             self.stats += duplicates.stats
