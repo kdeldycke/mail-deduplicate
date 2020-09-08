@@ -607,7 +607,7 @@ class Deduplicate:
             self.stats += duplicates.stats
 
     def report(self):
-        """ Print user-friendly statistics and metrics. """
+        """ Returns a text report of user-friendly statistics and metrics. """
         table = [
             ["Mails", "Metric"],
             ["Found", self.stats["mail_found"]],
@@ -618,7 +618,7 @@ class Deduplicate:
             ["Duplicates", self.stats["mail_duplicates"]],
             ["Deleted", self.stats["mail_deleted"]],
         ]
-        logger.info(tabulate(table, tablefmt="fancy_grid", headers="firstrow"))
+        output = tabulate(table, tablefmt="fancy_grid", headers="firstrow")
 
         table = [
             ["Duplicate sets", "Metric"],
@@ -633,7 +633,8 @@ class Deduplicate:
             ],
             ["Deduplicated", self.stats["set_deduplicated"]],
         ]
-        logger.info(tabulate(table, tablefmt="fancy_grid", headers="firstrow"))
+        output += '\n'
+        output += tabulate(table, tablefmt="fancy_grid", headers="firstrow")
 
         # Perform some high-level consistency checks on metrics. Helps users
         # reports tricky edge-cases.
@@ -662,3 +663,5 @@ class Deduplicate:
             + self.stats["set_rejected_content"]
             + self.stats["set_deduplicated"]
         )
+
+        return output

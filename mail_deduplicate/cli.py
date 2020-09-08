@@ -248,4 +248,5 @@ def deduplicate(
     logger.info("=== Phase #3: deduplicate mails.")
     dedup.run()
 
-    dedup.report()
+    # Print deduplication statistics.
+    click.echo(dedup.report())
