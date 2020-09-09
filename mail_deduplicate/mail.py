@@ -232,7 +232,8 @@ class Mail:
         if header == "subject":
             subject = value
             while True:
-                matching = re.match(r"([Rr]e: )*(\[\w[\w_-]+\w\] )+(?s)(.+)", subject)
+                matching = re.match(
+                    r"([Rr]e: )*(\[\w[\w_-]+\w\] )+(.+)", subject, re.DOTALL)
                 if not matching:
                     break
                 subject = matching.group(3)
