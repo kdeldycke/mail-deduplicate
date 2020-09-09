@@ -136,9 +136,9 @@ class Mail:
                     try:
                         part_body = part_body.decode(enc)
                         break
-                    except UnicodeDecodeError as ex:
+                    except UnicodeDecodeError:
                         continue
-                    except LookupError as ex:
+                    except LookupError:
                         continue
                 else:
                     part_body = part.get_payload(decode=False)
