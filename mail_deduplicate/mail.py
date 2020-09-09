@@ -239,6 +239,7 @@ class Mail:
                 subject = matching.group(3)
                 # show_progress("Trimmed Subject to %s" % subject)
             return subject
+
         elif header == "content-type":
             # Apparently list servers actually munge Content-Type
             # e.g. by stripping the quotes from charset="us-ascii".
@@ -253,6 +254,7 @@ class Mail:
             # from a mailing list you're both subscribed to - then it's
             # still useful to be able to eliminate duplicates.
             return re.sub(";.*", "", value)
+
         elif header == "date":
             # Date timestamps can differ by seconds or hours for various
             # reasons, so let's only honour the date for now.
@@ -264,6 +266,7 @@ class Mail:
                 return time.strftime("%Y/%m/%d UTC", time.gmtime(utc_timestamp))
             except (TypeError, ValueError):
                 return value
+
         elif header in ["to", "message-id"]:
             # Sometimes email.parser strips the <> brackets from a To:
             # header which has a single address.  I have seen this happen
