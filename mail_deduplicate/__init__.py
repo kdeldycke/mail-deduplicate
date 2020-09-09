@@ -174,4 +174,3 @@ class Config:
         """ Expose configuration entries as properties. """
         if attr_id in self.conf:
             return self.conf[attr_id]
-        return super(Config, self).__getattr__(attr_id)
