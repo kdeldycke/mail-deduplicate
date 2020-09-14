@@ -47,7 +47,7 @@ arrow = "^0.16.0"
 black = "^20.8b1"
 bump2version = "^1.0.0"
 check-wheel-contents = "^0.1.0"
-coverage = {extras = ["toml"], version = "^5.2.1"}
+coverage = {extras = ["toml"], version = "^5.3"}
 pycodestyle = "^2"
 pylint = "^2.6"
 pytest = "^6.0"
