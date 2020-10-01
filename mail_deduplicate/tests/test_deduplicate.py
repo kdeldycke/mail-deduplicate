@@ -25,6 +25,7 @@ from mailbox import Mailbox, Message, Maildir, mbox
 
 import pytest
 import arrow
+from boltons.iterutils import same
 
 from .. import STRATEGIES
 from ..deduplicate import DuplicateSet
@@ -116,7 +117,7 @@ def make_box(tmp_path):
         # Check parameters.
         assert box_type in (Maildir, mbox)
         assert issubclass(box_type, Mailbox)
-        assert {isinstance(m, MailFactory) for m in mails} == {True}
+        assert same(map(type, mails), MailFactory)
 
         # Create the container under a random name and put all provided mails there.
         box = box_type(tmp_path.joinpath(uuid4().hex), create=True)
@@ -145,7 +146,7 @@ def check_box(box_path, box_type, kept=None, deleted=None):
         if mail_list is None:
             mail_list = []
         if mail_list:
-            assert {isinstance(m, MailFactory) for m in mail_list} == {True}
+            assert same(map(type, mail_list), MailFactory)
 
     # Compares the content of the box.
     box = box_type(box_path, create=False)
