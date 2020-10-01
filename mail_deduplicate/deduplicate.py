@@ -136,7 +136,8 @@ class DuplicateSet:
             if self.conf.content_threshold > -1:
                 content_difference = self.diff(mail_a, mail_b)
                 logger.debug(
-                    f"{mail_a} and {mail_b} differs by {content_difference} bytes in content."
+                    f"{mail_a} and {mail_b} differs by {content_difference} bytes in "
+                    "content."
                 )
                 if content_difference > self.conf.content_threshold:
                     if self.conf.show_diff:
@@ -239,7 +240,8 @@ class DuplicateSet:
         Only keeps the subset sharing the most recent timestamp.
         """
         logger.info(
-            f"Deleting all mails strictly older than the {self.newest_timestamp} timestamp..."
+            f"Deleting all mails strictly older than the {self.newest_timestamp} "
+            "timestamp..."
         )
         # Select candidates for deletion.
         candidates = [
@@ -262,7 +264,8 @@ class DuplicateSet:
         timestamp.
         """
         logger.info(
-            f"Deleting all mails sharing the oldest {self.oldest_timestamp} timestamp..."
+            f"Deleting all mails sharing the oldest {self.oldest_timestamp} "
+            "timestamp..."
         )
         # Select candidates for deletion.
         candidates = [
@@ -284,7 +287,8 @@ class DuplicateSet:
         Only keeps the subset sharing the most ancient timestamp.
         """
         logger.info(
-            f"Deleting all mails strictly newer than the {self.oldest_timestamp} timestamp..."
+            f"Deleting all mails strictly newer than the {self.oldest_timestamp} "
+            "timestamp..."
         )
         # Select candidates for deletion.
         candidates = [
@@ -307,7 +311,8 @@ class DuplicateSet:
         timestamp.
         """
         logger.info(
-            f"Deleting all mails sharing the newest {self.newest_timestamp} timestamp..."
+            f"Deleting all mails sharing the newest {self.newest_timestamp} "
+            "timestamp..."
         )
         # Select candidates for deletion.
         candidates = [
@@ -349,7 +354,8 @@ class DuplicateSet:
         size.
         """
         logger.info(
-            f"Deleting all mails sharing the smallest size of {self.smallest_size} bytes..."
+            f"Deleting all mails sharing the smallest size of {self.smallest_size} "
+            "bytes..."
         )
         # Select candidates for deletion.
         candidates = [mail for mail in self.pool if mail.size == self.smallest_size]
@@ -389,7 +395,8 @@ class DuplicateSet:
         size.
         """
         logger.info(
-            f"Deleting all mails sharing the biggest size of {self.biggest_size} bytes..."
+            f"Deleting all mails sharing the biggest size of {self.biggest_size} "
+            "bytes..."
         )
         # Select candidates for deletion.
         candidates = [mail for mail in self.pool if mail.size == self.biggest_size]
@@ -406,7 +413,8 @@ class DuplicateSet:
     def delete_matching_path(self):
         """ Delete all duplicates whose file path match the regexp. """
         logger.info(
-            f"Deleting all mails with file path matching the {self.conf.regexp.pattern} regexp..."
+            f"Deleting all mails with file path matching the {self.conf.regexp.pattern} "
+            "regexp..."
         )
         # Select candidates for deletion.
         candidates = [
@@ -579,7 +587,8 @@ class Deduplicate:
         """
         if self.conf.strategy:
             logger.info(
-                f"The {self.conf.strategy} strategy will be applied on each duplicate set."
+                f"The {self.conf.strategy} strategy will be applied on each duplicate "
+                "set."
             )
         else:
             logger.warning("No removal strategy will be applied.")
