@@ -153,7 +153,7 @@ def make_box(tmp_path):
     ``Maildir`` and ``mbox`` for the moment.
     """
 
-    def _make_mailbox(box_type, mails):
+    def _make_box(box_type, mails):
         """Create a fake maildir and populate it with mails."""
         # Check parameters.
         assert box_type in (Maildir, mbox)
@@ -169,7 +169,7 @@ def make_box(tmp_path):
         box.close()
         return box._path
 
-    return _make_mailbox
+    return _make_box
 
 
 def check_box(box_path, box_type, kept=None, deleted=None):
