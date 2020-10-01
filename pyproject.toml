@@ -35,7 +35,6 @@ python = "^3.7"
 boltons = "^20.2.1"
 click = "^7.1"
 click-log = "^0.3"
-progressbar2 = "^3.52.1"
 tabulate = "^0.8.7"
 # Should have been put in dev-dependencies but extras only works from main
 # section.

@@ -25,7 +25,6 @@ from mailbox import Maildir, mbox
 from operator import attrgetter
 
 from boltons.cacheutils import cachedproperty
-from progressbar import Bar, Percentage, ProgressBar
 from tabulate import tabulate
 import click
 
@@ -545,26 +544,17 @@ class Deduplicate:
 
         Displays a progress bar as the operation might be slow.
         """
+        def mail_iterator():
+            for source_path, mail_source in self.sources.items():
+                for mail_id in mail_source.iterkeys():
+                    yield source_path, mail_id
 
-        # Setup the progress bar.
-        def bar(iterable=None):
-            """ Identity function to silence the progress bar. """
-            return iterable
-
-        # Override the pass-through bar() method with the progress bar widget.
-        if self.conf.progress:
-            bar = ProgressBar(
-                widgets=[Percentage(), Bar()],
-                max_value=self.stats["mail_found"],
-                redirect_stderr=True,
-                redirect_stdout=True,
-            )
-
-        # Browse all mails from all sources, compute hashes and group mails by
-        # hash.
-        for source_path, mail_source in self.sources.items():
-
-            for mail_id in bar(mail_source.iterkeys()):
+        with click.progressbar(
+                mail_iterator(),
+                length=self.stats["mail_found"],
+                label="Mails hashed",
+                show_pos=True) as progress:
+            for source_path, mail_id in progress:
 
                 mail = Mail(source_path, mail_id, self.conf)
 

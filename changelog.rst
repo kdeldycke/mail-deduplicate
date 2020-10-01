@@ -17,6 +17,8 @@ ChangeLog
 * Repackage project around Poetry and ``pyproject.toml``. Get rid of
   ``setup.py``.
 * Replace unmaintained ``bumpversion`` by ``bump2version``.
+* Drop dependency on ``progressbar2`` and replace it with ``click``'s.
+  Closes #37.
 * Switch from Travis to GitHub Actions for all CI/CD jobs.
 * Regularly run unittests against Windows, Linux and macOS.
 * Removes all copyright dates.
