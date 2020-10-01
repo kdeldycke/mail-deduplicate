@@ -22,7 +22,6 @@ from textwrap import dedent
 from uuid import uuid4
 
 from mailbox import Mailbox, Message, Maildir, mbox
-from pathlib import Path
 
 import pytest
 import arrow
