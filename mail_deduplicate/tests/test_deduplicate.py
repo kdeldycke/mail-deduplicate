@@ -107,9 +107,9 @@ class MailFactory:
 def make_box(tmp_path):
     """A generic fixture to produce a temporary box of mails.
 
-    The container can be created in any format support by Python standard
-    library, by the way of the ``container_type`` parameter. Supported values:
-    ``Maildir``, ``mbox``, etc.
+    The mail container can be created in any format supported by Python standard
+    library, by the way of the ``box_type`` parameter. Supported values: only
+    ``Maildir`` and ``mbox`` for the moment.
     """
 
     def _make_mailbox(box_type, mails):
@@ -139,7 +139,7 @@ def check_box(box_path, box_type, kept=None, deleted=None):
     fair comparison in a normalized space.
     """
     # Check provided parameters.
-    assert isinstance(box_path, Path)
+    assert isinstance(box_path, str)
     assert box_type in (Maildir, mbox)
     for mail_list in (kept, deleted):
         if mail_list:
