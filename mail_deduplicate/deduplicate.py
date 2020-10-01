@@ -643,7 +643,7 @@ class Deduplicate:
         )
 
         assert self.stats["mail_kept"] >= self.stats["mail_deleted"]
-        assert self.stats["mail_duplicates"] > 0 and (
+        assert self.stats["mail_duplicates"] == 0 or (
             self.stats["mail_duplicates"] > self.stats["mail_deleted"]
         )
 
