@@ -110,7 +110,7 @@ class DuplicateSet:
 
         Compare all mails of the duplicate set with each other, both in size
         and content. Raise an error if we're not within the limits imposed by
-        the threshold setting.
+        the threshold settings.
         """
         logger.info("Check that mail differences are within the limits.")
         if self.conf.size_threshold < 0:
@@ -196,35 +196,40 @@ class DuplicateSet:
 
     def dedupe(self):
         """ Performs the deduplication and its preliminary checks. """
-        if len(self.pool) == 1:
+        if self.size == 1:
             logger.debug("Ignore set: only one message found.")
-            self.stats["mail_unique"] += 1
+            self.stats["mail_unique"] += self.size
             self.stats["set_ignored"] += 1
             return
 
         self.stats["mail_duplicates"] += self.size
+
+        # Fine-grained checks on mail differences.
         try:
-            # Fine-grained checks on mail differences.
             self.check_differences()
-            # Call the deduplication strategy.
-            self.apply_strategy()
         except UnicodeDecodeError as expt:
             self.stats["set_rejected_encoding"] += 1
             logger.warning("Reject set: unparseable mails due to bad encoding.")
             logger.debug(f"{expt}")
+            return
         except SizeDiffAboveThreshold:
             self.stats["set_rejected_size"] += 1
             logger.warning("Reject set: mails are too dissimilar in size.")
+            return
         except ContentDiffAboveThreshold:
             self.stats["set_rejected_content"] += 1
             logger.warning("Reject set: mails are too dissimilar in content.")
+            return
+
+        # Call the deduplication strategy.
+        self.apply_strategy()
+
+        # Count duplicate sets without deletion as skipped.
+        if not self.stats["mail_deleted"]:
+            logger.info("Skip set: no deletion happened.")
+            self.stats["set_skipped"] += 1
         else:
-            # Count duplicate sets without deletion as skipped.
-            if not self.stats["mail_deleted"]:
-                logger.info("Skip set: no deletion happened.")
-                self.stats["set_skipped"] += 1
-            else:
-                self.stats["set_deduplicated"] += 1
+            self.stats["set_deduplicated"] += 1
 
     # TODO: Factorize code structure common to all strategy.
 
@@ -461,17 +466,17 @@ class Deduplicate:
         # Deduplication statistics.
         self.stats = Counter(
             {
-                # Total number of mails encountered in all maildirs.
+                # Total number of mails encountered in all mail sources.
                 "mail_found": 0,
-                # Number of mails skipped because of user options.
-                "mail_skipped": 0,
-                # Number of mails ignored because they were faulty.
+                # Number of mails ignored because they were faulty or unparseable.
                 "mail_rejected": 0,
-                # Number of valid mails ingested and retained for deduplication.
+                # Number of valid mails parsed and retained for deduplication.
                 "mail_kept": 0,
-                # Number of unique mails (i.e. sets with one mail).
+                # Number of unique mails (which ended up in duplicate sets with
+                # one mail and one only).
                 "mail_unique": 0,
-                # Number of duplicate mails (sum of mails in all duplicate sets).
+                # Number of duplicate mails (sum of mails in all duplicate sets
+                # with at least 2 mails).
                 "mail_duplicates": 0,
                 # Number of mails removed.
                 "mail_deleted": 0,
@@ -588,24 +593,9 @@ class Deduplicate:
             log_level = logger.debug if mail_count == 1 else logger.info
             log_level(f"--- {mail_count} mails sharing hash {hash_key}")
 
+            # Performs the deduplication within the set.
             duplicates = DuplicateSet(hash_key, mail_set, self.conf)
-
-            self.stats["mail_duplicates"] += duplicates.size
-
-            # Fine-grained checks on mail differences.
-            try:
-                duplicates.check_differences()
-            except SizeDiffAboveThreshold:
-                self.stats["set_rejected_size"] += 1
-                logger.warning("Reject set: mails are too dissimilar in size.")
-                continue
-            except ContentDiffAboveThreshold:
-                self.stats["set_rejected_content"] += 1
-                logger.warning("Reject set: mails are too dissimilar in content.")
-                continue
-
-            # Call the deduplication strategy.
-            duplicates.apply_strategy()
+            duplicates.dedupe()
 
             # Merge stats resulting of actions on duplicate sets.
             self.stats += duplicates.stats
@@ -615,7 +605,6 @@ class Deduplicate:
         table = [
             ["Mails", "Metric"],
             ["Found", self.stats["mail_found"]],
-            ["Skipped", self.stats["mail_skipped"]],
             ["Rejected", self.stats["mail_rejected"]],
             ["Kept", self.stats["mail_kept"]],
             ["Unique", self.stats["mail_unique"]],
@@ -642,18 +631,20 @@ class Deduplicate:
 
         # Perform some high-level consistency checks on metrics. Helps users
         # reports tricky edge-cases.
+        assert self.stats["mail_found"] >= self.stats["mail_rejected"]
+        assert self.stats["mail_found"] >= self.stats["mail_kept"]
         assert self.stats["mail_found"] == (
-            self.stats["mail_skipped"]
-            + self.stats["mail_rejected"]
-            + self.stats["mail_kept"]
+            self.stats["mail_rejected"] + self.stats["mail_kept"]
         )
+
         assert self.stats["mail_kept"] >= self.stats["mail_unique"]
         assert self.stats["mail_kept"] >= self.stats["mail_duplicates"]
-        assert self.stats["mail_kept"] >= self.stats["mail_deleted"]
         assert self.stats["mail_kept"] == (
             self.stats["mail_unique"] + self.stats["mail_duplicates"]
         )
-        assert (self.stats["mail_duplicates"] == 0) or (
+
+        assert self.stats["mail_kept"] >= self.stats["mail_deleted"]
+        assert self.stats["mail_duplicates"] > 0 and (
             self.stats["mail_duplicates"] > self.stats["mail_deleted"]
         )
 
@@ -661,10 +652,10 @@ class Deduplicate:
 
         assert self.stats["set_total"] == (
             self.stats["set_ignored"]
-            + self.stats["set_skipped"]
             + self.stats["set_rejected_encoding"]
             + self.stats["set_rejected_size"]
             + self.stats["set_rejected_content"]
+            + self.stats["set_skipped"]
             + self.stats["set_deduplicated"]
         )
 
