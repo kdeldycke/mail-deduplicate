@@ -142,8 +142,10 @@ def check_box(box_path, box_type, kept=None, deleted=None):
     assert isinstance(box_path, str)
     assert box_type in (Maildir, mbox)
     for mail_list in (kept, deleted):
+        assert not isinstance(mail_list, set)
+        if mail_list is None:
+            mail_list = []
         if mail_list:
-            assert not isinstance(mail_list, set)
             assert {isinstance(m, MailFactory) for m in mail_list} == {True}
 
     # Compares the content of the box.
