@@ -227,7 +227,6 @@ newest_mail = MailFactory(date=newest_date)
 newer_mail = MailFactory(date=newer_date)
 older_mail = MailFactory(date=older_date)
 oldest_mail = MailFactory(date=oldest_date)
-invalid_date_mail = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 
 
 def test_maildir_older_strategy(invoke, make_box):
@@ -243,7 +242,6 @@ def test_maildir_older_strategy(invoke, make_box):
             older_mail,
             newer_mail,
             newest_mail,
-            invalid_date_mail,
         ],
     )
 
@@ -262,7 +260,6 @@ def test_maildir_older_strategy(invoke, make_box):
             older_mail,
             older_mail,
             newer_mail,
-            invalid_date_mail,
         ],
     )
 
@@ -280,7 +277,6 @@ def test_maildir_oldest_strategy(invoke, make_box):
             older_mail,
             newer_mail,
             newest_mail,
-            invalid_date_mail,
         ],
     )
 
@@ -298,7 +294,6 @@ def test_maildir_oldest_strategy(invoke, make_box):
             older_mail,
             newer_mail,
             newest_mail,
-            invalid_date_mail,
         ],
         deleted=[oldest_mail, oldest_mail],
     )
@@ -317,7 +312,6 @@ def test_maildir_newer_strategy(invoke, make_box):
             older_mail,
             newer_mail,
             newest_mail,
-            invalid_date_mail,
         ],
     )
 
@@ -336,7 +330,6 @@ def test_maildir_newer_strategy(invoke, make_box):
             older_mail,
             newer_mail,
             newest_mail,
-            invalid_date_mail,
         ],
     )
 
@@ -354,7 +347,6 @@ def test_maildir_newest_strategy(invoke, make_box):
             older_mail,
             newer_mail,
             newest_mail,
-            invalid_date_mail,
         ],
     )
 
@@ -372,7 +364,6 @@ def test_maildir_newest_strategy(invoke, make_box):
             older_mail,
             older_mail,
             newer_mail,
-            invalid_date_mail,
         ],
         deleted=[newest_mail, newest_mail],
     )
