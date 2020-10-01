@@ -74,7 +74,7 @@ def validate_regexp(ctx, param, value):
     "-s",
     "--strategy",
     type=click.Choice(STRATEGIES),
-    help="Deletion strategy to apply within a subset of duplicates. If not set "
+    help="Deletion strategy to apply within a subset of duplicates. If not set, "
     "duplicates will be grouped and counted but no removal will happens.",
 )
 @click.option(

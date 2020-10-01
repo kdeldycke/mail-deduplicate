@@ -191,6 +191,7 @@ class DuplicateSet:
         method_id = self.conf.strategy.replace("-", "_")
         if not hasattr(DuplicateSet, method_id):
             raise NotImplementedError("DuplicateSet.{}() method.".format(method_id))
+        logger.debug(f"Call {method_id}() strategy.")
         getattr(self, method_id)()
 
     def dedupe(self):
@@ -577,8 +578,7 @@ class Deduplicate:
         """
         if self.conf.strategy:
             logger.info(
-                f"The {self.conf.strategy} strategy will be applied on each duplicate "
-                "set."
+                f"{self.conf.strategy} strategy will be applied on each duplicate set."
             )
         else:
             logger.warning("No removal strategy will be applied.")
