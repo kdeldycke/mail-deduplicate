@@ -10,7 +10,9 @@ ChangeLog
 * Removes the ``hash`` subcommand. Replaced it with a ``--hash-only`` parameter
   to the main dedupe command.
 * Removes ``deduplicate`` subcommand. ``mdedup`` is now a simple CLI.
-* Drop support for Python 2.
+* Fix calls to deduplication stategy. Closes #86 and #88.
+* Fix computation of stats. Closes #89.
+* Drop support for Python 2. Refs #90.
 * Bump minimal Python requirement to 3.7.
 * Repackage project around Poetry and ``pyproject.toml``. Get rid of
   ``setup.py``.
