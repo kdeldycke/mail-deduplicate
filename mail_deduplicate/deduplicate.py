@@ -628,8 +628,13 @@ class Deduplicate:
         output += "\n"
         output += tabulate(table, tablefmt="fancy_grid", headers="firstrow")
 
-        # Perform some high-level consistency checks on metrics. Helps users
-        # reports tricky edge-cases.
+        return output
+
+    def check_stats(self):
+        """ Perform some high-level consistency checks on metrics.
+
+        Helps users reports tricky edge-cases.
+        """
         assert self.stats["mail_found"] >= self.stats["mail_rejected"]
         assert self.stats["mail_found"] >= self.stats["mail_kept"]
         assert self.stats["mail_found"] == (
@@ -657,5 +662,3 @@ class Deduplicate:
             + self.stats["set_skipped"]
             + self.stats["set_deduplicated"]
         )
-
-        return output

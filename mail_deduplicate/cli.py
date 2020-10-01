@@ -241,5 +241,6 @@ def mdedup(
     click.echo("=== Phase #3: deduplicate mails.")
     dedup.run()
 
-    # Print deduplication statistics.
+    # Print deduplication statistics, then performs a self-check on them.
     click.echo(dedup.report())
+    dedup.check_stats()
