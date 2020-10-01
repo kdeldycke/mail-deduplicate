@@ -105,9 +105,12 @@ def validate_regexp(ctx, param, value):
     type=int,
     metavar="BYTES",
     default=DEFAULT_SIZE_THRESHOLD,
-    help="Maximum allowed difference in size between mails. Whole subset of "
-    "duplicates will be rejected above threshold. Set to -1 to not allow any "
-    "difference. Defaults to {} bytes.".format(DEFAULT_SIZE_THRESHOLD),
+    help="Maximum difference allowed in size between mails sharing the same hash. "
+    "The whole subset of duplicates will be rejected for deduplication if any of two "
+    "mails deviates above the threshold. Set to 0 to get strict and deduplicate the "
+    "subset only if all mails are exactly the same. Set to -1 to allow "
+    "any difference and keep deduplicating the subset whatever the differences. "
+    "Defaults to {} bytes.".format(DEFAULT_SIZE_THRESHOLD),
 )
 @click.option(
     "-C",
@@ -115,9 +118,12 @@ def validate_regexp(ctx, param, value):
     type=int,
     metavar="BYTES",
     default=DEFAULT_CONTENT_THRESHOLD,
-    help="Maximum allowed difference in content between mails. Whole subset of "
-    "duplicates will be rejected above threshold. Set to -1 to not allow any "
-    "difference. Defaults to {} bytes.".format(DEFAULT_CONTENT_THRESHOLD),
+    help="Maximum difference allowed in content between mails sharing the same hash. "
+    "The whole subset of duplicates will be rejected for deduplication if any of two "
+    "mails deviates above the threshold. Set to 0 to get strict and deduplicate the "
+    "subset only if all mails are exactly the same. Set to -1 to allow "
+    "any difference and keep deduplicating the subset whatever the differences. "
+    "Defaults to {} bytes.".format(DEFAULT_CONTENT_THRESHOLD),
 )
 @click.option(
     "-d",
@@ -177,7 +183,8 @@ def mdedup(
 
     Deletion strategy on a duplicate set only applies if no major differences
     between mails are uncovered during a fine-grained check differences during
-    the second pass. Limits can be set via the threshold options.
+    the second pass. Limits can be set via the --size-threshold and
+    --content-threshold options.
     """
     level = logger.level
     level_name = logging._levelToName.get(level, level)
