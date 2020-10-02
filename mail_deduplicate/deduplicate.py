@@ -545,16 +545,18 @@ class Deduplicate:
 
         Displays a progress bar as the operation might be slow.
         """
+
         def mail_iterator():
             for source_path, mail_source in self.sources.items():
                 for mail_id in mail_source.iterkeys():
                     yield source_path, mail_id
 
         with click.progressbar(
-                mail_iterator(),
-                length=self.stats["mail_found"],
-                label="Mails hashed",
-                show_pos=True) as progress:
+            mail_iterator(),
+            length=self.stats["mail_found"],
+            label="Mails hashed",
+            show_pos=True,
+        ) as progress:
             for source_path, mail_id in progress:
 
                 mail = Mail(source_path, mail_id, self.conf)
@@ -631,7 +633,7 @@ class Deduplicate:
         return output
 
     def check_stats(self):
-        """ Perform some high-level consistency checks on metrics.
+        """Perform some high-level consistency checks on metrics.
 
         Helps users reports tricky edge-cases.
         """
