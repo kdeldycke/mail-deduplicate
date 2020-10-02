@@ -2,10 +2,8 @@ ChangeLog
 =========
 
 
-`4.0.0 (unreleased) <https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...develop>`_
-----------------------------------------------------------------------------------------------
-
-.. note:: This version is not yet released and is under active development.
+`4.0.0 (2020-10-02) <https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v4.0.0>`_
+---------------------------------------------------------------------------------------------
 
 * Removes the ``hash`` subcommand. Replaced it with a ``--hash-only`` parameter
   to the main dedupe command.
