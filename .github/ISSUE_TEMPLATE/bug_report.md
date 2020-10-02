@@ -13,10 +13,11 @@ A clear and concise description of what the bug is.
 #### To reproduce
 
 Steps to reproduce the behavior:
-1. The full `mdedup` CLI invocation you used
-1. Try to produce the minimal subset of mails leading to the bug, and add copies of those mails (eventually censored)
-
-This effort will help maintainers add this particular edge-case to the set of unittests to prevent future regressions.
+1. The full `mdedup` CLI invocation you used.
+1. The data set leading to the bug.
+   Try to produce here the minimal subset of mails leading to the bug, and add copies of those mails (eventually censored).
+   This effort will help maintainers add this particular edge-case to the set of unittests to prevent future regressions.
+   You can reduce down the issue to a particular deduplicate subset by using the `--hash-only` parameter.
 
 #### Expected behavior
 
