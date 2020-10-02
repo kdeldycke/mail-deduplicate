@@ -45,7 +45,6 @@ biggest_mail = MailFactory(
 )
 
 
-
 def test_maildir_smaller_strategy_dry_run(invoke, make_box):
     """ Check no mail is removed in dry-run mode. """
     box_path = make_box(

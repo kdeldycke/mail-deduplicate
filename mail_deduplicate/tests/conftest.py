@@ -192,7 +192,6 @@ def check_box(box_path, box_type, kept=None, deleted=None):
     # Compares the content of the box.
     box = box_type(box_path, create=False)
 
-
     # TODO: use a COunter to count occurences
 
     assert len(box) == len(kept)
