@@ -192,7 +192,7 @@ def check_box(box_path, box_type, kept=None, deleted=None):
     # Compares the content of the box.
     box = box_type(box_path, create=False)
 
-    # TODO: use a COunter to count occurences
+    # TODO: use a COunter to count occurrences
 
     assert len(box) == len(kept)
     mails_found = sorted([str(m) for m in box])
