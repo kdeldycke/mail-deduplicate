@@ -1,38 +1,42 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a report to help improve the project
 title: ''
-labels: ''
-assignees: ''
-
+labels: 'bug'
+assignees: 'kdeldycke'
 ---
 
-**Describe the bug**
+#### Describe the bug
+
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+#### To reproduce
 
-**Expected behavior**
+Steps to reproduce the behavior:
+1. The full `mdedup` CLI invocation you used
+1. Try to produce the minimal subset of mails leading to the bug, and add copies of those mails (eventually censored)
+
+This effort will help maintainers add this particular edge-case to the set of unittests to prevent future regressions.
+
+#### Expected behavior
+
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+#### CLI output
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+Add here a copy of the console output of:
+* The `mdedup` CLI invocation and its output
+* The Python traceback you encountered
+* The `mdedup` output, but this time the `--verbosity=DEBUG` parameter 
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+Wisely choose to feature here the full output or excerpt relevant to the bug you're trying to highlight.
 
-**Additional context**
+#### Environment
+
+- OS: [e.g. macOS 10.14.5, Linux Ubuntu 19.04]
+- Python version: i.e. output of `$ python --version`
+- Mail deduplicate version: i.e. output of `$ mdedup --version`
+
+#### Additional context
+
 Add any other context about the problem here.
