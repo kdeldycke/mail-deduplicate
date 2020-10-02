@@ -7,6 +7,8 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Add issue templates to guide users to report bugs and request features.
+
 
 `4.0.0 (2020-10-02) <https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v4.0.0>`_
 ---------------------------------------------------------------------------------------------
