@@ -601,7 +601,7 @@ class Deduplicate:
             self.stats += duplicates.stats
 
         # Close all open boxes.
-        for box in self.mail_source.values():
+        for box in self.sources.values():
             box.close()
 
     def report(self):
