@@ -44,6 +44,9 @@ class Mail:
         # Global config.
         self.conf = conf
 
+    def __repr__(self):
+        return "<Mail {!r}>".format(self.mail_id)
+
     @cachedproperty
     def source(self):
         """ Return mail's source object. """
