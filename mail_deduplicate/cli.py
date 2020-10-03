@@ -56,14 +56,6 @@ def validate_regexp(ctx, param, value):
 
 @click.command(short_help="Deduplicate mail boxes content.", no_args_is_help=True)
 @click.option(
-    "-h",
-    "--hash-only",
-    is_flag=True,
-    default=False,
-    help="Compute and display the internal hashes used to identify duplicates. Do not "
-    "performs any deduplication operation.",
-)
-@click.option(
     "-n",
     "--dry-run",
     is_flag=True,
@@ -71,25 +63,12 @@ def validate_regexp(ctx, param, value):
     help="Do not actually delete anything; just show which mails would be removed.",
 )
 @click.option(
-    "-s",
-    "--strategy",
-    type=click.Choice(STRATEGIES),
-    help="Deletion strategy to apply within a subset of duplicates. If not set, "
-    "duplicates will be grouped and counted but no removal will happens.",
-)
-@click.option(
-    "-t",
-    "--time-source",
-    type=click.Choice(TIME_SOURCES),
-    help="Source of a mail's time reference. Required in time-sensitive strategies.",
-)
-@click.option(
-    "-r",
-    "--regexp",
-    callback=validate_regexp,
-    metavar="REGEXP",
-    help="Regular expression against a mail file path. Required in "
-    "delete-matching-path and delete-non-matching-path strategies.",
+    "-h",
+    "--hash-only",
+    is_flag=True,
+    default=False,
+    help="Compute and display the internal hashes used to identify duplicates. Do not "
+    "performs any deduplication operation.",
 )
 @click.option(
     "-i",
@@ -132,6 +111,29 @@ def validate_regexp(ctx, param, value):
     default=False,
     help="Show the unified diff of duplicates not within thresholds.",
 )
+@click.option(
+    "-s",
+    "--strategy",
+    type=click.Choice(STRATEGIES),
+    help="Deletion strategy to apply within a subset of duplicates. If not set, "
+    "duplicates will be grouped and counted but no removal will happens.",
+)
+@click.option(
+    "-t",
+    "--time-source",
+    type=click.Choice(TIME_SOURCES),
+    help="Source of a mail's time reference. Required in time-sensitive strategies.",
+)
+@click.option(
+    "-r",
+    "--regexp",
+    callback=validate_regexp,
+    metavar="REGEXP",
+    help="Regular expression against a mail file path. Required in "
+    "delete-matching-path and delete-non-matching-path strategies.",
+)
+# New option:
+# show their canonicalised forms of mails
 # TODO: add a show-progress option.
 @click.argument(
     "mail_sources",
@@ -149,15 +151,15 @@ def validate_regexp(ctx, param, value):
 @click.pass_context
 def mdedup(
     ctx,
-    hash_only,
     dry_run,
-    strategy,
-    time_source,
-    regexp,
+    hash_only,
     message_id,
     size_threshold,
     content_threshold,
     show_diff,
+    strategy,
+    time_source,
+    regexp,
     mail_sources,
 ):
     """Deduplicate mails from a set of either mbox files or maildir folders.

@@ -146,15 +146,15 @@ class Config:
 
     # Keep these defaults in sync with CLI option definitions.
     default_conf = {
-        "hash_only": False,
         "dry_run": False,
-        "strategy": None,
-        "time_source": None,
-        "regexp": None,
+        "hash_only": False,
         "message_id": False,
         "size_threshold": DEFAULT_SIZE_THRESHOLD,
         "content_threshold": DEFAULT_CONTENT_THRESHOLD,
         "show_diff": False,
+        "strategy": None,
+        "time_source": None,
+        "regexp": None,
     }
 
     def __init__(self, **kwargs):
