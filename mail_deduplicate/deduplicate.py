@@ -460,8 +460,6 @@ class Deduplicate:
     # Index of mail sources by their full, normalized path. So we can refer
     # to them in Mail instances. Also have the nice side effect of natural
     # deduplication of sources themselves.
-    # TODO: Lock, unlock, flush and close mboxes and maildirs. See:
-    # https://docs.python.org/2/library/mailbox.html#mailbox.Mailbox.flush
     sources = {}
 
     def __init__(self, conf):
@@ -510,28 +508,27 @@ class Deduplicate:
         considered as an ``mbox``. Else, if the provided path is a folder, it
         is parsed as a ``maildir``.
         """
+        logger.info(f"Opening {source_path} ...")
 
         if source_path.is_dir():
-            logger.info(f"Opening {source_path} as a maildir...")
+            logger.info(f"Maildir detected.")
 
             # Validates folder is a maildir.
             for subdir in MD_SUBDIRS:
                 if not source_path.joinpath(subdir).is_dir():
-                    raise ValueError(
-                        f"{source_path} is not a maildir folder (missing {subdir!r} "
-                        "sub-directory)."
-                    )
+                    raise ValueError(f"Missing sub-directory {subdir!r}")
 
             mail_source = Maildir(source_path, factory=None, create=False)
 
         elif source_path.is_file():
-            logger.info(f"Opening {source_path} as an mbox...")
+            logger.info(f"mbox detected.")
             mail_source = mbox(source_path, factory=None, create=False)
 
         else:
             raise ValueError(f"Unrecognized mail source at {source_path}")
 
         # Register the mail source.
+        mail_source.lock()
         self.sources[source_path] = mail_source
 
         # Keep track of global mail count.
@@ -600,6 +597,10 @@ class Deduplicate:
 
             # Merge stats resulting of actions on duplicate sets.
             self.stats += duplicates.stats
+
+        # Close all open boxes.
+        for box in self.mail_source.values():
+            box.close()
 
     def report(self):
         """ Returns a text report of user-friendly statistics and metrics. """
