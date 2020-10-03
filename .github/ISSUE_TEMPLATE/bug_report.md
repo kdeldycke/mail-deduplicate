@@ -6,6 +6,11 @@ labels: 'bug'
 assignees: 'kdeldycke'
 ---
 
+#### Preliminary checks
+
+* [ ] I have [read the Code of Conduct](../code-of-conduct.md)
+* [ ] I have checked there is not other [Issue](../../../issues) or [Pull Requests](../../../pulls) covering the same issue I'm about to report
+
 #### Describe the bug
 
 A clear and concise description of what the bug is.
