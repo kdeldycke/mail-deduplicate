@@ -28,7 +28,7 @@ invalid_date_mail_2 = MailFactory(date_rfc2822="Thu, 13 Dec 102 15:30 WET")
 
 def test_invalid_date_parsing(invoke, make_box):
     """ Test strategy of newest mail deletion. """
-    box_path = make_box(
+    box_path, box_type = make_box(
         Maildir,
         [
             invalid_date_mail_1,
@@ -45,13 +45,8 @@ def test_invalid_date_parsing(invoke, make_box):
     # Older mails are kept but not the newest ones.
     check_box(
         box_path,
-        Maildir,
-        kept=[
-            invalid_date_mail_1,
-            invalid_date_mail_2,
-        ],
-        deleted=[
-            invalid_date_mail_1,
+        box_type,
+        content=[
             invalid_date_mail_1,
             invalid_date_mail_2,
         ],

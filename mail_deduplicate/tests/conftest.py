@@ -167,12 +167,12 @@ def make_box(tmp_path):
             box.add(fake_mail.render())
 
         box.close()
-        return box._path
+        return box._path, box_type
 
     return _make_box
 
 
-def check_box(box_path, box_type, kept=None, deleted=None):
+def check_box(box_path, box_type, content=None):
     """Check the content of a mail box (in any of maildir of mbox format).
 
     Does not use ``set()`` types internally to avoid silent deduplication.
@@ -182,21 +182,17 @@ def check_box(box_path, box_type, kept=None, deleted=None):
     # Check provided parameters.
     assert isinstance(box_path, str)
     assert box_type in (Maildir, mbox)
-    for mail_list in (kept, deleted):
-        assert not isinstance(mail_list, set)
-        if mail_list is None:
-            mail_list = []
-        if mail_list:
-            assert same(map(type, mail_list), MailFactory)
+    assert not isinstance(content, set)
+    if content is None:
+        content = []
+    assert same(map(type, content), MailFactory)
 
     # Compares the content of the box.
     box = box_type(box_path, create=False)
 
     # TODO: use a COunter to count occurrences
 
-    assert len(box) == len(kept)
+    assert len(box) == len(content)
     mails_found = sorted([str(m) for m in box])
-    assert sorted([str(m.as_message()) for m in kept]) == mails_found
-    for mail in deleted:
-        assert str(mail.as_message()) not in mails_found
+    assert sorted([str(m.as_message()) for m in content]) == mails_found
     box.close()

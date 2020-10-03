@@ -47,7 +47,7 @@ biggest_mail = MailFactory(
 
 def test_maildir_smaller_strategy_dry_run(invoke, make_box):
     """ Check no mail is removed in dry-run mode. """
-    box_path = make_box(
+    box_path, box_type = make_box(
         Maildir,
         [
             smallest_mail,
@@ -64,8 +64,8 @@ def test_maildir_smaller_strategy_dry_run(invoke, make_box):
     assert result.exit_code == 0
     check_box(
         box_path,
-        Maildir,
-        kept=[
+        box_type,
+        content=[
             smallest_mail,
             bigger_mail,
             smallest_mail,
@@ -78,7 +78,7 @@ def test_maildir_smaller_strategy_dry_run(invoke, make_box):
 
 def test_maildir_smaller_strategy(invoke, make_box):
     """ Test strategy of small mail deletion. """
-    box_path = make_box(
+    box_path, box_type = make_box(
         Maildir,
         [
             smallest_mail,
@@ -98,22 +98,14 @@ def test_maildir_smaller_strategy(invoke, make_box):
     # Biggest mails are kept but not the smaller ones.
     check_box(
         box_path,
-        Maildir,
-        kept=[biggest_mail, biggest_mail],
-        deleted=[
-            smallest_mail,
-            smallest_mail,
-            bigger_mail,
-            smaller_mail,
-            smaller_mail,
-            bigger_mail,
-        ],
+        box_type,
+        content=[biggest_mail, biggest_mail],
     )
 
 
 def test_maildir_smallest_strategy(invoke, make_box):
     """ Test strategy of smallest mail deletion. """
-    box_path = make_box(
+    box_path, box_type = make_box(
         Maildir,
         [
             smallest_mail,
@@ -133,8 +125,8 @@ def test_maildir_smallest_strategy(invoke, make_box):
     # Bigger mails are kept but not the smallest ones.
     check_box(
         box_path,
-        Maildir,
-        kept=[
+        box_type,
+        content=[
             biggest_mail,
             bigger_mail,
             smaller_mail,
@@ -142,13 +134,12 @@ def test_maildir_smallest_strategy(invoke, make_box):
             bigger_mail,
             biggest_mail,
         ],
-        deleted=[smallest_mail, smallest_mail],
     )
 
 
 def test_maildir_bigger_strategy(invoke, make_box):
     """ Test strategy of bigger mail deletion. """
-    box_path = make_box(
+    box_path, box_type = make_box(
         Maildir,
         [
             smallest_mail,
@@ -168,22 +159,14 @@ def test_maildir_bigger_strategy(invoke, make_box):
     # Smallest mails are kept but not the bigger ones.
     check_box(
         box_path,
-        Maildir,
-        kept=[smallest_mail, smallest_mail],
-        deleted=[
-            biggest_mail,
-            bigger_mail,
-            smaller_mail,
-            smaller_mail,
-            bigger_mail,
-            biggest_mail,
-        ],
+        box_type,
+        content=[smallest_mail, smallest_mail],
     )
 
 
 def test_maildir_biggest_strategy(invoke, make_box):
     """ Test strategy of biggest mail deletion. """
-    box_path = make_box(
+    box_path, box_type = make_box(
         Maildir,
         [
             smallest_mail,
@@ -203,8 +186,8 @@ def test_maildir_biggest_strategy(invoke, make_box):
     # Smaller mails are kept but not the biggest ones.
     check_box(
         box_path,
-        Maildir,
-        kept=[
+        box_type,
+        content=[
             smallest_mail,
             smallest_mail,
             bigger_mail,
@@ -212,7 +195,6 @@ def test_maildir_biggest_strategy(invoke, make_box):
             smaller_mail,
             bigger_mail,
         ],
-        deleted=[biggest_mail, biggest_mail],
     )
 
 
@@ -230,7 +212,7 @@ oldest_mail = MailFactory(date=oldest_date)
 
 def test_maildir_older_strategy(invoke, make_box):
     """ Test strategy of older mail deletion. """
-    box_path = make_box(
+    box_path, box_type = make_box(
         Maildir,
         [
             oldest_mail,
@@ -250,22 +232,14 @@ def test_maildir_older_strategy(invoke, make_box):
     # Newest mails are kept but not the older ones.
     check_box(
         box_path,
-        Maildir,
-        kept=[newest_mail, newest_mail],
-        deleted=[
-            oldest_mail,
-            oldest_mail,
-            newer_mail,
-            older_mail,
-            older_mail,
-            newer_mail,
-        ],
+        box_type,
+        content=[newest_mail, newest_mail],
     )
 
 
 def test_maildir_oldest_strategy(invoke, make_box):
     """ Test strategy of oldest mail deletion. """
-    box_path = make_box(
+    box_path, box_type = make_box(
         Maildir,
         [
             oldest_mail,
@@ -285,8 +259,8 @@ def test_maildir_oldest_strategy(invoke, make_box):
     # Newer mails are kept but not the oldest ones.
     check_box(
         box_path,
-        Maildir,
-        kept=[
+        box_type,
+        content=[
             newest_mail,
             newer_mail,
             older_mail,
@@ -294,13 +268,12 @@ def test_maildir_oldest_strategy(invoke, make_box):
             newer_mail,
             newest_mail,
         ],
-        deleted=[oldest_mail, oldest_mail],
     )
 
 
 def test_maildir_newer_strategy(invoke, make_box):
     """ Test strategy of newer mail deletion. """
-    box_path = make_box(
+    box_path, box_type = make_box(
         Maildir,
         [
             oldest_mail,
@@ -320,22 +293,14 @@ def test_maildir_newer_strategy(invoke, make_box):
     # Oldest mails are kept but not the newer ones.
     check_box(
         box_path,
-        Maildir,
-        kept=[oldest_mail, oldest_mail],
-        deleted=[
-            newest_mail,
-            newer_mail,
-            older_mail,
-            older_mail,
-            newer_mail,
-            newest_mail,
-        ],
+        box_type,
+        content=[oldest_mail, oldest_mail],
     )
 
 
 def test_maildir_newest_strategy(invoke, make_box):
     """ Test strategy of newest mail deletion. """
-    box_path = make_box(
+    box_path, box_type = make_box(
         Maildir,
         [
             oldest_mail,
@@ -355,8 +320,8 @@ def test_maildir_newest_strategy(invoke, make_box):
     # Older mails are kept but not the newest ones.
     check_box(
         box_path,
-        Maildir,
-        kept=[
+        box_type,
+        content=[
             oldest_mail,
             oldest_mail,
             newer_mail,
@@ -364,5 +329,4 @@ def test_maildir_newest_strategy(invoke, make_box):
             older_mail,
             newer_mail,
         ],
-        deleted=[newest_mail, newest_mail],
     )
