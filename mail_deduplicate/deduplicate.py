@@ -544,6 +544,8 @@ class Deduplicate:
         """
 
         def mail_iterator():
+            """ Pre-package mails data from all sources for consumption by the
+            progress bar. """
             for source_path, mail_source in self.sources.items():
                 for mail_id in mail_source.iterkeys():
                     yield source_path, mail_id
