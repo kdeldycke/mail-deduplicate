@@ -21,8 +21,8 @@ import re
 from collections import Counter
 from difflib import unified_diff
 from itertools import combinations
-from mailbox import Maildir, mbox
 from operator import attrgetter
+from pathlib import Path
 
 from boltons.cacheutils import cachedproperty
 from boltons.iterutils import unique
@@ -35,9 +35,12 @@ from . import (
     MissingMessageID,
     SizeDiffAboveThreshold,
     logger,
-    MD_SUBDIRS,
 )
 from .mail import Mail
+from .mailbox import box_types, autodetect_box_type
+
+
+DRY_RUN_LABEL = click.style("DRY_RUN", fg="yellow")
 
 
 class DuplicateSet:
@@ -46,8 +49,6 @@ class DuplicateSet:
 
     Implements all deletion strategies applicable to a set of duplicate mails.
     """
-
-    dry_run_label = click.style("DRY_RUN", fg="yellow")
 
     def __init__(self, hash_key, mail_set, conf):
         """Load-up the duplicate set of mail and freeze pool.
@@ -415,37 +416,23 @@ class Deduplicate:
         )
 
     def add_source(self, source_path):
-        """Registers a source of mails, validates and opens it.
+        """Registers a source of mails, validates and opens it. """
+        # Make the path absolute, resolving any symlinks. Do not allow duplicates in
+        # our sources, as we use the path as a unique key to tie back a mail
+        # from its source on deletion later.
+        source_path = Path(source_path).resolve(strict=True)
+        if source_path in self.sources:
+            raise ValueError(f"{source_path} already added.")
 
-        Autodetects the kind of source. If the path is a file, then it is
-        considered as an ``mbox``. Else, if the provided path is a folder, it
-        is parsed as a ``maildir``.
-        """
-        logger.info(f"Opening {source_path} ...")
-
-        if source_path.is_dir():
-            logger.info(f"Maildir detected.")
-
-            # Validates folder is a maildir.
-            for subdir in MD_SUBDIRS:
-                if not source_path.joinpath(subdir).is_dir():
-                    raise ValueError(f"Missing sub-directory {subdir!r}")
-
-            mail_source = Maildir(source_path, factory=None, create=False)
-
-        elif source_path.is_file():
-            logger.info(f"mbox detected.")
-            mail_source = mbox(source_path, factory=None, create=False)
-
-        else:
-            raise ValueError(f"Unrecognized mail source at {source_path}")
-
-        # Register the mail source.
-        mail_source.lock()
-        self.sources[source_path] = mail_source
+        # Open and register the mail source.
+        box_type = autodetect_box_type(source_path)
+        box_constructor = box_types[box_type]
+        box = box_constructor(source_path, factory=None, create=False)
+        box.lock()
+        self.sources[source_path] = box
 
         # Keep track of global mail count.
-        mail_found = len(mail_source)
+        mail_found = len(box)
         logger.info(f"{mail_found} mails found.")
         self.stats["mail_found"] += mail_found
 

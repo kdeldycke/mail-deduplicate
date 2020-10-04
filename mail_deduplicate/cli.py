@@ -235,7 +235,7 @@ def mdedup(
 
     click.echo("=== Phase #1: load mails.")
     for source in mail_sources:
-        dedup.add_source(Path(source).resolve())
+        dedup.add_source(source)
 
     click.echo("=== Phase #2: compute mail hashes.")
     dedup.hash_all()

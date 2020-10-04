@@ -113,10 +113,6 @@ CTIME = "ctime"
 TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
 
 
-# List of required sub-folders defining a properly structured maildir.
-MD_SUBDIRS = frozenset(("cur", "new", "tmp"))
-
-
 # Defines custom exception first to avoid circular imports.
 
 
