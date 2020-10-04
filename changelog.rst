@@ -10,6 +10,8 @@ ChangeLog
 * Split-up the selection of mails candidate for removal and the deletion itself
   into two distinct batch operations.
 * Add issue templates to guide users to report bugs and request features.
+* Upgrade to ``Poetry 1.1.0``.
+* Test publishing to PyPi in dry-run mode by the way of Poetry.
 * Auto-optimize images.
 * Auto-lock closed issues and PRs after a moment of inactivity.
 
