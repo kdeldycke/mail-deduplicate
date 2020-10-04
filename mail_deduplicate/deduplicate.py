@@ -190,13 +190,14 @@ class DuplicateSet:
         return getattr(self, method_id)()
 
     def select_candidates(self):
-        """ Returns the list of duplicates selected for removal.
+        """Returns the list of duplicates selected for removal.
 
         Run preliminary checks and return the candidates fitting the strategy
-        and constraints set by the configuration. """
+        and constraints set by the configuration."""
         if self.size == 1:
             logger.debug(
-                "Ignore set: no need to deduplicate as only one message found.")
+                "Ignore set: no need to deduplicate as only one message found."
+            )
             self.stats["mail_unique"] += self.size
             self.stats["set_ignored"] += 1
             return
@@ -250,9 +251,7 @@ class DuplicateSet:
             f"Select all mails strictly older than the {self.newest_timestamp} "
             "timestamp..."
         )
-        return [
-            mail for mail in self.pool if mail.timestamp < self.newest_timestamp
-        ]
+        return [mail for mail in self.pool if mail.timestamp < self.newest_timestamp]
 
     def delete_oldest(self):
         """Delete all the oldest duplicates.
@@ -264,9 +263,7 @@ class DuplicateSet:
             f"Select all mails sharing the oldest {self.oldest_timestamp} "
             "timestamp..."
         )
-        return [
-            mail for mail in self.pool if mail.timestamp == self.oldest_timestamp
-        ]
+        return [mail for mail in self.pool if mail.timestamp == self.oldest_timestamp]
 
     def delete_newer(self):
         """Delete all newer duplicates.
@@ -277,9 +274,7 @@ class DuplicateSet:
             f"Select all mails strictly newer than the {self.oldest_timestamp} "
             "timestamp..."
         )
-        return [
-            mail for mail in self.pool if mail.timestamp > self.oldest_timestamp
-        ]
+        return [mail for mail in self.pool if mail.timestamp > self.oldest_timestamp]
 
     def delete_newest(self):
         """Delete all the newest duplicates.
@@ -291,9 +286,7 @@ class DuplicateSet:
             f"Select all mails sharing the newest {self.newest_timestamp} "
             "timestamp..."
         )
-        return [
-            mail for mail in self.pool if mail.timestamp == self.newest_timestamp
-        ]
+        return [mail for mail in self.pool if mail.timestamp == self.newest_timestamp]
 
     def delete_smaller(self):
         """Delete all smaller duplicates.
@@ -346,9 +339,7 @@ class DuplicateSet:
             "{self.conf.regexp.pattern} regexp..."
         )
         # Select candidates for deletion.
-        return [
-            mail for mail in self.pool if re.search(self.conf.regexp, mail.path)
-        ]
+        return [mail for mail in self.pool if re.search(self.conf.regexp, mail.path)]
 
     def delete_non_matching_path(self):
         """ Delete all duplicates whose file path doesn't match the regexp. """
@@ -444,8 +435,8 @@ class Deduplicate:
         """
 
         def mail_iterator():
-            """ Pre-package mails data from all sources for consumption by the
-            progress bar. """
+            """Pre-package mails data from all sources for consumption by the
+            progress bar."""
             for source_path, box in self.sources.items():
                 for mail_id in box.iterkeys():
                     yield source_path, mail_id, box.get_message(mail_id)
@@ -509,8 +500,8 @@ class Deduplicate:
             box.close()
 
     def remove_duplicates(self):
-        """ Performs the action of removing the selected mail candidates
-        in-place, from their original boxes. """
+        """Performs the action of removing the selected mail candidates
+        in-place, from their original boxes."""
         # Check our indexing and selection methods are not flagging candidates
         # several times.
         assert unique(self.candidates) == self.candidates

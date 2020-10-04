@@ -33,7 +33,6 @@ class Mail:
 
     """Message with deduplication-specific properties and utilities."""
 
-
     def __init__(self, source_path, mail_id, conf):
         """ Create mail proxy pointing to its source path and unique ID. """
         # Path to the mail's source.
