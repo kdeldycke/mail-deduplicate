@@ -202,9 +202,9 @@ def mdedup(
         (
             time_source,
             "-t/--time-source",
-            [DELETE_OLDER, DELETE_OLDEST, DELETE_NEWER, DELETE_NEWEST],
+            {DELETE_OLDER, DELETE_OLDEST, DELETE_NEWER, DELETE_NEWEST},
         ),
-        (regexp, "-r/--regexp", [DELETE_MATCHING_PATH, DELETE_NON_MATCHING_PATH]),
+        (regexp, "-r/--regexp", {DELETE_MATCHING_PATH, DELETE_NON_MATCHING_PATH}),
     ]
     for param_value, param_name, required_strategies in requirements:
         if strategy in required_strategies:
