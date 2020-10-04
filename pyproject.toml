@@ -1,7 +1,7 @@
 [tool.poetry]
 # Docs: https://python-poetry.org/docs/pyproject/
 name = "mail-deduplicate"
-version = "4.0.1"
+version = "5.0.0"
 description = """Deduplicate mails from mbox files and maildir folders."""
 license = 'GPL-2.0-or-later'
 authors = ["Kevin Deldycke <kevin@deldycke.com>"]

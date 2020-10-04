@@ -25,7 +25,7 @@ import sys
 # Canonical name of the CLI.
 CLI_NAME = "mdedup"
 
-__version__ = "4.0.1"
+__version__ = "5.0.0"
 
 
 logger = logging.getLogger(__name__)
