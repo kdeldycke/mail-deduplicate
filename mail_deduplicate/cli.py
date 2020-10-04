@@ -184,9 +184,9 @@ def mdedup(
       doesn't match the regular expression provided via the --regexp parameter.
 
     Deletion strategy on a duplicate set only applies if no major differences
-    between mails are uncovered during a fine-grained check differences during
-    the second pass. Limits can be set via the --size-threshold and
-    --content-threshold options.
+    between mails are uncovered during a fine-grained check differences in the
+    second phase. Limits can be set via the --size-threshold and --content-threshold
+    options.
     """
     level = logger.level
     level_name = logging._levelToName.get(level, level)
