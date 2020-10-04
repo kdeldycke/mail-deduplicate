@@ -31,7 +31,8 @@ from . import CTIME, HEADERS, InsufficientHeadersError, MissingMessageID, logger
 
 class Mail:
 
-    """ Encapsulate a single mail and its metadata. """
+    """Message with deduplication-specific properties and utilities."""
+
 
     def __init__(self, source_path, mail_id, conf):
         """ Create mail proxy pointing to its source path and unique ID. """
@@ -44,22 +45,11 @@ class Mail:
         # Global config.
         self.conf = conf
 
+        # The message object representing the parsed mail.
+        self.message = None
+
     def __repr__(self):
         return "<Mail {!r}>".format(self.mail_id)
-
-    @cachedproperty
-    def source(self):
-        """ Return mail's source object. """
-        # Import here to avoid circular imports.
-        from .deduplicate import Deduplicate  # noqa
-
-        return Deduplicate.sources[self.source_path]
-
-    @cachedproperty
-    def message(self):
-        """ Fetch message from its source. """
-        logger.debug(f"Fetching {self.mail_id!r} from {self.source_path} ...")
-        return self.source.get_message(self.mail_id)
 
     @cachedproperty
     def path(self):
@@ -244,7 +234,7 @@ class Mail:
                 # show_progress("Trimmed Subject to %s" % subject)
             return subject
 
-        elif header == "content-type":
+        if header == "content-type":
             # Apparently list servers actually munge Content-Type
             # e.g. by stripping the quotes from charset="us-ascii".
             # Section 5.1 of RFC2045 says that either form is valid
@@ -259,7 +249,7 @@ class Mail:
             # still useful to be able to eliminate duplicates.
             return re.sub(";.*", "", value)
 
-        elif header == "date":
+        if header == "date":
             # Date timestamps can differ by seconds or hours for various
             # reasons, so let's only honour the date for now.
             try:
@@ -284,8 +274,3 @@ class Mail:
                 return email.utils.unquote(value)
 
         return value
-
-    def delete(self):
-        logger.debug(f"Deleting {self!r}...")
-        self.source.remove(self.mail_id)
-        logger.info(f"{self.path} deleted.")

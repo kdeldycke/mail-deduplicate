@@ -7,6 +7,8 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Split-up the selection of mails candidate for removal and the deletion itself
+  into two distinct batch operations.
 * Add issue templates to guide users to report bugs and request features.
 
 

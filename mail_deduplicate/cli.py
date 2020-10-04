@@ -247,9 +247,13 @@ def mdedup(
                 click.echo("Hash: {}".format(mail.hash_key))
         ctx.exit()
 
-    click.echo("=== Phase #3: deduplicate mails.")
-    dedup.run()
+    click.echo("=== Phase #3: detect duplicates.")
+    dedup.gather_candidates()
 
+    click.echo("=== Phase #4: remove candidates.")
+    dedup.remove_duplicates()
+
+    click.echo("=== Phase #5: statistics and self-checks.")
     # Print deduplication statistics, then performs a self-check on them.
     click.echo(dedup.report())
     dedup.check_stats()
