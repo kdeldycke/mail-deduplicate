@@ -142,9 +142,6 @@ def validate_regexp(ctx, param, value):
     help="Regular expression against a mail file path. Required in "
     "delete-matching-path and delete-non-matching-path strategies.",
 )
-# New option:
-# show their canonicalised forms of mails
-# TODO: add a show-progress option.
 @click.argument(
     "mail_sources",
     nargs=-1,
