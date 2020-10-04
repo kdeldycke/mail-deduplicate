@@ -10,6 +10,7 @@ ChangeLog
 * Split-up the selection of mails candidate for removal and the deletion itself
   into two distinct batch operations.
 * Add issue templates to guide users to report bugs and request features.
+* Auto-lock closed issues and PRs after a moment of inactivity.
 
 
 `4.0.0 (2020-10-02) <https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v4.0.0>`_
