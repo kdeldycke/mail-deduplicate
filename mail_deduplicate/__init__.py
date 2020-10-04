@@ -144,6 +144,7 @@ class Config:
     default_conf = {
         "dry_run": False,
         "sources_format": False,
+        "force_unlock": False,
         "hash_only": False,
         "message_id": False,
         "size_threshold": DEFAULT_SIZE_THRESHOLD,

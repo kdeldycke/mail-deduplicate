@@ -94,9 +94,6 @@ def autodetect_box_type(path):
             * ``Babyl``
             * ``MMDF``
     """
-    logger.info(f"Opening {path} and auto-detect format...")
-
-    assert isinstance(path, Path)
     if path.is_dir():
         logger.info("Maildir detected.")
 
@@ -114,14 +111,39 @@ def autodetect_box_type(path):
     raise ValueError("Unrecognized mail source type.")
 
 
-def open_box(path, box_type=False):
+def open_box(path, box_type=False, force_unlock=False):
     """Open a mailbox.
+
+    Returns the locked box, ready for operations.
 
     If ``box_type`` is specified, forces the opening of the box in the
     specified format. Else try to autodetect the type.
     """
+    logger.info(f"Opening {path} ...")
+    assert isinstance(path, Path)
     if not box_type:
         box_type = autodetect_box_type(path)
+    else:
+        logger.warning(f"Forcing {box_type} format.")
 
     constructor = BOX_TYPES[box_type]
-    return constructor(path)
+    box = constructor(path)
+
+    try:
+        logger.debug(f"Locking box...")
+        box.lock()
+    except mailbox.ExternalClashError:
+        logger.error(f"Box already locked!")
+        # Remove the lock manually and re-lock.
+        if force_unlock:
+            logger.warning(f"Forcing removal of lock...")
+            # Forces internal metadata.
+            box._locked = True
+            box.unlock()
+            box.lock()
+        # Re-raise error.
+        else:
+            raise
+
+    logger.debug(f"Box opened.")
+    return box

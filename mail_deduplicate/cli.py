@@ -73,6 +73,13 @@ def validate_regexp(ctx, param, value):
     "helpful to open rare kind of mail sources.",
 )
 @click.option(
+    "-u",
+    "--force-unlock",
+    is_flag=True,
+    default=False,
+    help="Remove the lock on mail source opening if one is found."
+)
+@click.option(
     "-h",
     "--hash-only",
     is_flag=True,
@@ -160,6 +167,7 @@ def mdedup(
     ctx,
     dry_run,
     sources_format,
+    force_unlock,
     hash_only,
     message_id,
     size_threshold,
@@ -230,6 +238,7 @@ def mdedup(
     conf = Config(
         dry_run=dry_run,
         sources_format=sources_format,
+        force_unlock=force_unlock,
         hash_only=hash_only,
         message_id=message_id,
         size_threshold=size_threshold,
