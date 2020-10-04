@@ -23,29 +23,51 @@ import os
 import re
 import textwrap
 import time
+import inspect
+import mailbox
 
 from boltons.cacheutils import cachedproperty
 
 from . import CTIME, HEADERS, InsufficientHeadersError, MissingMessageID, logger
 
 
-class Mail:
+class DedupMail:
 
-    """Message with deduplication-specific properties and utilities."""
+    """Message with deduplication-specific properties and utilities.
 
-    def __init__(self, source_path, mail_id, conf):
-        """ Create mail proxy pointing to its source path and unique ID. """
-        # Path to the mail's source.
-        self.source_path = source_path
+    Adds all data-cleaning primitives and heuristics to Python's standard
+    library messages from: https://github.com/python/cpython/blob
+    /e799aa8b92c195735f379940acd9925961ad04ec/Lib/mailbox.py#L1489
+
+    This class should not be used directly but composed with
+    ``mailbox.Message`` sub-classes.
+    """
+
+    def __init__(self, message=None):
+        """ Initialize a pre-parsed ``Message`` instance the same way the default
+        factory in Python's ``mailbox`` module does.
+        """
+        # Hunt down in our parent classes (but ourselve) the first one inheriting the
+        # mailbox.Message class. That way we can get to the original factory.
+        orig_message_klass = None
+        for klass in inspect.getmro(self.__class__)[1:]:
+            if issubclass(klass, mailbox.Message):
+                orig_message_klass = klass
+                break
+        assert orig_message_klass
+
+        # Call original object initialization from the right message class we
+        # inherits from mailbox.Message.
+        super(orig_message_klass, self).__init__(message)
+
+        # Normalized path to the mailbox this message originates.
+        self.source_path = None
 
         # Mail ID used to uniquely refers to it in the context of its source.
-        self.mail_id = mail_id
+        self.mail_id = None
 
         # Global config.
-        self.conf = conf
-
-        # The message object representing the parsed mail.
-        self.message = None
+        self.conf = None
 
     def __repr__(self):
         return "<Mail {!r}>".format(self.mail_id)
@@ -57,7 +79,7 @@ class Mail:
         For mailbox mails, returns a fake path composed with mail's internal
         ID.
         """
-        filename = self.message.get_filename()
+        filename = self.get_filename()
         if filename:
             filepath = self.source_path.joinpath(filename)
         else:
@@ -66,7 +88,11 @@ class Mail:
 
     @cachedproperty
     def timestamp(self):
-        """ Compute the normalized canonical timestamp of the mail. """
+        """ Compute the normalized canonical timestamp of the mail.
+
+        Sourced from the message's header by default. In the case of maildir,
+        can be sourced from the email's file from the filesystem.
+        """
         # XXX ctime does not refer to creation time on POSIX systems, but
         # rather the last time the inode data changed. Source:
         # https://userprimary.net/posts/2007/11/18
@@ -75,7 +101,7 @@ class Mail:
             return os.path.getctime(self.path)
 
         # Fetch from the date header.
-        value = self.message.get("Date")
+        value = self.get("Date")
         try:
             value = email.utils.mktime_tz(email.utils.parsedate_tz(value))
         except ValueError:
@@ -103,10 +129,10 @@ class Mail:
     def body_lines(self):
         """ Return a normalized list of lines from message's body. """
         body = []
-        if self.message.preamble is not None:
-            body.extend(self.message.preamble.splitlines(keepends=True))
+        if self.preamble is not None:
+            body.extend(self.preamble.splitlines(keepends=True))
 
-        for part in self.message.walk():
+        for part in self.walk():
             if part.is_multipart():
                 continue
 
@@ -137,8 +163,8 @@ class Mail:
 
             body.extend(part_body.splitlines(keepends=True))
 
-        if self.message.epilogue is not None:
-            body.extend(self.message.epilogue.splitlines(keepends=True))
+        if self.epilogue is not None:
+            body.extend(self.epilogue.splitlines(keepends=True))
         return body
 
     @cachedproperty
@@ -148,7 +174,7 @@ class Mail:
         Only used for debugging and human-friendly logging.
         """
         # Fetch subject from first message.
-        subject = self.message.get("Subject", "")
+        subject = self.get("Subject", "")
         subject, _ = re.subn(r"\s+", " ", subject)
         return subject
 
@@ -156,7 +182,7 @@ class Mail:
     def hash_key(self):
         """ Returns the canonical hash of a mail. """
         if self.conf.message_id:
-            message_id = self.message.get("Message-Id")
+            message_id = self.get("Message-Id")
             if message_id:
                 return message_id.strip()
             logger.error(f"No Message-ID found: {self.header_text}")
@@ -167,21 +193,22 @@ class Mail:
     @cachedproperty
     def header_text(self):
         return "".join(
-            "{}: {}\n".format(header, self.message[header])
+            "{}: {}\n".format(header, self.get(header))
             for header in HEADERS
-            if self.message[header] is not None
+            if self.get(header) is not None
         )
 
     @cachedproperty
     def canonical_headers(self):
-        """ Copy selected headers into a new string. """
+        """ Serialize the canonical headers names and values into a string to facilitate
+        hashing. """
         canonical_headers = ""
 
         for header in HEADERS:
-            if header not in self.message:
+            if header not in self:
                 continue
 
-            for value in self.message.get_all(header):
+            for value in self.get_all(header):
                 canonical_value = self.canonical_header_value(header, value)
                 if re.search(r"\S", canonical_value):
                     canonical_headers += "{}: {}\n".format(header, canonical_value)

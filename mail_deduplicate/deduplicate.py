@@ -36,8 +36,7 @@ from . import (
     SizeDiffAboveThreshold,
     logger,
 )
-from .mail import Mail
-from .mailbox import box_types, autodetect_box_type
+from .mailbox import open_box
 
 
 DRY_RUN_LABEL = click.style("DRY_RUN", fg="yellow")
@@ -120,7 +119,7 @@ class DuplicateSet:
             if self.conf.size_threshold > -1:
                 size_difference = abs(mail_a.size - mail_b.size)
                 logger.debug(
-                    f"{mail_a} and {mail_b} differs by {size_difference} bytes in size."
+                    f"{mail_a!r} and {mail_b!r} differs by {size_difference} bytes in size."
                 )
                 if size_difference > self.conf.size_threshold:
                     raise SizeDiffAboveThreshold
@@ -129,7 +128,7 @@ class DuplicateSet:
             if self.conf.content_threshold > -1:
                 content_difference = self.diff(mail_a, mail_b)
                 logger.debug(
-                    f"{mail_a} and {mail_b} differs by {content_difference} bytes in "
+                    f"{mail_a!r} and {mail_b!r} differs by {content_difference} bytes in "
                     "content."
                 )
                 if content_difference > self.conf.content_threshold:
@@ -416,9 +415,7 @@ class Deduplicate:
             raise ValueError(f"{source_path} already added.")
 
         # Open and register the mail source.
-        box_type = autodetect_box_type(source_path)
-        box_constructor = box_types[box_type]
-        box = box_constructor(source_path, factory=None, create=False)
+        box = open_box(source_path, autodetect=True)
         box.lock()
         self.sources[source_path] = box
 
@@ -433,35 +430,33 @@ class Deduplicate:
 
         Displays a progress bar as the operation might be slow.
         """
-
-        def mail_iterator():
-            """Pre-package mails data from all sources for consumption by the
-            progress bar."""
-            for source_path, box in self.sources.items():
-                for mail_id in box.iterkeys():
-                    yield source_path, mail_id, box.get_message(mail_id)
-
         with click.progressbar(
-            mail_iterator(),
             length=self.stats["mail_found"],
             label="Mails hashed",
             show_pos=True,
         ) as progress:
-            for source_path, mail_id, message in progress:
 
-                mail = Mail(source_path, mail_id, self.conf)
-                mail.message = message
+            for source_path, box in self.sources.items():
+                for mail_id, mail in box.iteritems():
 
-                try:
-                    mail_hash = mail.hash_key
-                except (InsufficientHeadersError, MissingMessageID) as expt:
-                    logger.warning(f"Rejecting {mail.path}: {expt.args[0]}")
-                    self.stats["mail_rejected"] += 1
-                else:
-                    logger.debug(f"Hash is {mail_hash} for {mail.path}.")
-                    # Use a set to deduplicate entries pointing to the same file.
-                    self.mails.setdefault(mail_hash, set()).add(mail)
-                    self.stats["mail_kept"] += 1
+                    # Re-attach box_path and mail_id to let the mail carry its
+                    # own information on its origin box and index in this box.
+                    mail.mail_id = mail_id
+                    mail.source_path = source_path
+                    mail.conf = self.conf
+
+                    try:
+                        mail_hash = mail.hash_key
+                    except (InsufficientHeadersError, MissingMessageID) as expt:
+                        logger.warning(f"Rejecting {mail.path}: {expt.args[0]}")
+                        self.stats["mail_rejected"] += 1
+                    else:
+                        logger.debug(f"Hash is {mail_hash} for {mail.path}.")
+                        # Use a set to deduplicate entries pointing to the same file.
+                        self.mails.setdefault(mail_hash, set()).add(mail)
+                        self.stats["mail_kept"] += 1
+
+                    progress.update(1)
 
     def gather_candidates(self):
         """Gather all candidates for deletion from each duplicate set.

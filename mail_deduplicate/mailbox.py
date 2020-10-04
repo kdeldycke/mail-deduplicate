@@ -19,9 +19,13 @@
 
 import mailbox
 import inspect
+from functools import partial
+from pathlib import Path
+
+from boltons.dictutils import FrozenDict
 
 from . import logger
-from .mail import Mail
+from .mail import DedupMail
 
 
 """ Patch and tweak Python's standard librabry mailboxes constructors to set
@@ -33,23 +37,47 @@ tools and utilities. """
 MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 
 
-# Maintain a mapping between box type IDs and their constructors.
-box_types = {}
+def build_box_constructors():
+    """ Gather all constructors specific mailbox formats supported by the standard
+    Python library.
 
-# Gather all constructors specific mailbox formats supported by the standard
-# Python library.
-for _, klass in inspect.getmembers(mailbox, inspect.isclass):
-    # Only keep subclasses of the mailbox.Mailbox interface, but the latter and
-    # all others starting with an underscore.
-    if (
-        klass != mailbox.Mailbox
-        and not klass.__name__.startswith("_")
-        and issubclass(klass, mailbox.Mailbox)
-    ):
-        box_types[klass.__name__.lower()] = klass
+    Only keep subclasses of the mailbox.Mailbox interface, but the latter and
+    all others starting with an underscore.
+    """
+    for _, klass in inspect.getmembers(mailbox, inspect.isclass):
+        if (
+            klass != mailbox.Mailbox
+            and not klass.__name__.startswith("_")
+            and issubclass(klass, mailbox.Mailbox)
+        ):
+            # Fetch the default factory for each mailbox type based on naming
+            # conventions .
+            message_klass = getattr(mailbox, "{}Message".format(klass.__name__))
+            assert issubclass(message_klass, mailbox.Message)
+
+            # Extend the default factory with our own ``DedupMail`` class to add
+            # deduplication utilities.
+            factory_klass = type(
+                "{}DedupMail".format(klass.__name__),
+                (DedupMail, message_klass, object),
+                {"__doc__": f"Extend the default message factory for {klass} with our "
+                    "own ``DedupMail`` class to add deduplication utilities."}
+            )
+
+            # Set our own custom factory and safety options to default constructor.
+            constructor = partial(klass, factory=factory_klass, create=False)
+
+            # Generates our own box_type_id for use in CLI parameters.
+            box_type_id = klass.__name__.lower()
+
+            yield box_type_id, constructor
 
 
-def autodetect_box_type(source_path):
+# Mapping between supported box type IDs and their constructors.
+BOX_TYPES = FrozenDict(build_box_constructors())
+
+
+def autodetect_box_type(path):
     """Auto-detect the format of the mailbox located at the provided path.
 
     Returns a box type as indexed in the ``box_types`` dictionnary above.
@@ -66,20 +94,32 @@ def autodetect_box_type(source_path):
             * ``Babyl``
             * ``MMDF``
     """
-    logger.info(f"Opening {source_path} and auto-detect format...")
+    logger.info(f"Opening {path} and auto-detect format...")
 
-    if source_path.is_dir():
+    assert isinstance(path, Path)
+    if path.is_dir():
         logger.info("Maildir detected.")
 
         # Validates folder is a maildir.
         for subdir in MAILDIR_SUBDIRS:
-            if not source_path.joinpath(subdir).is_dir():
+            if not path.joinpath(subdir).is_dir():
                 raise ValueError(f"Missing sub-directory {subdir!r}")
 
         return "maildir"
 
-    if source_path.is_file():
+    if path.is_file():
         logger.info("mbox detected.")
         return "mbox"
 
     raise ValueError("Unrecognized mail source type.")
+
+
+def open_box(path, autodetect=True):
+    """Open a mailbox."""
+    if autodetect is True:
+        box_type = autodetect_box_type(path)
+    else:
+        raise NotImplementedError()
+
+    constructor = BOX_TYPES[box_type]
+    return constructor(path)
