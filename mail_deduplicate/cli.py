@@ -251,11 +251,11 @@ def mdedup(
 
     dedup = Deduplicate(conf)
 
-    click.echo("=== Phase #1: load mails.")
+    click.echo(click.style("► Phase #1 - Load mails", fg="blue", bold=True))
     for source in mail_sources:
         dedup.add_source(source)
 
-    click.echo("=== Phase #2: compute mail hashes.")
+    click.echo(click.style("► Phase #2 - Compute hashes", fg="blue", bold=True))
     dedup.hash_all()
     if hash_only:
         for all_mails in dedup.mails.values():
@@ -265,13 +265,15 @@ def mdedup(
                 click.echo("Hash: {}".format(mail.hash_key))
         ctx.exit()
 
-    click.echo("=== Phase #3: detect duplicates.")
+    click.echo(click.style(
+        "► Phase #3 - Detect duplicates", fg="blue", bold=True))
     dedup.gather_candidates()
 
-    click.echo("=== Phase #4: remove candidates.")
+    click.echo(click.style(
+        "► Phase #4 - Delete candidates", fg="blue", bold=True))
     dedup.remove_duplicates()
 
-    click.echo("=== Phase #5: statistics and self-checks.")
+    click.echo(click.style("► Phase #5 - Report", fg="blue", bold=True))
     # Print deduplication statistics, then performs a self-check on them.
     click.echo(dedup.report())
     dedup.check_stats()
