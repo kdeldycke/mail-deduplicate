@@ -7,6 +7,9 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Add supports for ``Babyl``, ``MH`` and ``MMDF`` mailbox types.
+* Add new ``-f``/``--sources-format`` option to force the type of mail sources
+  on opening.
 * Split-up the selection of mails candidate for removal and the deletion itself
   into two distinct batch operations.
 * Add issue templates to guide users to report bugs and request features.

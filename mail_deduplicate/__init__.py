@@ -143,6 +143,7 @@ class Config:
     # Keep these defaults in sync with CLI option definitions.
     default_conf = {
         "dry_run": False,
+        "sources_format": False,
         "hash_only": False,
         "message_id": False,
         "size_threshold": DEFAULT_SIZE_THRESHOLD,

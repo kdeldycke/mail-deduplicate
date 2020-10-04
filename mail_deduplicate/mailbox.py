@@ -114,12 +114,14 @@ def autodetect_box_type(path):
     raise ValueError("Unrecognized mail source type.")
 
 
-def open_box(path, autodetect=True):
-    """Open a mailbox."""
-    if autodetect is True:
+def open_box(path, box_type=False):
+    """Open a mailbox.
+
+    If ``box_type`` is specified, forces the opening of the box in the
+    specified format. Else try to autodetect the type.
+    """
+    if not box_type:
         box_type = autodetect_box_type(path)
-    else:
-        raise NotImplementedError()
 
     constructor = BOX_TYPES[box_type]
     return constructor(path)

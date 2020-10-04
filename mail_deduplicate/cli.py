@@ -39,6 +39,7 @@ from . import (
     __version__,
     logger,
 )
+from .mailbox import BOX_TYPES
 from .deduplicate import Deduplicate
 
 click_log.basic_config(logger)
@@ -61,6 +62,15 @@ def validate_regexp(ctx, param, value):
     is_flag=True,
     default=False,
     help="Do not actually delete anything; just show which mails would be removed.",
+)
+@click.option(
+    "-f",
+    "--sources-format",
+    type=click.Choice(sorted(BOX_TYPES)),
+    help="Force all provided mail sources to be parsed in the specified format. "
+    "If not set, auto-detect the format of sources independently. Because "
+    "auto-detection only supports 'maildir' and 'mbox' format, this option is "
+    "helpful to open rare kind of mail sources.",
 )
 @click.option(
     "-h",
@@ -152,6 +162,7 @@ def validate_regexp(ctx, param, value):
 def mdedup(
     ctx,
     dry_run,
+    sources_format,
     hash_only,
     message_id,
     size_threshold,
@@ -225,6 +236,7 @@ def mdedup(
         regexp=regexp,
         dry_run=dry_run,
         show_diff=show_diff,
+        sources_format=sources_format,
         message_id=message_id,
         size_threshold=size_threshold,
         content_threshold=content_threshold,
