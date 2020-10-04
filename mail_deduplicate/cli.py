@@ -124,14 +124,14 @@ def validate_regexp(ctx, param, value):
 @click.option(
     "-s",
     "--strategy",
-    type=click.Choice(STRATEGIES),
+    type=click.Choice(sorted(STRATEGIES)),
     help="Deletion strategy to apply within a subset of duplicates. If not set, "
     "duplicates will be grouped and counted but no removal will happens.",
 )
 @click.option(
     "-t",
     "--time-source",
-    type=click.Choice(TIME_SOURCES),
+    type=click.Choice(sorted(TIME_SOURCES)),
     help="Source of a mail's time reference. Required in time-sensitive strategies.",
 )
 @click.option(
@@ -148,7 +148,7 @@ def validate_regexp(ctx, param, value):
 @click.argument(
     "mail_sources",
     nargs=-1,
-    metavar="MBOXES/MAILDIRS",
+    metavar="MAIL_SOURCE_1 MAIL_SOURCE_2 (...)",
     type=click.Path(exists=True, resolve_path=True),
 )
 @click_log.simple_verbosity_option(
