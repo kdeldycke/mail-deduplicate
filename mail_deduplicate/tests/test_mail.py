@@ -27,7 +27,7 @@ invalid_date_mail_2 = MailFactory(date_rfc2822="Thu, 13 Dec 102 15:30 WET")
 
 
 def test_invalid_date_parsing_noop(invoke, make_box):
-    """ Mails with strange non-standard dates gets parsed anyway and
+    """Mails with strange non-standard dates gets parsed anyway and
     grouped into duplicate sets. No deduplication happen: mails groups shares
     the same metadata."""
     box_path, box_type = make_box(
@@ -41,8 +41,7 @@ def test_invalid_date_parsing_noop(invoke, make_box):
         ],
     )
 
-    result = invoke(
-        "--time-source=date-header", "--strategy=delete-newest", box_path)
+    result = invoke("--time-source=date-header", "--strategy=delete-newest", box_path)
 
     assert result.exit_code == 0
 
