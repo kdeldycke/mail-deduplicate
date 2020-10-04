@@ -228,16 +228,16 @@ def mdedup(
             )
 
     conf = Config(
-        strategy=strategy,
-        time_source=time_source,
-        regexp=regexp,
         dry_run=dry_run,
-        show_diff=show_diff,
         sources_format=sources_format,
+        hash_only=hash_only,
         message_id=message_id,
         size_threshold=size_threshold,
         content_threshold=content_threshold,
-        # progress=progress,
+        show_diff=show_diff,
+        strategy=strategy,
+        time_source=time_source,
+        regexp=regexp,
     )
 
     dedup = Deduplicate(conf)
