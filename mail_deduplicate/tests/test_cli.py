@@ -83,19 +83,3 @@ def test_verbosity(invoke, level):
         assert "debug: " in result.stderr
     else:
         assert "debug: " not in result.stderr
-
-
-@pytest.mark.parametrize("source", ["./dummy_maildir/", "./__init__.py"])
-def test_nonexistent_path(invoke, source):
-    result = invoke(source)
-    assert result.exit_code == 2
-    assert not result.stdout
-    assert "Path '{}' does not exist".format(source) in result.stderr
-
-
-def test_invalid_maildir_structure(invoke):
-    result = invoke(".")
-    assert result.exit_code == 1
-    assert "Phase #1" in result.stdout
-    assert "Opening " in result.stderr
-    assert "is not a maildir" in str(result.exc_info[1])
