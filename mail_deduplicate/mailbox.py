@@ -42,14 +42,15 @@ for _, klass in inspect.getmembers(mailbox, inspect.isclass):
     # Only keep subclasses of the mailbox.Mailbox interface, but the latter and
     # all others starting with an underscore.
     if (
-            klass != mailbox.Mailbox and
-            not klass.__name__.startswith('_') and
-            issubclass(klass, mailbox.Mailbox)):
+        klass != mailbox.Mailbox
+        and not klass.__name__.startswith("_")
+        and issubclass(klass, mailbox.Mailbox)
+    ):
         box_types[klass.__name__.lower()] = klass
 
 
 def autodetect_box_type(source_path):
-    """ Auto-detect the format of the mailbox located at the provided path.
+    """Auto-detect the format of the mailbox located at the provided path.
 
     Returns a box type as indexed in the ``box_types`` dictionnary above.
 
@@ -75,10 +76,10 @@ def autodetect_box_type(source_path):
             if not source_path.joinpath(subdir).is_dir():
                 raise ValueError(f"Missing sub-directory {subdir!r}")
 
-        return 'maildir'
+        return "maildir"
 
     if source_path.is_file():
         logger.info("mbox detected.")
-        return 'mbox'
+        return "mbox"
 
     raise ValueError("Unrecognized mail source type.")
