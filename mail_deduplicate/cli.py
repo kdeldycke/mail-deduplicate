@@ -66,7 +66,7 @@ def validate_regexp(ctx, param, value):
 @click.option(
     "-f",
     "--sources-format",
-    type=click.Choice(sorted(BOX_TYPES), case_sensitive=True),
+    type=click.Choice(sorted(BOX_TYPES), case_sensitive=False),
     help="Force all provided mail sources to be parsed in the specified format. "
     "If not set, auto-detect the format of sources independently. Because "
     "auto-detection only supports 'maildir' and 'mbox' format, this option is "
