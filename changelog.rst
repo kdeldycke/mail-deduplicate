@@ -2,10 +2,8 @@ ChangeLog
 =========
 
 
-`5.0.0 (unreleased) <https://github.com/kdeldycke/mail-deduplicate/compare/v4.0.0...develop>`_
-----------------------------------------------------------------------------------------------
-
-.. note:: This version is not yet released and is under active development.
+`5.0.0 (2020-10-05) <https://github.com/kdeldycke/mail-deduplicate/compare/v4.0.0...v5.0.0>`_
+---------------------------------------------------------------------------------------------
 
 * Add supports for ``Babyl``, ``MH`` and ``MMDF`` mailbox types.
 * Add new ``-f``/``--sources-format`` option to force the type of mail sources
