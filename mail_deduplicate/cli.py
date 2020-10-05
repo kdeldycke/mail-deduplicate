@@ -91,9 +91,14 @@ def validate_regexp(ctx, param, value):
     "-h",
     "--hash-header",
     multiple=True,
-    help="Header to use to compute each mail's hash. Can be repeated multiple "
-    "time to set an ordered list of headers. Header names are case-insensitive. "
-    "Defaults to: {}.".format("-h {} ".join(HASH_HEADERS)),
+    type=str,
+    metavar="Header-ID",
+    default=HASH_HEADERS,
+    help="Headers to use to compute each mail's hash. Must be repeated multiple "
+    "times to set an ordered list of headers. IDs are case-insensitive. Duplicate "
+    "entries are removed. Defaults to: \"{}\".".format(
+        " ".join(["-h {}".format(h) for h in HASH_HEADERS])
+    ),
 )
 @click.option(
     "-S",

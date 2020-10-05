@@ -166,16 +166,16 @@ class Config:
         assert self.content_threshold >= -1
 
         # Headers are case-insensitive in Python implementation.
-        normalized_headers = tuple(h.lower() for h in self.hash_headers)
-        # Check lower-cased header IDs are unique.
-        assert len(unique(normalized_headers)) == len(unique(self.hash_headers))
+        normalized_headers = [h.lower() for h in self.hash_headers]
+        # Remove duplicate entries.
+        normalized_headers = unique(normalized_headers)
         # Mail headers are composed of ASCII characters between 33 and 126
         # (both inclusive) according the RFC-5322.
         for hid in normalized_headers:
             ascii_indexes = set(map(ord, hid))
             assert max(ascii_indexes) <= 126
             assert min(ascii_indexes) >= 33
-        self.hash_headers = normalized_headers
+        self.hash_headers = tuple(normalized_headers)
 
     def __getattr__(self, attr_id):
         """ Expose configuration entries as properties. """
