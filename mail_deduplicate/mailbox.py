@@ -22,6 +22,7 @@ import inspect
 from functools import partial
 from pathlib import Path
 
+import click
 from boltons.dictutils import FrozenDict
 
 from . import logger
@@ -119,7 +120,8 @@ def open_box(path, box_type=False, force_unlock=False):
     If ``box_type`` is specified, forces the opening of the box in the
     specified format. Else try to autodetect the type.
     """
-    logger.info(f"Opening {path} ...")
+    styled_path = click.style(str(path), fg='bright_white')
+    logger.info(f"Opening {styled_path} ...")
     assert isinstance(path, Path)
     if not box_type:
         box_type = autodetect_box_type(path)
