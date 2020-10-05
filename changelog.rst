@@ -11,6 +11,8 @@ ChangeLog
   to compute hash.
 * Remove ``-i``/``--message-id`` option. Can be emulated with ``-h
   Message-ID`` or ``--hash-header Message-ID`` option.
+* Make all keyword-based choice parameters (``--sources-format``, ``--strategy`` and
+  ``--time-source``) case-insensitive.
 
 
 `5.0.0 (2020-10-05) <https://github.com/kdeldycke/mail-deduplicate/compare/v4.0.0...v5.0.0>`_

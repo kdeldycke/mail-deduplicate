@@ -66,7 +66,7 @@ def validate_regexp(ctx, param, value):
 @click.option(
     "-f",
     "--sources-format",
-    type=click.Choice(sorted(BOX_TYPES)),
+    type=click.Choice(sorted(BOX_TYPES), case_sensitive=True),
     help="Force all provided mail sources to be parsed in the specified format. "
     "If not set, auto-detect the format of sources independently. Because "
     "auto-detection only supports 'maildir' and 'mbox' format, this option is "
@@ -131,14 +131,14 @@ def validate_regexp(ctx, param, value):
 @click.option(
     "-s",
     "--strategy",
-    type=click.Choice(sorted(STRATEGIES)),
+    type=click.Choice(sorted(STRATEGIES), case_sensitive=False),
     help="Deletion strategy to apply within a subset of duplicates. If not set, "
     "duplicates will be grouped and counted but no removal will happens.",
 )
 @click.option(
     "-t",
     "--time-source",
-    type=click.Choice(sorted(TIME_SOURCES)),
+    type=click.Choice(sorted(TIME_SOURCES), case_sensitive=False),
     help="Source of a mail's time reference. Required in time-sensitive strategies.",
 )
 @click.option(
