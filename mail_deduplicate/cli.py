@@ -19,7 +19,6 @@
 
 import logging
 import re
-from pathlib import Path
 
 import click
 import click_log
@@ -33,6 +32,7 @@ from . import (
     DELETE_NON_MATCHING_PATH,
     DELETE_OLDER,
     DELETE_OLDEST,
+    HASH_HEADERS,
     STRATEGIES,
     TIME_SOURCES,
     Config,
@@ -80,7 +80,7 @@ def validate_regexp(ctx, param, value):
     help="Remove the lock on mail source opening if one is found."
 )
 @click.option(
-    "-h",
+    "-H",
     "--hash-only",
     is_flag=True,
     default=False,
@@ -88,12 +88,12 @@ def validate_regexp(ctx, param, value):
     "performs any deduplication operation.",
 )
 @click.option(
-    "-i",
-    "--message-id",
-    is_flag=True,
-    default=False,
-    help="Only use the Message-ID header as a hash key. Not recommended. Replace the "
-    "default behavior consisting in deriving the hash from several headers.",
+    '-h',
+    '--hash-header',
+    multiple=True,
+    help="Header to use to compute each mail's hash. Can be repeated multiple "
+    "time to set an ordered list of headers. Header names are case-insensitive. "
+    "Defaults to: {}.".format("-h {} ".join(HASH_HEADERS)),
 )
 @click.option(
     "-S",
@@ -169,7 +169,7 @@ def mdedup(
     sources_format,
     force_unlock,
     hash_only,
-    message_id,
+    hash_header,
     size_threshold,
     content_threshold,
     show_diff,
@@ -240,7 +240,7 @@ def mdedup(
         sources_format=sources_format,
         force_unlock=force_unlock,
         hash_only=hash_only,
-        message_id=message_id,
+        hash_headers=hash_header,
         size_threshold=size_threshold,
         content_threshold=content_threshold,
         show_diff=show_diff,
@@ -260,8 +260,7 @@ def mdedup(
     if hash_only:
         for all_mails in dedup.mails.values():
             for mail in all_mails:
-                click.echo(mail.header_text)
-                click.echo("-" * 70)
+                click.echo(mail.pretty_headers)
                 click.echo("Hash: {}".format(mail.hash_key))
         ctx.exit()
 

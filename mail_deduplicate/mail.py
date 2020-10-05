@@ -26,9 +26,10 @@ import time
 import inspect
 import mailbox
 
+from tabulate import tabulate
 from boltons.cacheutils import cachedproperty
 
-from . import CTIME, HEADERS, InsufficientHeadersError, MissingMessageID, logger
+from . import CTIME, InsufficientHeadersError, logger
 
 
 class DedupMail:
@@ -181,74 +182,92 @@ class DedupMail:
     @cachedproperty
     def hash_key(self):
         """ Returns the canonical hash of a mail. """
-        if self.conf.message_id:
-            message_id = self.get("Message-Id")
-            if message_id:
-                return message_id.strip()
-            logger.error(f"No Message-ID found: {self.header_text}")
-            raise MissingMessageID
-
-        return hashlib.sha224(self.canonical_headers).hexdigest()
-
-    @cachedproperty
-    def header_text(self):
-        return "".join(
-            "{}: {}\n".format(header, self.get(header))
-            for header in HEADERS
-            if self.get(header) is not None
-        )
+        return hashlib.sha224(self.serialized_headers).hexdigest()
 
     @cachedproperty
     def canonical_headers(self):
-        """ Serialize the canonical headers names and values into a string to facilitate
-        hashing. """
-        canonical_headers = ""
+        """ Returns the full list of all canonical headers names and values in preparation for hashing.
+        """
+        canonical_headers = []
 
-        for header in HEADERS:
-            if header not in self:
+        for header_id in self.conf.hash_headers:
+
+            # Skip absent header.
+            if header_id not in self:
                 continue
 
-            for value in self.get_all(header):
-                canonical_value = self.canonical_header_value(header, value)
-                if re.search(r"\S", canonical_value):
-                    canonical_headers += "{}: {}\n".format(header, canonical_value)
+            # Fetch all occurences of the header.
+            canonical_values = []
+            for header_value in self.get_all(header_id):
+                normalized_value = self.normalize_header_value(header_id, header_value)
+                if re.search(r"\S", normalized_value):
+                    canonical_values.append(normalized_value)
+            canonical_value = "\n".join(canonical_values)
 
-        canonical_headers = canonical_headers.encode("utf-8")
-        if len(canonical_headers) > 50:
-            return canonical_headers
+            canonical_headers.append((header_id, canonical_value))
+
+        # Cast to a tuple to prevent any modification.
+        return tuple(canonical_headers)
+
+    @cachedproperty
+    def pretty_canonical_headers(self):
+        """ Renders into a table and in the same order, headers names and values
+        used to produce mail's hash.
+
+        Returns a string ready to be printing to user or for debugging.
+        """
+        table = [["Header ID", "Header value"]] + list(self.canonical_headers)
+        return tabulate(table, tablefmt="fancy_grid", headers="firstrow")
+
+    @cachedproperty
+    def serialized_headers(self):
+        """ Serialize the canonical headers into a single string ready to be hashed. """
+        serialized_headers = '\n'.join(
+            ["{}: {}".format(h_id, h_value) for h_id, h_value in
+             self.canonical_headers]).encode("utf-8")
+
+        # Simple heuristic to make sure our hashes are based on reasonably long
+        # strings.
+        if len(serialized_headers) > 50:
+            return serialized_headers
 
         # At this point we should have at absolute minimum 3 or 4 headers, e.g.
         # From/To/Date/Subject; if not, something went badly wrong.
 
-        if len(canonical_headers) == 0:
+        if len(serialized_headers) == 0:
             raise InsufficientHeadersError("No canonical headers found")
 
         err = textwrap.dedent(
             """\
             Not enough data from canonical headers to compute reliable hash!
-            Headers:
+            Serialized headers:
             --------- 8< --------- 8< --------- 8< --------- 8< ---------
             {}
             --------- 8< --------- 8< --------- 8< --------- 8< ---------"""
         )
-        raise InsufficientHeadersError(err.format(canonical_headers))
+        raise InsufficientHeadersError(err.format(serialized_headers))
 
     @staticmethod
-    def canonical_header_value(header, value):
-        header = header.lower()
+    def normalize_header_value(header_id, value):
+        """ Normalize and clean-up header value into its canonical form.
+
+        Always returns a unicode string.
+        """
         # Problematic when reading utf8 emails
         # this will ensure value is always string
         if isinstance(value, bytes):
             value = value.decode("utf-8", "replace")
         elif isinstance(value, email.header.Header):
             value = str(value)
+
+        # Normalize white spaces.
         value = re.sub(r"\s+", " ", value).strip()
 
         # Trim Subject prefixes automatically added by mailing list software,
         # since the mail could have been cc'd to multiple lists, in which case
         # it will receive a different prefix for each, but this shouldn't be
         # treated as a real difference between duplicate mails.
-        if header == "subject":
+        if header_id == "subject":
             subject = value
             while True:
                 matching = re.match(
@@ -260,7 +279,7 @@ class DedupMail:
                 # show_progress("Trimmed Subject to %s" % subject)
             return subject
 
-        if header == "content-type":
+        if header_id == "content-type":
             # Apparently list servers actually munge Content-Type
             # e.g. by stripping the quotes from charset="us-ascii".
             # Section 5.1 of RFC2045 says that either form is valid
@@ -275,7 +294,7 @@ class DedupMail:
             # still useful to be able to eliminate duplicates.
             return re.sub(";.*", "", value)
 
-        if header == "date":
+        if header_id == "date":
             # Date timestamps can differ by seconds or hours for various
             # reasons, so let's only honour the date for now.
             try:
@@ -287,7 +306,7 @@ class DedupMail:
             except (TypeError, ValueError):
                 return value
 
-        elif header in ["to", "message-id"]:
+        elif header_id in ["to", "message-id"]:
             # Sometimes email.parser strips the <> brackets from a To:
             # header which has a single address.  I have seen this happen
             # for only one mail in a duplicate pair.  I'm not sure why

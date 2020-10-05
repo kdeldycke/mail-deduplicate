@@ -21,6 +21,8 @@
 
 import logging
 import sys
+from operator import methodcaller
+from boltons.iterutils import unique
 
 # Canonical name of the CLI.
 CLI_NAME = "mdedup"
@@ -31,8 +33,8 @@ __version__ = "5.1.0"
 logger = logging.getLogger(__name__)
 
 
-# List of mail headers to use when computing the hash of a mail.
-HEADERS = [
+# Ordered list of headers to use by default to compute the hash of a mail.
+HASH_HEADERS = (
     "Date",
     "From",
     "To",
@@ -55,7 +57,7 @@ HEADERS = [
     "User-Agent",
     "X-Priority",
     "Message-ID",
-]
+)
 
 
 # Since we're ignoring the Content-Length header for the reasons stated above,
@@ -121,11 +123,6 @@ class InsufficientHeadersError(Exception):
     """ Issue was encountered with email headers. """
 
 
-class MissingMessageID(Exception):
-
-    """ No Message-ID header found in email headers. """
-
-
 class SizeDiffAboveThreshold(Exception):
 
     """ Difference in mail size is greater than threshold. """
@@ -146,7 +143,7 @@ class Config:
         "sources_format": False,
         "force_unlock": False,
         "hash_only": False,
-        "message_id": False,
+        "hash_headers": HASH_HEADERS,
         "size_threshold": DEFAULT_SIZE_THRESHOLD,
         "content_threshold": DEFAULT_CONTENT_THRESHOLD,
         "show_diff": False,
@@ -156,6 +153,7 @@ class Config:
     }
 
     def __init__(self, **kwargs):
+        """ Validates configuration parameter types and values. """
         # Load default values.
         self.conf = self.default_conf.copy()
 
@@ -164,9 +162,20 @@ class Config:
                 raise ValueError("Unrecognized {} configuration option.".format(param))
             self.conf[param] = value
 
-        # Validates configuration.
         assert self.size_threshold >= -1
         assert self.content_threshold >= -1
+
+        # Headers are case-insensitive in Python implementation.
+        normalized_headers = tuple(h.lower() for h in self.hash_headers)
+        # Check lower-cased header IDs are unique.
+        assert len(unique(normalized_headers)) == len(unique(self.hash_headers))
+        # Mail headers are composed of ASCII characters between 33 and 126
+        # (both inclusive) according the RFC-5322.
+        for hid in normalized_headers:
+            ascii_indexes = set(map(ord, hid))
+            assert max(ascii_indexes) <= 126
+            assert min(ascii_indexes) >= 33
+        self.hash_headers = normalized_headers
 
     def __getattr__(self, attr_id):
         """ Expose configuration entries as properties. """

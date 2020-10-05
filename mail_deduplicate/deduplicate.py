@@ -32,7 +32,6 @@ import click
 from . import (
     ContentDiffAboveThreshold,
     InsufficientHeadersError,
-    MissingMessageID,
     SizeDiffAboveThreshold,
     logger,
 )
@@ -430,6 +429,11 @@ class Deduplicate:
 
         Displays a progress bar as the operation might be slow.
         """
+        logger.info(
+            "Use [{}] headers to compute hashes.".format(
+                ", ".join([
+                    click.style(h, fg='bright_white') for h in self.conf.hash_headers])))
+
         with click.progressbar(
             length=self.stats["mail_found"],
             label="Mails hashed",
@@ -447,7 +451,7 @@ class Deduplicate:
 
                     try:
                         mail_hash = mail.hash_key
-                    except (InsufficientHeadersError, MissingMessageID) as expt:
+                    except InsufficientHeadersError as expt:
                         logger.warning(f"Rejecting {mail.path}: {expt.args[0]}")
                         self.stats["mail_rejected"] += 1
                     else:

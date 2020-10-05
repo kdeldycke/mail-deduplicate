@@ -7,6 +7,11 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Add new ``-h``/``--hash-header`` option to select which mail headers to use
+  to compute hash.
+* Remove ``-i``/``--message-id`` option. Can be emulated with ``-h
+  Message-ID`` or ``--hash-header Message-ID`` option.
+
 
 `5.0.0 (2020-10-05) <https://github.com/kdeldycke/mail-deduplicate/compare/v4.0.0...v5.0.0>`_
 ---------------------------------------------------------------------------------------------
