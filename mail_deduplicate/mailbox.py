@@ -39,7 +39,7 @@ MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 
 
 def build_box_constructors():
-    """ Gather all constructors specific mailbox formats supported by the standard
+    """Gather all constructors specific mailbox formats supported by the standard
     Python library.
 
     Only keep subclasses of the mailbox.Mailbox interface, but the latter and
@@ -61,8 +61,10 @@ def build_box_constructors():
             factory_klass = type(
                 "{}DedupMail".format(klass.__name__),
                 (DedupMail, message_klass, object),
-                {"__doc__": f"Extend the default message factory for {klass} with our "
-                    "own ``DedupMail`` class to add deduplication utilities."}
+                {
+                    "__doc__": f"Extend the default message factory for {klass} with our "
+                    "own ``DedupMail`` class to add deduplication utilities."
+                },
             )
 
             # Set our own custom factory and safety options to default constructor.
@@ -120,7 +122,7 @@ def open_box(path, box_type=False, force_unlock=False):
     If ``box_type`` is specified, forces the opening of the box in the
     specified format. Else try to autodetect the type.
     """
-    styled_path = click.style(str(path), fg='bright_white')
+    styled_path = click.style(str(path), fg="bright_white")
     logger.info(f"Opening {styled_path} ...")
     assert isinstance(path, Path)
     if not box_type:

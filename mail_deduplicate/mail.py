@@ -45,7 +45,7 @@ class DedupMail:
     """
 
     def __init__(self, message=None):
-        """ Initialize a pre-parsed ``Message`` instance the same way the default
+        """Initialize a pre-parsed ``Message`` instance the same way the default
         factory in Python's ``mailbox`` module does.
         """
         # Hunt down in our parent classes (but ourselve) the first one inheriting the
@@ -89,7 +89,7 @@ class DedupMail:
 
     @cachedproperty
     def timestamp(self):
-        """ Compute the normalized canonical timestamp of the mail.
+        """Compute the normalized canonical timestamp of the mail.
 
         Sourced from the message's header by default. In the case of maildir,
         can be sourced from the email's file from the filesystem.
@@ -186,8 +186,7 @@ class DedupMail:
 
     @cachedproperty
     def canonical_headers(self):
-        """ Returns the full list of all canonical headers names and values in preparation for hashing.
-        """
+        """Returns the full list of all canonical headers names and values in preparation for hashing."""
         canonical_headers = []
 
         for header_id in self.conf.hash_headers:
@@ -211,7 +210,7 @@ class DedupMail:
 
     @cachedproperty
     def pretty_canonical_headers(self):
-        """ Renders into a table and in the same order, headers names and values
+        """Renders into a table and in the same order, headers names and values
         used to produce mail's hash.
 
         Returns a string ready to be printing to user or for debugging.
@@ -222,9 +221,9 @@ class DedupMail:
     @cachedproperty
     def serialized_headers(self):
         """ Serialize the canonical headers into a single string ready to be hashed. """
-        serialized_headers = '\n'.join(
-            ["{}: {}".format(h_id, h_value) for h_id, h_value in
-             self.canonical_headers]).encode("utf-8")
+        serialized_headers = "\n".join(
+            ["{}: {}".format(h_id, h_value) for h_id, h_value in self.canonical_headers]
+        ).encode("utf-8")
 
         # Simple heuristic to make sure our hashes are based on reasonably long
         # strings.
@@ -249,7 +248,7 @@ class DedupMail:
 
     @staticmethod
     def normalize_header_value(header_id, value):
-        """ Normalize and clean-up header value into its canonical form.
+        """Normalize and clean-up header value into its canonical form.
 
         Always returns a unicode string.
         """

@@ -77,7 +77,7 @@ def validate_regexp(ctx, param, value):
     "--force-unlock",
     is_flag=True,
     default=False,
-    help="Remove the lock on mail source opening if one is found."
+    help="Remove the lock on mail source opening if one is found.",
 )
 @click.option(
     "-H",
@@ -88,8 +88,8 @@ def validate_regexp(ctx, param, value):
     "performs any deduplication operation.",
 )
 @click.option(
-    '-h',
-    '--hash-header',
+    "-h",
+    "--hash-header",
     multiple=True,
     help="Header to use to compute each mail's hash. Can be repeated multiple "
     "time to set an ordered list of headers. Header names are case-insensitive. "
@@ -264,12 +264,10 @@ def mdedup(
                 click.echo("Hash: {}".format(mail.hash_key))
         ctx.exit()
 
-    click.echo(click.style(
-        "\n● Phase #3 - Detect duplicates", fg="blue", bold=True))
+    click.echo(click.style("\n● Phase #3 - Detect duplicates", fg="blue", bold=True))
     dedup.gather_candidates()
 
-    click.echo(click.style(
-        "\n● Phase #4 - Delete candidates", fg="blue", bold=True))
+    click.echo(click.style("\n● Phase #4 - Delete candidates", fg="blue", bold=True))
     dedup.remove_duplicates()
 
     click.echo(click.style("\n● Phase #5 - Report", fg="blue", bold=True))
