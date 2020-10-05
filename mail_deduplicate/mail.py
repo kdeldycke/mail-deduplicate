@@ -196,7 +196,7 @@ class DedupMail:
             if header_id not in self:
                 continue
 
-            # Fetch all occurences of the header.
+            # Fetch all occurrences of the header.
             canonical_values = []
             for header_value in self.get_all(header_id):
                 normalized_value = self.normalize_header_value(header_id, header_value)
