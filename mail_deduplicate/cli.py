@@ -97,7 +97,7 @@ def validate_regexp(ctx, param, value):
     help="Headers to use to compute each mail's hash. Must be repeated multiple "
     "times to set an ordered list of headers. IDs are case-insensitive. Duplicate "
     'entries are removed. Defaults to: "{}".'.format(
-        " ".join(["-h {}".format(h) for h in HASH_HEADERS])
+        " ".join([f"-h {h}" for h in HASH_HEADERS])
     ),
 )
 @click.option(
@@ -111,7 +111,7 @@ def validate_regexp(ctx, param, value):
     "mails deviates above the threshold. Set to 0 to get strict and deduplicate the "
     "subset only if all mails are exactly the same. Set to -1 to allow "
     "any difference and keep deduplicating the subset whatever the differences. "
-    "Defaults to {} bytes.".format(DEFAULT_SIZE_THRESHOLD),
+    f"Defaults to {DEFAULT_SIZE_THRESHOLD} bytes.",
 )
 @click.option(
     "-C",
@@ -124,7 +124,7 @@ def validate_regexp(ctx, param, value):
     "mails deviates above the threshold. Set to 0 to get strict and deduplicate the "
     "subset only if all mails are exactly the same. Set to -1 to allow "
     "any difference and keep deduplicating the subset whatever the differences. "
-    "Defaults to {} bytes.".format(DEFAULT_CONTENT_THRESHOLD),
+    f"Defaults to {DEFAULT_CONTENT_THRESHOLD} bytes.",
 )
 @click.option(
     "-d",
@@ -231,13 +231,11 @@ def mdedup(
         if strategy in required_strategies:
             if not param_value:
                 raise click.BadParameter(
-                    "{} strategy requires the {} parameter.".format(
-                        strategy, param_name
-                    )
+                    f"{strategy} strategy requires the {param_name} parameter."
                 )
         elif param_value:
             raise click.BadParameter(
-                "{} parameter not allowed in {} strategy.".format(param_name, strategy)
+                f"{param_name} parameter not allowed in {strategy} strategy."
             )
 
     conf = Config(
@@ -266,7 +264,7 @@ def mdedup(
         for all_mails in dedup.mails.values():
             for mail in all_mails:
                 click.echo(mail.pretty_headers)
-                click.echo("Hash: {}".format(mail.hash_key))
+                click.echo(f"Hash: {mail.hash_key}")
         ctx.exit()
 
     click.echo(click.style("\n● Phase #3 - Detect duplicates", fg="blue", bold=True))

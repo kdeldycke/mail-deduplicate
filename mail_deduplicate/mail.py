@@ -71,7 +71,7 @@ class DedupMail:
         self.conf = None
 
     def __repr__(self):
-        return "<Mail {!r}>".format(self.mail_id)
+        return f"<Mail {self.mail_id!r}>"
 
     @cachedproperty
     def path(self):
@@ -84,7 +84,7 @@ class DedupMail:
         if filename:
             filepath = self.source_path.joinpath(filename)
         else:
-            filepath = "{}:{}".format(self.source_path, self.mail_id)
+            filepath = f"{self.source_path}:{self.mail_id}"
         return filepath
 
     @cachedproperty
@@ -235,7 +235,7 @@ class DedupMail:
             logger.debug(self.pretty_canonical_headers)
 
         return "\n".join(
-            ["{}: {}".format(h_id, h_value) for h_id, h_value in self.canonical_headers]
+            [f"{h_id}: {h_value}" for h_id, h_value in self.canonical_headers]
         ).encode("utf-8")
 
     @staticmethod

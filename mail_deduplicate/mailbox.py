@@ -53,13 +53,13 @@ def build_box_constructors():
         ):
             # Fetch the default factory for each mailbox type based on naming
             # conventions .
-            message_klass = getattr(mailbox, "{}Message".format(klass.__name__))
+            message_klass = getattr(mailbox, f"{klass.__name__}Message")
             assert issubclass(message_klass, mailbox.Message)
 
             # Extend the default factory with our own ``DedupMail`` class to add
             # deduplication utilities.
             factory_klass = type(
-                "{}DedupMail".format(klass.__name__),
+                f"{klass.__name__}DedupMail",
                 (DedupMail, message_klass, object),
                 {
                     "__doc__": f"Extend the default message factory for {klass} with our "

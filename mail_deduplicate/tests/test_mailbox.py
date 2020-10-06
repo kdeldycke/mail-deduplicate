@@ -24,7 +24,7 @@ import pytest
 def test_nonexistent_path(invoke, source):
     result = invoke(source)
     assert result.exit_code == 2
-    assert "Path '{}' does not exist".format(source) in result.output
+    assert f"Path '{source}' does not exist" in result.output
 
 
 def test_invalid_maildir_structure(invoke):

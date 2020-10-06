@@ -70,8 +70,9 @@ class DuplicateSet:
 
     def __repr__(self):
         """ Print internal raw states for debugging. """
-        return "<{} hash={}, size={}, conf={!r}, pool={!r}>".format(
-            self.__class__.__name__, self.hash_key, self.size, self.conf, self.pool
+        return (
+            f"<{self.__class__.__name__} hash={self.hash_key} size={self.size} "
+            f"conf={self.conf!r} pool={self.pool!r}>"
         )
 
     @cachedproperty
@@ -163,10 +164,10 @@ class DuplicateSet:
             unified_diff(
                 mail_a.body_lines,
                 mail_b.body_lines,
-                fromfile="Normalized body of {}".format(mail_a.path),
-                tofile="Normalized body of {}".format(mail_b.path),
-                fromfiledate="{:0.2f}".format(mail_a.timestamp),
-                tofiledate="{:0.2f}".format(mail_b.timestamp),
+                fromfile=f"Normalized body of {mail_a.path}",
+                tofile=f"Normalized body of {mail_b.path}",
+                fromfiledate=f"{mail_a.timestamp:0.2f}",
+                tofiledate=f"{mail_b.timestamp:0.2f}",
                 n=0,
                 lineterm="\n",
             )
@@ -183,7 +184,7 @@ class DuplicateSet:
 
         method_id = self.conf.strategy.replace("-", "_")
         if not hasattr(DuplicateSet, method_id):
-            raise NotImplementedError("DuplicateSet.{}() method.".format(method_id))
+            raise NotImplementedError(f"DuplicateSet.{method_id}() method.")
         logger.debug(f"Call {method_id}() strategy.")
         return getattr(self, method_id)()
 
@@ -510,7 +511,7 @@ class Deduplicate:
 
         for box_path, mail_id in self.candidates:
             # TODO: fetch mail path from Mail object instance directly.
-            mail_path = "{}:{}".format(box_path, mail_id)
+            mail_path = f"{box_path}:{mail_id}"
             self.stats["mail_deleted"] += 1
 
             if self.conf.dry_run:
