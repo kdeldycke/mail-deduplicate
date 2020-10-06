@@ -96,7 +96,7 @@ def validate_regexp(ctx, param, value):
     default=HASH_HEADERS,
     help="Headers to use to compute each mail's hash. Must be repeated multiple "
     "times to set an ordered list of headers. IDs are case-insensitive. Duplicate "
-    "entries are removed. Defaults to: \"{}\".".format(
+    'entries are removed. Defaults to: "{}".'.format(
         " ".join(["-h {}".format(h) for h in HASH_HEADERS])
     ),
 )

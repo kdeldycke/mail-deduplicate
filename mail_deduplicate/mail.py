@@ -229,7 +229,8 @@ class DedupMail:
         if headers_count < MINIMAL_HEADERS_COUNT:
             logger.warning(self.pretty_canonical_headers)
             raise TooFewHeaders(
-                f"{headers_count} headers found out of {MINIMAL_HEADERS_COUNT}.")
+                f"{headers_count} headers found out of {MINIMAL_HEADERS_COUNT}."
+            )
         else:
             logger.debug(self.pretty_canonical_headers)
 
