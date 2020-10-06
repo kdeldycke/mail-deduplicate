@@ -29,6 +29,12 @@ from ..deduplicate import DuplicateSet
 def test_strategy_definitions():
     """ Test deduplication strategy definitions. """
     for strategy_id in STRATEGIES:
+
+        # All strategies are lower cases strings, with dashes.
+        assert isinstance(strategy_id, str)
+        assert set(strategy_id).issubset("abcdefghijklmnopqrstuvwxyz-")
+
+        # Each strategy is implemented.
         method_id = strategy_id.replace("-", "_")
         assert hasattr(DuplicateSet, method_id)
         assert callable(getattr(DuplicateSet, method_id))
