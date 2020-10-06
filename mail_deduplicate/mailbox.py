@@ -97,21 +97,24 @@ def autodetect_box_type(path):
             * ``Babyl``
             * ``MMDF``
     """
-    if path.is_dir():
-        logger.info("Maildir detected.")
+    box_type = None
 
-        # Validates folder is a maildir.
+    # Validates folder is a maildir.
+    if path.is_dir():
         for subdir in MAILDIR_SUBDIRS:
             if not path.joinpath(subdir).is_dir():
                 raise ValueError(f"Missing sub-directory {subdir!r}")
+        box_type = "maildir"
 
-        return "maildir"
+    # Validates folder is a mbox.
+    elif path.is_file():
+        box_type = "mbox"
 
-    if path.is_file():
-        logger.info("mbox detected.")
-        return "mbox"
+    if not box_type:
+        raise ValueError("Unrecognized mail source type.")
 
-    raise ValueError("Unrecognized mail source type.")
+    logger.info("{} detected.".format(click.style(box_type, fg="bright_white")))
+    return box_type
 
 
 def open_box(path, box_type=False, force_unlock=False):

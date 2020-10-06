@@ -457,7 +457,6 @@ class Deduplicate:
                         logger.warning(f"Rejecting {mail.path}: {expt.args[0]}")
                         self.stats["mail_rejected"] += 1
                     else:
-                        logger.debug(f"Hash is {mail_hash} for {mail.path}.")
                         # Use a set to deduplicate entries pointing to the same file.
                         self.mails.setdefault(mail_hash, set()).add(mail)
                         self.stats["mail_kept"] += 1
@@ -485,7 +484,8 @@ class Deduplicate:
             # Alter log level depending on set length.
             mail_count = len(mail_set)
             log_level = logger.debug if mail_count == 1 else logger.info
-            log_level(f"--- {mail_count} mails sharing hash {hash_key}")
+            log_level(click.style(
+                f"◼ {mail_count} mails sharing hash {hash_key}", fg="cyan"))
 
             # Performs the deduplication within the set.
             duplicates = DuplicateSet(hash_key, mail_set, self.conf)

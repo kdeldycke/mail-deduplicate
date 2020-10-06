@@ -182,7 +182,10 @@ class DedupMail:
     @cachedproperty
     def hash_key(self):
         """ Returns the canonical hash of a mail. """
-        return hashlib.sha224(self.serialized_headers).hexdigest()
+        logger.debug(f"Serialized headers: {self.serialized_headers!r}")
+        hash_value = hashlib.sha224(self.serialized_headers).hexdigest()
+        logger.debug(f"Hash: {hash_value}")
+        return hash_value
 
     @cachedproperty
     def canonical_headers(self):
