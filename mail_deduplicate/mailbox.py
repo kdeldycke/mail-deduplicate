@@ -137,13 +137,13 @@ def open_box(path, box_type=False, force_unlock=False):
     box = constructor(path)
 
     try:
-        logger.debug(f"Locking box...")
+        logger.debug("Locking box...")
         box.lock()
     except mailbox.ExternalClashError:
-        logger.error(f"Box already locked!")
+        logger.error("Box already locked!")
         # Remove the lock manually and re-lock.
         if force_unlock:
-            logger.warning(f"Forcing removal of lock...")
+            logger.warning("Forcing removal of lock...")
             # Forces internal metadata.
             box._locked = True
             box.unlock()
@@ -152,5 +152,5 @@ def open_box(path, box_type=False, force_unlock=False):
         else:
             raise
 
-    logger.debug(f"Box opened.")
+    logger.debug("Box opened.")
     return box

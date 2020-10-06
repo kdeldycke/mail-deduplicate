@@ -334,8 +334,8 @@ class DuplicateSet:
     def delete_matching_path(self):
         """ Delete all duplicates whose file path match the regexp. """
         logger.info(
-            f"Select all mails with file path matching the "
-            "{self.conf.regexp.pattern} regexp..."
+            "Select all mails with file path matching the "
+            f"{self.conf.regexp.pattern} regexp..."
         )
         # Select candidates for deletion.
         return [mail for mail in self.pool if re.search(self.conf.regexp, mail.path)]
@@ -343,8 +343,8 @@ class DuplicateSet:
     def delete_non_matching_path(self):
         """ Delete all duplicates whose file path doesn't match the regexp. """
         logger.info(
-            f"Select all mails with file path not matching the "
-            "{self.conf.regexp.pattern} regexp..."
+            "Select all mails with file path not matching the "
+            f"{self.conf.regexp.pattern} regexp..."
         )
         return [
             mail for mail in self.pool if not re.search(self.conf.regexp, mail.path)
