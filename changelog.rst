@@ -9,6 +9,7 @@ ChangeLog
 
 * Rename ``-f``/``--sources-format`` option to ``-i``/``--input-format``.
 * ``--time-source`` parameter is now optional and defaults to ``date-header``.
+* Run tests on Python 3.9.
 
 
 `5.1.0 (2020-10-06) <https://github.com/kdeldycke/mail-deduplicate/compare/v5.0.0...v5.1.0>`_
