@@ -29,7 +29,7 @@ import mailbox
 from tabulate import tabulate
 from boltons.cacheutils import cachedproperty
 
-from . import CTIME, InsufficientHeadersError, logger
+from . import CTIME, TooFewHeaders, MINIMAL_HEADERS_COUNT, logger
 
 
 class DedupMail:
@@ -221,30 +221,18 @@ class DedupMail:
     @cachedproperty
     def serialized_headers(self):
         """ Serialize the canonical headers into a single string ready to be hashed. """
-        serialized_headers = "\n".join(
+        # At this point we should have at an absolute minimum of headers.
+        headers_count = len(self.canonical_headers)
+        if headers_count < MINIMAL_HEADERS_COUNT:
+            logger.warning(self.pretty_canonical_headers)
+            raise TooFewHeaders(
+                f"{headers_count} headers found out of {MINIMAL_HEADERS_COUNT}.")
+        else:
+            logger.debug(self.pretty_canonical_headers)
+
+        return "\n".join(
             ["{}: {}".format(h_id, h_value) for h_id, h_value in self.canonical_headers]
         ).encode("utf-8")
-
-        # Simple heuristic to make sure our hashes are based on reasonably long
-        # strings.
-        if len(serialized_headers) > 50:
-            return serialized_headers
-
-        # At this point we should have at absolute minimum 3 or 4 headers, e.g.
-        # From/To/Date/Subject; if not, something went badly wrong.
-
-        if len(serialized_headers) == 0:
-            raise InsufficientHeadersError("No canonical headers found")
-
-        err = textwrap.dedent(
-            """\
-            Not enough data from canonical headers to compute reliable hash!
-            Serialized headers:
-            --------- 8< --------- 8< --------- 8< --------- 8< ---------
-            {}
-            --------- 8< --------- 8< --------- 8< --------- 8< ---------"""
-        )
-        raise InsufficientHeadersError(err.format(serialized_headers))
 
     @staticmethod
     def normalize_header_value(header_id, value):

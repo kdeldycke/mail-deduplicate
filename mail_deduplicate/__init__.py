@@ -60,6 +60,10 @@ HASH_HEADERS = (
 )
 
 
+# Below this value, we consider not having enough data to compute a solid hash.
+MINIMAL_HEADERS_COUNT = 4
+
+
 # Since we're ignoring the Content-Length header for the reasons stated above,
 # we limit the allowed difference between the sizes of the message payloads. If
 # this is exceeded, a warning is issued and the messages are not considered
@@ -118,9 +122,9 @@ TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
 # Defines custom exception first to avoid circular imports.
 
 
-class InsufficientHeadersError(Exception):
+class TooFewHeaders(Exception):
 
-    """ Issue was encountered with email headers. """
+    """ Not enough headers were found to produce a solid hash. """
 
 
 class SizeDiffAboveThreshold(Exception):

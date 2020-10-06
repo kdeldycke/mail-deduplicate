@@ -31,7 +31,7 @@ import click
 
 from . import (
     ContentDiffAboveThreshold,
-    InsufficientHeadersError,
+    TooFewHeaders,
     SizeDiffAboveThreshold,
     logger,
 )
@@ -453,7 +453,7 @@ class Deduplicate:
 
                     try:
                         mail_hash = mail.hash_key
-                    except InsufficientHeadersError as expt:
+                    except TooFewHeaders as expt:
                         logger.warning(f"Rejecting {mail.path}: {expt.args[0]}")
                         self.stats["mail_rejected"] += 1
                     else:
