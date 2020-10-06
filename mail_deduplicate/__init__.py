@@ -144,7 +144,7 @@ class Config:
     # Keep these defaults in sync with CLI option definitions.
     default_conf = {
         "dry_run": False,
-        "sources_format": False,
+        "input_format": False,
         "force_unlock": False,
         "hash_only": False,
         "hash_headers": HASH_HEADERS,

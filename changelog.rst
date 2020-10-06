@@ -7,6 +7,8 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Rename ``-f``/``--sources-format`` option to ``-i``/``--input-format``.
+
 
 `5.1.0 (2020-10-06) <https://github.com/kdeldycke/mail-deduplicate/compare/v5.0.0...v5.1.0>`_
 ---------------------------------------------------------------------------------------------

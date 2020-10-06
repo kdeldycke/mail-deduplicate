@@ -64,8 +64,8 @@ def validate_regexp(ctx, param, value):
     help="Do not actually delete anything; just show which mails would be removed.",
 )
 @click.option(
-    "-f",
-    "--sources-format",
+    "-i",
+    "--input-format",
     type=click.Choice(sorted(BOX_TYPES), case_sensitive=False),
     help="Force all provided mail sources to be parsed in the specified format. "
     "If not set, auto-detect the format of sources independently. Because "
@@ -171,7 +171,7 @@ def validate_regexp(ctx, param, value):
 def mdedup(
     ctx,
     dry_run,
-    sources_format,
+    input_format,
     force_unlock,
     hash_only,
     hash_header,
@@ -240,7 +240,7 @@ def mdedup(
 
     conf = Config(
         dry_run=dry_run,
-        sources_format=sources_format,
+        input_format=input_format,
         force_unlock=force_unlock,
         hash_only=hash_only,
         hash_headers=hash_header,

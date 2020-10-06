@@ -415,7 +415,7 @@ class Deduplicate:
             raise ValueError(f"{source_path} already added.")
 
         # Open and register the mail source.
-        box = open_box(source_path, self.conf.sources_format, self.conf.force_unlock)
+        box = open_box(source_path, self.conf.input_format, self.conf.force_unlock)
         self.sources[source_path] = box
 
         # Keep track of global mail count.
