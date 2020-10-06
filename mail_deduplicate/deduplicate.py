@@ -484,8 +484,9 @@ class Deduplicate:
             # Alter log level depending on set length.
             mail_count = len(mail_set)
             log_level = logger.debug if mail_count == 1 else logger.info
-            log_level(click.style(
-                f"◼ {mail_count} mails sharing hash {hash_key}", fg="cyan"))
+            log_level(
+                click.style(f"◼ {mail_count} mails sharing hash {hash_key}", fg="cyan")
+            )
 
             # Performs the deduplication within the set.
             duplicates = DuplicateSet(hash_key, mail_set, self.conf)
