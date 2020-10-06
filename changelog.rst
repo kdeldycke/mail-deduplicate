@@ -2,10 +2,8 @@ ChangeLog
 =========
 
 
-`5.1.0 (unreleased) <https://github.com/kdeldycke/mail-deduplicate/compare/v5.0.0...develop>`_
-----------------------------------------------------------------------------------------------
-
-.. note:: This version is not yet released and is under active development.
+`5.1.0 (2020-10-06) <https://github.com/kdeldycke/mail-deduplicate/compare/v5.0.0...v5.1.0>`_
+---------------------------------------------------------------------------------------------
 
 * Add new ``-h``/``--hash-header`` option to select which mail headers to use
   to compute hash.
