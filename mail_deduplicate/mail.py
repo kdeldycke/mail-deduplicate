@@ -286,13 +286,14 @@ class DedupMail:
 
         if header_id == "date":
             # Date timestamps can differ by seconds or hours for various
-            # reasons, so let's only honour the date for now.
+            # reasons, so let's only honour the date for now and normalize them
+            # to UTC timezone.
             try:
                 parsed = email.utils.parsedate_tz(value)
                 if not parsed:
                     raise TypeError
                 utc_timestamp = email.utils.mktime_tz(parsed)
-                return time.strftime("%Y/%m/%d UTC", time.gmtime(utc_timestamp))
+                return time.strftime("%Y-%m-%d", time.gmtime(utc_timestamp))
             except (TypeError, ValueError):
                 return value
 
