@@ -24,13 +24,12 @@ import pytest
 def test_nonexistent_path(invoke, source):
     result = invoke(source)
     assert result.exit_code == 2
-    assert not result.stdout
-    assert "Path '{}' does not exist".format(source) in result.stderr
+    assert "Path '{}' does not exist".format(source) in result.output
 
 
 def test_invalid_maildir_structure(invoke):
     result = invoke(".")
     assert result.exit_code == 1
-    assert "Phase #1" in result.stdout
-    assert "Opening " in result.stderr
+    assert "Phase #1" in result.output
+    assert "Opening " in result.output
     assert "Missing sub-directory" in str(result.exc_info[1])

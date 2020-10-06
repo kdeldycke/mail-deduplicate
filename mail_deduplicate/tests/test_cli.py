@@ -40,46 +40,41 @@ def test_temporary_fs(runner):
 def test_bare_call(invoke):
     result = invoke()
     assert result.exit_code == 0
-    assert "Usage: " in result.stdout
-    assert not result.stderr
+    assert "Usage: " in result.output
 
 
 def test_main_help(invoke):
     result = invoke("--help")
     assert result.exit_code == 0
-    assert "Usage: " in result.stdout
-    assert not result.stderr
+    assert "Usage: " in result.output
 
 
 def test_version(invoke):
     result = invoke("--version")
     assert result.exit_code == 0
-    assert __version__ in result.stdout
-    assert not result.stderr
+    assert __version__ in result.output
 
 
 def test_unknown_option(invoke):
     result = invoke("--blah")
     assert result.exit_code == 2
-    assert not result.stdout
-    assert "Error: no such option: --blah" in result.stderr
+    assert "Error: no such option: --blah" in result.output
 
 
 def test_unrecognized_verbosity(invoke):
     result = invoke("--verbosity", "random")
     assert result.exit_code == 2
-    assert not result.stdout
-    assert "Error: Invalid value for '--verbosity' / '-v'" in result.stderr
+    assert "Error: Invalid value for '--verbosity' / '-v'" in result.output
 
 
 @pytest.mark.parametrize("level", ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"])
 def test_verbosity(invoke, level):
     result = invoke("--verbosity", level)
     assert result.exit_code == 0
-    assert "Usage: " in result.stdout
+    assert "Usage: " in result.output
 
     assert logger.level == getattr(logging, level)
     if level == "DEBUG":
-        assert "debug: " in result.stderr
+        assert "debug: " in result.output
     else:
-        assert "debug: " not in result.stderr
+        assert "debug: " not in result.output

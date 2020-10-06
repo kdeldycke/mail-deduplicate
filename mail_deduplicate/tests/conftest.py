@@ -45,7 +45,7 @@ def print_cli_output(cmd, output):
 
 @pytest.fixture
 def runner():
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     with runner.isolated_filesystem():
         yield runner
 
@@ -62,10 +62,6 @@ def invoke(runner):
             assert same(map(type, args), str)
 
         result = runner.invoke(mdedup, args, color=color)
-
-        # Strip colors out of results.
-        result.stdout_bytes = strip_ansi(result.stdout_bytes)
-        result.stderr_bytes = strip_ansi(result.stderr_bytes)
 
         print_cli_output([CLI_NAME] + args, result.output)
 
