@@ -35,6 +35,7 @@ from . import (
     HASH_HEADERS,
     STRATEGIES,
     TIME_SOURCES,
+    DATE_HEADER,
     Config,
     __version__,
     logger,
@@ -143,8 +144,10 @@ def validate_regexp(ctx, param, value):
 @click.option(
     "-t",
     "--time-source",
+    default=DATE_HEADER,
     type=click.Choice(sorted(TIME_SOURCES), case_sensitive=False),
-    help="Source of a mail's time reference. Required in time-sensitive strategies.",
+    help="Source of a mail's time reference used in time-sensitive strategies. "
+    f"Defaults to {DATE_HEADER!r}.",
 )
 @click.option(
     "-r",
@@ -220,11 +223,6 @@ def mdedup(
 
     # Validate exclusive options requirement depending on strategy.
     requirements = [
-        (
-            time_source,
-            "-t/--time-source",
-            {DELETE_OLDER, DELETE_OLDEST, DELETE_NEWER, DELETE_NEWEST},
-        ),
         (regexp, "-r/--regexp", {DELETE_MATCHING_PATH, DELETE_NON_MATCHING_PATH}),
     ]
     for param_value, param_name, required_strategies in requirements:

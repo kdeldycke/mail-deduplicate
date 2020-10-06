@@ -41,7 +41,7 @@ def test_invalid_date_parsing_noop(invoke, make_box):
         ],
     )
 
-    result = invoke("--time-source=date-header", "--strategy=delete-newest", box_path)
+    result = invoke("--strategy=delete-newest", box_path)
 
     assert result.exit_code == 0
 
@@ -77,7 +77,6 @@ def test_invalid_date_parsing_dedup(invoke, make_box):
         "--hash-header=from",
         "--hash-header=to",
         "--hash-header=subject",
-        "--time-source=date-header",
         "--strategy=delete-newest",
         box_path,
     )

@@ -226,7 +226,7 @@ def test_maildir_older_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--time-source=date-header", "--strategy=delete-older", box_path)
+    result = invoke("--strategy=delete-older", box_path)
 
     assert result.exit_code == 0
     # Newest mails are kept but not the older ones.
@@ -253,7 +253,7 @@ def test_maildir_oldest_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--time-source=date-header", "--strategy=delete-oldest", box_path)
+    result = invoke("--strategy=delete-oldest", box_path)
 
     assert result.exit_code == 0
     # Newer mails are kept but not the oldest ones.
@@ -287,7 +287,7 @@ def test_maildir_newer_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--time-source=date-header", "--strategy=delete-newer", box_path)
+    result = invoke("--strategy=delete-newer", box_path)
 
     assert result.exit_code == 0
     # Oldest mails are kept but not the newer ones.
@@ -314,7 +314,7 @@ def test_maildir_newest_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--time-source=date-header", "--strategy=delete-newest", box_path)
+    result = invoke("--strategy=delete-newest", box_path)
 
     assert result.exit_code == 0
     # Older mails are kept but not the newest ones.
