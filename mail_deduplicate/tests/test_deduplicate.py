@@ -20,6 +20,7 @@
 from mailbox import Maildir
 
 import arrow
+import pytest
 
 from .conftest import MailFactory, check_box
 from .. import STRATEGIES
@@ -51,7 +52,17 @@ biggest_mail = MailFactory(
 )
 
 
-def test_maildir_smaller_strategy_dry_run(invoke, make_box):
+# List of strategies and their required dummy options.
+strategy_options = {sid: [] for sid in STRATEGIES}
+# Add dummy regexps.
+strategy_options.update({
+    "delete-matching-path": ["--regexp=.*"],
+    "delete-non-matching-path": ["--regexp=.*"],
+})
+
+
+@pytest.mark.parametrize("strategy_id,options", strategy_options.items())
+def test_maildir_dry_run(invoke, make_box, strategy_id, options):
     """ Check no mail is removed in dry-run mode. """
     box_path, box_type = make_box(
         Maildir,
@@ -65,7 +76,7 @@ def test_maildir_smaller_strategy_dry_run(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=delete-smaller", "--dry-run", box_path)
+    result = invoke(f"--strategy={strategy_id}", *options, "--dry-run", box_path)
 
     assert result.exit_code == 0
     check_box(
