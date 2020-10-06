@@ -161,11 +161,14 @@ class Config:
         # Load default values.
         self.conf = self.default_conf.copy()
 
-        for param, value in kwargs.items():
-            if param not in self.default_conf:
-                raise ValueError("Unrecognized {} configuration option.".format(param))
-            self.conf[param] = value
+        unrecognized_options = set(kwargs) - set(self.default_conf)
+        if unrecognized_options:
+            raise ValueError(f"Unrecognized {unrecognized_options} options.")
 
+        # Replace defaults values with our config.
+        self.conf.update(kwargs)
+
+        # Check thresholds.
         assert self.size_threshold >= -1
         assert self.content_threshold >= -1
 
