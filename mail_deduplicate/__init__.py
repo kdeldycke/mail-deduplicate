@@ -27,7 +27,7 @@ from boltons.iterutils import unique
 # Canonical name of the CLI.
 CLI_NAME = "mdedup"
 
-__version__ = "5.1.0"
+__version__ = "5.2.0"
 
 
 logger = logging.getLogger(__name__)
