@@ -55,10 +55,12 @@ biggest_mail = MailFactory(
 # List of strategies and their required dummy options.
 strategy_options = {sid: [] for sid in STRATEGIES}
 # Add dummy regexps.
-strategy_options.update({
-    "delete-matching-path": ["--regexp=.*"],
-    "delete-non-matching-path": ["--regexp=.*"],
-})
+strategy_options.update(
+    {
+        "delete-matching-path": ["--regexp=.*"],
+        "delete-non-matching-path": ["--regexp=.*"],
+    }
+)
 
 
 @pytest.mark.parametrize("strategy_id,options", strategy_options.items())
