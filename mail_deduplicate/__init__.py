@@ -22,7 +22,9 @@
 import logging
 import sys
 from operator import methodcaller
+
 from boltons.iterutils import unique
+from boltons.ecoutils import get_profile
 
 # Canonical name of the CLI.
 CLI_NAME = "mdedup"
@@ -30,6 +32,11 @@ CLI_NAME = "mdedup"
 __version__ = "5.2.0"
 
 
+# Environment data.
+env_data = get_profile(scrub=True)
+
+
+# Initialize global logger.
 logger = logging.getLogger(__name__)
 
 

@@ -23,6 +23,7 @@ from functools import partial
 
 import click
 import click_log
+from click_help_colors import HelpColorsGroup, HelpColorsCommand, version_option
 
 from . import (
     DEFAULT_CONTENT_THRESHOLD,
@@ -37,6 +38,7 @@ from . import (
     CLI_NAME,
     __version__,
     logger,
+    env_data,
 )
 from .mailbox import BOX_TYPES
 from .deduplicate import Deduplicate
@@ -240,7 +242,14 @@ def validate_regexp(ctx, param, value):
     type=click.Choice(["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"], case_sensitive=False),
     help="Either CRITICAL, ERROR, WARNING, INFO or DEBUG. Defaults to INFO.",
 )
-@click.version_option(__version__)
+@version_option(
+    version=__version__,
+    prog_name=CLI_NAME,
+    version_color='green',
+    prog_name_color='white',
+    message=f"%(prog)s %(version)s\n{env_data}",
+    message_color='bright_black',
+)
 @click.pass_context
 def mdedup(
     ctx,
