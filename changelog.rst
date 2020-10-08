@@ -9,6 +9,7 @@ ChangeLog
 
 * Rename ``-f``/``--sources-format`` option to ``-i``/``--input-format``.
 * ``--time-source`` parameter is now optional and defaults to ``date-header``.
+* Colorize help screeen.
 * Run tests on Python 3.9.
 
 

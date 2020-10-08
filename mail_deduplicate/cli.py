@@ -19,6 +19,7 @@
 
 import logging
 import re
+from functools import partial
 
 import click
 import click_log
@@ -27,16 +28,13 @@ from . import (
     DEFAULT_CONTENT_THRESHOLD,
     DEFAULT_SIZE_THRESHOLD,
     DELETE_MATCHING_PATH,
-    DELETE_NEWER,
-    DELETE_NEWEST,
     DELETE_NON_MATCHING_PATH,
-    DELETE_OLDER,
-    DELETE_OLDEST,
     HASH_HEADERS,
     STRATEGIES,
     TIME_SOURCES,
     DATE_HEADER,
     Config,
+    CLI_NAME,
     __version__,
     logger,
 )
@@ -44,6 +42,73 @@ from .mailbox import BOX_TYPES
 from .deduplicate import Deduplicate
 
 click_log.basic_config(logger)
+
+
+def collect_keywords(ctx):
+    """ Parse click context to collect option names and choice keywords. """
+    options = set()
+    choices = set()
+    metavars = set()
+
+    # Add user defined help options.
+    options.update(ctx.help_option_names)
+
+    # Collect all option names and choice keywords.
+    for param in ctx.command.params:
+        options.update(param.opts)
+        if isinstance(param.type, click.Choice):
+            choices.update(param.type.choices)
+        if param.metavar:
+            metavars.add(param.metavar)
+
+    return options, choices, metavars
+
+
+def colorized_help(ctx):
+    """ Get default help screen and colorize section titles, options and choice
+    keywords. """
+    cli_color = "white"
+    title_color = "yellow"
+    option_color = "green"
+    choice_color = "blue"
+    metavar_color = "bright_black"
+
+    options, choices, metavars = collect_keywords(ctx)
+
+    help_txt = ctx.get_help()
+
+    def colorize(match, fg=None):
+        """ Re-create the matching string by concatenating all groups, but only
+        colorize named groups.
+        """
+        txt = ""
+        for group in match.groups():
+            if group in match.groupdict().values():
+                txt += click.style(group, fg=fg)
+            else:
+                txt += group
+        return txt
+
+    # Highligh numbers.
+    help_txt = re.sub(r"(\s)(?P<colorize>-?\d+)", partial(colorize, fg=choice_color), help_txt)
+
+    # Highlight CLI.
+    help_txt = re.sub(fr"(\s)(?P<colorize>{CLI_NAME})", partial(colorize, fg=cli_color), help_txt)
+
+    # Highligh sections.
+    help_txt = re.sub(r"^(?P<colorize>\S[\S+ ]+)(:)", partial(colorize, fg=title_color), help_txt, flags=re.MULTILINE)
+
+    # Highlight keywords.
+    for keywords, color in [
+            (sorted(options), option_color),
+            (sorted(choices, reverse=True), choice_color),
+            (sorted(metavars, reverse=True), metavar_color)]:
+        for keyword in keywords:
+            # Accounts for text wrapping after a dash.
+            keyword = keyword.replace("-", "-\s*")
+            help_txt = re.sub(fr"([\s\[\|])(?P<colorize>{keyword})", partial(colorize, fg=color), help_txt)
+
+    return help_txt
 
 
 def validate_regexp(ctx, param, value):
@@ -56,22 +121,26 @@ def validate_regexp(ctx, param, value):
     return value
 
 
-@click.command(short_help="Deduplicate mail boxes content.", no_args_is_help=True)
+@click.command(
+    short_help="Deduplicate mail boxes content.",
+    no_args_is_help=False,
+)
 @click.option(
     "-n",
     "--dry-run",
     is_flag=True,
     default=False,
-    help="Do not actually delete anything; just show which mails would be removed.",
+    help="Do not actually performs anything; just apply the selection strategy, and "
+    "show which action would have been performed otherwise.",
 )
 @click.option(
     "-i",
     "--input-format",
     type=click.Choice(sorted(BOX_TYPES), case_sensitive=False),
-    help="Force all provided mail sources to be parsed in the specified format. "
-    "If not set, auto-detect the format of sources independently. Because "
-    "auto-detection only supports 'maildir' and 'mbox' format, this option is "
-    "helpful to open rare kind of mail sources.",
+    help="Force all provided mail sources to be parsed in the specified format. If "
+    "not set, auto-detect the format of sources independently. Auto-detection only "
+    "supports maildir and mbox format. So use this option to open up other box "
+    "format, or bypass unreliable detection.",
 )
 @click.option(
     "-u",
@@ -95,9 +164,9 @@ def validate_regexp(ctx, param, value):
     type=str,
     metavar="Header-ID",
     default=HASH_HEADERS,
-    help="Headers to use to compute each mail's hash. Must be repeated multiple "
-    "times to set an ordered list of headers. IDs are case-insensitive. Duplicate "
-    'entries are removed. Defaults to: "{}".'.format(
+    help="Headers to use to compute each mail's hash. Must be repeated multiple times "
+    "to set an ordered list of headers. Header IDs are case-insensitive. Repeating "
+    "entries are removed. Defaults to: {}.".format(
         " ".join([f"-h {h}" for h in HASH_HEADERS])
     ),
 )
@@ -108,11 +177,11 @@ def validate_regexp(ctx, param, value):
     metavar="BYTES",
     default=DEFAULT_SIZE_THRESHOLD,
     help="Maximum difference allowed in size between mails sharing the same hash. "
-    "The whole subset of duplicates will be rejected for deduplication if any of two "
-    "mails deviates above the threshold. Set to 0 to get strict and deduplicate the "
-    "subset only if all mails are exactly the same. Set to -1 to allow "
-    "any difference and keep deduplicating the subset whatever the differences. "
-    f"Defaults to {DEFAULT_SIZE_THRESHOLD} bytes.",
+    "The whole subset of duplicates will be rejected if at least one pair of mail "
+    "exceed the threshold. Set to 0 to enforce strictness and deduplicate the subset "
+    "only if all mails are exactly the same. Set to -1 to allow any difference and "
+    "keep deduplicating the subset whatever the differences. Defaults to "
+    f"{DEFAULT_SIZE_THRESHOLD} bytes.",
 )
 @click.option(
     "-C",
@@ -121,11 +190,11 @@ def validate_regexp(ctx, param, value):
     metavar="BYTES",
     default=DEFAULT_CONTENT_THRESHOLD,
     help="Maximum difference allowed in content between mails sharing the same hash. "
-    "The whole subset of duplicates will be rejected for deduplication if any of two "
-    "mails deviates above the threshold. Set to 0 to get strict and deduplicate the "
-    "subset only if all mails are exactly the same. Set to -1 to allow "
-    "any difference and keep deduplicating the subset whatever the differences. "
-    f"Defaults to {DEFAULT_CONTENT_THRESHOLD} bytes.",
+    "The whole subset of duplicates will be rejected if at least one pair of mail "
+    "exceed the threshold. Set to 0 to enforce strictness and deduplicate the subset "
+    "only if all mails are exactly the same. Set to -1 to allow any difference and "
+    "keep deduplicating the subset whatever the differences. Defaults to "
+    f"{DEFAULT_CONTENT_THRESHOLD} bytes.",
 )
 @click.option(
     "-d",
@@ -138,8 +207,9 @@ def validate_regexp(ctx, param, value):
     "-s",
     "--strategy",
     type=click.Choice(sorted(STRATEGIES), case_sensitive=False),
-    help="Deletion strategy to apply within a subset of duplicates. If not set, "
-    "duplicates will be grouped and counted but no removal will happens.",
+    help="Selection strategy to apply within a subset of duplicates. If not set, "
+    "duplicates will be grouped and counted but no selection will happen, and no "
+    "action will be performed on the set.",
 )
 @click.option(
     "-t",
@@ -147,7 +217,7 @@ def validate_regexp(ctx, param, value):
     default=DATE_HEADER,
     type=click.Choice(sorted(TIME_SOURCES), case_sensitive=False),
     help="Source of a mail's time reference used in time-sensitive strategies. "
-    f"Defaults to {DATE_HEADER!r}.",
+    f"Defaults to {DATE_HEADER}.",
 )
 @click.option(
     "-r",
@@ -160,13 +230,14 @@ def validate_regexp(ctx, param, value):
 @click.argument(
     "mail_sources",
     nargs=-1,
-    metavar="MAIL_SOURCE_1 MAIL_SOURCE_2 (...)",
+    metavar="MAIL_SOURCE_1 MAIL_SOURCE_2 ...",
     type=click.Path(exists=True, resolve_path=True),
 )
 @click_log.simple_verbosity_option(
     logger,
     default="INFO",
     metavar="LEVEL",
+    type=click.Choice(["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"], case_sensitive=False),
     help="Either CRITICAL, ERROR, WARNING, INFO or DEBUG. Defaults to INFO.",
 )
 @click.version_option(__version__)
@@ -186,40 +257,52 @@ def mdedup(
     regexp,
     mail_sources,
 ):
-    """Deduplicate mails from a set of either mbox files or maildir folders.
-
-    Run a first pass computing the canonical hash of each encountered mail from
-    their headers, then a second pass to apply the deletion strategy on each
-    subset of duplicate mails.
+    """Deduplicate mails from a set of mail boxes.
 
     \b
-    Removal strategies for each subsets of duplicate mails:
-      - delete-older:    Deletes the olders,    keeps the newests.
-      - delete-oldest:   Deletes the oldests,   keeps the newers.
-      - delete-newer:    Deletes the newers,    keeps the oldests.
-      - delete-newest:   Deletes the newests,   keeps the olders.
-      - delete-smaller:  Deletes the smallers,  keeps the biggests.
-      - delete-smallest: Deletes the smallests, keeps the biggers.
-      - delete-bigger:   Deletes the biggers,   keeps the smallests.
-      - delete-biggest:  Deletes the biggests,  keeps the smallers.
-      - delete-matching-path: Deletes all duplicates whose file path match the
-      regular expression provided via the --regexp parameter.
-      - delete-non-matching-path: Deletes all duplicates whose file path
-      doesn't match the regular expression provided via the --regexp parameter.
+    Process:
+    * Phase #1: run a first pass to compute from their headers the canonical hash of
+                each encountered mail.
+    * Phase #2: a second pass to apply the selection strategy on each subset of
+                duplicate mails sharing the same hash.
+    * Phase #3: perform an action on all selected mails.
 
-    Deletion strategy on a duplicate set only applies if no major differences
-    between mails are uncovered during a fine-grained check differences in the
-    second phase. Limits can be set via the --size-threshold and --content-threshold
-    options.
+    A dozen of strategies are available to select mails in each subset:
+
+    \b
+    Time-based:
+    * delete-older:    Deletes the olders,    keeps the newests.
+    * delete-oldest:   Deletes the oldests,   keeps the newers.
+    * delete-newer:    Deletes the newers,    keeps the oldests.
+    * delete-newest:   Deletes the newests,   keeps the olders.
+
+    \b
+    Size-based:
+    * delete-smaller:  Deletes the smallers,  keeps the biggests.
+    * delete-smallest: Deletes the smallests, keeps the biggers.
+    * delete-bigger:   Deletes the biggers,   keeps the smallests.
+    * delete-biggest:  Deletes the biggests,  keeps the smallers.
+
+    \b
+    File-based:
+    * delete-matching-path: Deletes all duplicates whose file path match the
+    regular expression provided via the --regexp parameter.
+    * delete-non-matching-path: Deletes all duplicates whose file path
+    doesn't match the regular expression provided via the --regexp parameter.
+
+    Action on the selected mails in phase #3 is only performed if no major differences
+    between mails are uncovered during a fine-grained check differences in the second
+    phase. Limits can be set via the --size-threshold and --content-threshold options.
     """
+    # Print help screen and exit if no mail source provided.
+    if not mail_sources:
+        # Apply dynamic style to help screen.
+        click.echo(colorized_help(ctx))
+        ctx.exit()
+
     level = logger.level
     level_name = logging._levelToName.get(level, level)
     logger.debug(f"Verbosity set to {level_name}.")
-
-    # Print help screen and exit if no mail source provided.
-    if not mail_sources:
-        click.echo(ctx.get_help())
-        ctx.exit()
 
     # Validate exclusive options requirement depending on strategy.
     requirements = [
@@ -252,11 +335,12 @@ def mdedup(
 
     dedup = Deduplicate(conf)
 
-    click.echo(click.style("\n● Phase #1 - Load mails", fg="blue", bold=True))
+    click.echo(click.style("\n● Phase #0 - Load mails", fg="blue", bold=True))
     for source in mail_sources:
         dedup.add_source(source)
 
-    click.echo(click.style("\n● Phase #2 - Compute hashes", fg="blue", bold=True))
+    click.echo(click.style(
+        "\n● Phase #1 - Compute hashes and group duplicates", fg="blue", bold=True))
     dedup.hash_all()
     if hash_only:
         for all_mails in dedup.mails.values():
@@ -265,13 +349,16 @@ def mdedup(
                 click.echo(f"Hash: {mail.hash_key}")
         ctx.exit()
 
-    click.echo(click.style("\n● Phase #3 - Detect duplicates", fg="blue", bold=True))
+    click.echo(click.style(
+        "\n● Phase #2 - Select candidates in groups", fg="blue", bold=True))
     dedup.gather_candidates()
 
-    click.echo(click.style("\n● Phase #4 - Delete candidates", fg="blue", bold=True))
+    click.echo(click.style(
+        "\n● Phase #3 - Perform action on all candidates", fg="blue", bold=True))
     dedup.remove_duplicates()
 
-    click.echo(click.style("\n● Phase #5 - Report", fg="blue", bold=True))
+    click.echo(click.style(
+        "\n● Phase #4 - Report and statistics", fg="blue", bold=True))
     # Print deduplication statistics, then performs a self-check on them.
     click.echo(dedup.report())
     dedup.check_stats()
