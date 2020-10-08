@@ -67,8 +67,8 @@ def collect_keywords(ctx):
 
 
 def colorized_help(ctx):
-    """ Get default help screen and colorize section titles, options and choice
-    keywords. """
+    """Get default help screen and colorize section titles, options and choice
+    keywords."""
     cli_color = "white"
     title_color = "yellow"
     option_color = "green"
@@ -80,7 +80,7 @@ def colorized_help(ctx):
     help_txt = ctx.get_help()
 
     def colorize(match, fg=None):
-        """ Re-create the matching string by concatenating all groups, but only
+        """Re-create the matching string by concatenating all groups, but only
         colorize named groups.
         """
         txt = ""
@@ -92,23 +92,37 @@ def colorized_help(ctx):
         return txt
 
     # Highligh numbers.
-    help_txt = re.sub(r"(\s)(?P<colorize>-?\d+)", partial(colorize, fg=choice_color), help_txt)
+    help_txt = re.sub(
+        r"(\s)(?P<colorize>-?\d+)", partial(colorize, fg=choice_color), help_txt
+    )
 
     # Highlight CLI.
-    help_txt = re.sub(fr"(\s)(?P<colorize>{CLI_NAME})", partial(colorize, fg=cli_color), help_txt)
+    help_txt = re.sub(
+        fr"(\s)(?P<colorize>{CLI_NAME})", partial(colorize, fg=cli_color), help_txt
+    )
 
     # Highligh sections.
-    help_txt = re.sub(r"^(?P<colorize>\S[\S+ ]+)(:)", partial(colorize, fg=title_color), help_txt, flags=re.MULTILINE)
+    help_txt = re.sub(
+        r"^(?P<colorize>\S[\S+ ]+)(:)",
+        partial(colorize, fg=title_color),
+        help_txt,
+        flags=re.MULTILINE,
+    )
 
     # Highlight keywords.
     for keywords, color in [
-            (sorted(options), option_color),
-            (sorted(choices, reverse=True), choice_color),
-            (sorted(metavars, reverse=True), metavar_color)]:
+        (sorted(options), option_color),
+        (sorted(choices, reverse=True), choice_color),
+        (sorted(metavars, reverse=True), metavar_color),
+    ]:
         for keyword in keywords:
             # Accounts for text wrapping after a dash.
             keyword = keyword.replace("-", "-\s*")
-            help_txt = re.sub(fr"([\s\[\|])(?P<colorize>{keyword})", partial(colorize, fg=color), help_txt)
+            help_txt = re.sub(
+                fr"([\s\[\|])(?P<colorize>{keyword})",
+                partial(colorize, fg=color),
+                help_txt,
+            )
 
     return help_txt
 
@@ -239,16 +253,18 @@ def validate_regexp(ctx, param, value):
     logger,
     default="INFO",
     metavar="LEVEL",
-    type=click.Choice(["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"], case_sensitive=False),
+    type=click.Choice(
+        ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"], case_sensitive=False
+    ),
     help="Either CRITICAL, ERROR, WARNING, INFO or DEBUG. Defaults to INFO.",
 )
 @version_option(
     version=__version__,
     prog_name=CLI_NAME,
-    version_color='green',
-    prog_name_color='white',
+    version_color="green",
+    prog_name_color="white",
     message=f"%(prog)s %(version)s\n{env_data}",
-    message_color='bright_black',
+    message_color="bright_black",
 )
 @click.pass_context
 def mdedup(
@@ -348,8 +364,11 @@ def mdedup(
     for source in mail_sources:
         dedup.add_source(source)
 
-    click.echo(click.style(
-        "\n● Phase #1 - Compute hashes and group duplicates", fg="blue", bold=True))
+    click.echo(
+        click.style(
+            "\n● Phase #1 - Compute hashes and group duplicates", fg="blue", bold=True
+        )
+    )
     dedup.hash_all()
     if hash_only:
         for all_mails in dedup.mails.values():
@@ -358,16 +377,21 @@ def mdedup(
                 click.echo(f"Hash: {mail.hash_key}")
         ctx.exit()
 
-    click.echo(click.style(
-        "\n● Phase #2 - Select candidates in groups", fg="blue", bold=True))
+    click.echo(
+        click.style("\n● Phase #2 - Select candidates in groups", fg="blue", bold=True)
+    )
     dedup.gather_candidates()
 
-    click.echo(click.style(
-        "\n● Phase #3 - Perform action on all candidates", fg="blue", bold=True))
+    click.echo(
+        click.style(
+            "\n● Phase #3 - Perform action on all candidates", fg="blue", bold=True
+        )
+    )
     dedup.remove_duplicates()
 
-    click.echo(click.style(
-        "\n● Phase #4 - Report and statistics", fg="blue", bold=True))
+    click.echo(
+        click.style("\n● Phase #4 - Report and statistics", fg="blue", bold=True)
+    )
     # Print deduplication statistics, then performs a self-check on them.
     click.echo(dedup.report())
     dedup.check_stats()
