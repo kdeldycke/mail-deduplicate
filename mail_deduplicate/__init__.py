@@ -104,14 +104,16 @@ COPY_DISCARDED = "copy-discarded"
 MOVE_KEPT = "move-kept"
 MOVE_DISCARDED = "move-discarded"
 
-ACTIONS = frozenset([
-    DELETE_DISCARDED,
-    DELETE_KEPT,
-    COPY_KEPT,
-    COPY_DISCARDED,
-    MOVE_KEPT,
-    MOVE_DISCARDED,
-])
+ACTIONS = frozenset(
+    [
+        DELETE_DISCARDED,
+        DELETE_KEPT,
+        COPY_KEPT,
+        COPY_DISCARDED,
+        MOVE_KEPT,
+        MOVE_DISCARDED,
+    ]
+)
 
 
 class TooFewHeaders(Exception):

@@ -77,7 +77,8 @@ STRATEGY_DEFINITIONS = frozenset(
         ),
         (
             (DISCARD_SMALLEST, KEEP_BIGGER),
-            "Discards the smallests, keeps the biggers."),
+            "Discards the smallests, keeps the biggers.",
+        ),
         (
             (DISCARD_BIGGER, KEEP_SMALLEST),
             "Discards the biggers, keeps the smallests.",
