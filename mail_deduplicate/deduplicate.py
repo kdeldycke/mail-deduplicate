@@ -41,14 +41,14 @@ class DuplicateSet:
 
     """A duplicate set of mails sharing the same hash.
 
-    Implements all deletion strategies applicable to a set of duplicate mails.
+    Implements all selection strategies applicable to a set of duplicate mails.
     """
 
     def __init__(self, hash_key, mail_set, conf):
         """Load-up the duplicate set of mail and freeze pool.
 
         Once loaded-up, the pool of parsed mails is considered frozen for the
-        rest of the duplicate set life. This allow aggressive caching of lazy
+        rest of the duplicate set's life. This allow aggressive caching of lazy
         instance attributes depending on the pool content.
         """
         self.hash_key = hash_key
@@ -351,7 +351,8 @@ class DuplicateSet:
 
 class Deduplicate:
 
-    """Load-up messages, search for duplicates and delete them.
+    """Load-up messages, search for duplicates, apply selection strategy and perform
+    the action.
 
     Similar messages sharing the same hash are grouped together in a ``DuplicateSet``.
     """
@@ -374,7 +375,7 @@ class Deduplicate:
         # Deduplication statistics.
         self.stats = Counter(
             {
-                # Total number of mails encountered in all mail sources.
+                # Total number of mails encountered from all mail sources.
                 "mail_found": 0,
                 # Number of mails ignored because they were faulty or unparseable.
                 "mail_rejected": 0,
@@ -406,8 +407,8 @@ class Deduplicate:
     def add_source(self, source_path):
         """Registers a source of mails, validates and opens it. """
         # Make the path absolute, resolving any symlinks. Do not allow duplicates in
-        # our sources, as we use the path as a unique key to tie back a mail
-        # from its source on deletion later.
+        # our sources, as we use the path as a unique key to tie back a mail from its
+        # source when performing the action later.
         source_path = Path(source_path).resolve(strict=True)
         if source_path in self.sources:
             raise ValueError(f"{source_path} already added.")
@@ -422,8 +423,8 @@ class Deduplicate:
         self.stats["mail_found"] += mail_found
 
     def hash_all(self):
-        """Browse all mails from all registered sources, compute hashes and
-        group mails by hash.
+        """Browse all mails from all registered sources, compute hashes and group mails
+        by hash.
 
         Displays a progress bar as the operation might be slow.
         """
@@ -437,7 +438,7 @@ class Deduplicate:
 
         with click.progressbar(
             length=self.stats["mail_found"],
-            label="Mails hashed",
+            label="Hashed mails",
             show_pos=True,
         ) as progress:
 
@@ -462,11 +463,11 @@ class Deduplicate:
 
                     progress.update(1)
 
-    def gather_candidates(self):
-        """Gather all candidates for deletion from each duplicate set.
+    def select_all(self):
+        """Gather the final selection of mails from each duplicate set.
 
-        We apply the removal strategy one duplicate set at a time to keep
-        memory footprint low and make the log of actions easier to read.
+        We apply the selection strategy one duplicate set at a time to keep memory
+        footprint low and make the log easier to read.
         """
         if self.conf.strategy:
             logger.info(
@@ -474,7 +475,7 @@ class Deduplicate:
                 "duplicate set to select candidates."
             )
         else:
-            logger.warning("No removal strategy will be applied.")
+            logger.warning("No selection strategy will be applied.")
 
         self.stats["set_total"] = len(self.mails)
 
@@ -487,13 +488,13 @@ class Deduplicate:
                 click.style(f"◼ {mail_count} mails sharing hash {hash_key}", fg="cyan")
             )
 
-            # Performs the deduplication within the set.
+            # Performs the selection within the set.
             duplicates = DuplicateSet(hash_key, mail_set, self.conf)
             candidates = duplicates.select_candidates()
             if candidates:
                 self.candidates += candidates
 
-            # Merge stats resulting of actions on duplicate sets.
+            # Merge duplicate set's stats to global stats.
             self.stats += duplicates.stats
 
         # Close all open boxes.

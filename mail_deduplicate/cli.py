@@ -189,7 +189,7 @@ def validate_regexp(ctx, param, value):
     default=HASH_HEADERS,
     help="Headers to use to compute each mail's hash. Must be repeated multiple times "
     "to set an ordered list of headers. Header IDs are case-insensitive. Repeating "
-    "entries are removed. Defaults to: {}.".format(
+    "entries are ignored. Defaults to: {}.".format(
         " ".join([f"-h {h}" for h in HASH_HEADERS])
     ),
 )
@@ -404,13 +404,13 @@ def mdedup(
         ctx.exit()
 
     click.echo(
-        click.style("\n● Phase #2 - Select candidates in groups", fg="blue", bold=True)
+        click.style("\n● Phase #2 - Select mails in each group", fg="blue", bold=True)
     )
-    dedup.gather_candidates()
+    dedup.select_all()
 
     click.echo(
         click.style(
-            "\n● Phase #3 - Perform action on all candidates", fg="blue", bold=True
+            "\n● Phase #3 - Perform action on selected mails", fg="blue", bold=True
         )
     )
     if action == DELETE_DISCARDED:
