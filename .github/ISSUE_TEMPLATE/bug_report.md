@@ -128,9 +128,12 @@ Wisely choose to feature here the full output or excerpt relevant to the bug you
 
 #### Environment
 
-- OS: [e.g. macOS 10.14.5, Linux Ubuntu 19.04]
-- Python version: i.e. output of `$ python --version`
-- Mail deduplicate version: i.e. output of `$ mdedup --version`
+All data on execution context as provided by `$ mdedup --version`:
+```shell-session
+$ mdedup --version
+mdedup 6.0.0
+{'username': '-', 'guid': '7f3fc29e62ad41e5335b6aa85b3eab9', 'hostname': '-', 'hostfqdn': '-', 'uname': {'system': 'Darwin', 'node': '-', 'release': '19.6.0', 'version': 'Darwin Kernel Version 19.6.0: Mon Aug 31 22:12:52 PDT 2020; root:xnu-6153.141.2~1/RELEASE_X86_64', 'machine': 'x86_64', 'processor': 'i386'}, 'linux_dist_name': '', 'linux_dist_version': '', 'cpu_count': 4, 'fs_encoding': 'utf-8', 'ulimit_soft': 256, 'ulimit_hard': 9223372036854775807, 'cwd': '-', 'umask': '0o2', 'python': {'argv': '-', 'bin': '-', 'version': '3.8.5 (default, Jul 21 2020, 10:48:26) [Clang 11.0.3 (clang-1103.0.32.62)]', 'compiler': 'Clang 11.0.3 (clang-1103.0.32.62)', 'build_date': 'Jul 21 2020 10:48:26', 'version_info': [3, 8, 5, 'final', 0], 'features': {'openssl': 'OpenSSL 1.1.1g  21 Apr 2020', 'expat': 'expat_2.2.8', 'sqlite': '3.33.0', 'tkinter': '8.5', 'zlib': '1.2.11', 'unicode_wide': True, 'readline': True, '64bit': True, 'ipv6': True, 'threading': True, 'urandom': True}}, 'time_utc': '2020-10-09 15:07:34.199095', 'time_utc_offset': 1.0, '_eco_version': '1.0.1'}
+```
 
 #### Additional context
 
