@@ -23,9 +23,11 @@ from functools import partial
 
 import click
 import click_log
-from click_help_colors import HelpColorsGroup, HelpColorsCommand, version_option
+from click_help_colors import HelpColorsCommand, HelpColorsGroup, version_option
 
 from . import (
+    CLI_NAME,
+    DATE_HEADER,
     DEFAULT_CONTENT_THRESHOLD,
     DEFAULT_SIZE_THRESHOLD,
     DELETE_MATCHING_PATH,
@@ -33,15 +35,13 @@ from . import (
     HASH_HEADERS,
     STRATEGIES,
     TIME_SOURCES,
-    DATE_HEADER,
     Config,
-    CLI_NAME,
     __version__,
-    logger,
     env_data,
+    logger,
 )
-from .mailbox import BOX_TYPES
 from .deduplicate import Deduplicate
+from .mailbox import BOX_TYPES
 
 click_log.basic_config(logger)
 

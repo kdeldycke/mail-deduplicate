@@ -23,8 +23,8 @@ import logging
 import sys
 from operator import methodcaller
 
-from boltons.iterutils import unique
 from boltons.ecoutils import get_profile
+from boltons.iterutils import unique
 
 # Canonical name of the CLI.
 CLI_NAME = "mdedup"

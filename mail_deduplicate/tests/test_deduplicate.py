@@ -22,9 +22,9 @@ from mailbox import Maildir
 import arrow
 import pytest
 
-from .conftest import MailFactory, check_box
 from .. import STRATEGIES
 from ..deduplicate import DuplicateSet
+from .conftest import MailFactory, check_box
 
 
 def test_strategy_definitions():

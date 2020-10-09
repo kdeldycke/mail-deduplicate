@@ -19,17 +19,17 @@
 
 import email
 import hashlib
+import inspect
+import mailbox
 import os
 import re
 import textwrap
 import time
-import inspect
-import mailbox
 
-from tabulate import tabulate
 from boltons.cacheutils import cachedproperty
+from tabulate import tabulate
 
-from . import CTIME, TooFewHeaders, MINIMAL_HEADERS_COUNT, logger
+from . import CTIME, MINIMAL_HEADERS_COUNT, TooFewHeaders, logger
 
 
 class DedupMail:

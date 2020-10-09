@@ -21,7 +21,6 @@ from mailbox import Maildir, mbox
 
 from .conftest import MailFactory, check_box
 
-
 invalid_date_mail_1 = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 invalid_date_mail_2 = MailFactory(date_rfc2822="Thu, 13 Dec 102 15:30 WET")
 

@@ -24,19 +24,13 @@ from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
 
+import click
 from boltons.cacheutils import cachedproperty
 from boltons.iterutils import unique
 from tabulate import tabulate
-import click
 
-from . import (
-    ContentDiffAboveThreshold,
-    TooFewHeaders,
-    SizeDiffAboveThreshold,
-    logger,
-)
+from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders, logger
 from .mailbox import open_box
-
 
 DRY_RUN_LABEL = click.style("DRY_RUN", fg="yellow")
 
