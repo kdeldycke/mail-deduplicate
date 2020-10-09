@@ -8,73 +8,112 @@ List global options:
 
 .. code-block:: shell-session
 
-    $ mdedup --help
-    Usage: mdedup [OPTIONS] MBOXES/MAILDIRS
+    Usage: mdedup [OPTIONS] MAIL_SOURCE_1 MAIL_SOURCE_2 ...
 
-      Deduplicate mails from a set of either mbox files or maildir folders.
+      Deduplicate mails from a set of mail boxes.
 
-      Run a first pass computing the canonical hash of each encountered mail
-      from their headers, then a second pass to apply the deletion strategy on
-      each subset of duplicate mails.
+      Process:
+      * Phase #1: run a first pass to compute from their headers the canonical hash of
+                  each encountered mail.
+      * Phase #2: a second pass to apply the selection strategy on each subset of
+                  duplicate mails sharing the same hash.
+      * Phase #3: perform an action on all selected mails.
 
-      Removal strategies for each subsets of duplicate mails:
-        - delete-older:    Deletes the olders,    keeps the newests.
-        - delete-oldest:   Deletes the oldests,   keeps the newers.
-        - delete-newer:    Deletes the newers,    keeps the oldests.
-        - delete-newest:   Deletes the newests,   keeps the olders.
-        - delete-smaller:  Deletes the smallers,  keeps the biggests.
-        - delete-smallest: Deletes the smallests, keeps the biggers.
-        - delete-bigger:   Deletes the biggers,   keeps the smallests.
-        - delete-biggest:  Deletes the biggests,  keeps the smallers.
-        - delete-matching-path: Deletes all duplicates whose file path match the
-        regular expression provided via the --regexp parameter.
-        - delete-non-matching-path: Deletes all duplicates whose file path
-        doesn't match the regular expression provided via the --regexp parameter.
+      A dozen of strategies are available to select mails in each subset:
 
-      Deletion strategy on a duplicate set only applies if no major differences
-      between mails are uncovered during a fine-grained check differences during
-      the second pass. Limits can be set via the threshold options.
+      Time-based:
+      * discard-older:    Discards the olders,    keeps the newests.
+      * discard-oldest:   Discards the oldests,   keeps the newers.
+      * discard-newer:    Discards the newers,    keeps the oldests.
+      * discard-newest:   Discards the newests,   keeps the olders.
+
+      Size-based:
+      * discard-smaller:  Discards the smallers,  keeps the biggests.
+      * discard-smallest: Discards the smallests, keeps the biggers.
+      * discard-bigger:   Discards the biggers,   keeps the smallests.
+      * discard-biggest:  Discards the biggests,  keeps the smallers.
+
+      File-based:
+      * discard-matching-path: Discardss all duplicates whose file path match the
+      regular expression provided via the --regexp parameter.
+      * discard-non-matching-path: Discardss all duplicates whose file path
+      doesn't match the regular expression provided via the --regexp parameter.
+
+      Action on the selected mails in phase #3 is only performed if no major
+      differences between mails are uncovered during a fine-grained check
+      differences in the second phase. Limits can be set via the --size-
+      threshold and --content-threshold options.
 
     Options:
-      -h, --hash-only                 Compute and display the internal hashes used
+      -n, --dry-run                   Do not actually performs anything; just
+                                      apply the selection strategy, and show which
+                                      action would have been performed otherwise.
+
+      -i, --input-format [babyl|maildir|mbox|mh|mmdf]
+                                      Force all provided mail sources to be parsed
+                                      in the specified format. If not set, auto-
+                                      detect the format of sources independently.
+                                      Auto-detection only supports maildir and
+                                      mbox format. So use this option to open up
+                                      other box format, or bypass unreliable
+                                      detection.
+
+      -u, --force-unlock              Remove the lock on mail source opening if
+                                      one is found.
+
+      -H, --hash-only                 Compute and display the internal hashes used
                                       to identify duplicates. Do not performs any
                                       deduplication operation.
 
-      -n, --dry-run                   Do not actually delete anything; just show
-                                      which mails would be removed.
+      -h, --hash-header Header-ID     Headers to use to compute each mail's hash.
+                                      Must be repeated multiple times to set an
+                                      ordered list of headers. Header IDs are
+                                      case-insensitive. Repeating entries are
+                                      ignored. Defaults to: -h Date -h From -h To
+                                      -h Subject -h MIME-Version -h Content-Type
+                                      -h Content-Disposition -h User-Agent -h
+                                      X-Priority -h Message-ID.
 
-      -s, --strategy [delete-matching-path|delete-non-matching-path|delete-newer|delete-older|delete-newest|delete-smaller|delete-oldest|delete-smallest|delete-biggest|delete-bigger]
-                                      Deletion strategy to apply within a subset
-                                      of duplicates. If not set duplicates will be
-                                      grouped and counted but no removal will
-                                      happens.
+      -S, --size-threshold BYTES      Maximum difference allowed in size between
+                                      mails sharing the same hash. The whole
+                                      subset of duplicates will be rejected if at
+                                      least one pair of mail exceed the threshold.
+                                      Set to 0 to enforce strictness and
+                                      deduplicate the subset only if all mails are
+                                      exactly the same. Set to -1 to allow any
+                                      difference and keep deduplicating the subset
+                                      whatever the differences. Defaults to 512
+                                      bytes.
 
-      -t, --time-source [date-header|ctime]
-                                      Source of a mail's time reference. Required
-                                      in time-sensitive strategies.
-
-      -r, --regexp REGEXP             Regular expression against a mail file path.
-                                      Required in delete-matching-path and delete-
-                                      non-matching-path strategies.
-
-      -i, --message-id                Only use the Message-ID header as a hash
-                                      key. Not recommended. Replace the default
-                                      behavior consisting in deriving the hash
-                                      from several headers.
-
-      -S, --size-threshold BYTES      Maximum allowed difference in size between
-                                      mails. Whole subset of duplicates will be
-                                      rejected above threshold. Set to -1 to not
-                                      allow any difference. Defaults to 512 bytes.
-
-      -C, --content-threshold BYTES   Maximum allowed difference in content
-                                      between mails. Whole subset of duplicates
-                                      will be rejected above threshold. Set to -1
-                                      to not allow any difference. Defaults to 768
+      -C, --content-threshold BYTES   Maximum difference allowed in content
+                                      between mails sharing the same hash. The
+                                      whole subset of duplicates will be rejected
+                                      if at least one pair of mail exceed the
+                                      threshold. Set to 0 to enforce strictness
+                                      and deduplicate the subset only if all mails
+                                      are exactly the same. Set to -1 to allow any
+                                      difference and keep deduplicating the subset
+                                      whatever the differences. Defaults to 768
                                       bytes.
 
       -d, --show-diff                 Show the unified diff of duplicates not
                                       within thresholds.
+
+      -s, --strategy [discard-bigger|discard-biggest|discard-matching-path|discard-newer|discard-newest|discard-non-matching-path|discard-older|discard-oldest|discard-smaller|discard-smallest]
+                                      Selection strategy to apply within a subset
+                                      of duplicates. If not set, duplicates will
+                                      be grouped and counted but no selection will
+                                      happen, and no action will be performed on
+                                      the set.
+
+      -t, --time-source [ctime|date-header]
+                                      Source of a mail's time reference used in
+                                      time-sensitive strategies. Defaults to date-
+                                      header.
+
+      -r, --regexp REGEXP             Regular expression against a mail file path.
+                                      Required in discard-matching-path and
+                                      discard-non-matching-path strategies.
 
       -v, --verbosity LEVEL           Either CRITICAL, ERROR, WARNING, INFO or
                                       DEBUG. Defaults to INFO.
