@@ -126,7 +126,22 @@ CTIME = "ctime"
 TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
 
 
-# Defines custom exception first to avoid circular imports.
+# Actions performed on the mail selection.
+DELETE_DISCARDED = "delete-discarded"
+DELETE_KEPT = "delete-kept"
+COPY_KEPT = "copy-kept"
+COPY_DISCARDED = "copy-discarded"
+MOVE_KEPT = "move-kept"
+MOVE_DISCARDED = "move-discarded"
+
+ACTIONS = frozenset([
+    DELETE_DISCARDED,
+    DELETE_KEPT,
+    COPY_KEPT,
+    COPY_DISCARDED,
+    MOVE_KEPT,
+    MOVE_DISCARDED,
+])
 
 
 class TooFewHeaders(Exception):
@@ -161,6 +176,7 @@ class Config:
         "strategy": None,
         "time_source": None,
         "regexp": None,
+        "action": COPY_KEPT,
     }
 
     def __init__(self, **kwargs):

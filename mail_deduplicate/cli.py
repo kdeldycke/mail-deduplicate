@@ -27,6 +27,9 @@ from click_help_colors import version_option
 
 from . import (
     CLI_NAME,
+    COPY_KEPT,
+    ACTIONS,
+    DELETE_DISCARDED,
     DATE_HEADER,
     DEFAULT_CONTENT_THRESHOLD,
     DEFAULT_SIZE_THRESHOLD,
@@ -243,6 +246,15 @@ def validate_regexp(ctx, param, value):
     help="Regular expression against a mail file path. Required in "
     "discard-matching-path and discard-non-matching-path strategies.",
 )
+@click.option(
+    "-a",
+    "--action",
+    default=COPY_KEPT,
+    type=click.Choice(sorted(ACTIONS), case_sensitive=False),
+    help="Action performed on the selected mails. Defaults to copy-kept as it is the "
+    "safest: it only reads the mail sources and create a brand new mail box with the "
+    "selection results.",
+)
 @click.argument(
     "mail_sources",
     nargs=-1,
@@ -280,6 +292,7 @@ def mdedup(
     strategy,
     time_source,
     regexp,
+    action,
     mail_sources,
 ):
     """Deduplicate mails from a set of mail boxes.
@@ -387,7 +400,10 @@ def mdedup(
             "\n● Phase #3 - Perform action on all candidates", fg="blue", bold=True
         )
     )
-    dedup.remove_duplicates()
+    if action == DELETE_DISCARDED:
+        dedup.remove_duplicates()
+    else:
+        raise NotImplementedError(f"{action} action not implemented yet.")
 
     click.echo(
         click.style("\n● Phase #4 - Report and statistics", fg="blue", bold=True)

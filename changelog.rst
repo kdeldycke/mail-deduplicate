@@ -7,6 +7,8 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Add new ``-a``/``--action`` option to choose which action to perform on the
+  final mail selection.
 * Rename all strategies from ``--delete-*`` to ``--discard-*``.
 * Rename ``-f``/``--sources-format`` option to ``-i``/``--input-format``.
 * ``--time-source`` parameter is now optional and defaults to ``date-header``.
