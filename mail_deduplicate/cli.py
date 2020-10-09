@@ -23,7 +23,7 @@ from functools import partial
 
 import click
 import click_log
-from click_help_colors import HelpColorsCommand, HelpColorsGroup, version_option
+from click_help_colors import version_option
 
 from . import (
     CLI_NAME,
