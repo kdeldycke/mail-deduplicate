@@ -23,7 +23,6 @@ import inspect
 import mailbox
 import os
 import re
-import textwrap
 import time
 
 from boltons.cacheutils import cachedproperty
