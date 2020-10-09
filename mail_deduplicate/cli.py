@@ -319,15 +319,15 @@ def mdedup(
     between mails are uncovered during a fine-grained check differences in the second
     phase. Limits can be set via the --size-threshold and --content-threshold options.
     """
+    level = logger.level
+    level_name = logging._levelToName.get(level, level)
+    logger.debug(f"Verbosity set to {level_name}.")
+
     # Print help screen and exit if no mail source provided.
     if not mail_sources:
         # Apply dynamic style to help screen.
         click.echo(colorized_help(ctx))
         ctx.exit()
-
-    level = logger.level
-    level_name = logging._levelToName.get(level, level)
-    logger.debug(f"Verbosity set to {level_name}.")
 
     # Validate exclusive options requirement depending on strategy.
     requirements = [

@@ -30,6 +30,6 @@ def test_nonexistent_path(invoke, source):
 def test_invalid_maildir_structure(invoke):
     result = invoke(".")
     assert result.exit_code == 1
-    assert "Phase #1" in result.output
+    assert "Phase #0" in result.output
     assert "Opening " in result.output
     assert "Missing sub-directory" in str(result.exc_info[1])
