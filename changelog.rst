@@ -2,7 +2,7 @@ ChangeLog
 =========
 
 
-`5.2.0 (unreleased) <https://github.com/kdeldycke/mail-deduplicate/compare/v5.2.0...develop>`_
+`6.0.0 (unreleased) <https://github.com/kdeldycke/mail-deduplicate/compare/v5.1.0...develop>`_
 ----------------------------------------------------------------------------------------------
 
 .. note:: This version is not yet released and is under active development.
