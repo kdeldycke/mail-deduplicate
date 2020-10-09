@@ -30,8 +30,8 @@ from . import (
     DATE_HEADER,
     DEFAULT_CONTENT_THRESHOLD,
     DEFAULT_SIZE_THRESHOLD,
-    DELETE_MATCHING_PATH,
-    DELETE_NON_MATCHING_PATH,
+    DISCARD_MATCHING_PATH,
+    DISCARD_NON_MATCHING_PATH,
     HASH_HEADERS,
     STRATEGIES,
     TIME_SOURCES,
@@ -241,7 +241,7 @@ def validate_regexp(ctx, param, value):
     callback=validate_regexp,
     metavar="REGEXP",
     help="Regular expression against a mail file path. Required in "
-    "delete-matching-path and delete-non-matching-path strategies.",
+    "discard-matching-path and discard-non-matching-path strategies.",
 )
 @click.argument(
     "mail_sources",
@@ -296,23 +296,23 @@ def mdedup(
 
     \b
     Time-based:
-    * delete-older:    Deletes the olders,    keeps the newests.
-    * delete-oldest:   Deletes the oldests,   keeps the newers.
-    * delete-newer:    Deletes the newers,    keeps the oldests.
-    * delete-newest:   Deletes the newests,   keeps the olders.
+    * discard-older:    Discards the olders,    keeps the newests.
+    * discard-oldest:   Discards the oldests,   keeps the newers.
+    * discard-newer:    Discards the newers,    keeps the oldests.
+    * discard-newest:   Discards the newests,   keeps the olders.
 
     \b
     Size-based:
-    * delete-smaller:  Deletes the smallers,  keeps the biggests.
-    * delete-smallest: Deletes the smallests, keeps the biggers.
-    * delete-bigger:   Deletes the biggers,   keeps the smallests.
-    * delete-biggest:  Deletes the biggests,  keeps the smallers.
+    * discard-smaller:  Discards the smallers,  keeps the biggests.
+    * discard-smallest: Discards the smallests, keeps the biggers.
+    * discard-bigger:   Discards the biggers,   keeps the smallests.
+    * discard-biggest:  Discards the biggests,  keeps the smallers.
 
     \b
     File-based:
-    * delete-matching-path: Deletes all duplicates whose file path match the
+    * discard-matching-path: Discardss all duplicates whose file path match the
     regular expression provided via the --regexp parameter.
-    * delete-non-matching-path: Deletes all duplicates whose file path
+    * discard-non-matching-path: Discardss all duplicates whose file path
     doesn't match the regular expression provided via the --regexp parameter.
 
     Action on the selected mails in phase #3 is only performed if no major differences
@@ -331,7 +331,7 @@ def mdedup(
 
     # Validate exclusive options requirement depending on strategy.
     requirements = [
-        (regexp, "-r/--regexp", {DELETE_MATCHING_PATH, DELETE_NON_MATCHING_PATH}),
+        (regexp, "-r/--regexp", {DISCARD_MATCHING_PATH, DISCARD_NON_MATCHING_PATH}),
     ]
     for param_value, param_name, required_strategies in requirements:
         if strategy in required_strategies:

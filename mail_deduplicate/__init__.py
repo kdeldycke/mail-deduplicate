@@ -90,32 +90,32 @@ DEFAULT_SIZE_THRESHOLD = 512  # bytes
 DEFAULT_CONTENT_THRESHOLD = 768  # bytes
 
 
-# Use symbols to define removal strategies.
-DELETE_OLDER = "delete-older"
-DELETE_OLDEST = "delete-oldest"
-DELETE_NEWER = "delete-newer"
-DELETE_NEWEST = "delete-newest"
+# Use symbols to define selection strategies.
+DISCARD_OLDER = "discard-older"
+DISCARD_OLDEST = "discard-oldest"
+DISCARD_NEWER = "discard-newer"
+DISCARD_NEWEST = "discard-newest"
 
-DELETE_SMALLER = "delete-smaller"
-DELETE_SMALLEST = "delete-smallest"
-DELETE_BIGGER = "delete-bigger"
-DELETE_BIGGEST = "delete-biggest"
+DISCARD_SMALLER = "discard-smaller"
+DISCARD_SMALLEST = "discard-smallest"
+DISCARD_BIGGER = "discard-bigger"
+DISCARD_BIGGEST = "discard-biggest"
 
-DELETE_MATCHING_PATH = "delete-matching-path"
-DELETE_NON_MATCHING_PATH = "delete-non-matching-path"
+DISCARD_MATCHING_PATH = "discard-matching-path"
+DISCARD_NON_MATCHING_PATH = "discard-non-matching-path"
 
 STRATEGIES = frozenset(
     [
-        DELETE_OLDER,
-        DELETE_OLDEST,
-        DELETE_NEWER,
-        DELETE_NEWEST,
-        DELETE_SMALLER,
-        DELETE_SMALLEST,
-        DELETE_BIGGER,
-        DELETE_BIGGEST,
-        DELETE_MATCHING_PATH,
-        DELETE_NON_MATCHING_PATH,
+        DISCARD_OLDER,
+        DISCARD_OLDEST,
+        DISCARD_NEWER,
+        DISCARD_NEWEST,
+        DISCARD_SMALLER,
+        DISCARD_SMALLEST,
+        DISCARD_BIGGER,
+        DISCARD_BIGGEST,
+        DISCARD_MATCHING_PATH,
+        DISCARD_NON_MATCHING_PATH,
     ]
 )
 

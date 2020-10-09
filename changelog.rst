@@ -7,6 +7,7 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development.
 
+* Rename all strategies from ``--delete-*`` to ``-discard-*``.
 * Rename ``-f``/``--sources-format`` option to ``-i``/``--input-format``.
 * ``--time-source`` parameter is now optional and defaults to ``date-header``.
 * Colorize help screeen.

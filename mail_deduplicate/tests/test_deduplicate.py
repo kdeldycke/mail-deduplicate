@@ -57,8 +57,8 @@ strategy_options = {sid: [] for sid in STRATEGIES}
 # Add dummy regexps.
 strategy_options.update(
     {
-        "delete-matching-path": ["--regexp=.*"],
-        "delete-non-matching-path": ["--regexp=.*"],
+        "discard-matching-path": ["--regexp=.*"],
+        "discard-non-matching-path": ["--regexp=.*"],
     }
 )
 
@@ -111,7 +111,7 @@ def test_maildir_smaller_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=delete-smaller", box_path)
+    result = invoke("--strategy=discard-smaller", box_path)
 
     assert result.exit_code == 0
     # Biggest mails are kept but not the smaller ones.
@@ -138,7 +138,7 @@ def test_maildir_smallest_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=delete-smallest", box_path)
+    result = invoke("--strategy=discard-smallest", box_path)
 
     assert result.exit_code == 0
     # Bigger mails are kept but not the smallest ones.
@@ -172,7 +172,7 @@ def test_maildir_bigger_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=delete-bigger", box_path)
+    result = invoke("--strategy=discard-bigger", box_path)
 
     assert result.exit_code == 0
     # Smallest mails are kept but not the bigger ones.
@@ -199,7 +199,7 @@ def test_maildir_biggest_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=delete-biggest", box_path)
+    result = invoke("--strategy=discard-biggest", box_path)
 
     assert result.exit_code == 0
     # Smaller mails are kept but not the biggest ones.
@@ -245,7 +245,7 @@ def test_maildir_older_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=delete-older", box_path)
+    result = invoke("--strategy=discard-older", box_path)
 
     assert result.exit_code == 0
     # Newest mails are kept but not the older ones.
@@ -272,7 +272,7 @@ def test_maildir_oldest_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=delete-oldest", box_path)
+    result = invoke("--strategy=discard-oldest", box_path)
 
     assert result.exit_code == 0
     # Newer mails are kept but not the oldest ones.
@@ -306,7 +306,7 @@ def test_maildir_newer_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=delete-newer", box_path)
+    result = invoke("--strategy=discard-newer", box_path)
 
     assert result.exit_code == 0
     # Oldest mails are kept but not the newer ones.
@@ -333,7 +333,7 @@ def test_maildir_newest_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=delete-newest", box_path)
+    result = invoke("--strategy=discard-newest", box_path)
 
     assert result.exit_code == 0
     # Older mails are kept but not the newest ones.
