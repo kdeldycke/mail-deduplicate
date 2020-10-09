@@ -10,6 +10,7 @@ ChangeLog
 * Add new ``-a``/``--action`` option to choose which action to perform on the
   final mail selection.
 * Rename all strategies from ``--delete-*`` to ``--discard-*``.
+* Add aliases to all strategies in the form of ``--keep-*``.
 * Rename ``-f``/``--sources-format`` option to ``-i``/``--input-format``.
 * ``--time-source`` parameter is now optional and defaults to ``date-header``.
 * Colorize help screeen.

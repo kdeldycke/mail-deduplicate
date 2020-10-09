@@ -31,6 +31,8 @@ from tabulate import tabulate
 
 from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders, logger
 from .mailbox import open_box
+from .strategy import get_strategy_method_ids
+
 
 DRY_RUN_LABEL = click.style("DRY_RUN", fg="yellow")
 
@@ -168,19 +170,21 @@ class DuplicateSet:
         )
 
     def call_strategy(self):
-        """Call deduplication with the configured strategy.
-
-        Transform strategy keyword into its method ID, and call it.
-        """
+        """Call an apply selection strategy."""
         if not self.conf.strategy:
-            logger.warning("No strategy selected, skip deduplication.")
+            logger.warning("No strategy selected, skip selection.")
             return
 
-        method_id = self.conf.strategy.replace("-", "_")
-        if not hasattr(DuplicateSet, method_id):
-            raise NotImplementedError(f"DuplicateSet.{method_id}() method.")
-        logger.debug(f"Call {method_id}() strategy.")
-        return getattr(self, method_id)()
+        # Look for strategy implementation or one of its alias.
+        method_ids = get_strategy_method_ids(self.conf.strategy)
+        for mid in method_ids:
+            logger.debug(f"Search for {mid}() strategy implementation...")
+            if hasattr(DuplicateSet, mid):
+                # Apply strategy.
+                logger.debug(f"Call {mid}()...")
+                return getattr(self, mid)()
+
+        raise NotImplementedError(f"Can't find any of {method_ids!r} methods.")
 
     def select_candidates(self):
         """Returns the list of duplicates selected for removal.
@@ -235,8 +239,8 @@ class DuplicateSet:
     # TODO: Factorize reduce the code structure common to all strategy below
     # around the notion of selection criterion.
 
-    def delete_older(self):
-        """Delete all older duplicates.
+    def discard_older(self):
+        """Discard all older duplicates.
 
         Only keeps the subset sharing the most recent timestamp.
         """
@@ -246,8 +250,8 @@ class DuplicateSet:
         )
         return [mail for mail in self.pool if mail.timestamp < self.newest_timestamp]
 
-    def delete_oldest(self):
-        """Delete all the oldest duplicates.
+    def discard_oldest(self):
+        """Discard all the oldest duplicates.
 
         Keeps all mail of the duplicate set but those sharing the oldest
         timestamp.
@@ -258,8 +262,8 @@ class DuplicateSet:
         )
         return [mail for mail in self.pool if mail.timestamp == self.oldest_timestamp]
 
-    def delete_newer(self):
-        """Delete all newer duplicates.
+    def discard_newer(self):
+        """Discard all newer duplicates.
 
         Only keeps the subset sharing the most ancient timestamp.
         """
@@ -269,8 +273,8 @@ class DuplicateSet:
         )
         return [mail for mail in self.pool if mail.timestamp > self.oldest_timestamp]
 
-    def delete_newest(self):
-        """Delete all the newest duplicates.
+    def discard_newest(self):
+        """Discard all the newest duplicates.
 
         Keeps all mail of the duplicate set but those sharing the newest
         timestamp.
@@ -281,8 +285,8 @@ class DuplicateSet:
         )
         return [mail for mail in self.pool if mail.timestamp == self.newest_timestamp]
 
-    def delete_smaller(self):
-        """Delete all smaller duplicates.
+    def discard_smaller(self):
+        """Discard all smaller duplicates.
 
         Only keeps the subset sharing the biggest size.
         """
@@ -291,8 +295,8 @@ class DuplicateSet:
         )
         return [mail for mail in self.pool if mail.size < self.biggest_size]
 
-    def delete_smallest(self):
-        """Delete all the smallest duplicates.
+    def discard_smallest(self):
+        """Discard all the smallest duplicates.
 
         Keeps all mail of the duplicate set but those sharing the smallest
         size.
@@ -303,8 +307,8 @@ class DuplicateSet:
         )
         return [mail for mail in self.pool if mail.size == self.smallest_size]
 
-    def delete_bigger(self):
-        """Delete all bigger duplicates.
+    def discard_bigger(self):
+        """Discard all bigger duplicates.
 
         Only keeps the subset sharing the smallest size.
         """
@@ -313,8 +317,8 @@ class DuplicateSet:
         )
         return [mail for mail in self.pool if mail.size > self.smallest_size]
 
-    def delete_biggest(self):
-        """Delete all the biggest duplicates.
+    def discard_biggest(self):
+        """Discard all the biggest duplicates.
 
         Keeps all mail of the duplicate set but those sharing the biggest
         size.
@@ -325,8 +329,8 @@ class DuplicateSet:
         )
         return [mail for mail in self.pool if mail.size == self.biggest_size]
 
-    def delete_matching_path(self):
-        """ Delete all duplicates whose file path match the regexp. """
+    def discard_matching_path(self):
+        """ Discard all duplicates whose file path match the regexp. """
         logger.info(
             "Select all mails with file path matching the "
             f"{self.conf.regexp.pattern} regexp..."
@@ -334,8 +338,8 @@ class DuplicateSet:
         # Select candidates for deletion.
         return [mail for mail in self.pool if re.search(self.conf.regexp, mail.path)]
 
-    def delete_non_matching_path(self):
-        """ Delete all duplicates whose file path doesn't match the regexp. """
+    def discard_non_matching_path(self):
+        """ Discard all duplicates whose file path doesn't match the regexp. """
         logger.info(
             "Select all mails with file path not matching the "
             f"{self.conf.regexp.pattern} regexp..."

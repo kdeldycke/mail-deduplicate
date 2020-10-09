@@ -90,36 +90,6 @@ DEFAULT_SIZE_THRESHOLD = 512  # bytes
 DEFAULT_CONTENT_THRESHOLD = 768  # bytes
 
 
-# Use symbols to define selection strategies.
-DISCARD_OLDER = "discard-older"
-DISCARD_OLDEST = "discard-oldest"
-DISCARD_NEWER = "discard-newer"
-DISCARD_NEWEST = "discard-newest"
-
-DISCARD_SMALLER = "discard-smaller"
-DISCARD_SMALLEST = "discard-smallest"
-DISCARD_BIGGER = "discard-bigger"
-DISCARD_BIGGEST = "discard-biggest"
-
-DISCARD_MATCHING_PATH = "discard-matching-path"
-DISCARD_NON_MATCHING_PATH = "discard-non-matching-path"
-
-STRATEGIES = frozenset(
-    [
-        DISCARD_OLDER,
-        DISCARD_OLDEST,
-        DISCARD_NEWER,
-        DISCARD_NEWEST,
-        DISCARD_SMALLER,
-        DISCARD_SMALLEST,
-        DISCARD_BIGGER,
-        DISCARD_BIGGEST,
-        DISCARD_MATCHING_PATH,
-        DISCARD_NON_MATCHING_PATH,
-    ]
-)
-
-
 # Sources from which we compute a mail's canonical timestamp.
 DATE_HEADER = "date-header"
 CTIME = "ctime"

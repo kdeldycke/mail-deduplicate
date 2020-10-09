@@ -33,15 +33,19 @@ from . import (
     DATE_HEADER,
     DEFAULT_CONTENT_THRESHOLD,
     DEFAULT_SIZE_THRESHOLD,
-    DISCARD_MATCHING_PATH,
-    DISCARD_NON_MATCHING_PATH,
     HASH_HEADERS,
-    STRATEGIES,
     TIME_SOURCES,
     Config,
     __version__,
     env_data,
     logger,
+)
+from .strategy import (
+    STRATEGIES,
+    DISCARD_MATCHING_PATH,
+    DISCARD_NON_MATCHING_PATH,
+    KEEP_MATCHING_PATH,
+    KEEP_NON_MATCHING_PATH,
 )
 from .deduplicate import Deduplicate
 from .mailbox import BOX_TYPES
@@ -344,7 +348,16 @@ def mdedup(
 
     # Validate exclusive options requirement depending on strategy.
     requirements = [
-        (regexp, "-r/--regexp", {DISCARD_MATCHING_PATH, DISCARD_NON_MATCHING_PATH}),
+        (
+            regexp,
+            "-r/--regexp",
+            {
+                DISCARD_MATCHING_PATH,
+                DISCARD_NON_MATCHING_PATH,
+                KEEP_MATCHING_PATH,
+                KEEP_NON_MATCHING_PATH,
+            },
+        ),
     ]
     for param_value, param_name, required_strategies in requirements:
         if strategy in required_strategies:
