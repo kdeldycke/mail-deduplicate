@@ -38,12 +38,13 @@ MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 
 
 def build_box_constructors():
-    """Gather all constructors specific mailbox formats supported by the standard
-    Python library.
+    """Build our own mail constructors for each mailbox format.
 
-    Only keep subclasses of the mailbox.Mailbox interface, but the latter and
-    all others starting with an underscore.
+    Gather all constructors defined by the standard Python library and extend them
+    with our ``DedupMail`` class.
     """
+    # Only keep subclasses of the ``mailbox.Mailbox`` interface, but the latter and
+    # all others starting with an underscore.
     for _, klass in inspect.getmembers(mailbox, inspect.isclass):
         if (
             klass != mailbox.Mailbox
@@ -51,18 +52,17 @@ def build_box_constructors():
             and issubclass(klass, mailbox.Mailbox)
         ):
             # Fetch the default factory for each mailbox type based on naming
-            # conventions .
+            # conventions.
             message_klass = getattr(mailbox, f"{klass.__name__}Message")
             assert issubclass(message_klass, mailbox.Message)
 
-            # Extend the default factory with our own ``DedupMail`` class to add
-            # deduplication utilities.
+            # Extend the default factory with DedupMail class.
             factory_klass = type(
                 f"{klass.__name__}DedupMail",
                 (DedupMail, message_klass, object),
                 {
-                    "__doc__": f"Extend the default message factory for {klass} with our "
-                    "own ``DedupMail`` class to add deduplication utilities."
+                    "__doc__": f"Extend the default message factory for {klass} with "
+                    "our own ``DedupMail`` class to add deduplication utilities."
                 },
             )
 
