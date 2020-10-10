@@ -17,39 +17,23 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-from string import ascii_lowercase
 from mailbox import Maildir
-from operator import truth
+from string import ascii_lowercase
 
 import arrow
 import pytest
 
-from ..strategy import STRATEGIES, get_strategy_method_ids
-from ..deduplicate import DuplicateSet
+from ..strategy import STRATEGY_METHODS
 from .conftest import MailFactory, check_box
 
 
 def test_strategy_definitions():
     """ Test deduplication strategy definitions. """
-    for strategy_id in STRATEGIES:
-
+    for strategy_id, method in STRATEGY_METHODS.items():
         # All strategies are lower cases strings, with dashes.
         assert isinstance(strategy_id, str)
         assert set(strategy_id).issubset(ascii_lowercase + "-")
-
-        # Each strategy is implemented or its aliases provides fallback.
-        methods = list(
-            filter(
-                truth,
-                [
-                    getattr(DuplicateSet, mid, None)
-                    for mid in get_strategy_method_ids(strategy_id)
-                ],
-            )
-        )
-        assert methods
-        for method in methods:
-            assert callable(method)
+        assert callable(method)
 
 
 # Collections of pre-defined fixtures to use in the deduplication tests below.
@@ -68,7 +52,7 @@ biggest_mail = MailFactory(
 
 
 # List of strategies and their required dummy options.
-strategy_options = {sid: [] for sid in STRATEGIES}
+strategy_options = dict.fromkeys(STRATEGY_METHODS, [])
 # Add dummy regexps.
 strategy_options.update(
     {

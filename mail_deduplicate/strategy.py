@@ -19,10 +19,157 @@
 
 """ Strategy definitions. """
 
-from operator import itemgetter
+import random
+import re
+from operator import attrgetter
 
-from boltons.iterutils import flatten
 from boltons.dictutils import FrozenDict
+
+from . import logger
+
+
+def discard_older(duplicates):
+    """Discard all older duplicates.
+
+    Only keeps the subset sharing the most recent timestamp.
+    """
+    logger.info(
+        f"Select all mails strictly older than the {duplicates.newest_timestamp} "
+        "timestamp..."
+    )
+    return {
+        mail for mail in duplicates.pool if mail.timestamp < duplicates.newest_timestamp
+    }
+
+
+def discard_oldest(duplicates):
+    """Discard all the oldest duplicates.
+
+    Keeps all mail of the duplicate set but those sharing the oldest
+    timestamp.
+    """
+    logger.info(
+        f"Select all mails sharing the oldest {duplicates.oldest_timestamp} "
+        "timestamp..."
+    )
+    return {
+        mail
+        for mail in duplicates.pool
+        if mail.timestamp == duplicates.oldest_timestamp
+    }
+
+
+def discard_newer(duplicates):
+    """Discard all newer duplicates.
+
+    Only keeps the subset sharing the most ancient timestamp.
+    """
+    logger.info(
+        f"Select all mails strictly newer than the {duplicates.oldest_timestamp} "
+        "timestamp..."
+    )
+    return {
+        mail for mail in duplicates.pool if mail.timestamp > duplicates.oldest_timestamp
+    }
+
+
+def discard_newest(duplicates):
+    """Discard all the newest duplicates.
+
+    Keeps all mail of the duplicate set but those sharing the newest
+    timestamp.
+    """
+    logger.info(
+        f"Select all mails sharing the newest {duplicates.newest_timestamp} "
+        "timestamp..."
+    )
+    return {
+        mail
+        for mail in duplicates.pool
+        if mail.timestamp == duplicates.newest_timestamp
+    }
+
+
+def discard_smaller(duplicates):
+    """Discard all smaller duplicates.
+
+    Only keeps the subset sharing the biggest size.
+    """
+    logger.info(
+        f"Select all mails strictly smaller than {duplicates.biggest_size} bytes..."
+    )
+    return {mail for mail in duplicates.pool if mail.size < duplicates.biggest_size}
+
+
+def discard_smallest(duplicates):
+    """Discard all the smallest duplicates.
+
+    Keeps all mail of the duplicate set but those sharing the smallest
+    size.
+    """
+    logger.info(
+        f"Select all mails sharing the smallest size of {duplicates.smallest_size} "
+        "bytes..."
+    )
+    return {mail for mail in duplicates.pool if mail.size == duplicates.smallest_size}
+
+
+def discard_bigger(duplicates):
+    """Discard all bigger duplicates.
+
+    Only keeps the subset sharing the smallest size.
+    """
+    logger.info(
+        f"Select all mails strictly bigger than {duplicates.smallest_size} bytes..."
+    )
+    return {mail for mail in duplicates.pool if mail.size > duplicates.smallest_size}
+
+
+def discard_biggest(duplicates):
+    """Discard all the biggest duplicates.
+
+    Keeps all mail of the duplicate set but those sharing the biggest
+    size.
+    """
+    logger.info(
+        f"Select all mails sharing the biggest size of {duplicates.biggest_size} "
+        "bytes..."
+    )
+    return {mail for mail in duplicates.pool if mail.size == duplicates.biggest_size}
+
+
+def discard_matching_path(duplicates):
+    """ Discard all duplicates whose file path match the regexp. """
+    logger.info(
+        "Select all mails with file path matching the "
+        f"{duplicates.conf.regexp.pattern} regexp..."
+    )
+    return {
+        mail for mail in duplicates.pool if re.search(duplicates.conf.regexp, mail.path)
+    }
+
+
+def discard_non_matching_path(duplicates):
+    """ Discard all duplicates whose file path doesn't match the regexp. """
+    logger.info(
+        "Select all mails with file path not matching the "
+        f"{duplicates.conf.regexp.pattern} regexp..."
+    )
+    return {
+        mail
+        for mail in duplicates.pool
+        if not re.search(duplicates.conf.regexp, mail.path)
+    }
+
+
+def discard_one(duplicates):
+    """Select one random mail."""
+    return {random.choice(tuple(duplicates.pool))}
+
+
+def discard_all_but_one(duplicates):
+    """Select all but one random mail."""
+    return set(random.sample(duplicates.pool, k=len(duplicates.pool) - 1))
 
 
 # Use symbols to define selection strategies.
@@ -58,7 +205,7 @@ KEEP_ALL_BUT_ONE = "keep-all-but-one"
 # Groups strategy aliases and their definitions. Aliases are great useability
 # features as it helps users to better reason about the selection operators
 # dependening on their mental models.
-STRATEGY_DEFINITIONS = frozenset(
+STRATEGY_ALIASES = frozenset(
     [
         (
             (DISCARD_OLDER, KEEP_NEWEST),
@@ -113,8 +260,6 @@ STRATEGY_DEFINITIONS = frozenset(
     ]
 )
 
-STRATEGIES = frozenset(flatten(map(itemgetter(0), STRATEGY_DEFINITIONS)))
-
 
 def get_method_id(strat_id):
     """ Transform strategy ID to its method ID. """
@@ -122,30 +267,33 @@ def get_method_id(strat_id):
 
 
 def build_method_mapping():
-    """Precompute the mapping of strategy IDs to their prefered method name, including
-    aliases as fallbacks.
+    """Precompute the mapping of all strategy IDs to their prefered method name,
+    including aliases as fallbacks.
     """
-    method_ids = dict()
-    for strat_id in STRATEGIES:
-        method_ids.setdefault(strat_id, []).append(get_method_id(strat_id))
-        # Hunt for aliases.
-        for aliases in map(itemgetter(0), STRATEGY_DEFINITIONS):
-            if strat_id in aliases:
-                for alias_id in aliases:
-                    alias_mid = get_method_id(alias_id)
-                    if alias_mid not in method_ids[strat_id]:
-                        method_ids[strat_id].append(alias_mid)
-    return method_ids
+    methods = dict()
+    for strategies, desc in STRATEGY_ALIASES:
+        fallback_method = None
+        for strat_id in strategies:
+            mid = get_method_id(strat_id)
+            method = globals().get(mid)
+            if method:
+                fallback_method = method
+            if not fallback_method:
+                raise NotImplementedError(f"Can't find {mid}() method.")
+            methods[strat_id] = fallback_method
+    return methods
 
 
-STRATEGY_METHOD_IDS = FrozenDict(build_method_mapping())
+STRATEGY_METHODS = FrozenDict(build_method_mapping())
 
 
-def get_strategy_method_ids(strat_id):
-    """Returns the method ID imnplementing the selection strategy.
+def apply_strategy(strat_id, duplicates):
+    """Perform the selection strategy on the provided duplicate set.
 
-    Transform strategy keyword into its ID and resolves aliases.
+    Returns a set of selected mails' UIDs.
     """
-    if strat_id not in STRATEGIES:
+    if strat_id not in STRATEGY_METHODS:
         raise ValueError(f"Unknown {strat_id} strategy.")
-    return STRATEGY_METHOD_IDS[strat_id]
+    method = STRATEGY_METHODS[strat_id]
+    logger.debug(f"Apply {method!r}...")
+    return set(map(attrgetter("uid"), method(duplicates)))

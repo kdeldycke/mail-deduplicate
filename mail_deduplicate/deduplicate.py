@@ -17,13 +17,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import re
 from collections import Counter
 from difflib import unified_diff
 from itertools import combinations
-from operator import attrgetter, itemgetter
+from operator import attrgetter
 from pathlib import Path
-import random
 
 import click
 from boltons.cacheutils import cachedproperty
@@ -32,8 +30,7 @@ from tabulate import tabulate
 
 from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders, logger
 from .mailbox import open_box
-from .strategy import get_strategy_method_ids
-
+from .strategy import apply_strategy
 
 DRY_RUN_LABEL = click.style("DRY_RUN", fg="yellow")
 
@@ -167,24 +164,6 @@ class DuplicateSet:
             )
         )
 
-    def call_strategy(self):
-        """Call and apply selection strategy on the whole ``DuplicateSet``."""
-        if not self.conf.strategy:
-            logger.warning("No strategy selected, skip selection.")
-            return set()
-
-        # Look for strategy implementation or one of its alias.
-        method_ids = get_strategy_method_ids(self.conf.strategy)
-        for mid in method_ids:
-            logger.debug(f"Look for {mid}() strategy implementation...")
-            if hasattr(DuplicateSet, mid):
-                # Apply strategy.
-                logger.debug(f"Call {mid}()...")
-                method = getattr(self, mid)
-                return set(map(attrgetter("uid"), method()))
-
-        raise NotImplementedError(f"Can't find any of {method_ids!r} methods.")
-
     def select_candidates(self):
         """Returns the list of duplicates selected for removal.
 
@@ -217,8 +196,13 @@ class DuplicateSet:
             logger.warning("Reject set: mails are too dissimilar in content.")
             return
 
-        # Fetch the subset of selected mails from the set.
-        selected_uids = self.call_strategy()
+        if not self.conf.strategy:
+            logger.warning("No strategy selected, skip selection.")
+            self.stats["set_skipped"] += 1
+            return
+
+        # Fetch the subset of selected mails from the set by applying the
+        selected_uids = apply_strategy(self.conf.strategy, self)
 
         # Duplicate sets matching as a whole are skipped altogether.
         candidate_count = len(selected_uids)
@@ -233,122 +217,6 @@ class DuplicateSet:
         logger.info(f"{candidate_count} mail candidates selected for action.")
         self.stats["set_deduplicated"] += 1
         return selected_uids
-
-    def discard_older(self):
-        """Discard all older duplicates.
-
-        Only keeps the subset sharing the most recent timestamp.
-        """
-        logger.info(
-            f"Select all mails strictly older than the {self.newest_timestamp} "
-            "timestamp..."
-        )
-        return {mail for mail in self.pool if mail.timestamp < self.newest_timestamp}
-
-    def discard_oldest(self):
-        """Discard all the oldest duplicates.
-
-        Keeps all mail of the duplicate set but those sharing the oldest
-        timestamp.
-        """
-        logger.info(
-            f"Select all mails sharing the oldest {self.oldest_timestamp} "
-            "timestamp..."
-        )
-        return {mail for mail in self.pool if mail.timestamp == self.oldest_timestamp}
-
-    def discard_newer(self):
-        """Discard all newer duplicates.
-
-        Only keeps the subset sharing the most ancient timestamp.
-        """
-        logger.info(
-            f"Select all mails strictly newer than the {self.oldest_timestamp} "
-            "timestamp..."
-        )
-        return {mail for mail in self.pool if mail.timestamp > self.oldest_timestamp}
-
-    def discard_newest(self):
-        """Discard all the newest duplicates.
-
-        Keeps all mail of the duplicate set but those sharing the newest
-        timestamp.
-        """
-        logger.info(
-            f"Select all mails sharing the newest {self.newest_timestamp} "
-            "timestamp..."
-        )
-        return {mail for mail in self.pool if mail.timestamp == self.newest_timestamp}
-
-    def discard_smaller(self):
-        """Discard all smaller duplicates.
-
-        Only keeps the subset sharing the biggest size.
-        """
-        logger.info(
-            f"Select all mails strictly smaller than {self.biggest_size} bytes..."
-        )
-        return {mail for mail in self.pool if mail.size < self.biggest_size}
-
-    def discard_smallest(self):
-        """Discard all the smallest duplicates.
-
-        Keeps all mail of the duplicate set but those sharing the smallest
-        size.
-        """
-        logger.info(
-            f"Select all mails sharing the smallest size of {self.smallest_size} "
-            "bytes..."
-        )
-        return {mail for mail in self.pool if mail.size == self.smallest_size}
-
-    def discard_bigger(self):
-        """Discard all bigger duplicates.
-
-        Only keeps the subset sharing the smallest size.
-        """
-        logger.info(
-            f"Select all mails strictly bigger than {self.smallest_size} bytes..."
-        )
-        return {mail for mail in self.pool if mail.size > self.smallest_size}
-
-    def discard_biggest(self):
-        """Discard all the biggest duplicates.
-
-        Keeps all mail of the duplicate set but those sharing the biggest
-        size.
-        """
-        logger.info(
-            f"Select all mails sharing the biggest size of {self.biggest_size} "
-            "bytes..."
-        )
-        return {mail for mail in self.pool if mail.size == self.biggest_size}
-
-    def discard_matching_path(self):
-        """ Discard all duplicates whose file path match the regexp. """
-        logger.info(
-            "Select all mails with file path matching the "
-            f"{self.conf.regexp.pattern} regexp..."
-        )
-        return {mail for mail in self.pool if re.search(self.conf.regexp, mail.path)}
-
-    def discard_non_matching_path(self):
-        """ Discard all duplicates whose file path doesn't match the regexp. """
-        logger.info(
-            "Select all mails with file path not matching the "
-            f"{self.conf.regexp.pattern} regexp..."
-        )
-        return {
-            mail for mail in self.pool if not re.search(self.conf.regexp, mail.path)
-        }
-
-    def discard_one(self):
-        """Select one random mail."""
-        return {random.choice(tuple(self.pool))}
-
-    def discard_all_but_one(self):
-        """Select all but one random mail."""
-        return set(random.sample(self.pool, k=len(self.pool) - 1))
 
 
 class Deduplicate:

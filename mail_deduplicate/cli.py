@@ -41,11 +41,11 @@ from . import (
     logger,
 )
 from .strategy import (
-    STRATEGIES,
     DISCARD_MATCHING_PATH,
     DISCARD_NON_MATCHING_PATH,
     KEEP_MATCHING_PATH,
     KEEP_NON_MATCHING_PATH,
+    STRATEGY_METHODS,
 )
 from .deduplicate import Deduplicate
 from .mailbox import BOX_TYPES
@@ -229,7 +229,7 @@ def validate_regexp(ctx, param, value):
 @click.option(
     "-s",
     "--strategy",
-    type=click.Choice(sorted(STRATEGIES), case_sensitive=False),
+    type=click.Choice(sorted(STRATEGY_METHODS), case_sensitive=False),
     help="Selection strategy to apply within a subset of duplicates. If not set, "
     "duplicates will be grouped and counted but no selection will happen, and no "
     "action will be performed on the set.",
