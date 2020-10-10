@@ -67,10 +67,7 @@ class DuplicateSet:
 
     def __repr__(self):
         """ Print internal raw states for debugging. """
-        return (
-            f"<{self.__class__.__name__} hash={self.hash_key} size={self.size} "
-            f"conf={self.conf!r} pool={self.pool!r}>"
-        )
+        return f"<{self.__class__.__name__} hash={self.hash_key} size={self.size}>"
 
     @cachedproperty
     def size(self):
