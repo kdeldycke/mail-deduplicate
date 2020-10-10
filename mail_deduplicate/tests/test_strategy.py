@@ -52,8 +52,12 @@ def test_strategy_definitions():
 
 
 # Collections of pre-defined fixtures to use in the deduplication tests below.
-smallest_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
-smaller_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
+smallest_mail = MailFactory(
+    body="Hello I am a duplicate mail. With annoying ćĥäŖş."
+)
+smaller_mail = MailFactory(
+    body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++"
+)
 bigger_mail = MailFactory(
     body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++"
 )
