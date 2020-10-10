@@ -182,7 +182,7 @@ class DuplicateSet:
             if hasattr(DuplicateSet, mid):
                 # Apply strategy.
                 logger.debug(f"Call {mid}()...")
-                return getattr(self, mid)()
+                return set(filter(getattr(self, mid), self.pool))
 
         raise NotImplementedError(f"Can't find any of {method_ids!r} methods.")
 
@@ -236,10 +236,7 @@ class DuplicateSet:
         self.stats["set_deduplicated"] += 1
         return [(mail.source_path, mail.mail_id) for mail in selected_mails]
 
-    # TODO: Factorize reduce the code structure common to all strategy below
-    # around the notion of selection criterion.
-
-    def discard_older(self):
+    def discard_older(self, mail):
         """Discard all older duplicates.
 
         Only keeps the subset sharing the most recent timestamp.
@@ -248,9 +245,9 @@ class DuplicateSet:
             f"Select all mails strictly older than the {self.newest_timestamp} "
             "timestamp..."
         )
-        return [mail for mail in self.pool if mail.timestamp < self.newest_timestamp]
+        return mail.timestamp < self.newest_timestamp
 
-    def discard_oldest(self):
+    def discard_oldest(self, mail):
         """Discard all the oldest duplicates.
 
         Keeps all mail of the duplicate set but those sharing the oldest
@@ -260,9 +257,9 @@ class DuplicateSet:
             f"Select all mails sharing the oldest {self.oldest_timestamp} "
             "timestamp..."
         )
-        return [mail for mail in self.pool if mail.timestamp == self.oldest_timestamp]
+        return mail.timestamp == self.oldest_timestamp
 
-    def discard_newer(self):
+    def discard_newer(self, mail):
         """Discard all newer duplicates.
 
         Only keeps the subset sharing the most ancient timestamp.
@@ -271,9 +268,9 @@ class DuplicateSet:
             f"Select all mails strictly newer than the {self.oldest_timestamp} "
             "timestamp..."
         )
-        return [mail for mail in self.pool if mail.timestamp > self.oldest_timestamp]
+        return mail.timestamp > self.oldest_timestamp
 
-    def discard_newest(self):
+    def discard_newest(self, mail):
         """Discard all the newest duplicates.
 
         Keeps all mail of the duplicate set but those sharing the newest
@@ -283,9 +280,9 @@ class DuplicateSet:
             f"Select all mails sharing the newest {self.newest_timestamp} "
             "timestamp..."
         )
-        return [mail for mail in self.pool if mail.timestamp == self.newest_timestamp]
+        return mail.timestamp == self.newest_timestamp
 
-    def discard_smaller(self):
+    def discard_smaller(self, mail):
         """Discard all smaller duplicates.
 
         Only keeps the subset sharing the biggest size.
@@ -293,9 +290,9 @@ class DuplicateSet:
         logger.info(
             f"Select all mails strictly smaller than {self.biggest_size} bytes..."
         )
-        return [mail for mail in self.pool if mail.size < self.biggest_size]
+        return mail.size < self.biggest_size
 
-    def discard_smallest(self):
+    def discard_smallest(self, mail):
         """Discard all the smallest duplicates.
 
         Keeps all mail of the duplicate set but those sharing the smallest
@@ -305,9 +302,9 @@ class DuplicateSet:
             f"Select all mails sharing the smallest size of {self.smallest_size} "
             "bytes..."
         )
-        return [mail for mail in self.pool if mail.size == self.smallest_size]
+        return mail.size == self.smallest_size
 
-    def discard_bigger(self):
+    def discard_bigger(self, mail):
         """Discard all bigger duplicates.
 
         Only keeps the subset sharing the smallest size.
@@ -315,9 +312,9 @@ class DuplicateSet:
         logger.info(
             f"Select all mails strictly bigger than {self.smallest_size} bytes..."
         )
-        return [mail for mail in self.pool if mail.size > self.smallest_size]
+        return mail.size > self.smallest_size
 
-    def discard_biggest(self):
+    def discard_biggest(self, mail):
         """Discard all the biggest duplicates.
 
         Keeps all mail of the duplicate set but those sharing the biggest
@@ -327,26 +324,23 @@ class DuplicateSet:
             f"Select all mails sharing the biggest size of {self.biggest_size} "
             "bytes..."
         )
-        return [mail for mail in self.pool if mail.size == self.biggest_size]
+        return mail.size == self.biggest_size
 
-    def discard_matching_path(self):
+    def discard_matching_path(self, mail):
         """ Discard all duplicates whose file path match the regexp. """
         logger.info(
             "Select all mails with file path matching the "
             f"{self.conf.regexp.pattern} regexp..."
         )
-        # Select candidates for deletion.
-        return [mail for mail in self.pool if re.search(self.conf.regexp, mail.path)]
+        return re.search(self.conf.regexp, mail.path)
 
-    def discard_non_matching_path(self):
+    def discard_non_matching_path(self, mail):
         """ Discard all duplicates whose file path doesn't match the regexp. """
         logger.info(
             "Select all mails with file path not matching the "
             f"{self.conf.regexp.pattern} regexp..."
         )
-        return [
-            mail for mail in self.pool if not re.search(self.conf.regexp, mail.path)
-        ]
+        return not re.search(self.conf.regexp, mail.path)
 
 
 class Deduplicate:
