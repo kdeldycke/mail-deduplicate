@@ -380,8 +380,8 @@ class Deduplicate:
                 # Number of duplicate mails (sum of mails in all duplicate sets
                 # with at least 2 mails).
                 "mail_duplicates": 0,
-                # Number of mails removed.
                 "mail_deleted": 0,
+                # Number of mails discarded from the final selection.
                 # Total number of duplicate sets.
                 "set_total": 0,
                 # Total number of unprocessed sets because mail is unique.
