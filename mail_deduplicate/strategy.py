@@ -89,12 +89,12 @@ STRATEGY_DEFINITIONS = frozenset(
         ),
         (
             (DISCARD_MATCHING_PATH, KEEP_NON_MATCHING_PATH),
-            "Discardss all duplicates whose file path match the regular "
+            "Discards all duplicates whose file path match the regular "
             "expression provided via the --regexp parameter.",
         ),
         (
             (DISCARD_NON_MATCHING_PATH, KEEP_MATCHING_PATH),
-            "Discardss all duplicates whose file path doesn't match the regular "
+            "Discards all duplicates whose file path doesn't match the regular "
             "expression provided via the --regexp parameter.",
         ),
     ]
