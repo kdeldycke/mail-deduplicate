@@ -173,7 +173,7 @@ class DuplicateSet:
         """Call an apply selection strategy."""
         if not self.conf.strategy:
             logger.warning("No strategy selected, skip selection.")
-            return
+            return set()
 
         # Look for strategy implementation or one of its alias.
         method_ids = get_strategy_method_ids(self.conf.strategy)
