@@ -11,6 +11,8 @@ ChangeLog
   final mail selection.
 * Rename all strategies from ``--delete-*`` to ``--discard-*``.
 * Add aliases to all strategies in the form of ``--keep-*``.
+* Add new ``discard-all-but-one``, ``discard-one``, ``keep-one`` and
+  ``keep-all-but-one`` selection strategies.
 * Rename ``-f``/``--sources-format`` option to ``-i``/``--input-format``.
 * ``--time-source`` parameter is now optional and defaults to ``date-header``.
 * Colorize help screeen.

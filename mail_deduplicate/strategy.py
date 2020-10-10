@@ -30,29 +30,34 @@ DISCARD_OLDER = "discard-older"
 DISCARD_OLDEST = "discard-oldest"
 DISCARD_NEWER = "discard-newer"
 DISCARD_NEWEST = "discard-newest"
+KEEP_OLDER = "keep-older"
+KEEP_OLDEST = "keep-oldest"
+KEEP_NEWER = "keep-newer"
+KEEP_NEWEST = "keep-newest"
 
 DISCARD_SMALLER = "discard-smaller"
 DISCARD_SMALLEST = "discard-smallest"
 DISCARD_BIGGER = "discard-bigger"
 DISCARD_BIGGEST = "discard-biggest"
+KEEP_SMALLER = "keep-smaller"
+KEEP_SMALLEST = "keep-smallest"
+KEEP_BIGGER = "keep-bigger"
+KEEP_BIGGEST = "keep-biggest"
 
 DISCARD_MATCHING_PATH = "discard-matching-path"
 DISCARD_NON_MATCHING_PATH = "discard-non-matching-path"
-
-KEEP_NEWEST = "keep-newest"
-KEEP_NEWER = "keep-newer"
-KEEP_OLDEST = "keep-oldest"
-KEEP_OLDER = "keep-older"
-
-KEEP_BIGGEST = "keep-biggest"
-KEEP_BIGGER = "keep-bigger"
-KEEP_SMALLEST = "keep-smallest"
-KEEP_SMALLER = "keep-smaller"
-
-KEEP_NON_MATCHING_PATH = "keep-non-matching-path"
 KEEP_MATCHING_PATH = "keep-matching-path"
+KEEP_NON_MATCHING_PATH = "keep-non-matching-path"
 
-# Groups strategy aliases and their definitions.
+DISCARD_ONE = "discard-one"
+DISCARD_ALL_BUT_ONE = "discard-all-but-one"
+KEEP_ONE = "keep-one"
+KEEP_ALL_BUT_ONE = "keep-all-but-one"
+
+
+# Groups strategy aliases and their definitions. Aliases are great useability
+# features as it helps users to better reason about the selection operators
+# dependening on their mental models.
 STRATEGY_DEFINITIONS = frozenset(
     [
         (
@@ -96,6 +101,14 @@ STRATEGY_DEFINITIONS = frozenset(
             (DISCARD_NON_MATCHING_PATH, KEEP_MATCHING_PATH),
             "Discards all duplicates whose file path doesn't match the regular "
             "expression provided via the --regexp parameter.",
+        ),
+        (
+            (DISCARD_ONE, KEEP_ALL_BUT_ONE),
+            "Randomly discards one duplicate, and keep all others.",
+        ),
+        (
+            (DISCARD_ALL_BUT_ONE, KEEP_ONE),
+            "Randomly discards all duplicates, but keep one.",
         ),
     ]
 )

@@ -369,3 +369,66 @@ def test_maildir_newest_strategy(invoke, make_box):
             newer_mail,
         ],
     )
+
+
+
+random_mail_1 = MailFactory(message_id=MailFactory.random_string(30))
+random_mail_2 = MailFactory(message_id=MailFactory.random_string(30))
+
+
+def test_maildir_one_strategy(invoke, make_box):
+    """ Test strategy of discarding one random duplicate. """
+    box_path, box_type = make_box(
+        Maildir,
+        [
+            random_mail_1,
+            random_mail_1,
+            random_mail_1,
+            random_mail_2,
+            random_mail_2,
+            random_mail_2,
+        ],
+    )
+
+    result = invoke("--strategy=discard-one", "--action=delete-discarded", box_path)
+
+    assert result.exit_code == 0
+    # Newest mails are kept but not the older ones.
+    check_box(
+        box_path,
+        box_type,
+        content=[
+            random_mail_1,
+            random_mail_1,
+            random_mail_2,
+            random_mail_2,
+        ],
+    )
+
+
+def test_maildir_all_but_one_strategy(invoke, make_box):
+    """ Test strategy of discarding all but one random duplicate. """
+    box_path, box_type = make_box(
+        Maildir,
+        [
+            random_mail_1,
+            random_mail_1,
+            random_mail_1,
+            random_mail_2,
+            random_mail_2,
+            random_mail_2,
+        ],
+    )
+
+    result = invoke("--strategy=discard-all-but-one", "--action=delete-discarded", box_path)
+
+    assert result.exit_code == 0
+    # Newest mails are kept but not the older ones.
+    check_box(
+        box_path,
+        box_type,
+        content=[
+            random_mail_1,
+            random_mail_2,
+        ],
+    )

@@ -17,6 +17,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+import string
+import random
 from email.utils import formatdate as maildate
 from mailbox import Mailbox, Maildir, Message, mbox
 from textwrap import dedent, indent
@@ -93,6 +95,7 @@ class MailFactory:
             "body": "Да, они летят.",
             "date": arrow.utcnow(),
             "date_rfc2822": None,
+            "message_id": "<201111231111.abcdef101@mail.nohost.com>",
         }
 
         # Check all custom fields are recognized and supported.
@@ -123,7 +126,7 @@ class MailFactory:
             \tfor me@host.com; {date_rfc2822}
             Date: {date_rfc2822}
             From: foo@bar.com
-            Message-Id: <201111231111.abcdef101@mail.nohost.com>
+            Message-Id: {message_id}
             To: baz
             Subject: A duplicate mail
             Mime-Version: 1.0
@@ -138,6 +141,11 @@ class MailFactory:
     def as_message(self):
         """Returns the mail as an instance of ``mailbox.Message``."""
         return Message(self.render())
+
+
+    @staticmethod
+    def random_string(length):
+        return ''.join(random.choice(string.ascii_lowercase) for i in range(length))
 
 
 @pytest.fixture
