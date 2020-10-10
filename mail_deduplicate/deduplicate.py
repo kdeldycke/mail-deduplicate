@@ -176,7 +176,7 @@ class DuplicateSet:
         # Look for strategy implementation or one of its alias.
         method_ids = get_strategy_method_ids(self.conf.strategy)
         for mid in method_ids:
-            logger.debug(f"Search for {mid}() strategy implementation...")
+            logger.debug(f"Look for {mid}() strategy implementation...")
             if hasattr(DuplicateSet, mid):
                 # Apply strategy.
                 logger.debug(f"Call {mid}()...")
@@ -342,9 +342,11 @@ class DuplicateSet:
         }
 
     def discard_one(self):
+        """Select one random mail."""
         return {random.choice(tuple(self.pool))}
 
     def discard_all_but_one(self):
+        """Select all but one random mail."""
         return set(random.sample(self.pool, k=len(self.pool) - 1))
 
 
