@@ -28,7 +28,6 @@ import arrow
 import click
 import pytest
 from boltons.iterutils import flatten, same
-from boltons.strutils import strip_ansi
 from boltons.tbutils import ExceptionInfo
 from click.testing import CliRunner
 
