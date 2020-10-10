@@ -17,6 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+from string import ascii_lowercase
 from mailbox import Maildir
 from operator import truth
 
@@ -34,7 +35,7 @@ def test_strategy_definitions():
 
         # All strategies are lower cases strings, with dashes.
         assert isinstance(strategy_id, str)
-        assert set(strategy_id).issubset("abcdefghijklmnopqrstuvwxyz-")
+        assert set(strategy_id).issubset(ascii_lowercase + "-")
 
         # Each strategy is implemented or its aliases provides fallback.
         methods = list(
