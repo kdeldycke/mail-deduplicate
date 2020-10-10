@@ -170,7 +170,7 @@ class DuplicateSet:
         )
 
     def call_strategy(self):
-        """Call an apply selection strategy."""
+        """Call and apply selection strategy on the whole ``DuplicateSet``."""
         if not self.conf.strategy:
             logger.warning("No strategy selected, skip selection.")
             return set()
@@ -221,18 +221,17 @@ class DuplicateSet:
         # Apply the selection strategy to the set.
         selected_mails = self.call_strategy()
 
-        # Count duplicate sets matching as a whole as skipped: no deletion will
-        # happens.
+        # Duplicate sets matching as a whole are skipped altogether.
         candidate_count = len(selected_mails)
         if candidate_count == self.size:
             logger.warning(
-                f"Skip deletion: all {candidate_count} mails of the set match the "
-                "strategy criterion."
+                f"Skip whole set, as all {candidate_count} mails within were selected. "
+                "The strategy criterion was not able to discard some."
             )
             self.stats["set_skipped"] += 1
             return
 
-        logger.info(f"{candidate_count} candidates found for deletion.")
+        logger.info(f"{candidate_count} mail candidates selected for action.")
         self.stats["set_deduplicated"] += 1
         return [(mail.source_path, mail.mail_id) for mail in selected_mails]
 
@@ -360,8 +359,8 @@ class Deduplicate:
         # All mails grouped by hashes.
         self.mails = {}
 
-        # List of candidates selected for deletion.
-        self.candidates = []
+        # List of mail's IDs selected after application of selection strategy.
+        self.selection = []
 
         # Global config.
         self.conf = conf
@@ -486,7 +485,7 @@ class Deduplicate:
             duplicates = DuplicateSet(hash_key, mail_set, self.conf)
             candidates = duplicates.select_candidates()
             if candidates:
-                self.candidates += candidates
+                self.selection += candidates
 
             # Merge duplicate set's stats to global stats.
             self.stats += duplicates.stats
@@ -495,14 +494,14 @@ class Deduplicate:
         for box in self.sources.values():
             box.close()
 
-    def remove_duplicates(self):
+    def remove_selection(self):
         """Performs the action of removing the selected mail candidates
         in-place, from their original boxes."""
         # Check our indexing and selection methods are not flagging candidates
         # several times.
-        assert unique(self.candidates) == self.candidates
+        assert unique(self.selection) == self.selection
 
-        for box_path, mail_id in self.candidates:
+        for box_path, mail_id in self.selection:
             # TODO: fetch mail path from Mail object instance directly.
             mail_path = f"{box_path}:{mail_id}"
             self.stats["mail_deleted"] += 1
@@ -511,7 +510,7 @@ class Deduplicate:
                 logger.warning(f"{DRY_RUN_LABEL}: skip deletion of {mail_path!r}.")
                 return
 
-            logger.debug(f"Deleting {mail_path!r}...")
+            logger.debug(f"Deleting {mail_path!r} in-place...")
             self.sources[box_path].remove(mail_id)
             logger.info(f"{mail_path} deleted.")
 

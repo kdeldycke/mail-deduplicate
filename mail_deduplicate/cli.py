@@ -414,7 +414,7 @@ def mdedup(
         )
     )
     if action == DELETE_DISCARDED:
-        dedup.remove_duplicates()
+        dedup.remove_selection()
     else:
         raise NotImplementedError(f"{action} action not implemented yet.")
 
