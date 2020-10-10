@@ -17,8 +17,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-import string
 import random
+import string
 from email.utils import formatdate as maildate
 from mailbox import Mailbox, Maildir, Message, mbox
 from textwrap import dedent, indent
@@ -141,10 +141,9 @@ class MailFactory:
         """Returns the mail as an instance of ``mailbox.Message``."""
         return Message(self.render())
 
-
     @staticmethod
     def random_string(length):
-        return ''.join(random.choice(string.ascii_lowercase) for i in range(length))
+        return "".join(random.choice(string.ascii_lowercase) for i in range(length))
 
 
 @pytest.fixture

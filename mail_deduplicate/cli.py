@@ -26,13 +26,13 @@ import click_log
 from click_help_colors import version_option
 
 from . import (
+    ACTIONS,
     CLI_NAME,
     COPY_KEPT,
-    ACTIONS,
-    DELETE_DISCARDED,
     DATE_HEADER,
     DEFAULT_CONTENT_THRESHOLD,
     DEFAULT_SIZE_THRESHOLD,
+    DELETE_DISCARDED,
     HASH_HEADERS,
     TIME_SOURCES,
     Config,
@@ -40,6 +40,8 @@ from . import (
     env_data,
     logger,
 )
+from .deduplicate import Deduplicate
+from .mailbox import BOX_TYPES
 from .strategy import (
     DISCARD_MATCHING_PATH,
     DISCARD_NON_MATCHING_PATH,
@@ -47,8 +49,6 @@ from .strategy import (
     KEEP_NON_MATCHING_PATH,
     STRATEGY_METHODS,
 )
-from .deduplicate import Deduplicate
-from .mailbox import BOX_TYPES
 
 click_log.basic_config(logger)
 

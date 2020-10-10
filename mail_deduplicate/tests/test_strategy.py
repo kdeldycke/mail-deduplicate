@@ -360,7 +360,6 @@ def test_maildir_newest_strategy(invoke, make_box):
     )
 
 
-
 random_mail_1 = MailFactory(message_id=MailFactory.random_string(30))
 random_mail_2 = MailFactory(message_id=MailFactory.random_string(30))
 
@@ -409,7 +408,9 @@ def test_maildir_all_but_one_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=discard-all-but-one", "--action=delete-discarded", box_path)
+    result = invoke(
+        "--strategy=discard-all-but-one", "--action=delete-discarded", box_path
+    )
 
     assert result.exit_code == 0
     # Newest mails are kept but not the older ones.
