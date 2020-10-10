@@ -31,7 +31,7 @@ from . import logger
 def discard_older(duplicates):
     """Discard all older duplicates.
 
-    Only keeps the subset sharing the most recent timestamp.
+    Only keeps the newests, i.e. the subset sharing the most recent timestamp.
     """
     logger.info(
         f"Select all mails strictly older than the {duplicates.newest_timestamp} "
@@ -45,8 +45,8 @@ def discard_older(duplicates):
 def discard_oldest(duplicates):
     """Discard all the oldest duplicates.
 
-    Keeps all mail of the duplicate set but those sharing the oldest
-    timestamp.
+    Only keeps the newers, i.e. all mail of the duplicate set but those sharing
+    the oldest timestamp.
     """
     logger.info(
         f"Select all mails sharing the oldest {duplicates.oldest_timestamp} "
@@ -62,7 +62,7 @@ def discard_oldest(duplicates):
 def discard_newer(duplicates):
     """Discard all newer duplicates.
 
-    Only keeps the subset sharing the most ancient timestamp.
+    Only keeps the oldest, i.e. the subset sharing the most ancient timestamp.
     """
     logger.info(
         f"Select all mails strictly newer than the {duplicates.oldest_timestamp} "
@@ -76,8 +76,8 @@ def discard_newer(duplicates):
 def discard_newest(duplicates):
     """Discard all the newest duplicates.
 
-    Keeps all mail of the duplicate set but those sharing the newest
-    timestamp.
+    Only keeps the olders, i.e. all mail of the duplicate set but those sharing the
+    newest timestamp.
     """
     logger.info(
         f"Select all mails sharing the newest {duplicates.newest_timestamp} "
@@ -93,7 +93,7 @@ def discard_newest(duplicates):
 def discard_smaller(duplicates):
     """Discard all smaller duplicates.
 
-    Only keeps the subset sharing the biggest size.
+    Only keeps the biggests, i.e. the subset sharing the biggest size.
     """
     logger.info(
         f"Select all mails strictly smaller than {duplicates.biggest_size} bytes..."
@@ -104,8 +104,8 @@ def discard_smaller(duplicates):
 def discard_smallest(duplicates):
     """Discard all the smallest duplicates.
 
-    Keeps all mail of the duplicate set but those sharing the smallest
-    size.
+    Only keeps the biggers. i.e. all mail of the duplicate set but those sharing the
+    smallest size.
     """
     logger.info(
         f"Select all mails sharing the smallest size of {duplicates.smallest_size} "
@@ -117,7 +117,7 @@ def discard_smallest(duplicates):
 def discard_bigger(duplicates):
     """Discard all bigger duplicates.
 
-    Only keeps the subset sharing the smallest size.
+    Only keeps the smallests, i.e. the subset sharing the smallest size.
     """
     logger.info(
         f"Select all mails strictly bigger than {duplicates.smallest_size} bytes..."
@@ -128,8 +128,8 @@ def discard_bigger(duplicates):
 def discard_biggest(duplicates):
     """Discard all the biggest duplicates.
 
-    Keeps all mail of the duplicate set but those sharing the biggest
-    size.
+    Only keeps the smallers, i.e. all mail of the duplicate set but those sharing the
+    biggest size.
     """
     logger.info(
         f"Select all mails sharing the biggest size of {duplicates.biggest_size} "
@@ -139,7 +139,9 @@ def discard_biggest(duplicates):
 
 
 def discard_matching_path(duplicates):
-    """ Discard all duplicates whose file path match the regexp. """
+    """Discards all duplicates whose file path match the regular expression provided
+    via the --regexp parameter.
+    """
     logger.info(
         "Select all mails with file path matching the "
         f"{duplicates.conf.regexp.pattern} regexp..."
@@ -150,7 +152,9 @@ def discard_matching_path(duplicates):
 
 
 def discard_non_matching_path(duplicates):
-    """ Discard all duplicates whose file path doesn't match the regexp. """
+    """Discards all duplicates whose file path doesn't match the regular expression
+    provided via the --regexp parameter.
+    """
     logger.info(
         "Select all mails with file path not matching the "
         f"{duplicates.conf.regexp.pattern} regexp..."
@@ -163,12 +167,12 @@ def discard_non_matching_path(duplicates):
 
 
 def discard_one(duplicates):
-    """Select one random mail."""
+    """Randomly discards one duplicate, and keep all others."""
     return {random.choice(tuple(duplicates.pool))}
 
 
 def discard_all_but_one(duplicates):
-    """Select all but one random mail."""
+    """Randomly discards all duplicates, but keep one."""
     return set(random.sample(duplicates.pool, k=len(duplicates.pool) - 1))
 
 
@@ -207,56 +211,18 @@ KEEP_ALL_BUT_ONE = "keep-all-but-one"
 # dependening on their mental models.
 STRATEGY_ALIASES = frozenset(
     [
-        (
-            (DISCARD_OLDER, KEEP_NEWEST),
-            "Discards the olders, keeps the newests.",
-        ),
-        (
-            (DISCARD_OLDEST, KEEP_NEWER),
-            "Discards the oldests, keeps the newers.",
-        ),
-        (
-            (DISCARD_NEWER, KEEP_OLDEST),
-            "Discards the newers, keeps the oldests.",
-        ),
-        (
-            (DISCARD_NEWEST, KEEP_OLDER),
-            "Discards the newests, keeps the olders.",
-        ),
-        (
-            (DISCARD_SMALLER, KEEP_BIGGEST),
-            "Discards the smallers, keeps the biggests.",
-        ),
-        (
-            (DISCARD_SMALLEST, KEEP_BIGGER),
-            "Discards the smallests, keeps the biggers.",
-        ),
-        (
-            (DISCARD_BIGGER, KEEP_SMALLEST),
-            "Discards the biggers, keeps the smallests.",
-        ),
-        (
-            (DISCARD_BIGGEST, KEEP_SMALLER),
-            "Discards the biggests, keeps the smallers.",
-        ),
-        (
-            (DISCARD_MATCHING_PATH, KEEP_NON_MATCHING_PATH),
-            "Discards all duplicates whose file path match the regular "
-            "expression provided via the --regexp parameter.",
-        ),
-        (
-            (DISCARD_NON_MATCHING_PATH, KEEP_MATCHING_PATH),
-            "Discards all duplicates whose file path doesn't match the regular "
-            "expression provided via the --regexp parameter.",
-        ),
-        (
-            (DISCARD_ONE, KEEP_ALL_BUT_ONE),
-            "Randomly discards one duplicate, and keep all others.",
-        ),
-        (
-            (DISCARD_ALL_BUT_ONE, KEEP_ONE),
-            "Randomly discards all duplicates, but keep one.",
-        ),
+        (DISCARD_OLDER, KEEP_NEWEST),
+        (DISCARD_OLDEST, KEEP_NEWER),
+        (DISCARD_NEWER, KEEP_OLDEST),
+        (DISCARD_NEWEST, KEEP_OLDER),
+        (DISCARD_SMALLER, KEEP_BIGGEST),
+        (DISCARD_SMALLEST, KEEP_BIGGER),
+        (DISCARD_BIGGER, KEEP_SMALLEST),
+        (DISCARD_BIGGEST, KEEP_SMALLER),
+        (DISCARD_MATCHING_PATH, KEEP_NON_MATCHING_PATH),
+        (DISCARD_NON_MATCHING_PATH, KEEP_MATCHING_PATH),
+        (DISCARD_ONE, KEEP_ALL_BUT_ONE),
+        (DISCARD_ALL_BUT_ONE, KEEP_ONE),
     ]
 )
 
@@ -271,7 +237,7 @@ def build_method_mapping():
     including aliases as fallbacks.
     """
     methods = dict()
-    for strategies, desc in STRATEGY_ALIASES:
+    for strategies in STRATEGY_ALIASES:
         fallback_method = None
         for strat_id in strategies:
             mid = get_method_id(strat_id)
