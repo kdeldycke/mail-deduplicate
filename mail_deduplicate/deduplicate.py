@@ -180,7 +180,8 @@ class DuplicateSet:
             if hasattr(DuplicateSet, mid):
                 # Apply strategy.
                 logger.debug(f"Call {mid}()...")
-                return getattr(self, mid)()
+                method = getattr(self, mid)
+                return set(map(attrgetter("uid"), method()))
 
         raise NotImplementedError(f"Can't find any of {method_ids!r} methods.")
 
@@ -216,11 +217,11 @@ class DuplicateSet:
             logger.warning("Reject set: mails are too dissimilar in content.")
             return
 
-        # Apply the selection strategy to the set.
-        selected_mails = self.call_strategy()
+        # Fetch the subset of selected mails from the set.
+        selected_uids = self.call_strategy()
 
         # Duplicate sets matching as a whole are skipped altogether.
-        candidate_count = len(selected_mails)
+        candidate_count = len(selected_uids)
         if candidate_count == self.size:
             logger.warning(
                 f"Skip whole set, as all {candidate_count} mails within were selected. "
@@ -231,7 +232,7 @@ class DuplicateSet:
 
         logger.info(f"{candidate_count} mail candidates selected for action.")
         self.stats["set_deduplicated"] += 1
-        return map(attrgetter("source_path", "mail_id"), selected_mails)
+        return selected_uids
 
     def discard_older(self):
         """Discard all older duplicates.

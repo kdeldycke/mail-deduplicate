@@ -73,18 +73,22 @@ class DedupMail:
         return f"<Mail {self.mail_id!r}>"
 
     @cachedproperty
+    def uid(self):
+        """Unique ID of the mail."""
+        return self.source_path, self.mail_id
+
+    @cachedproperty
     def path(self):
         """Real filesystem path of the mail originating from maildirs.
 
-        For mailbox mails, returns a fake path composed with mail's internal
-        ID.
+        For mailbox mails, returns a fake path composed with mail's internal ID.
+
+        Returns a string that is used by regexp-based selection strategies.
         """
         filename = self.get_filename()
         if filename:
-            filepath = self.source_path.joinpath(filename)
-        else:
-            filepath = f"{self.source_path}:{self.mail_id}"
-        return filepath
+            return str(self.source_path.joinpath(filename))
+        return f"{self.uid[0]!s}:{self.uid[1]}"
 
     @cachedproperty
     def timestamp(self):
