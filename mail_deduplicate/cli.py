@@ -109,7 +109,7 @@ def validate_regexp(ctx, param, value):
     help="Headers to use to compute each mail's hash. Must be repeated multiple times "
     "to set an ordered list of headers. Header IDs are case-insensitive. Repeating "
     "entries are ignored. Defaults to: {}.".format(
-        " ".join([f"-h {h}" for h in HASH_HEADERS])
+        " ".join([f"-h {choice_style(h)}" for h in HASH_HEADERS])
     ),
 )
 @click.option(
@@ -167,17 +167,18 @@ def validate_regexp(ctx, param, value):
     "--regexp",
     callback=validate_regexp,
     metavar="REGEXP",
-    help="Regular expression against a mail file path. Required in "
-    "discard-matching-path and discard-non-matching-path strategies.",
+    help=f"Regular expression against a mail file path. Required in "
+    f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, {KEEP_MATCHING_PATH} and "
+    f"{KEEP_NON_MATCHING_PATH} strategies."
 )
 @click.option(
     "-a",
     "--action",
     default=COPY_KEPT,
     type=click.Choice(sorted(ACTIONS), case_sensitive=False),
-    help="Action performed on the selected mails. Defaults to copy-kept as it is the "
-    "safest: it only reads the mail sources and create a brand new mail box with the "
-    "selection results.",
+    help=f"Action performed on the selected mails. Defaults to {COPY_KEPT} as it is "
+    "the safest: it only reads the mail sources and create a brand new mail box with "
+    "the selection results.",
 )
 @click.argument(
     "mail_sources",
@@ -251,6 +252,8 @@ def mdedup(
             (strat_id, ' '.join(method.__doc__.split()))
             for strat_id, method in sorted(STRATEGY_METHODS.items())]
         formatter = ctx.make_formatter()
+        # XXX Seems to have no effect. Should have introduced an empty line
+        # before section.
         formatter.write_paragraph()
         with formatter.section("Available strategies"):
             formatter.write_dl(strat_table)
