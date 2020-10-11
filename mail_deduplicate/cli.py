@@ -73,7 +73,7 @@ def collect_keywords(ctx):
     return options, choices, metavars
 
 
-def colorized_help(ctx):
+def colorized_help(help_txt, keywords):
     """Get default help screen and colorize section titles, options and choice
     keywords."""
     cli_color = "white"
@@ -82,9 +82,7 @@ def colorized_help(ctx):
     choice_color = "blue"
     metavar_color = "bright_black"
 
-    options, choices, metavars = collect_keywords(ctx)
-
-    help_txt = ctx.get_help()
+    options, choices, metavars = keywords
 
     def colorize(match, fg=None):
         """Re-create the matching string by concatenating all groups, but only
@@ -232,7 +230,8 @@ def validate_regexp(ctx, param, value):
     type=click.Choice(sorted(STRATEGY_METHODS), case_sensitive=False),
     help="Selection strategy to apply within a subset of duplicates. If not set, "
     "duplicates will be grouped and counted but no selection will happen, and no "
-    "action will be performed on the set.",
+    "action will be performed on the set. Description of each strategy is "
+    "available at the bottom.",
 )
 @click.option(
     "-t",
@@ -309,29 +308,6 @@ def mdedup(
                 duplicate mails sharing the same hash.
     * Phase #3: perform an action on all selected mails.
 
-    A dozen of strategies are available to select mails in each subset:
-
-    \b
-    Time-based:
-    * discard-older:    Discards the olders,    keeps the newests.
-    * discard-oldest:   Discards the oldests,   keeps the newers.
-    * discard-newer:    Discards the newers,    keeps the oldests.
-    * discard-newest:   Discards the newests,   keeps the olders.
-
-    \b
-    Size-based:
-    * discard-smaller:  Discards the smallers,  keeps the biggests.
-    * discard-smallest: Discards the smallests, keeps the biggers.
-    * discard-bigger:   Discards the biggers,   keeps the smallests.
-    * discard-biggest:  Discards the biggests,  keeps the smallers.
-
-    \b
-    File-based:
-    * discard-matching-path: Discardss all duplicates whose file path match the
-    regular expression provided via the --regexp parameter.
-    * discard-non-matching-path: Discardss all duplicates whose file path
-    doesn't match the regular expression provided via the --regexp parameter.
-
     Action on the selected mails in phase #3 is only performed if no major differences
     between mails are uncovered during a fine-grained check differences in the second
     phase. Limits can be set via the --size-threshold and --content-threshold options.
@@ -342,8 +318,23 @@ def mdedup(
 
     # Print help screen and exit if no mail source provided.
     if not mail_sources:
+
+        # Extract keywords
+        keywords = collect_keywords(ctx)
+
         # Apply dynamic style to help screen.
-        click.echo(colorized_help(ctx))
+        click.echo(colorized_help(ctx.get_help(), keywords))
+
+        # Produce the strategy reference table.
+        strat_table = [
+            (strat_id, ' '.join(method.__doc__.split()))
+            for strat_id, method in sorted(STRATEGY_METHODS.items())]
+        formatter = ctx.make_formatter()
+        formatter.write_paragraph()
+        with formatter.section("Available strategies"):
+            formatter.write_dl(strat_table)
+        click.echo(colorized_help(formatter.getvalue().rstrip(), keywords))
+
         ctx.exit()
 
     # Validate exclusive options requirement depending on strategy.
