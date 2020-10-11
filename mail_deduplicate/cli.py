@@ -298,9 +298,15 @@ def mdedup(
 
     dedup = Deduplicate(conf)
 
-    for source in mail_sources:
-        dedup.add_source(source)
     click.echo(title_style("\n● Phase #0 - Load mails"))
+    with click.progressbar(
+            mail_sources,
+            length=len(mail_sources),
+            label="Mail sources",
+            show_pos=True,
+        ) as progress:
+        for source in progress:
+            dedup.add_source(source)
 
     click.echo(title_style("\n● Phase #1 - Compute hashes and group duplicates"))
     dedup.hash_all()
