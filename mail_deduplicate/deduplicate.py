@@ -94,7 +94,7 @@ class DuplicateSet:
         and content. Raise an error if we're not within the limits imposed by
         the threshold settings.
         """
-        logger.info("Check that mail differences are within the limits.")
+        logger.info("Check mail differences are below the thresholds.")
         if self.conf.size_threshold < 0:
             logger.info("Skip checking for size differences.")
         if self.conf.content_threshold < 0:
@@ -169,9 +169,7 @@ class DuplicateSet:
         Run preliminary checks and return the candidates fitting the strategy
         and constraints set by the configuration."""
         if self.size == 1:
-            logger.debug(
-                "Ignore set: no need to deduplicate as only one message found."
-            )
+            logger.debug("Ignore set: only one message found.")
             self.stats["mail_unique"] += self.size
             self.stats["set_ignored"] += 1
             return
@@ -207,7 +205,7 @@ class DuplicateSet:
         candidate_count = len(selected_uids)
         if candidate_count == self.size:
             logger.warning(
-                f"Skip whole set, as all {candidate_count} mails within were selected. "
+                f"Skip whole set, all {candidate_count} mails within were selected. "
                 "The strategy criterion was not able to discard some."
             )
             self.stats["set_skipped"] += 1
@@ -340,7 +338,7 @@ class Deduplicate:
                 "duplicate set to select candidates."
             )
         else:
-            logger.warning("No selection strategy will be applied.")
+            logger.warning("No strategy configured, skip selection.")
 
         self.stats["set_total"] = len(self.mails)
 
