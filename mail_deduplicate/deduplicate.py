@@ -29,10 +29,9 @@ from boltons.iterutils import unique
 from tabulate import tabulate
 
 from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders, logger
+from .colorize import choice_style, subtitle_style
 from .mailbox import open_box
 from .strategy import apply_strategy
-
-DRY_RUN_LABEL = click.style("DRY_RUN", fg="yellow")
 
 
 class DuplicateSet:
@@ -299,12 +298,8 @@ class Deduplicate:
         Displays a progress bar as the operation might be slow.
         """
         logger.info(
-            "Use [{}] headers to compute hashes.".format(
-                ", ".join(
-                    [click.style(h, fg="bright_white") for h in self.conf.hash_headers]
-                )
-            )
-        )
+            f"Use [{', '.join(map(choice_style, self.conf.hash_headers))}] headers to "
+            "compute hashes.")
 
         with click.progressbar(
             length=self.stats["mail_found"],
@@ -341,7 +336,7 @@ class Deduplicate:
         """
         if self.conf.strategy:
             logger.info(
-                f"{self.conf.strategy} strategy will be applied on each "
+                f"{choice_style(self.conf.strategy)} strategy will be applied on each "
                 "duplicate set to select candidates."
             )
         else:
@@ -354,9 +349,7 @@ class Deduplicate:
             # Alter log level depending on set length.
             mail_count = len(mail_set)
             log_level = logger.debug if mail_count == 1 else logger.info
-            log_level(
-                click.style(f"◼ {mail_count} mails sharing hash {hash_key}", fg="cyan")
-            )
+            log_level(subtitle_style(f"◼ {mail_count} mails sharing hash {hash_key}"))
 
             # Performs the selection within the set.
             duplicates = DuplicateSet(hash_key, mail_set, self.conf)
@@ -384,7 +377,7 @@ class Deduplicate:
             self.stats["mail_deleted"] += 1
 
             if self.conf.dry_run:
-                logger.warning(f"{DRY_RUN_LABEL}: skip deletion of {mail_path!r}.")
+                logger.warning(f"DRY RUN: Skip deletion of {mail_path!r}.")
                 return
 
             logger.debug(f"Deleting {mail_path!r} in-place...")

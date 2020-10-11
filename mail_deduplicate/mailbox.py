@@ -22,10 +22,10 @@ import mailbox
 from functools import partial
 from pathlib import Path
 
-import click
 from boltons.dictutils import FrozenDict
 
 from . import logger
+from .colorize import choice_style
 from .mail import DedupMail
 
 """ Patch and tweak Python's standard librabry mailboxes constructors to set
@@ -112,7 +112,7 @@ def autodetect_box_type(path):
     if not box_type:
         raise ValueError("Unrecognized mail source type.")
 
-    logger.info("{} detected.".format(click.style(box_type, fg="bright_white")))
+    logger.info(f"{choice_style(box_type)} detected.")
     return box_type
 
 
@@ -124,9 +124,8 @@ def open_box(path, box_type=False, force_unlock=False):
     If ``box_type`` is specified, forces the opening of the box in the
     specified format. Else try to autodetect the type.
     """
-    styled_path = click.style(str(path), fg="bright_white")
-    logger.info(f"Opening {styled_path} ...")
     assert isinstance(path, Path)
+    logger.info(f"Opening {choice_style(str(path))} ...")
     if not box_type:
         box_type = autodetect_box_type(path)
     else:

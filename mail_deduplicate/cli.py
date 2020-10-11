@@ -19,7 +19,6 @@
 
 import logging
 import re
-from functools import partial
 
 import click
 import click_log
@@ -40,6 +39,7 @@ from . import (
     env_data,
     logger,
 )
+from .colorize import collect_keywords, colorized_help, title_style, choice_style, colors
 from .deduplicate import Deduplicate
 from .mailbox import BOX_TYPES
 from .strategy import (
@@ -51,85 +51,6 @@ from .strategy import (
 )
 
 click_log.basic_config(logger)
-
-
-def collect_keywords(ctx):
-    """ Parse click context to collect option names and choice keywords. """
-    options = set()
-    choices = set()
-    metavars = set()
-
-    # Add user defined help options.
-    options.update(ctx.help_option_names)
-
-    # Collect all option names and choice keywords.
-    for param in ctx.command.params:
-        options.update(param.opts)
-        if isinstance(param.type, click.Choice):
-            choices.update(param.type.choices)
-        if param.metavar:
-            metavars.add(param.metavar)
-
-    return options, choices, metavars
-
-
-def colorized_help(help_txt, keywords):
-    """Get default help screen and colorize section titles, options and choice
-    keywords."""
-    cli_color = "white"
-    title_color = "yellow"
-    option_color = "green"
-    choice_color = "blue"
-    metavar_color = "bright_black"
-
-    options, choices, metavars = keywords
-
-    def colorize(match, fg=None):
-        """Re-create the matching string by concatenating all groups, but only
-        colorize named groups.
-        """
-        txt = ""
-        for group in match.groups():
-            if group in match.groupdict().values():
-                txt += click.style(group, fg=fg)
-            else:
-                txt += group
-        return txt
-
-    # Highligh numbers.
-    help_txt = re.sub(
-        r"(\s)(?P<colorize>-?\d+)", partial(colorize, fg=choice_color), help_txt
-    )
-
-    # Highlight CLI.
-    help_txt = re.sub(
-        fr"(\s)(?P<colorize>{CLI_NAME})", partial(colorize, fg=cli_color), help_txt
-    )
-
-    # Highligh sections.
-    help_txt = re.sub(
-        r"^(?P<colorize>\S[\S+ ]+)(:)",
-        partial(colorize, fg=title_color),
-        help_txt,
-        flags=re.MULTILINE,
-    )
-
-    # Highlight keywords.
-    for keywords, color in [
-        (sorted(options), option_color),
-        (sorted(choices, reverse=True), choice_color),
-        (sorted(metavars, reverse=True), metavar_color),
-    ]:
-        for keyword in keywords:
-            # Accounts for text wrapping after a dash.
-            keyword = keyword.replace("-", "-\s*")
-            help_txt = re.sub(
-                fr"([\s\[\|])(?P<colorize>{keyword})",
-                partial(colorize, fg=color),
-                help_txt,
-            )
-
-    return help_txt
 
 
 def validate_regexp(ctx, param, value):
@@ -277,7 +198,7 @@ def validate_regexp(ctx, param, value):
     version=__version__,
     prog_name=CLI_NAME,
     version_color="green",
-    prog_name_color="white",
+    prog_name_color=colors["cli"]["fg"],
     message=f"%(prog)s %(version)s\n{env_data}",
     message_color="bright_black",
 )
@@ -377,15 +298,11 @@ def mdedup(
 
     dedup = Deduplicate(conf)
 
-    click.echo(click.style("\n● Phase #0 - Load mails", fg="blue", bold=True))
     for source in mail_sources:
         dedup.add_source(source)
+    click.echo(title_style("\n● Phase #0 - Load mails"))
 
-    click.echo(
-        click.style(
-            "\n● Phase #1 - Compute hashes and group duplicates", fg="blue", bold=True
-        )
-    )
+    click.echo(title_style("\n● Phase #1 - Compute hashes and group duplicates"))
     dedup.hash_all()
     if hash_only:
         for all_mails in dedup.mails.values():
@@ -394,24 +311,16 @@ def mdedup(
                 click.echo(f"Hash: {mail.hash_key}")
         ctx.exit()
 
-    click.echo(
-        click.style("\n● Phase #2 - Select mails in each group", fg="blue", bold=True)
-    )
+    click.echo(title_style("\n● Phase #2 - Select mails in each group"))
     dedup.select_all()
 
-    click.echo(
-        click.style(
-            "\n● Phase #3 - Perform action on selected mails", fg="blue", bold=True
-        )
-    )
     if action == DELETE_DISCARDED:
         dedup.remove_selection()
+    click.echo(title_style("\n● Phase #3 - Perform action on selected mails"))
     else:
         raise NotImplementedError(f"{action} action not implemented yet.")
 
-    click.echo(
-        click.style("\n● Phase #4 - Report and statistics", fg="blue", bold=True)
-    )
+    click.echo(title_style("\n● Phase #4 - Report and statistics"))
     # Print deduplication statistics, then performs a self-check on them.
     click.echo(dedup.report())
     dedup.check_stats()
