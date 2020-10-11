@@ -171,6 +171,7 @@ class DuplicateSet:
         if self.size == 1:
             logger.debug("Ignore set: only one message found.")
             self.stats["mail_unique"] += self.size
+            self.stats["mail_discarded"] += self.size
             self.stats["set_ignored"] += 1
             return
 
@@ -180,21 +181,25 @@ class DuplicateSet:
         try:
             self.check_differences()
         except UnicodeDecodeError as expt:
+            self.stats["mail_discarded"] += self.size
             self.stats["set_rejected_encoding"] += 1
             logger.warning("Reject set: unparseable mails due to bad encoding.")
             logger.debug(f"{expt}")
             return
         except SizeDiffAboveThreshold:
+            self.stats["mail_discarded"] += self.size
             self.stats["set_rejected_size"] += 1
             logger.warning("Reject set: mails are too dissimilar in size.")
             return
         except ContentDiffAboveThreshold:
+            self.stats["mail_discarded"] += self.size
             self.stats["set_rejected_content"] += 1
             logger.warning("Reject set: mails are too dissimilar in content.")
             return
 
         if not self.conf.strategy:
             logger.warning("No strategy selected, skip selection.")
+            self.stats["mail_discarded"] += self.size
             self.stats["set_skipped"] += 1
             return
 
@@ -208,10 +213,13 @@ class DuplicateSet:
                 f"Skip whole set, all {candidate_count} mails within were selected. "
                 "The strategy criterion was not able to discard some."
             )
+            self.stats["mail_discarded"] += candidate_count
             self.stats["set_skipped"] += 1
             return
 
         logger.info(f"{candidate_count} mail candidates selected for action.")
+        self.stats["mail_selected"] += candidate_count
+        self.stats["mail_discarded"] += self.size - candidate_count
         self.stats["set_deduplicated"] += 1
         return selected_uids
 
@@ -254,8 +262,17 @@ class Deduplicate:
                 # Number of duplicate mails (sum of mails in all duplicate sets
                 # with at least 2 mails).
                 "mail_duplicates": 0,
-                "mail_deleted": 0,
                 # Number of mails discarded from the final selection.
+                "mail_discarded": 0,
+                # Number of mails kept in the final selection.
+                "mail_selected": 0,
+                # Number of mails copied from their original mailbox to another.
+                "mail_copied": 0,
+                # Number of mails moved from their original mailbox to another.
+                "mail_moved": 0,
+                # Number of mails deleted from their mailbox in-place.
+                "mail_deleted": 0,
+
                 # Total number of duplicate sets.
                 "set_total": 0,
                 # Total number of unprocessed sets because mail is unique.
@@ -374,13 +391,13 @@ class Deduplicate:
             mail_path = f"{box_path}:{mail_id}"
             self.stats["mail_deleted"] += 1
 
+            logger.debug(f"Deleting {mail_path!r} in-place...")
+
             if self.conf.dry_run:
                 logger.warning(f"DRY RUN: Skip deletion of {mail_path!r}.")
-                return
-
-            logger.debug(f"Deleting {mail_path!r} in-place...")
-            self.sources[box_path].remove(mail_id)
-            logger.info(f"{mail_path} deleted.")
+            else:
+                self.sources[box_path].remove(mail_id)
+                logger.info(f"{mail_path} deleted.")
 
     def report(self):
         """ Returns a text report of user-friendly statistics and metrics. """
@@ -391,6 +408,10 @@ class Deduplicate:
             ["Retained", self.stats["mail_retained"]],
             ["Unique", self.stats["mail_unique"]],
             ["Duplicates", self.stats["mail_duplicates"]],
+            ["Discarded", self.stats["mail_discarded"]],
+            ["Selected", self.stats["mail_selected"]],
+            ["Copied", self.stats["mail_copied"]],
+            ["Moved", self.stats["mail_moved"]],
             ["Deleted", self.stats["mail_deleted"]],
         ]
         output = tabulate(table, tablefmt="fancy_grid", headers="firstrow")
@@ -428,6 +449,15 @@ class Deduplicate:
         assert self.stats["mail_retained"] >= self.stats["mail_duplicates"]
         assert self.stats["mail_retained"] == (
             self.stats["mail_unique"] + self.stats["mail_duplicates"]
+        )
+
+        assert self.stats["mail_retained"] == (
+            self.stats["mail_discarded"] + self.stats["mail_selected"]
+        )
+
+        assert self.stats["mail_selected"] == (
+            self.stats["mail_copied"] + self.stats["mail_moved"] +
+            self.stats["mail_deleted"]
         )
 
         assert self.stats["mail_retained"] >= self.stats["mail_deleted"]
