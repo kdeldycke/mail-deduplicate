@@ -314,11 +314,19 @@ def mdedup(
     click.echo(title_style("\n● Phase #2 - Select mails in each group"))
     dedup.select_all()
 
-    if action == DELETE_DISCARDED:
-        dedup.remove_selection()
     click.echo(title_style("\n● Phase #3 - Perform action on selected mails"))
+    logger.info(f"Call {choice_style(action)} action...")
+
+    selection_count = len(dedup.selection)
+    if selection_count == 0:
+        logger.warning(f"No mail selected for action.")
     else:
-        raise NotImplementedError(f"{action} action not implemented yet.")
+        logger.info(f"{selection_count} mails selected for action.")
+
+        if action == DELETE_DISCARDED:
+            dedup.remove_selection()
+        else:
+            raise NotImplementedError(f"{action} action not implemented yet.")
 
     click.echo(title_style("\n● Phase #4 - Report and statistics"))
     # Print deduplication statistics, then performs a self-check on them.
