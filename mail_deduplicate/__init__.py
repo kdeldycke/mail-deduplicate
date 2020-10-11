@@ -37,7 +37,7 @@ env_data = get_profile(scrub=True)
 
 
 # Initialize global logger.
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(CLI_NAME)
 
 
 # Ordered list of headers to use by default to compute the hash of a mail.
