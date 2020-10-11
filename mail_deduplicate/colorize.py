@@ -25,21 +25,32 @@ from functools import partial
 import click
 from click_log.core import ColorFormatter
 
-from . import CLI_NAME
+from . import CLI_NAME, logger
+
 
 # Help screen and log message colors.
+# Available options: https://click.palletsprojects.com/en/master/api/#click.style
 colors = {
-    "cli": dict(fg="white"),
-    "title": dict(fg="yellow", bold=True),
-    "subtitle": dict(fg="cyan"),
-    "option": dict(fg="green"),
-    "choice": dict(fg="blue"),
+    "cli": dict(fg="bright_white"),
+    "title": dict(fg="bright_green", bold=True),
+    "subtitle": dict(fg="green"),
+    "option": dict(fg="cyan"),
+    "choice": dict(fg="magenta"),
     "metavar": dict(fg="bright_black"),
 }
 
 # Update with default log message colors.
 assert set(colors).isdisjoint(ColorFormatter.colors)
 colors.update(ColorFormatter.colors)
+
+
+# Reverse color mapping to detect overlapping colors.
+color_index = {}
+for category, color_params in colors.items():
+    color_index.setdefault(tuple(sorted(color_params.items())), set()).add(category)
+for color_params, categories in color_index.items():
+    if len(categories) > 1:
+        logger.warning(f"{categories!r} shares the same {color_params!r} colors.")
 
 
 # Create handy function shortcuts for each class of colorization.
@@ -72,14 +83,14 @@ def colorized_help(help_txt, keywords):
     keywords."""
     options, choices, metavars = keywords
 
-    def colorize(match, fg=None):
+    def colorize(match, **kwargs):
         """Re-create the matching string by concatenating all groups, but only
         colorize named groups.
         """
         txt = ""
         for group in match.groups():
             if group in match.groupdict().values():
-                txt += click.style(group, fg=fg)
+                txt += click.style(group, **kwargs)
             else:
                 txt += group
         return txt
