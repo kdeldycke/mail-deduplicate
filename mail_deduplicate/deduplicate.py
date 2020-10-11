@@ -247,7 +247,7 @@ class Deduplicate:
                 # Number of mails ignored because they were faulty or unparseable.
                 "mail_rejected": 0,
                 # Number of valid mails parsed and retained for deduplication.
-                "mail_kept": 0,
+                "mail_retained": 0,
                 # Number of unique mails (which ended up in duplicate sets with
                 # one mail and one only).
                 "mail_unique": 0,
@@ -322,7 +322,7 @@ class Deduplicate:
                     else:
                         # Use a set to deduplicate entries pointing to the same file.
                         self.mails.setdefault(mail_hash, set()).add(mail)
-                        self.stats["mail_kept"] += 1
+                        self.stats["mail_retained"] += 1
 
                     progress.update(1)
 
@@ -388,7 +388,7 @@ class Deduplicate:
             ["Mails", "Metric"],
             ["Found", self.stats["mail_found"]],
             ["Rejected", self.stats["mail_rejected"]],
-            ["Kept", self.stats["mail_kept"]],
+            ["Retained", self.stats["mail_retained"]],
             ["Unique", self.stats["mail_unique"]],
             ["Duplicates", self.stats["mail_duplicates"]],
             ["Deleted", self.stats["mail_deleted"]],
@@ -419,18 +419,18 @@ class Deduplicate:
         Helps users reports tricky edge-cases.
         """
         assert self.stats["mail_found"] >= self.stats["mail_rejected"]
-        assert self.stats["mail_found"] >= self.stats["mail_kept"]
+        assert self.stats["mail_found"] >= self.stats["mail_retained"]
         assert self.stats["mail_found"] == (
-            self.stats["mail_rejected"] + self.stats["mail_kept"]
+            self.stats["mail_rejected"] + self.stats["mail_retained"]
         )
 
-        assert self.stats["mail_kept"] >= self.stats["mail_unique"]
-        assert self.stats["mail_kept"] >= self.stats["mail_duplicates"]
-        assert self.stats["mail_kept"] == (
+        assert self.stats["mail_retained"] >= self.stats["mail_unique"]
+        assert self.stats["mail_retained"] >= self.stats["mail_duplicates"]
+        assert self.stats["mail_retained"] == (
             self.stats["mail_unique"] + self.stats["mail_duplicates"]
         )
 
-        assert self.stats["mail_kept"] >= self.stats["mail_deleted"]
+        assert self.stats["mail_retained"] >= self.stats["mail_deleted"]
         assert self.stats["mail_duplicates"] == 0 or (
             self.stats["mail_duplicates"] > self.stats["mail_deleted"]
         )
