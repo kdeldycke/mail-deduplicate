@@ -2,7 +2,7 @@
 # Docs: https://python-poetry.org/docs/pyproject/
 name = "mail-deduplicate"
 version = "6.0.0"
-description = """Deduplicate mails from mbox files and maildir folders."""
+description = """Deduplicate mails from mail boxes."""
 license = 'GPL-2.0-or-later'
 authors = ["Kevin Deldycke <kevin@deldycke.com>"]
 readme = "readme.rst"
@@ -11,7 +11,7 @@ repository = 'https://github.com/kdeldycke/mail-deduplicate'
 documentation = 'https://maildir-deduplicate.readthedocs.io'
 keywords = [
     'CLI', 'mail', 'email', 'maildir', 'mbox', 'deduplication', 'dedupe',
-    'cleanup', 'mailbox']
+    'cleanup', 'mailbox', 'Babyl', 'MH', 'mbox', 'MMDF']
 classifiers = [
     # See: https://pypi.org/pypi?%3Aaction=list_classifiers
     'Development Status :: 5 - Production/Stable',

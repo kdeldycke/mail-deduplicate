@@ -1,8 +1,7 @@
 Mail Deduplicate
 ================
 
-Command-line tool to deduplicate mails from a set of mbox files and/or maildir
-folders.
+Command-line tool to deduplicate mails from a set of boxes.
 
 Stable release: |release| |versions|
 
@@ -28,9 +27,12 @@ Development: |build| |docs| |coverage|
 Features
 --------
 
-* Duplicate detection based on cherry-picked mail headers.
-* Source mails from multiple mbox files and/or maildir folders.
-* Multiple removal strategies based on size, timestamp or file path.
+* Duplicate detection based on cherry-picked and normalized mail headers.
+* Source and deduplicate mails from multiple sources.
+* Reads and writes to `mbox`, `maildir`, `babyl`, `mh` and `mmdf` formats.
+* Multiple duplicate selection strategies based on size, content, timestamp, file
+  path or random choice.
+* Copy, move or delete the resulting set of mails after the deduplication.
 * Dry-run mode.
 * Protection against false-positives by checking for size and content
   differences.
