@@ -27,10 +27,10 @@ from boltons.dictutils import FrozenDict
 from . import logger
 
 
-def discard_older(duplicates):
-    """Discard all older duplicates.
+def select_older(duplicates):
+    """Select all older duplicates.
 
-    Only select the newests, i.e. the subset sharing the most recent timestamp.
+    Discards the newests, i.e. the subset sharing the most recent timestamp.
     """
     logger.info(
         f"Select all mails strictly older than the {duplicates.newest_timestamp} "
@@ -41,10 +41,10 @@ def discard_older(duplicates):
     }
 
 
-def discard_oldest(duplicates):
-    """Discard all the oldest duplicates.
+def select_oldest(duplicates):
+    """Select all the oldest duplicates.
 
-    Only select the newers, i.e. all mail of the duplicate set but those sharing
+    Discards the newers, i.e. all mail of the duplicate set but those sharing
     the oldest timestamp.
     """
     logger.info(
@@ -58,10 +58,10 @@ def discard_oldest(duplicates):
     }
 
 
-def discard_newer(duplicates):
-    """Discard all newer duplicates.
+def select_newer(duplicates):
+    """Select all newer duplicates.
 
-    Only select the oldest, i.e. the subset sharing the most ancient timestamp.
+    Discards the oldest, i.e. the subset sharing the most ancient timestamp.
     """
     logger.info(
         f"Select all mails strictly newer than the {duplicates.oldest_timestamp} "
@@ -72,10 +72,10 @@ def discard_newer(duplicates):
     }
 
 
-def discard_newest(duplicates):
-    """Discard all the newest duplicates.
+def select_newest(duplicates):
+    """Select all the newest duplicates.
 
-    Only select the olders, i.e. all mail of the duplicate set but those sharing the
+    Discards the olders, i.e. all mail of the duplicate set but those sharing the
     newest timestamp.
     """
     logger.info(
@@ -89,10 +89,10 @@ def discard_newest(duplicates):
     }
 
 
-def discard_smaller(duplicates):
-    """Discard all smaller duplicates.
+def select_smaller(duplicates):
+    """Select all smaller duplicates.
 
-    Only select the biggests, i.e. the subset sharing the biggest size.
+    Discards the biggests, i.e. the subset sharing the biggest size.
     """
     logger.info(
         f"Select all mails strictly smaller than {duplicates.biggest_size} bytes..."
@@ -100,10 +100,10 @@ def discard_smaller(duplicates):
     return {mail for mail in duplicates.pool if mail.size < duplicates.biggest_size}
 
 
-def discard_smallest(duplicates):
-    """Discard all the smallest duplicates.
+def select_smallest(duplicates):
+    """Select all the smallest duplicates.
 
-    Only select the biggers. i.e. all mail of the duplicate set but those sharing the
+    Discards the biggers. i.e. all mail of the duplicate set but those sharing the
     smallest size.
     """
     logger.info(
@@ -113,10 +113,10 @@ def discard_smallest(duplicates):
     return {mail for mail in duplicates.pool if mail.size == duplicates.smallest_size}
 
 
-def discard_bigger(duplicates):
-    """Discard all bigger duplicates.
+def select_bigger(duplicates):
+    """Select all bigger duplicates.
 
-    Only select the smallests, i.e. the subset sharing the smallest size.
+    Discards the smallests, i.e. the subset sharing the smallest size.
     """
     logger.info(
         f"Select all mails strictly bigger than {duplicates.smallest_size} bytes..."
@@ -124,10 +124,10 @@ def discard_bigger(duplicates):
     return {mail for mail in duplicates.pool if mail.size > duplicates.smallest_size}
 
 
-def discard_biggest(duplicates):
-    """Discard all the biggest duplicates.
+def select_biggest(duplicates):
+    """Select all the biggest duplicates.
 
-    Only select the smallers, i.e. all mail of the duplicate set but those sharing the
+    Discards the smallers, i.e. all mail of the duplicate set but those sharing the
     biggest size.
     """
     logger.info(
@@ -137,8 +137,8 @@ def discard_biggest(duplicates):
     return {mail for mail in duplicates.pool if mail.size == duplicates.biggest_size}
 
 
-def discard_matching_path(duplicates):
-    """Discards all duplicates whose file path match the regular expression provided
+def select_matching_path(duplicates):
+    """Select all duplicates whose file path match the regular expression provided
     via the --regexp parameter.
     """
     logger.info(
@@ -150,8 +150,8 @@ def discard_matching_path(duplicates):
     }
 
 
-def discard_non_matching_path(duplicates):
-    """Discards all duplicates whose file path doesn't match the regular expression
+def select_non_matching_path(duplicates):
+    """Select all duplicates whose file path doesn't match the regular expression
     provided via the --regexp parameter.
     """
     logger.info(
@@ -165,13 +165,13 @@ def discard_non_matching_path(duplicates):
     }
 
 
-def discard_one(duplicates):
-    """Randomly discards one duplicate, and select all others."""
+def select_one(duplicates):
+    """Randomly select one duplicate, and discards all others."""
     return {random.choice(tuple(duplicates.pool))}
 
 
-def discard_all_but_one(duplicates):
-    """Randomly discards all duplicates, but select one."""
+def select_all_but_one(duplicates):
+    """Randomly discard one duplicate, and select all others."""
     return set(random.sample(duplicates.pool, k=len(duplicates.pool) - 1))
 
 
@@ -210,18 +210,18 @@ SELECT_ALL_BUT_ONE = "select-all-but-one"
 # dependening on their mental models.
 STRATEGY_ALIASES = frozenset(
     [
-        (DISCARD_OLDER, SELECT_NEWEST),
-        (DISCARD_OLDEST, SELECT_NEWER),
-        (DISCARD_NEWER, SELECT_OLDEST),
-        (DISCARD_NEWEST, SELECT_OLDER),
-        (DISCARD_SMALLER, SELECT_BIGGEST),
-        (DISCARD_SMALLEST, SELECT_BIGGER),
-        (DISCARD_BIGGER, SELECT_SMALLEST),
-        (DISCARD_BIGGEST, SELECT_SMALLER),
-        (DISCARD_MATCHING_PATH, SELECT_NON_MATCHING_PATH),
-        (DISCARD_NON_MATCHING_PATH, SELECT_MATCHING_PATH),
-        (DISCARD_ONE, SELECT_ALL_BUT_ONE),
-        (DISCARD_ALL_BUT_ONE, SELECT_ONE),
+        (SELECT_NEWEST,            DISCARD_OLDER),
+        (SELECT_NEWER,             DISCARD_OLDEST),
+        (SELECT_OLDEST,            DISCARD_NEWER),
+        (SELECT_OLDER,             DISCARD_NEWEST),
+        (SELECT_BIGGEST,           DISCARD_SMALLER),
+        (SELECT_BIGGER,            DISCARD_SMALLEST),
+        (SELECT_SMALLEST,          DISCARD_BIGGER),
+        (SELECT_SMALLER,           DISCARD_BIGGEST),
+        (SELECT_NON_MATCHING_PATH, DISCARD_MATCHING_PATH),
+        (SELECT_MATCHING_PATH,     DISCARD_NON_MATCHING_PATH),
+        (SELECT_ALL_BUT_ONE,       DISCARD_ONE),
+        (SELECT_ONE,               DISCARD_ALL_BUT_ONE),
     ]
 )
 
