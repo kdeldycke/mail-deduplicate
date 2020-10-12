@@ -41,7 +41,7 @@ STATS_DEF = OrderedDict(
         (
             "mail_rejected",
             "Number of mails individuality rejected because they were unparseable or "
-            "did not had enough metadata to compute hashes."
+            "did not had enough metadata to compute hashes.",
         ),
         (
             "mail_retained",
@@ -468,8 +468,9 @@ class Deduplicate:
         assert self.stats["mail_retained"] >= self.stats["mail_discarded"]
         assert self.stats["mail_retained"] >= self.stats["mail_selected"]
         assert self.stats["mail_retained"] == (
-            self.stats["mail_skipped"] +
-            self.stats["mail_discarded"] + self.stats["mail_selected"]
+            self.stats["mail_skipped"]
+            + self.stats["mail_discarded"]
+            + self.stats["mail_selected"]
         )
         # Action stats.
         assert self.stats["mail_selected"] >= self.stats["mail_copied"]
@@ -478,7 +479,8 @@ class Deduplicate:
         assert self.stats["mail_selected"] in (
             self.stats["mail_copied"],
             self.stats["mail_moved"],
-            self.stats["mail_deleted"])
+            self.stats["mail_deleted"],
+        )
         # Sets accounting.
         assert self.stats["set_total"] == self.stats["mail_hashes"]
         assert self.stats["set_single"] == self.stats["mail_unique"]
