@@ -50,7 +50,7 @@ for category, color_params in colors.items():
     color_index.setdefault(tuple(sorted(color_params.items())), set()).add(category)
 for color_params, categories in color_index.items():
     if len(categories) > 1:
-        logger.warning(f"{categories!r} shares the same {color_params!r} colors.")
+        logger.debug(f"{categories!r} shares the same {color_params!r} colors.")
 
 
 # Create handy function shortcuts for each class of colorization.
