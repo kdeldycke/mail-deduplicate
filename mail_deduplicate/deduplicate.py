@@ -41,8 +41,8 @@ STATS_DEF = OrderedDict(
         (
             "mail_rejected",
             "Number of mails rejected from the selection phase because they were "
-            "individualy faulty or unparseable, or because the whole set they belongs to "
-            "was rejected.",
+            "individualy faulty or unparseable, or because the whole set they belongs "
+            "to was rejected.",
         ),
         (
             "mail_retained",
@@ -73,8 +73,8 @@ STATS_DEF = OrderedDict(
         ("set_total", "Total number of duplicate sets."),
         (
             "set_single",
-            "Total number of sets containing a single mail and did not had to have "
-            "a strategy applied to. They were automatticaly kept in the final selection.",
+            "Total number of sets containing a single mail and did not had to have a "
+            "strategy applied to. They were automatticaly kept in the final selection.",
         ),
         (
             "set_rejected_encoding",
@@ -184,7 +184,8 @@ class DuplicateSet:
             if self.conf.size_threshold > -1:
                 size_difference = abs(mail_a.size - mail_b.size)
                 logger.debug(
-                    f"{mail_a!r} and {mail_b!r} differs by {size_difference} bytes in size."
+                    f"{mail_a!r} and {mail_b!r} differs by {size_difference} bytes "
+                    "in size."
                 )
                 if size_difference > self.conf.size_threshold:
                     raise SizeDiffAboveThreshold
@@ -193,8 +194,8 @@ class DuplicateSet:
             if self.conf.content_threshold > -1:
                 content_difference = self.diff(mail_a, mail_b)
                 logger.debug(
-                    f"{mail_a!r} and {mail_b!r} differs by {content_difference} bytes in "
-                    "content."
+                    f"{mail_a!r} and {mail_b!r} differs by {content_difference} bytes "
+                    "in content."
                 )
                 if content_difference > self.conf.content_threshold:
                     if self.conf.show_diff:
