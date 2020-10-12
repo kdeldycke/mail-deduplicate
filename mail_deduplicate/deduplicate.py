@@ -40,9 +40,8 @@ STATS_DEF = OrderedDict(
         ("mail_found", "Total number of mails encountered from all mail sources."),
         (
             "mail_rejected",
-            "Number of mails rejected from the selection phase because they were "
-            "individualy faulty or unparseable, or because the whole set they belongs "
-            "to was rejected.",
+            "Number of mails individuality rejected because they were unparseable or "
+            "did not had enough metadata to compute hashes."
         ),
         (
             "mail_retained",
@@ -57,6 +56,11 @@ STATS_DEF = OrderedDict(
             "mail_duplicates",
             "Number of duplicate mails (sum of mails in all duplicate sets with at "
             "least 2 mails).",
+        ),
+        (
+            "mail_skipped",
+            "Number of mails ignored in the selection phase because the whole set "
+            "they belongs to was skipped.",
         ),
         ("mail_discarded", "Number of mails discarded from the final selection."),
         (
@@ -77,23 +81,23 @@ STATS_DEF = OrderedDict(
             "strategy applied to. They were automatticaly kept in the final selection.",
         ),
         (
-            "set_rejected_encoding",
-            "Number of sets rejected from the selection process because they had "
+            "set_skipped_encoding",
+            "Number of sets skipped from the selection process because they had "
             "encoding issues.",
         ),
         (
-            "set_rejected_size",
-            "Number of sets rejected from the selection process because they were "
+            "set_skipped_size",
+            "Number of sets skipped from the selection process because they were "
             "too disimilar in size.",
         ),
         (
-            "set_rejected_content",
-            "Number of sets rejected from the selection process because they were "
+            "set_skipeed_content",
+            "Number of sets skipped from the selection process because they were "
             "too disimilar in content.",
         ),
         (
-            "set_rejected_strategy",
-            "Number of sets rejected from the selection process because the strategy "
+            "set_skipped_strategy",
+            "Number of sets skipped from the selection process because the strategy "
             "could not be applied.",
         ),
         (
@@ -130,7 +134,7 @@ class DuplicateSet:
         # There is no point creating a duplicate set with a single mail.
         assert self.size > 1
 
-        # Keep set metrics.
+        # Set metrics.
         self.stats = Counter()
         self.stats["mail_duplicates"] += self.size
 
@@ -242,47 +246,47 @@ class DuplicateSet:
     def select_candidates(self):
         """Returns the list of duplicates selected for action.
 
-        Run preliminary checks and return the candidates fitting the strategy
-        and constraints set by the configuration.
+        Run preliminary checks and return the candidates fitting the configured
+        strategy and safety checks.
         """
         # Fine-grained checks on mail differences.
         try:
             self.check_differences()
         except UnicodeDecodeError as expt:
-            self.stats["mail_rejected"] += self.size
-            self.stats["set_rejected_encoding"] += 1
-            logger.warning("Reject set: unparseable mails due to bad encoding.")
+            logger.warning("Skip set: unparseable mails due to bad encoding.")
             logger.debug(f"{expt}")
+            self.stats["mail_skipped"] += self.size
+            self.stats["set_skipped_encoding"] += 1
             return
         except SizeDiffAboveThreshold:
-            self.stats["mail_rejected"] += self.size
-            self.stats["set_rejected_size"] += 1
-            logger.warning("Reject set: mails are too dissimilar in size.")
+            logger.warning("Skip set: mails are too dissimilar in size.")
+            self.stats["mail_skipped"] += self.size
+            self.stats["set_skipped_size"] += 1
             return
         except ContentDiffAboveThreshold:
-            self.stats["mail_rejected"] += self.size
-            self.stats["set_rejected_content"] += 1
-            logger.warning("Reject set: mails are too dissimilar in content.")
+            logger.warning("Skip set: mails are too dissimilar in content.")
+            self.stats["mail_skipped"] += self.size
+            self.stats["set_skipped_content"] += 1
             return
 
         if not self.conf.strategy:
-            logger.warning("Reject set: no strategy to apply.")
-            self.stats["mail_rejected"] += self.size
-            self.stats["set_rejected_strategy"] += 1
+            logger.warning("Skip set: no strategy to apply.")
+            self.stats["mail_skipped"] += self.size
+            self.stats["set_skipped_strategy"] += 1
             return
 
-        # Fetch the subset of selected mails from the set by applying the
+        # Fetch the subset of selected mails from the set by applying strategy.
         selected = apply_strategy(self.conf.strategy, self)
         candidate_count = len(selected)
 
-        # Duplicate sets matching as a whole are rejected altogether.
+        # Duplicate sets matching as a whole are skipped altogether.
         if candidate_count == self.size:
             logger.warning(
-                f"Reject set: all {candidate_count} mails within were selected. "
+                f"Skip set: all {candidate_count} mails within were selected. "
                 "The strategy criterion was not able to discard some."
             )
-            self.stats["mail_rejected"] += self.size
-            self.stats["set_rejected_strategy"] += 1
+            self.stats["mail_skipped"] += self.size
+            self.stats["set_skipped_strategy"] += 1
             return
 
         logger.info(f"{candidate_count} mail candidates selected for action.")
@@ -332,7 +336,7 @@ class Deduplicate:
         assert source_path == box._path
         self.sources[source_path] = box
 
-        # Keep track of global mail count.
+        # Track of global mail count.
         mail_found = len(box)
         logger.info(f"{mail_found} mails found.")
         self.stats["mail_found"] += mail_found
@@ -401,7 +405,7 @@ class Deduplicate:
             # Unique mails are always selected. No need to mobilize the whole
             # DuplicateSet machinery.
             if mail_count == 1:
-                logger.debug("Keep unique message into selection.")
+                logger.debug("Add unique message to selection.")
                 self.stats["mail_unique"] += 1
                 self.stats["mail_selected"] += 1
                 self.stats["set_single"] += 1
@@ -447,45 +451,42 @@ class Deduplicate:
 
         Helps users reports tricky edge-cases.
         """
+        # Box opening stats.
         assert self.stats["mail_found"] >= self.stats["mail_rejected"]
         assert self.stats["mail_found"] >= self.stats["mail_retained"]
         assert self.stats["mail_found"] == (
             self.stats["mail_rejected"] + self.stats["mail_retained"]
         )
-
+        # Mail grouping by hash.
         assert self.stats["mail_retained"] >= self.stats["mail_unique"]
         assert self.stats["mail_retained"] >= self.stats["mail_duplicates"]
         assert self.stats["mail_retained"] == (
             self.stats["mail_unique"] + self.stats["mail_duplicates"]
         )
-
+        # Mail selection stats.
+        assert self.stats["mail_retained"] >= self.stats["mail_skipped"]
+        assert self.stats["mail_retained"] >= self.stats["mail_discarded"]
+        assert self.stats["mail_retained"] >= self.stats["mail_selected"]
         assert self.stats["mail_retained"] == (
+            self.stats["mail_skipped"] +
             self.stats["mail_discarded"] + self.stats["mail_selected"]
         )
-
-        assert self.stats["mail_selected"] == (
-            self.stats["mail_copied"]
-            + self.stats["mail_moved"]
-            + self.stats["mail_deleted"]
-        )
-
-        assert self.stats["mail_retained"] >= self.stats["mail_deleted"]
-        assert self.stats["mail_duplicates"] == 0 or (
-            self.stats["mail_duplicates"] > self.stats["mail_deleted"]
-        )
-
+        # Action stats.
+        assert self.stats["mail_selected"] >= self.stats["mail_copied"]
+        assert self.stats["mail_selected"] >= self.stats["mail_moved"]
+        assert self.stats["mail_selected"] >= self.stats["mail_deleted"]
+        assert self.stats["mail_selected"] in (
+            self.stats["mail_copied"],
+            self.stats["mail_moved"],
+            self.stats["mail_deleted"])
+        # Sets accounting.
+        assert self.stats["set_total"] == self.stats["mail_hashes"]
         assert self.stats["set_single"] == self.stats["mail_unique"]
-
-        assert self.stats["mail_hashes"] == (
-            self.stats["mail_unique"] + self.stats["mail_duplicates"]
-        )
-        assert self.stats["mail_hashes"] == self.stats["set_total"]
-
         assert self.stats["set_total"] == (
             self.stats["set_single"]
-            + self.stats["set_rejected_encoding"]
-            + self.stats["set_rejected_size"]
-            + self.stats["set_rejected_content"]
-            + self.stats["set_rejected_strategy"]
+            + self.stats["set_skipped_encoding"]
+            + self.stats["set_skipped_size"]
+            + self.stats["set_skipped_content"]
+            + self.stats["set_skipped_strategy"]
             + self.stats["set_deduplicated"]
         )

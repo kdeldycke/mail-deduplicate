@@ -26,28 +26,16 @@ from .mailbox import create_box
 
 
 # Actions performed on the mail selection.
-DELETE_DISCARDED = "delete-discarded"
-DELETE_KEPT = "delete-kept"
-COPY_KEPT = "copy-kept"
+COPY_SELECTED = "copy-selected"
 COPY_DISCARDED = "copy-discarded"
-MOVE_KEPT = "move-kept"
+MOVE_SELECTED = "move-selected"
 MOVE_DISCARDED = "move-discarded"
+DELETE_SELECTED = "delete-selected"
+DELETE_DISCARDED = "delete-discarded"
 
 
-def delete_kept(dedup):
-    """Remove all mails discarded from selection in-place, from their original boxes."""
-    for mail in dedup.selection:
-        logger.debug(f"Deleting {mail!r} in-place...")
-        dedup.stats["mail_deleted"] += 1
-        if dedup.conf.dry_run:
-            logger.warning("DRY RUN: Skip action.")
-        else:
-            dedup.sources[mail.source_path].remove(mail.mail_id)
-            logger.info(f"{mail!r} deleted.")
-
-
-def copy_kept(dedup):
-    """Copy all mails kept in selection to a brand new box."""
+def copy_selected(dedup):
+    """Copy all mails selected to a brand new box."""
     box = create_box(dedup.conf.export, dedup.conf.export_format)
 
     for mail in dedup.selection:
@@ -63,8 +51,8 @@ def copy_kept(dedup):
     box.close()
 
 
-def move_kept(dedup):
-    """Move all mails kept in selection to a brand new box."""
+def move_selected(dedup):
+    """Move all mails selected to a brand new box."""
     box = create_box(dedup.conf.export, dedup.conf.export_format)
 
     for mail in dedup.selection:
@@ -81,14 +69,26 @@ def move_kept(dedup):
     box.close()
 
 
+def delete_selected(dedup):
+    """Remove all mails selected in-place, from their original boxes."""
+    for mail in dedup.selection:
+        logger.debug(f"Deleting {mail!r} in-place...")
+        dedup.stats["mail_deleted"] += 1
+        if dedup.conf.dry_run:
+            logger.warning("DRY RUN: Skip action.")
+        else:
+            dedup.sources[mail.source_path].remove(mail.mail_id)
+            logger.info(f"{mail!r} deleted.")
+
+
 ACTIONS = FrozenDict(
     {
-        DELETE_DISCARDED: None,
-        DELETE_KEPT: delete_kept,
-        COPY_KEPT: copy_kept,
+        COPY_SELECTED: copy_selected,
         COPY_DISCARDED: None,
-        MOVE_KEPT: move_kept,
+        MOVE_SELECTED: move_selected,
         MOVE_DISCARDED: None,
+        DELETE_SELECTED: delete_selected,
+        DELETE_DISCARDED: None,
     }
 )
 
@@ -106,9 +106,10 @@ def perform_action(dedup):
     # Check our indexing and selection methods are not flagging candidates
     # several times.
     assert len(unique(dedup.selection)) == len(dedup.selection)
+    assert len(dedup.selection) == dedup.stats["mail_selected"]
 
     # Hunt down for action implementation.
-    method = ACTIONS.get(dedup.conf.action, None)
+    method = ACTIONS.get(dedup.conf.action)
     if not method:
         raise NotImplementedError(f"{dedup.conf.action} action not implemented yet.")
 

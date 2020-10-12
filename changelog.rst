@@ -9,14 +9,14 @@ ChangeLog
 
 * Add new ``-a``/``--action`` option to choose what to do on the final mail
   selection.
-* Implements new ``copy-discarded``, ``copy-kept``, ``delete-discarded``,
-  ``delete-kept``, ``move-discarded`` and ``move-kept`` actions.
+* Implements new ``copy-discarded``, ``copy-selected``, ``delete-discarded``,
+  ``delete-selected``, ``move-discarded`` and ``move-selected`` actions.
 * Add new ``-E``/``--export`` and ``-e``/``--export-format`` options to support
   the new ``copy-*`` and ``moved-*`` actions.
 * Rename all ``--delete-*`` strategies to ``--discard-*``.
-* Add ``--keep-*`` aliases to all strategies.
-* Add new ``discard-all-but-one``, ``discard-one``, ``keep-one`` and
-  ``keep-all-but-one`` selection strategies.
+* Add ``--select-*`` aliases to all strategies.
+* Add new ``discard-all-but-one``, ``discard-one``, ``select-one`` and
+  ``select-all-but-one`` selection strategies.
 * Rename ``-f``/``--sources-format`` option to ``-i``/``--input-format``.
 * ``--time-source`` parameter is now optional and defaults to ``date-header``.
 * Add metric description in deduplication end report.

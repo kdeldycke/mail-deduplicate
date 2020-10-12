@@ -48,17 +48,16 @@ from .mailbox import BOX_TYPES, BOX_STRUCTURES
 from .action import (
     ACTIONS,
     perform_action,
-    COPY_KEPT,
+    COPY_SELECTED,
     COPY_DISCARDED,
-    MOVE_KEPT,
+    MOVE_SELECTED,
     MOVE_DISCARDED,
-    DELETE_DISCARDED,
 )
 from .strategy import (
     DISCARD_MATCHING_PATH,
     DISCARD_NON_MATCHING_PATH,
-    KEEP_MATCHING_PATH,
-    KEEP_NON_MATCHING_PATH,
+    SELECT_MATCHING_PATH,
+    SELECT_NON_MATCHING_PATH,
     STRATEGY_METHODS,
 )
 
@@ -76,7 +75,7 @@ def validate_regexp(ctx, param, value):
 
 
 @click.command(
-    short_help="Deduplicate mail boxes content.",
+    short_help="Deduplicate mail boxes.",
     no_args_is_help=False,
 )
 @click.option(
@@ -84,8 +83,8 @@ def validate_regexp(ctx, param, value):
     "--dry-run",
     is_flag=True,
     default=False,
-    help="Do not actually performs anything; just apply the selection strategy, and "
-    "show which action would have been performed otherwise.",
+    help="Do not perform any action but act as if it was, and report which action "
+    "would have been performed otherwise.",
 )
 @click.option(
     "-i",
@@ -93,7 +92,7 @@ def validate_regexp(ctx, param, value):
     type=click.Choice(sorted(BOX_TYPES), case_sensitive=False),
     help="Force all provided mail sources to be parsed in the specified format. If "
     "not set, auto-detect the format of sources independently. Auto-detection only "
-    "supports maildir and mbox format. So use this option to open up other box "
+    "supports maildir and mbox format. Use this option to open up other box "
     "format, or bypass unreliable detection.",
 )
 @click.option(
@@ -109,7 +108,7 @@ def validate_regexp(ctx, param, value):
     is_flag=True,
     default=False,
     help="Compute and display the internal hashes used to identify duplicates. Do not "
-    "performs any deduplication operation.",
+    "performs any selection or action.",
 )
 @click.option(
     "-h",
@@ -131,10 +130,10 @@ def validate_regexp(ctx, param, value):
     metavar="BYTES",
     default=DEFAULT_SIZE_THRESHOLD,
     help="Maximum difference allowed in size between mails sharing the same hash. "
-    "The whole subset of duplicates will be rejected if at least one pair of mail "
-    "exceed the threshold. Set to 0 to enforce strictness and deduplicate the subset "
+    "The whole subset of duplicates will be skipped if at least one pair of mail "
+    "exceed the threshold. Set to 0 to enforce strictness and apply selection strategy on the subset "
     "only if all mails are exactly the same. Set to -1 to allow any difference and "
-    "keep deduplicating the subset whatever the differences. Defaults to "
+    "apply the strategy whatever the differences. Defaults to "
     f"{DEFAULT_SIZE_THRESHOLD} bytes.",
 )
 @click.option(
@@ -144,10 +143,10 @@ def validate_regexp(ctx, param, value):
     metavar="BYTES",
     default=DEFAULT_CONTENT_THRESHOLD,
     help="Maximum difference allowed in content between mails sharing the same hash. "
-    "The whole subset of duplicates will be rejected if at least one pair of mail "
-    "exceed the threshold. Set to 0 to enforce strictness and deduplicate the subset "
+    "The whole subset of duplicates will be skipped if at least one pair of mail "
+    "exceed the threshold. Set to 0 to enforce strictness and apply selection strategy on the subset "
     "only if all mails are exactly the same. Set to -1 to allow any difference and "
-    "keep deduplicating the subset whatever the differences. Defaults to "
+    "apply the strategy whatever the differences. Defaults to "
     f"{DEFAULT_CONTENT_THRESHOLD} bytes.",
 )
 @click.option(
@@ -162,8 +161,8 @@ def validate_regexp(ctx, param, value):
     "--strategy",
     type=click.Choice(sorted(STRATEGY_METHODS), case_sensitive=False),
     help="Selection strategy to apply within a subset of duplicates. If not set, "
-    "duplicates will be grouped and counted but no selection will happen, and no "
-    "action will be performed on the set. Description of each strategy is "
+    "duplicates will be grouped and counted but all be skipped, selection will be "
+    "empty, and no action will be performed. Description of each strategy is "
     "available at the bottom.",
 )
 @click.option(
@@ -179,22 +178,22 @@ def validate_regexp(ctx, param, value):
     "--regexp",
     callback=validate_regexp,
     metavar="REGEXP",
-    help=f"Regular expression on a mail's file path. Applies to real, individual "
+    help="Regular expression on a mail's file path. Applies to real, individual "
     "mail location for folder-based boxed "
     f"({', '.join(sorted(BOX_STRUCTURES['folder']))}). But for file-based boxes "
     f"({', '.join(sorted(BOX_STRUCTURES['file']))}), applies to the whole box's path, "
     "as all mails are packed into one single file. Required in "
-    f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, {KEEP_MATCHING_PATH} and "
-    f"{KEEP_NON_MATCHING_PATH} strategies.",
+    f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, {SELECT_MATCHING_PATH} and "
+    f"{SELECT_NON_MATCHING_PATH} strategies.",
 )
 @click.option(
     "-a",
     "--action",
-    default=COPY_KEPT,
+    default=COPY_SELECTED,
     type=click.Choice(sorted(ACTIONS), case_sensitive=False),
-    help=f"Action performed on the selected mails. Defaults to {COPY_KEPT} as it is "
-    "the safest: it only reads the mail sources and create a brand new mail box with "
-    "the selection results.",
+    help=f"Action performed on the selected mails. Defaults to {COPY_SELECTED} as it "
+    "is the safest: it only reads the mail sources and create a brand new mail box "
+    "with the selection results.",
 )
 @click.option(
     "-E",
@@ -202,8 +201,8 @@ def validate_regexp(ctx, param, value):
     metavar="MAIL_BOX_PATH",
     type=click.Path(resolve_path=True),
     help="Location of the destination mail box to where to copy or move deduplicated "
-    f"mails. Required in {COPY_KEPT}, {COPY_DISCARDED}, {MOVE_KEPT} and "
-    f"{MOVE_DISCARDED} actions.",
+    f"mails. Required in {COPY_SELECTED}, {COPY_DISCARDED}, "
+    f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
 )
 @click.option(
     "-e",
@@ -211,8 +210,8 @@ def validate_regexp(ctx, param, value):
     default="mbox",
     type=click.Choice(sorted(BOX_TYPES), case_sensitive=False),
     help="Format of the mail box to which deduplication mails will be exported to. "
-    f"Defaults to mbox. Only affects {COPY_KEPT}, {COPY_DISCARDED}, {MOVE_KEPT} and "
-    f"{MOVE_DISCARDED} actions.",
+    f"Defaults to mbox. Only affects {COPY_SELECTED}, {COPY_DISCARDED}, "
+    f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
 )
 @click.argument(
     "mail_sources",
@@ -268,7 +267,9 @@ def mdedup(
 
     Action on the selected mails in phase #3 is only performed if no major differences
     between mails are uncovered during a fine-grained check differences in the second
-    phase. Limits can be set via the --size-threshold and --content-threshold options.
+    phase. Limits can be set via the --size-threshold and --content-threshold
+    options, and are used as safety checks to prevent slightly different mails
+    to been seen as similiar through the lens of normalization.
     """
     level = logger.level
     level_name = logging._levelToName.get(level, level)
@@ -307,8 +308,8 @@ def mdedup(
                 {
                     DISCARD_MATCHING_PATH,
                     DISCARD_NON_MATCHING_PATH,
-                    KEEP_MATCHING_PATH,
-                    KEEP_NON_MATCHING_PATH,
+                    SELECT_MATCHING_PATH,
+                    SELECT_NON_MATCHING_PATH,
                 },
             ),
         ),
@@ -317,9 +318,9 @@ def mdedup(
                 export,
                 "-E/--export",
                 {
-                    COPY_KEPT,
+                    COPY_SELECTED,
                     COPY_DISCARDED,
-                    MOVE_KEPT,
+                    MOVE_SELECTED,
                     MOVE_DISCARDED,
                 },
             ),

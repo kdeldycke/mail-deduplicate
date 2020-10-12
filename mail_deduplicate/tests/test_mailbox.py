@@ -28,7 +28,7 @@ def test_nonexistent_path(invoke, source):
 
 
 def test_invalid_maildir_structure(invoke):
-    result = invoke(".")
+    result = invoke("--action=delete-discarded", ".")
     assert result.exit_code == 1
     assert "Phase #0" in result.output
     assert "Opening " in result.output
