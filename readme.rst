@@ -29,7 +29,7 @@ Features
 
 * Duplicate detection based on cherry-picked and normalized mail headers.
 * Source and deduplicate mails from multiple sources.
-* Reads and writes to `mbox`, `maildir`, `babyl`, `mh` and `mmdf` formats.
+* Reads and writes to ``mbox``, ``maildir``, ``babyl``, ``mh`` and ``mmdf`` formats.
 * Multiple duplicate selection strategies based on size, content, timestamp, file
   path or random choice.
 * Copy, move or delete the resulting set of mails after the deduplication.
