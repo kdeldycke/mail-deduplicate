@@ -42,7 +42,6 @@ def delete_kept(dedup):
         if dedup.conf.dry_run:
             logger.warning("DRY RUN: Skip action.")
         else:
-            import pdb;pdb.set_trace()
             dedup.sources[mail.source_path].remove(mail.mail_id)
             logger.info(f"{mail!r} deleted.")
 
