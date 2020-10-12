@@ -23,6 +23,7 @@ from functools import partial
 from pathlib import Path
 
 from boltons.dictutils import FrozenDict
+from boltons.iterutils import flatten
 
 from . import logger
 from .colorize import choice_style
@@ -31,10 +32,6 @@ from .mail import DedupMail
 """ Patch and tweak Python's standard librabry mailboxes constructors to set
 sane defaults. Also forces out our own message factories to add deduplication
 tools and utilities. """
-
-
-# List of required sub-folders defining a properly structured maildir.
-MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 
 
 def build_box_constructors():
@@ -77,6 +74,19 @@ def build_box_constructors():
 
 # Mapping between supported box type IDs and their constructors.
 BOX_TYPES = FrozenDict(build_box_constructors())
+
+
+# Categorize each box type into its structure type.
+BOX_STRUCTURES = FrozenDict({
+    'file': {'mbox', 'mmdf', 'babyl'},
+    'folder': {'maildir', 'mh'},
+})
+# Check we did not forgot any box type.
+assert set(flatten(BOX_STRUCTURES.values())) == set(BOX_TYPES)
+
+
+# List of required sub-folders defining a properly structured maildir.
+MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 
 
 def autodetect_box_type(path):

@@ -123,7 +123,7 @@ def colorized_help(help_txt, keywords):
             # Accounts for text wrapping after a dash.
             keyword = keyword.replace("-", "-\\s*")
             help_txt = re.sub(
-                fr"([\s\[\|])(?P<colorize>{keyword})",
+                fr"([\s\[\|\(])(?P<colorize>{keyword})",
                 partial(colorize, **color),
                 help_txt,
             )

@@ -154,8 +154,8 @@ class DuplicateSet:
             unified_diff(
                 mail_a.body_lines,
                 mail_b.body_lines,
-                fromfile=f"Normalized body of {mail_a.path}",
-                tofile=f"Normalized body of {mail_b.path}",
+                fromfile=f"Normalized body of {mail_a!r}",
+                tofile=f"Normalized body of {mail_b!r}",
                 fromfiledate=f"{mail_a.timestamp:0.2f}",
                 tofiledate=f"{mail_b.timestamp:0.2f}",
                 n=0,
@@ -323,18 +323,17 @@ class Deduplicate:
         ) as progress:
 
             for source_path, box in self.sources.items():
+                assert source_path == box._path
                 for mail_id, mail in box.iteritems():
 
-                    # Re-attach box_path and mail_id to let the mail carry its
-                    # own information on its origin box and index in this box.
-                    mail.mail_id = mail_id
-                    mail.source_path = source_path
+                    mail.add_box_metadata(box, mail_id)
+
                     mail.conf = self.conf
 
                     try:
                         mail_hash = mail.hash_key
                     except TooFewHeaders as expt:
-                        logger.warning(f"Rejecting {mail.path}: {expt.args[0]}")
+                        logger.warning(f"Rejecting {mail!r}: {expt.args[0]}")
                         self.stats["mail_rejected"] += 1
                     else:
                         # Use a set to deduplicate entries pointing to the same file.

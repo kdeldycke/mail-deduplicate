@@ -60,35 +60,44 @@ class DedupMail:
         # inherits from mailbox.Message.
         super(orig_message_klass, self).__init__(message)
 
-        # Normalized path to the mailbox this message originates.
+        # Normalized path to the mailbox this message originates from.
         self.source_path = None
 
         # Mail ID used to uniquely refers to it in the context of its source.
         self.mail_id = None
 
+        # Real filesystem location of the mail. Returns the individual mail's file
+        # for folder-based box types (maildir & co.), but returns the whole box path
+        # for file-based boxes (mbox & co.). Only used by regexp-based selection
+        # strategies.
+        self.path = None
+
         # Global config.
         self.conf = None
 
+    def add_box_metadata(self, box, mail_id):
+        """ Post-instanciation utility to attach to mail some metadata derived from its
+        parent box.
+
+        Called right after the ``__init__()`` constructor.
+
+        This allows the mail to carry its own information on its origin box and index.
+        """
+        self.source_path = box._path
+        self.mail_id = mail_id
+
+        # Extract file name and close it right away to reclaim memory.
+        mail_file = box.get_file(mail_id)
+        self.path = mail_file._file.name
+        mail_file.close()
+
     def __repr__(self):
-        return f"<Mail {self.mail_id!r}>"
+        return f"<Mail {self.uid!r}>"
 
     @cachedproperty
     def uid(self):
         """Unique ID of the mail."""
         return self.source_path, self.mail_id
-
-    @cachedproperty
-    def path(self):
-        """Real filesystem path of the mail originating from maildirs.
-
-        For mailbox mails, returns a fake path composed with mail's internal ID.
-
-        Returns a string that is used by regexp-based selection strategies.
-        """
-        filename = self.get_filename()
-        if filename:
-            return str(self.source_path.joinpath(filename))
-        return f"{self.uid[0]!s}:{self.uid[1]}"
 
     @cachedproperty
     def timestamp(self):

@@ -41,7 +41,7 @@ from . import (
 )
 from .colorize import collect_keywords, colorized_help, title_style, choice_style, colors
 from .deduplicate import Deduplicate
-from .mailbox import BOX_TYPES
+from .mailbox import BOX_TYPES, BOX_STRUCTURES
 from .strategy import (
     DISCARD_MATCHING_PATH,
     DISCARD_NON_MATCHING_PATH,
@@ -167,7 +167,11 @@ def validate_regexp(ctx, param, value):
     "--regexp",
     callback=validate_regexp,
     metavar="REGEXP",
-    help=f"Regular expression against a mail file path. Required in "
+    help=f"Regular expression on a mail's file path. Applies to real, individual "
+    "mail location for folder-based boxed "
+    f"({', '.join(sorted(BOX_STRUCTURES['folder']))}). But for file-based boxes "
+    f"({', '.join(sorted(BOX_STRUCTURES['file']))}), applies to the whole box's path, "
+    "as all mails are packed into one single file. Required in "
     f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, {KEEP_MATCHING_PATH} and "
     f"{KEEP_NON_MATCHING_PATH} strategies."
 )
