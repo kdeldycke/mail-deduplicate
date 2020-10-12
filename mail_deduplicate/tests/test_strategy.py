@@ -23,7 +23,33 @@ from string import ascii_lowercase
 import arrow
 import pytest
 
-from ..strategy import STRATEGY_METHODS
+from ..strategy import (
+    STRATEGY_METHODS,
+    DISCARD_OLDER                ,
+    DISCARD_OLDEST               ,
+    DISCARD_NEWER                ,
+    DISCARD_NEWEST               ,
+    SELECT_OLDER                 ,
+    SELECT_OLDEST                ,
+    SELECT_NEWER                 ,
+    SELECT_NEWEST                ,
+    DISCARD_SMALLER              ,
+    DISCARD_SMALLEST             ,
+    DISCARD_BIGGER               ,
+    DISCARD_BIGGEST              ,
+    SELECT_SMALLER               ,
+    SELECT_SMALLEST              ,
+    SELECT_BIGGER                ,
+    SELECT_BIGGEST               ,
+    DISCARD_MATCHING_PATH        ,
+    DISCARD_NON_MATCHING_PATH    ,
+    SELECT_MATCHING_PATH         ,
+    SELECT_NON_MATCHING_PATH     ,
+    DISCARD_ONE                  ,
+    DISCARD_ALL_BUT_ONE          ,
+    SELECT_ONE                   ,
+    SELECT_ALL_BUT_ONE           ,
+)
 from .conftest import MailFactory, check_box
 
 
@@ -98,7 +124,8 @@ def test_maildir_dry_run(invoke, make_box, strategy_id, options):
     )
 
 
-def test_maildir_smaller_strategy(invoke, make_box):
+@pytest.mark.parametrize("strategy_id", [SELECT_SMALLER, DISCARD_BIGGEST])
+def test_maildir_smaller_strategy(invoke, make_box, strategy_id):
     """ Test strategy of small mail selection. """
     box_path, box_type = make_box(
         Maildir,
@@ -114,7 +141,7 @@ def test_maildir_smaller_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=select-smaller", "--action=delete-selected", box_path)
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     # Biggest mails are selected but not the smaller ones.
@@ -125,7 +152,8 @@ def test_maildir_smaller_strategy(invoke, make_box):
     )
 
 
-def test_maildir_smallest_strategy(invoke, make_box):
+@pytest.mark.parametrize("strategy_id", [SELECT_SMALLEST, DISCARD_BIGGER])
+def test_maildir_smallest_strategy(invoke, make_box, strategy_id):
     """ Test strategy of smallest mail selection. """
     box_path, box_type = make_box(
         Maildir,
@@ -141,9 +169,7 @@ def test_maildir_smallest_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke(
-        "--strategy=select-smallest", "--action=delete-selected", box_path
-    )
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     # Bigger mails are selected but not the smallest ones.
@@ -161,7 +187,8 @@ def test_maildir_smallest_strategy(invoke, make_box):
     )
 
 
-def test_maildir_bigger_strategy(invoke, make_box):
+@pytest.mark.parametrize("strategy_id", [SELECT_BIGGER, DISCARD_SMALLEST])
+def test_maildir_bigger_strategy(invoke, make_box, strategy_id):
     """ Test strategy of bigger mail selection. """
     box_path, box_type = make_box(
         Maildir,
@@ -177,7 +204,7 @@ def test_maildir_bigger_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=select-bigger", "--action=delete-selected", box_path)
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     # Smallest mails are selected but not the bigger ones.
@@ -188,7 +215,8 @@ def test_maildir_bigger_strategy(invoke, make_box):
     )
 
 
-def test_maildir_biggest_strategy(invoke, make_box):
+@pytest.mark.parametrize("strategy_id", [SELECT_BIGGEST, DISCARD_SMALLER])
+def test_maildir_biggest_strategy(invoke, make_box, strategy_id):
     """ Test strategy of biggest mail selection. """
     box_path, box_type = make_box(
         Maildir,
@@ -204,7 +232,7 @@ def test_maildir_biggest_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=select-biggest", "--action=delete-selected", box_path)
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     # Smaller mails are selected but not the biggest ones.
@@ -234,7 +262,8 @@ older_mail = MailFactory(date=older_date)
 oldest_mail = MailFactory(date=oldest_date)
 
 
-def test_maildir_older_strategy(invoke, make_box):
+@pytest.mark.parametrize("strategy_id", [SELECT_OLDER, DISCARD_NEWEST])
+def test_maildir_older_strategy(invoke, make_box, strategy_id):
     """ Test strategy of older mail selection. """
     box_path, box_type = make_box(
         Maildir,
@@ -250,7 +279,7 @@ def test_maildir_older_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=select-older", "--action=delete-selected", box_path)
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     # Newest mails are selected but not the older ones.
@@ -261,7 +290,8 @@ def test_maildir_older_strategy(invoke, make_box):
     )
 
 
-def test_maildir_oldest_strategy(invoke, make_box):
+@pytest.mark.parametrize("strategy_id", [SELECT_OLDEST, DISCARD_NEWER])
+def test_maildir_oldest_strategy(invoke, make_box, strategy_id):
     """ Test strategy of oldest mail selection. """
     box_path, box_type = make_box(
         Maildir,
@@ -277,7 +307,7 @@ def test_maildir_oldest_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=select-oldest", "--action=delete-selected", box_path)
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     # Newer mails are selected but not the oldest ones.
@@ -295,7 +325,8 @@ def test_maildir_oldest_strategy(invoke, make_box):
     )
 
 
-def test_maildir_newer_strategy(invoke, make_box):
+@pytest.mark.parametrize("strategy_id", [SELECT_NEWER, DISCARD_OLDEST])
+def test_maildir_newer_strategy(invoke, make_box, strategy_id):
     """ Test strategy of newer mail selection. """
     box_path, box_type = make_box(
         Maildir,
@@ -311,7 +342,7 @@ def test_maildir_newer_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=select-newer", "--action=delete-selected", box_path)
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     # Oldest mails are selected but not the newer ones.
@@ -322,7 +353,8 @@ def test_maildir_newer_strategy(invoke, make_box):
     )
 
 
-def test_maildir_newest_strategy(invoke, make_box):
+@pytest.mark.parametrize("strategy_id", [SELECT_NEWEST, DISCARD_OLDER])
+def test_maildir_newest_strategy(invoke, make_box, strategy_id):
     """ Test strategy of newest mail selection. """
     box_path, box_type = make_box(
         Maildir,
@@ -338,7 +370,7 @@ def test_maildir_newest_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=select-newest", "--action=delete-selected", box_path)
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     # Older mails are selected but not the newest ones.
@@ -360,7 +392,8 @@ random_mail_1 = MailFactory(message_id=MailFactory.random_string(30))
 random_mail_2 = MailFactory(message_id=MailFactory.random_string(30))
 
 
-def test_maildir_one_strategy(invoke, make_box):
+@pytest.mark.parametrize("strategy_id", [SELECT_ONE, DISCARD_ALL_BUT_ONE])
+def test_maildir_one_strategy(invoke, make_box, strategy_id):
     """ Test strategy of discarding one random duplicate. """
     box_path, box_type = make_box(
         Maildir,
@@ -374,7 +407,7 @@ def test_maildir_one_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=select-one", "--action=delete-selected", box_path)
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     # Newest mails are selected but not the older ones.
@@ -390,7 +423,8 @@ def test_maildir_one_strategy(invoke, make_box):
     )
 
 
-def test_maildir_all_but_one_strategy(invoke, make_box):
+@pytest.mark.parametrize("strategy_id", [SELECT_ALL_BUT_ONE, DISCARD_ONE])
+def test_maildir_all_but_one_strategy(invoke, make_box, strategy_id):
     """ Test strategy of discarding all but one random duplicate. """
     box_path, box_type = make_box(
         Maildir,
@@ -404,9 +438,7 @@ def test_maildir_all_but_one_strategy(invoke, make_box):
         ],
     )
 
-    result = invoke(
-        "--strategy=select-all-but-one", "--action=delete-selected", box_path
-    )
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     # Newest mails are selected but not the older ones.
