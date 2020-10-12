@@ -54,4 +54,4 @@ Documentation
 -------------
 
 Docs are `hosted on Read the Docs
-<https://maildir-deduplicate.readthedocs.io>`_.
+<https://mail-deduplicate.readthedocs.io>`_.

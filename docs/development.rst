@@ -79,11 +79,11 @@ __ https://github.com/kdeldycke/mail-deduplicate/tree/develop
     :target: https://requires.io/github/kdeldycke/mail-deduplicate/requirements/?branch=develop
     :alt: Requirements freshness
 
-.. |docs-stable| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=stable
-    :target: https://maildir-deduplicate.readthedocs.io/en/stable/
+.. |docs-stable| image:: https://readthedocs.org/projects/mail-deduplicate/badge/?version=stable
+    :target: https://mail-deduplicate.readthedocs.io/en/stable/
     :alt: Documentation Status
-.. |docs-dev| image:: https://readthedocs.org/projects/maildir-deduplicate/badge/?version=develop
-    :target: https://maildir-deduplicate.readthedocs.io/en/develop/
+.. |docs-dev| image:: https://readthedocs.org/projects/mail-deduplicate/badge/?version=develop
+    :target: https://mail-deduplicate.readthedocs.io/en/develop/
     :alt: Documentation Status
 
 

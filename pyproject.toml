@@ -8,7 +8,7 @@ authors = ["Kevin Deldycke <kevin@deldycke.com>"]
 readme = "readme.rst"
 homepage = 'https://github.com/kdeldycke/mail-deduplicate'
 repository = 'https://github.com/kdeldycke/mail-deduplicate'
-documentation = 'https://maildir-deduplicate.readthedocs.io'
+documentation = 'https://mail-deduplicate.readthedocs.io'
 keywords = [
     'CLI', 'mail', 'email', 'maildir', 'mbox', 'deduplication', 'dedupe',
     'cleanup', 'mailbox', 'Babyl', 'MH', 'mbox', 'MMDF']
