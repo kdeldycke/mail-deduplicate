@@ -97,27 +97,27 @@ def colorized_help(help_txt, keywords):
 
     # Highligh numbers.
     help_txt = re.sub(
-        r"(\s)(?P<colorize>-?\d+)", partial(colorize, **colors['choice']), help_txt
+        r"(\s)(?P<colorize>-?\d+)", partial(colorize, **colors["choice"]), help_txt
     )
 
     # Highlight CLI.
     help_txt = re.sub(
-        fr"(\s)(?P<colorize>{CLI_NAME})", partial(colorize, **colors['cli']), help_txt
+        fr"(\s)(?P<colorize>{CLI_NAME})", partial(colorize, **colors["cli"]), help_txt
     )
 
     # Highligh sections.
     help_txt = re.sub(
         r"^(?P<colorize>\S[\S+ ]+)(:)",
-        partial(colorize, **colors['title']),
+        partial(colorize, **colors["title"]),
         help_txt,
         flags=re.MULTILINE,
     )
 
     # Highlight keywords.
     for matching_keywords, color in [
-        (sorted(options), colors['option']),
-        (sorted(choices, reverse=True), colors['choice']),
-        (sorted(metavars, reverse=True), colors['metavar']),
+        (sorted(options), colors["option"]),
+        (sorted(choices, reverse=True), colors["choice"]),
+        (sorted(metavars, reverse=True), colors["metavar"]),
     ]:
         for keyword in matching_keywords:
             # Accounts for text wrapping after a dash.
