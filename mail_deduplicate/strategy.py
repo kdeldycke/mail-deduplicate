@@ -256,10 +256,10 @@ STRATEGY_METHODS = FrozenDict(build_method_mapping())
 def apply_strategy(strat_id, duplicates):
     """Perform the selection strategy on the provided duplicate set.
 
-    Returns a set of selected mails' UIDs.
+    Returns a set of selected mails objects.
     """
     if strat_id not in STRATEGY_METHODS:
         raise ValueError(f"Unknown {strat_id} strategy.")
     method = STRATEGY_METHODS[strat_id]
     logger.debug(f"Apply {method!r}...")
-    return set(map(attrgetter("uid"), method(duplicates)))
+    return set(method(duplicates))

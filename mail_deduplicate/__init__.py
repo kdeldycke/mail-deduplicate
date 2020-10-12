@@ -149,6 +149,8 @@ class Config:
         "time_source": None,
         "regexp": None,
         "action": COPY_KEPT,
+        "export": None,
+        "export_format": "mbox",
     }
 
     def __init__(self, **kwargs):

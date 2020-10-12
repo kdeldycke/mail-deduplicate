@@ -25,13 +25,10 @@ import click_log
 from click_help_colors import version_option
 
 from . import (
-    ACTIONS,
     CLI_NAME,
-    COPY_KEPT,
     DATE_HEADER,
     DEFAULT_CONTENT_THRESHOLD,
     DEFAULT_SIZE_THRESHOLD,
-    DELETE_DISCARDED,
     HASH_HEADERS,
     TIME_SOURCES,
     Config,
@@ -42,6 +39,15 @@ from . import (
 from .colorize import collect_keywords, colorized_help, title_style, choice_style, colors
 from .deduplicate import Deduplicate
 from .mailbox import BOX_TYPES, BOX_STRUCTURES
+from .action import (
+    ACTIONS,
+    perform_action,
+    COPY_KEPT,
+    COPY_DISCARDED,
+    MOVE_KEPT,
+    MOVE_DISCARDED,
+    DELETE_DISCARDED,
+)
 from .strategy import (
     DISCARD_MATCHING_PATH,
     DISCARD_NON_MATCHING_PATH,
@@ -184,6 +190,24 @@ def validate_regexp(ctx, param, value):
     "the safest: it only reads the mail sources and create a brand new mail box with "
     "the selection results.",
 )
+@click.option(
+    "-E",
+    "--export",
+    metavar="MAIL_BOX_PATH",
+    type=click.Path(resolve_path=True),
+    help="Location of the destination mail box to where to copy or move deduplicated "
+    f"mails. Required in {COPY_KEPT}, {COPY_DISCARDED}, {MOVE_KEPT} and "
+    f"{MOVE_DISCARDED} actions.",
+)
+@click.option(
+    "-e",
+    "--export-format",
+    default="mbox",
+    type=click.Choice(sorted(BOX_TYPES), case_sensitive=False),
+    help="Format of the mail box to which deduplication mails will be exported to. "
+    f"Defaults to mbox. Only affects {COPY_KEPT}, {COPY_DISCARDED}, {MOVE_KEPT} and "
+    f"{MOVE_DISCARDED} actions.",
+)
 @click.argument(
     "mail_sources",
     nargs=-1,
@@ -222,6 +246,8 @@ def mdedup(
     time_source,
     regexp,
     action,
+    export,
+    export_format,
     mail_sources,
 ):
     """Deduplicate mails from a set of mail boxes.
@@ -265,29 +291,45 @@ def mdedup(
 
         ctx.exit()
 
-    # Validate exclusive options requirement depending on strategy.
-    requirements = [
-        (
-            regexp,
-            "-r/--regexp",
-            {
-                DISCARD_MATCHING_PATH,
-                DISCARD_NON_MATCHING_PATH,
-                KEEP_MATCHING_PATH,
-                KEEP_NON_MATCHING_PATH,
-            },
+    # Validate exclusive options requirement depending on strategy or action.
+    validation_requirements = {
+        strategy: (
+            (
+                regexp,
+                "-r/--regexp",
+                {
+                    DISCARD_MATCHING_PATH,
+                    DISCARD_NON_MATCHING_PATH,
+                    KEEP_MATCHING_PATH,
+                    KEEP_NON_MATCHING_PATH,
+                },
+            ),
         ),
-    ]
-    for param_value, param_name, required_strategies in requirements:
-        if strategy in required_strategies:
-            if not param_value:
+        action: (
+            (
+                export,
+                "-E/--export",
+                {
+                    COPY_KEPT,
+                    COPY_DISCARDED,
+                    MOVE_KEPT,
+                    MOVE_DISCARDED,
+                },
+            ),
+        ),
+    }
+
+    for conf_value, requirements in validation_requirements.items():
+        for param_value, param_name, required_values in requirements:
+            if conf_value in required_values:
+                if not param_value:
+                    raise click.BadParameter(
+                        f"{conf_value} requires the {param_name} parameter."
+                    )
+            elif param_value:
                 raise click.BadParameter(
-                    f"{strategy} strategy requires the {param_name} parameter."
+                    f"{param_name} parameter not allowed in {conf_value}."
                 )
-        elif param_value:
-            raise click.BadParameter(
-                f"{param_name} parameter not allowed in {strategy} strategy."
-            )
 
     conf = Config(
         dry_run=dry_run,
@@ -301,6 +343,9 @@ def mdedup(
         strategy=strategy,
         time_source=time_source,
         regexp=regexp,
+        action=action,
+        export=export,
+        export_format=export_format,
     )
 
     dedup = Deduplicate(conf)
@@ -328,18 +373,8 @@ def mdedup(
     dedup.select_all()
 
     click.echo(title_style("\n● Phase #3 - Perform action on selected mails"))
-    logger.info(f"Call {choice_style(action)} action...")
-
-    selection_count = len(dedup.selection)
-    if selection_count == 0:
-        logger.warning(f"No mail selected for action.")
-    else:
-        logger.info(f"{selection_count} mails selected for action.")
-
-        if action == DELETE_DISCARDED:
-            dedup.remove_selection()
-        else:
-            raise NotImplementedError(f"{action} action not implemented yet.")
+    perform_action(dedup)
+    dedup.close_all()
 
     click.echo(title_style("\n● Phase #4 - Report and statistics"))
     # Print deduplication statistics, then performs a self-check on them.

@@ -92,7 +92,7 @@ class DedupMail:
         mail_file.close()
 
     def __repr__(self):
-        return f"<Mail {self.uid!r}>"
+        return f"<{self.__class__.__name__} {self.source_path}:{self.mail_id}>"
 
     @cachedproperty
     def uid(self):

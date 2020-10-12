@@ -134,15 +134,16 @@ def open_box(path, box_type=False, force_unlock=False):
     If ``box_type`` is specified, forces the opening of the box in the
     specified format. Else try to autodetect the type.
     """
-    assert isinstance(path, Path)
-    logger.info(f"Opening {choice_style(str(path))} ...")
+    logger.info(f"Opening {choice_style(path)} ...")
+    path = Path(path)
     if not box_type:
         box_type = autodetect_box_type(path)
     else:
         logger.warning(f"Forcing {box_type} format.")
 
     constructor = BOX_TYPES[box_type]
-    box = constructor(path)
+    # Do not allow the constructor to create a new mailbox if not found.
+    box = constructor(path, create=False)
 
     try:
         logger.debug("Locking box...")
@@ -161,4 +162,23 @@ def open_box(path, box_type=False, force_unlock=False):
             raise
 
     logger.debug("Box opened.")
+    return box
+
+
+def create_box(path, box_type=False):
+    """Creates a brand new box from scratch."""
+    logger.info(
+        f"Creating new {choice_style(box_type)} box at {choice_style(path)} ...")
+    path = Path(path)
+
+    if path.exists():
+        raise FileExistsError(path)
+
+    constructor = BOX_TYPES[box_type]
+    # Allow the constructor to create a new mail box as we already double-checked
+    # beforehand it does not exist.
+    box = constructor(path, create=True)
+
+    logger.debug("Locking box...")
+    box.lock()
     return box

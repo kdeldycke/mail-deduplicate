@@ -9,6 +9,10 @@ ChangeLog
 
 * Add new ``-a``/``--action`` option to choose which action to perform on the
   final mail selection.
+* Implements new ``copy-discarded``, ``copy-kept``, ``delete-discarded``,
+  ``delete-kept``, ``move-discarded`` and ``move-kept`` actions.
+* Add new ``-E``/``--export`` and ``-e``/``--export-format`` options to support
+  the new ``copy-*`` and ``moved-*`` actions.
 * Rename all strategies from ``--delete-*`` to ``--discard-*``.
 * Add aliases to all strategies in the form of ``--keep-*``.
 * Add new ``discard-all-but-one``, ``discard-one``, ``keep-one`` and
