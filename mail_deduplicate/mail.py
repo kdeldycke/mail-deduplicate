@@ -25,6 +25,7 @@ import os
 import re
 import time
 
+import arrow
 from boltons.cacheutils import cachedproperty
 from tabulate import tabulate
 
@@ -306,7 +307,7 @@ class DedupMail:
                 if not parsed:
                     raise TypeError
                 utc_timestamp = email.utils.mktime_tz(parsed)
-                return time.strftime("%Y-%m-%d", time.gmtime(utc_timestamp))
+                return arrow.get(utc_timestamp).format('YYYY-MM-DD')
             except (TypeError, ValueError):
                 return value
 
