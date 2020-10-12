@@ -76,7 +76,7 @@ class DedupMail:
         self.conf = None
 
     def add_box_metadata(self, box, mail_id):
-        """ Post-instanciation utility to attach to mail some metadata derived from its
+        """Post-instanciation utility to attach to mail some metadata derived from its
         parent box.
 
         Called right after the ``__init__()`` constructor.

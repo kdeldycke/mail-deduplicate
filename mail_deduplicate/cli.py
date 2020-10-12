@@ -36,7 +36,13 @@ from . import (
     env_data,
     logger,
 )
-from .colorize import collect_keywords, colorized_help, title_style, choice_style, colors
+from .colorize import (
+    collect_keywords,
+    colorized_help,
+    title_style,
+    choice_style,
+    colors,
+)
 from .deduplicate import Deduplicate
 from .mailbox import BOX_TYPES, BOX_STRUCTURES
 from .action import (
@@ -179,7 +185,7 @@ def validate_regexp(ctx, param, value):
     f"({', '.join(sorted(BOX_STRUCTURES['file']))}), applies to the whole box's path, "
     "as all mails are packed into one single file. Required in "
     f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, {KEEP_MATCHING_PATH} and "
-    f"{KEEP_NON_MATCHING_PATH} strategies."
+    f"{KEEP_NON_MATCHING_PATH} strategies.",
 )
 @click.option(
     "-a",
@@ -279,8 +285,9 @@ def mdedup(
 
         # Produce the strategy reference table.
         strat_table = [
-            (strat_id, ' '.join(method.__doc__.split()))
-            for strat_id, method in sorted(STRATEGY_METHODS.items())]
+            (strat_id, " ".join(method.__doc__.split()))
+            for strat_id, method in sorted(STRATEGY_METHODS.items())
+        ]
         formatter = ctx.make_formatter()
         # XXX Seems to have no effect. Should have introduced an empty line
         # before section.
@@ -352,11 +359,11 @@ def mdedup(
 
     click.echo(title_style("\n● Phase #0 - Load mails"))
     with click.progressbar(
-            mail_sources,
-            length=len(mail_sources),
-            label="Mail sources",
-            show_pos=True,
-        ) as progress:
+        mail_sources,
+        length=len(mail_sources),
+        label="Mail sources",
+        show_pos=True,
+    ) as progress:
         for source in progress:
             dedup.add_source(source)
 

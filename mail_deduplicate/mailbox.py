@@ -77,10 +77,12 @@ BOX_TYPES = FrozenDict(build_box_constructors())
 
 
 # Categorize each box type into its structure type.
-BOX_STRUCTURES = FrozenDict({
-    'file': {'mbox', 'mmdf', 'babyl'},
-    'folder': {'maildir', 'mh'},
-})
+BOX_STRUCTURES = FrozenDict(
+    {
+        "file": {"mbox", "mmdf", "babyl"},
+        "folder": {"maildir", "mh"},
+    }
+)
 # Check we did not forgot any box type.
 assert set(flatten(BOX_STRUCTURES.values())) == set(BOX_TYPES)
 
@@ -168,7 +170,8 @@ def open_box(path, box_type=False, force_unlock=False):
 def create_box(path, box_type=False):
     """Creates a brand new box from scratch."""
     logger.info(
-        f"Creating new {choice_style(box_type)} box at {choice_style(path)} ...")
+        f"Creating new {choice_style(box_type)} box at {choice_style(path)} ..."
+    )
     path = Path(path)
 
     if path.exists():

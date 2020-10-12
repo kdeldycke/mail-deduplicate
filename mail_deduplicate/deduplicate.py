@@ -35,46 +35,74 @@ from .strategy import apply_strategy
 
 
 # Reference all tracked statistics and their definition.
-STATS_DEF = OrderedDict([
-    ("mail_found", "Total number of mails encountered from all mail sources."),
-    ("mail_rejected",
-        "Number of mails rejected from the selection phase because they were "
-        "individualy faulty or unparseable, or because the whole set they belongs to "
-        "was rejected."),
-    ("mail_retained", "Number of valid mails parsed and retained for deduplication."),
-    ("mail_hashes", "Number of unique hashes."),
-    ("mail_unique",
-        "Number of unique mails (which where automaticcaly added to selection)."),
-    ("mail_duplicates",
-        "Number of duplicate mails (sum of mails in all duplicate sets with at "
-        "least 2 mails)."),
-    ("mail_discarded", "Number of mails discarded from the final selection."),
-    ("mail_selected",
-        "Number of mails kept in the final selection on which the "
-        "action will be performed."),
-    ("mail_copied", "Number of mails copied from their original mailbox to another."),
-    ("mail_moved", "Number of mails moved from their original mailbox to another."),
-    ("mail_deleted", "Number of mails deleted from their mailbox in-place."),
-    ("set_total", "Total number of duplicate sets."),
-    ("set_single",
-        "Total number of sets containing a single mail and did not had to have "
-        "a strategy applied to. They were automatticaly kept in the final selection."),
-    ("set_rejected_encoding",
-        "Number of sets rejected from the selection process because they had "
-        "encoding issues."),
-    ("set_rejected_size",
-        "Number of sets rejected from the selection process because they were "
-        "too disimilar in size."),
-    ("set_rejected_content",
-        "Number of sets rejected from the selection process because they were "
-        "too disimilar in content."),
-    ("set_rejected_strategy",
-        "Number of sets rejected from the selection process because the strategy "
-        "could not be applied."),
-    ("set_deduplicated",
-        "Number of valid sets on which the selection strategy was successfully "
-        "applied."),
-])
+STATS_DEF = OrderedDict(
+    [
+        ("mail_found", "Total number of mails encountered from all mail sources."),
+        (
+            "mail_rejected",
+            "Number of mails rejected from the selection phase because they were "
+            "individualy faulty or unparseable, or because the whole set they belongs to "
+            "was rejected.",
+        ),
+        (
+            "mail_retained",
+            "Number of valid mails parsed and retained for deduplication.",
+        ),
+        ("mail_hashes", "Number of unique hashes."),
+        (
+            "mail_unique",
+            "Number of unique mails (which where automaticcaly added to selection).",
+        ),
+        (
+            "mail_duplicates",
+            "Number of duplicate mails (sum of mails in all duplicate sets with at "
+            "least 2 mails).",
+        ),
+        ("mail_discarded", "Number of mails discarded from the final selection."),
+        (
+            "mail_selected",
+            "Number of mails kept in the final selection on which the "
+            "action will be performed.",
+        ),
+        (
+            "mail_copied",
+            "Number of mails copied from their original mailbox to another.",
+        ),
+        ("mail_moved", "Number of mails moved from their original mailbox to another."),
+        ("mail_deleted", "Number of mails deleted from their mailbox in-place."),
+        ("set_total", "Total number of duplicate sets."),
+        (
+            "set_single",
+            "Total number of sets containing a single mail and did not had to have "
+            "a strategy applied to. They were automatticaly kept in the final selection.",
+        ),
+        (
+            "set_rejected_encoding",
+            "Number of sets rejected from the selection process because they had "
+            "encoding issues.",
+        ),
+        (
+            "set_rejected_size",
+            "Number of sets rejected from the selection process because they were "
+            "too disimilar in size.",
+        ),
+        (
+            "set_rejected_content",
+            "Number of sets rejected from the selection process because they were "
+            "too disimilar in content.",
+        ),
+        (
+            "set_rejected_strategy",
+            "Number of sets rejected from the selection process because the strategy "
+            "could not be applied.",
+        ),
+        (
+            "set_deduplicated",
+            "Number of valid sets on which the selection strategy was successfully "
+            "applied.",
+        ),
+    ]
+)
 
 
 class DuplicateSet:
@@ -316,7 +344,8 @@ class Deduplicate:
         """
         logger.info(
             f"Use [{', '.join(map(choice_style, self.conf.hash_headers))}] headers to "
-            "compute hashes.")
+            "compute hashes."
+        )
 
         with click.progressbar(
             length=self.stats["mail_found"],
@@ -401,11 +430,13 @@ class Deduplicate:
             table = [[title, "Metric", "Description"]]
             for stat_id, desc in STATS_DEF.items():
                 if stat_id.startswith(prefix):
-                    table.append([
-                        stat_id[len(prefix):].replace("_", " - ").title(),
-                        self.stats[stat_id],
-                        "\n".join(textwrap.wrap(desc, 60)),
-                    ])
+                    table.append(
+                        [
+                            stat_id[len(prefix) :].replace("_", " - ").title(),
+                            self.stats[stat_id],
+                            "\n".join(textwrap.wrap(desc, 60)),
+                        ]
+                    )
             output += tabulate(table, tablefmt="fancy_grid", headers="firstrow")
             output += "\n"
         return output
@@ -432,8 +463,9 @@ class Deduplicate:
         )
 
         assert self.stats["mail_selected"] == (
-            self.stats["mail_copied"] + self.stats["mail_moved"] +
-            self.stats["mail_deleted"]
+            self.stats["mail_copied"]
+            + self.stats["mail_moved"]
+            + self.stats["mail_deleted"]
         )
 
         assert self.stats["mail_retained"] >= self.stats["mail_deleted"]
@@ -443,9 +475,9 @@ class Deduplicate:
 
         assert self.stats["set_single"] == self.stats["mail_unique"]
 
-
         assert self.stats["mail_hashes"] == (
-            self.stats["mail_unique"] + self.stats["mail_duplicates"])
+            self.stats["mail_unique"] + self.stats["mail_duplicates"]
+        )
         assert self.stats["mail_hashes"] == self.stats["set_total"]
 
         assert self.stats["set_total"] == (
