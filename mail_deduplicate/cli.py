@@ -277,26 +277,30 @@ def mdedup(
 
     # Print help screen and exit if no mail source provided.
     if not mail_sources:
-
         # Extract keywords
         keywords = collect_keywords(ctx)
 
         # Apply dynamic style to help screen.
         click.echo(colorized_help(ctx.get_help(), keywords))
 
-        # Produce the strategy reference table.
-        strat_table = [
-            (strat_id, " ".join(method.__doc__.split()))
-            for strat_id, method in sorted(STRATEGY_METHODS.items())
-        ]
+        # Produce the strategy reference table, with grouped aliases.
+        method_to_ids = {}
+        for strat_id, method in sorted(STRATEGY_METHODS.items(), reverse=True):
+            method_to_ids.setdefault(method, []).append(strat_id)
+        strat_table = sorted([
+            ("|".join(strat_ids), " ".join(method.__doc__.split()))
+            for method, strat_ids in method_to_ids.items()
+        ])
+
+        # Reuse click machinery to format CLI helper output.
         formatter = ctx.make_formatter()
         # XXX Seems to have no effect. Should have introduced an empty line
         # before section.
         formatter.write_paragraph()
         with formatter.section("Available strategies"):
             formatter.write_dl(strat_table)
-        click.echo(colorized_help(formatter.getvalue().rstrip(), keywords))
 
+        click.echo(colorized_help(formatter.getvalue().rstrip(), keywords))
         ctx.exit()
 
     # Validate exclusive options requirement depending on strategy or action.
