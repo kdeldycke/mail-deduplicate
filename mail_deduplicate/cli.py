@@ -287,10 +287,12 @@ def mdedup(
         method_to_ids = {}
         for strat_id, method in sorted(STRATEGY_METHODS.items(), reverse=True):
             method_to_ids.setdefault(method, []).append(strat_id)
-        strat_table = sorted([
-            ("|".join(strat_ids), " ".join(method.__doc__.split()))
-            for method, strat_ids in method_to_ids.items()
-        ])
+        strat_table = sorted(
+            [
+                ("|".join(strat_ids), " ".join(method.__doc__.split()))
+                for method, strat_ids in method_to_ids.items()
+            ]
+        )
 
         # Reuse click machinery to format CLI helper output.
         formatter = ctx.make_formatter()

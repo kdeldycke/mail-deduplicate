@@ -307,7 +307,7 @@ class DedupMail:
                 if not parsed:
                     raise TypeError
                 utc_timestamp = email.utils.mktime_tz(parsed)
-                return arrow.get(utc_timestamp).format('YYYY-MM-DD')
+                return arrow.get(utc_timestamp).format("YYYY-MM-DD")
             except (TypeError, ValueError):
                 return value
 
