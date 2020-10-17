@@ -2,6 +2,12 @@ ChangeLog
 =========
 
 
+`6.0.1 (unreleased) <https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.0...develop>`_
+----------------------------------------------------------------------------------------------
+
+.. note:: This version is not yet released and is under active development
+
+
 `6.0.0 (2020-10-17) <https://github.com/kdeldycke/mail-deduplicate/compare/v5.1.0...v6.0.0>`_
 ---------------------------------------------------------------------------------------------
 
