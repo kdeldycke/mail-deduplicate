@@ -23,6 +23,9 @@ Development: |build| |docs| |coverage|
     :target: https://codecov.io/github/kdeldycke/mail-deduplicate?branch=develop
     :alt: Coverage Status
 
+.. figure:: https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/develop/docs/cli-coloured-header.png
+    :align: center
+
 
 Features
 --------
@@ -36,6 +39,16 @@ Features
 * Dry-run mode.
 * Protection against false-positives by checking for size and content
   differences.
+
+
+Screenshots
+-----------
+
+.. figure:: https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/develop/docs/cli-colored-help.png
+    :align: center
+
+.. figure:: https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/develop/docs/cli-coloured-run.png
+    :align: center
 
 
 Installation
