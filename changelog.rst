@@ -7,6 +7,7 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development
 
+* Check early that ``--export`` file doesn't exists. Closes #119.
 * Add screenshots.
 
 

@@ -153,11 +153,14 @@ def make_box(tmp_path):
     ``Maildir`` and ``mbox`` for the moment.
     """
 
-    def _make_box(box_type, mails):
+    def _make_box(box_type, mails=None):
         """Create a fake maildir and populate it with mails."""
         # Check parameters.
         assert box_type in (Maildir, mbox)
         assert issubclass(box_type, Mailbox)
+
+        if not mails:
+            mails = []
         assert same(map(type, mails), MailFactory)
 
         # Create the container under a random name and put all provided mails there.

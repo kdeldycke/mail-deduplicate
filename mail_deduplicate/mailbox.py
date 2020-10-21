@@ -167,10 +167,10 @@ def open_box(path, box_type=False, force_unlock=False):
 
 def create_box(path, box_type=False):
     """Creates a brand new box from scratch."""
+    assert isinstance(path, Path)
     logger.info(
-        f"Creating new {choice_style(box_type)} box at {choice_style(path)} ..."
+        f"Creating new {choice_style(box_type)} box at {choice_style(str(path))} ..."
     )
-    path = Path(path)
 
     if path.exists():
         raise FileExistsError(path)

@@ -15,6 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+from mailbox import Maildir
 import logging
 from pathlib import Path
 
@@ -76,3 +77,23 @@ def test_verbosity(invoke, level):
         assert "debug: " in result.output
     else:
         assert "debug: " not in result.output
+
+
+def test_early_export_file_check(invoke, make_box, tmp_path):
+    """ Ensures the export file is tested for existence before any process is ran.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/119 """
+    box_path, _ = make_box(Maildir)
+
+    result = invoke("--export=non_existing.file", box_path)
+    assert result.exit_code == 0
+    assert "0 mails found." in result.output
+    assert "● Phase #0" in result.output
+    assert "non_existing.file" not in result.output
+
+    file = tmp_path.joinpath("existing.file")
+    file.touch()
+    result = invoke(f"--export={file!s}", box_path)
+    assert result.exit_code == 1
+    assert result.output == ""
+    assert str(result.exception) == str(file)

@@ -20,6 +20,7 @@
 import logging
 import sys
 from operator import methodcaller
+from pathlib import Path
 
 from boltons.ecoutils import get_profile
 from boltons.iterutils import unique
@@ -158,6 +159,13 @@ class Config:
             assert max(ascii_indexes) <= 126
             assert min(ascii_indexes) >= 33
         self.hash_headers = tuple(normalized_headers)
+
+        # Export mail box will always be created from scratch and is not
+        # expected to exists in the first place.
+        if self.export:
+            self.export = Path(self.export).resolve()
+            if self.export.exists():
+                raise FileExistsError(self.export)
 
     def __getattr__(self, attr_id):
         """ Expose configuration entries as properties. """
