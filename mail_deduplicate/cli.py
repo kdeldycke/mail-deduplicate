@@ -129,9 +129,9 @@ def validate_regexp(ctx, param, value):
     default=DEFAULT_SIZE_THRESHOLD,
     help="Maximum difference allowed in size between mails sharing the same hash. "
     "The whole subset of duplicates will be skipped if at least one pair of mail "
-    "exceed the threshold. Set to 0 to enforce strictness and apply selection strategy on the subset "
-    "only if all mails are exactly the same. Set to -1 to allow any difference and "
-    "apply the strategy whatever the differences. Defaults to "
+    "exceed the threshold. Set to 0 to enforce strictness and apply selection strategy "
+    "on the subset only if all mails are exactly the same. Set to -1 to allow any "
+    "difference and apply the strategy whatever the differences. Defaults to "
     f"{DEFAULT_SIZE_THRESHOLD} bytes.",
 )
 @click.option(
@@ -142,9 +142,9 @@ def validate_regexp(ctx, param, value):
     default=DEFAULT_CONTENT_THRESHOLD,
     help="Maximum difference allowed in content between mails sharing the same hash. "
     "The whole subset of duplicates will be skipped if at least one pair of mail "
-    "exceed the threshold. Set to 0 to enforce strictness and apply selection strategy on the subset "
-    "only if all mails are exactly the same. Set to -1 to allow any difference and "
-    "apply the strategy whatever the differences. Defaults to "
+    "exceed the threshold. Set to 0 to enforce strictness and apply selection strategy "
+    "on the subset only if all mails are exactly the same. Set to -1 to allow any "
+    "difference and apply the strategy whatever the differences. Defaults to "
     f"{DEFAULT_CONTENT_THRESHOLD} bytes.",
 )
 @click.option(

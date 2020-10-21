@@ -200,7 +200,8 @@ class DedupMail:
 
     @cachedproperty
     def canonical_headers(self):
-        """Returns the full list of all canonical headers names and values in preparation for hashing."""
+        """Returns the full list of all canonical headers names and values in
+        preparation for hashing."""
         canonical_headers = []
 
         for header_id in self.conf.hash_headers:
