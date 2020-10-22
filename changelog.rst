@@ -2,10 +2,8 @@ ChangeLog
 =========
 
 
-`6.0.1 (unreleased) <https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.0...develop>`_
-----------------------------------------------------------------------------------------------
-
-.. note:: This version is not yet released and is under active development
+`6.0.1 (2020-10-22) <https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.0...v6.0.1>`_
+---------------------------------------------------------------------------------------------
 
 * Check early that ``--export`` file doesn't exists. Closes #119.
 * Add screenshots.
