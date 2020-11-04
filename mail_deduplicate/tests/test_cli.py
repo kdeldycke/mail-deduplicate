@@ -80,9 +80,9 @@ def test_verbosity(invoke, level):
 
 
 def test_early_export_file_check(invoke, make_box, tmp_path):
-    """ Ensures the export file is tested for existence before any process is ran.
+    """Ensures the export file is tested for existence before any process is ran.
 
-    See: https://github.com/kdeldycke/mail-deduplicate/issues/119 """
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/119"""
     box_path, _ = make_box(Maildir)
 
     result = invoke("--export=non_existing.file", box_path)
