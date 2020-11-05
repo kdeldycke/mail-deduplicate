@@ -17,12 +17,13 @@
 
 from mailbox import Maildir, mbox
 
-from .conftest import MailFactory, check_box
+from .conftest import MailFactory, check_box, skip_windows
 
 invalid_date_mail_1 = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 invalid_date_mail_2 = MailFactory(date_rfc2822="Thu, 13 Dec 102 15:30 WET")
 
 
+@skip_windows
 def test_invalid_date_parsing_noop(invoke, make_box):
     """Mails with strange non-standard dates gets parsed anyway and
     grouped into duplicate sets. No deduplication happen: mails groups shares
@@ -55,6 +56,7 @@ def test_invalid_date_parsing_noop(invoke, make_box):
     )
 
 
+@skip_windows
 def test_invalid_date_parsing_dedup(invoke, make_box):
     """Mails with strange non-standard dates gets parsed anyway and
     deduplicated if we reduce the source of hashed headers."""

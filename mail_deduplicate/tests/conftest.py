@@ -17,6 +17,7 @@
 
 import random
 import string
+import sys
 from email.utils import formatdate as maildate
 from mailbox import Mailbox, Maildir, Message, mbox
 from textwrap import dedent, indent
@@ -33,6 +34,15 @@ from .. import CLI_NAME
 from ..cli import mdedup
 
 """ Fixtures, configuration and helpers for tests. """
+
+
+def is_windows():
+    """ Return `True` only if current platform is of the Windows family. """
+    return sys.platform in ["win32", "cygwin"]
+
+
+skip_windows = pytest.mark.skipif(is_windows(), reason="Skip Windows")
+""" Pytest mark to skip a test if it is run on a Windows system. """
 
 
 def print_cli_output(cmd, output):
