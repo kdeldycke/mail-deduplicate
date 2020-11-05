@@ -129,10 +129,10 @@ def autodetect_box_type(path):
 def open_box(path, box_type=False, force_unlock=False):
     """Open a mailbox.
 
-    Returns the locked box, ready for operations.
+    Returns a list of boxes, one per sub-folder. All are locked, ready for operations.
 
-    If ``box_type`` is specified, forces the opening of the box in the
-    specified format. Else try to autodetect the type.
+    If ``box_type`` is provided, forces the opening of the box in the specified format.
+    Defaults to (crude) autodetection.
     """
     logger.info(f"Opening {choice_style(path)} ...")
     path = Path(path)
@@ -145,6 +145,14 @@ def open_box(path, box_type=False, force_unlock=False):
     # Do not allow the constructor to create a new mailbox if not found.
     box = constructor(path, create=False)
 
+    return open_subfolders(box, force_unlock)
+
+
+def lock_box(box, force_unlock):
+    """ Lock an opened box and allows for forced unlocking.
+
+    Returns the locked box.
+    """
     try:
         logger.debug("Locking box...")
         box.lock()
@@ -160,9 +168,23 @@ def open_box(path, box_type=False, force_unlock=False):
         # Re-raise error.
         else:
             raise
-
     logger.debug("Box opened.")
     return box
+
+
+def open_subfolders(box, force_unlock):
+    """ Browse recursively the subfolder tree of a box.
+
+    Returns a list of opened and locked boxes, each for one subfolder.
+    """
+    folder_list = [lock_box(box, force_unlock)]
+
+    # Skip box types not supporting subfolders.
+    if hasattr(box, "list_folders"):
+        for folder_id in box.list_folders():
+            logger.info(f"Opening subfolder {folder_id} ...")
+            folder_list += open_subfolders(box.get_folder(folder_id), force_unlock)
+    return folder_list
 
 
 def create_box(path, box_type=False):

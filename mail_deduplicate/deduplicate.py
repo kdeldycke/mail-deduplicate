@@ -329,15 +329,16 @@ class Deduplicate:
         if source_path in self.sources:
             raise ValueError(f"{source_path} already added.")
 
-        # Open and register the mail source.
-        box = open_box(source_path, self.conf.input_format, self.conf.force_unlock)
-        assert source_path == box._path
-        self.sources[source_path] = box
+        # Open and register the mail source. Subfolders will be registered as their
+        # own box.
+        boxes = open_box(source_path, self.conf.input_format, self.conf.force_unlock)
+        for box in boxes:
+            self.sources[box._path] = box
 
-        # Track of global mail count.
-        mail_found = len(box)
-        logger.info(f"{mail_found} mails found.")
-        self.stats["mail_found"] += mail_found
+            # Track global mail count.
+            mail_found = len(box)
+            logger.info(f"{mail_found} mails found.")
+            self.stats["mail_found"] += mail_found
 
     def hash_all(self):
         """Browse all mails from all registered sources, compute hashes and group mails
