@@ -435,7 +435,7 @@ class Deduplicate:
                 if stat_id.startswith(prefix):
                     table.append(
                         [
-                            stat_id[len(prefix):].replace("_", " - ").title(),
+                            stat_id[len(prefix) :].replace("_", " - ").title(),
                             self.stats[stat_id],
                             "\n".join(textwrap.wrap(desc, 60)),
                         ]
