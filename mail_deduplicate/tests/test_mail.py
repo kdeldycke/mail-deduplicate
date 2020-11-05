@@ -20,7 +20,9 @@ from mailbox import Maildir, mbox
 from .conftest import MailFactory, check_box, skip_windows
 
 """ Some invalid dates are not supported on Windows as they produce negative
-timestamps. See: https://github.com/arrow-py/arrow/pull/745
+timestamps. See:
+* https://github.com/arrow-py/arrow/issues/675
+* https://github.com/arrow-py/arrow/pull/745
 """
 
 invalid_date_mail_1 = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
