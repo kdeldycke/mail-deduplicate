@@ -149,7 +149,7 @@ def open_box(path, box_type=False, force_unlock=False):
 
 
 def lock_box(box, force_unlock):
-    """ Lock an opened box and allows for forced unlocking.
+    """Lock an opened box and allows for forced unlocking.
 
     Returns the locked box.
     """
@@ -173,7 +173,7 @@ def lock_box(box, force_unlock):
 
 
 def open_subfolders(box, force_unlock):
-    """ Browse recursively the subfolder tree of a box.
+    """Browse recursively the subfolder tree of a box.
 
     Returns a list of opened and locked boxes, each for one subfolder.
     """
