@@ -7,6 +7,9 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development
 
+* Add test runs against new OSes and distributions: ``ubuntu-18.04`` and
+  ``macos-11.0``.
+
 
 `6.0.2 (2020-11-05) <https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.1...v6.0.2>`_
 ---------------------------------------------------------------------------------------------
