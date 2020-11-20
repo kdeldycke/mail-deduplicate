@@ -10,7 +10,7 @@ jobs:
 
   python:
     name: Format Python code and create a PR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.3.4
         with:
@@ -43,7 +43,7 @@ jobs:
 
   json:
     name: Format JSON files and create a PR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.3.4
       - name: Install linter
@@ -70,7 +70,7 @@ jobs:
 
   typos:
     name: Fix typos and create a PR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.3.4
       - uses: sobolevn/misspell-fixer-action@0.1.0
@@ -91,7 +91,7 @@ jobs:
 
   images:
     name: Optimize images
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.3.4
       - uses: calibreapp/image-actions@1.1.0
@@ -118,7 +118,7 @@ jobs:
 
   gitignore:
     name: Generate .gitignore and create a PR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.3.4
       - name: Install git-extras package
@@ -145,7 +145,7 @@ jobs:
 
   mailmap:
     name: Update .mailmap and create a PR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2.3.4
         with:
