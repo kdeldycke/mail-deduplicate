@@ -1,7 +1,7 @@
 ---
-name: "\U0001F41B <CHANGE BUG REPORT TITLE HERE>"
+name: "\U0001F41B Bug Report"
 about: Create a report to help improve the project
-title: ''
+title: '\U0001F41B <CHANGE BUG REPORT TITLE HERE>'
 labels: 'bug'
 assignees: 'kdeldycke'
 ---
@@ -9,8 +9,8 @@ assignees: 'kdeldycke'
 #### Preliminary checks
 
 * [ ] I am running the latest version
-* [ ] I have [read the Code of Conduct](../code-of-conduct.md)
-* [ ] I have checked there is not other [Issue](../../../issues) or [Pull Requests](../../../pulls) covering the same issue I'm about to report
+* [ ] I have [read the Code of Conduct](../blob/main/.github/code-of-conduct.md)
+* [ ] I have checked there is not other [Issues](../issues) or [Pull Requests](../pulls) covering the same topic to open
 
 #### Describe the bug
 
@@ -97,7 +97,7 @@ Traceback (most recent call last):
     dedup.check_stats()
   File "/Users/kde/mail-deduplicate/mail_deduplicate/deduplicate.py", line 645, in check_stats
     assert self.stats["mail_found"] >= self.stats["mail_kept"]
-AssertionError: 
+AssertionError:
 ```
 
 * The `mdedup` output, but this time the `--verbosity=DEBUG` parameter:

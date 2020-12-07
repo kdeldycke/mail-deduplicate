@@ -15,9 +15,9 @@ Explain the motivation for making this change. What existing problem does the pu
 
 #### Preliminary checks
 
-* [ ] I have [read the Code of Conduct](../code-of-conduct.md)
-* [ ] I have referenced above all [issues](../../issues) related to the changes I'm bringing
-* [ ] I have checked there is no other [Pull Requests](../../../pulls) covering the same thing I'm about to address
+* [ ] I have [read the Code of Conduct](../blob/main/.github/code-of-conduct.md)
+* [ ] I have referenced above all [issues](../issues) related to the changes I'm bringing
+* [ ] I have checked there is no other [Pull Requests](../pulls) covering the same thing I'm about to address
 
 #### New Features Submissions:
 

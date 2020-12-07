@@ -1,7 +1,7 @@
 ---
-name: Feature request
+name: "🆕 Feature request"
 about: Suggest an idea for this project
-title: ''
+title: '🆕 <CHANGE FEATURE NAME HERE>'
 labels: 'feature request, help wanted'
 assignees: 'kdeldycke'
 
