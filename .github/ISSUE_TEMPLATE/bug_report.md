@@ -9,8 +9,8 @@ assignees: 'kdeldycke'
 #### Preliminary checks
 
 * [ ] I am running the latest version
-* [ ] I have [read the Code of Conduct](../blob/main/.github/code-of-conduct.md)
-* [ ] I have checked there is not other [Issues](../issues) or [Pull Requests](../pulls) covering the same topic to open
+* [ ] I have [read the Code of Conduct](https://github.com/kdeldycke/mail-deduplicate/blob/develop/.github/code-of-conduct.md)
+* [ ] I have checked there is not other [Issues](https://github.com/kdeldycke/mail-deduplicate/issues) or [Pull Requests](https://github.com/kdeldycke/mail-deduplicate/pulls) covering the same topic to open
 
 #### Describe the bug
 
