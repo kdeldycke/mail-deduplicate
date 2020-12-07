@@ -9,6 +9,7 @@ ChangeLog
 
 * Add test runs against new OSes and distributions: ``ubuntu-18.04`` and
   ``macos-11.0``.
+* Remove ``pycodestyle``, it brings nothing more now that we rely on ``black``.
 
 
 `6.0.2 (2020-11-05) <https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.1...v6.0.2>`_

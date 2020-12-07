@@ -129,13 +129,11 @@ imports:
     $ pip install -e .[develop]
     $ isort --apply
 
-Then run `pycodestyle <https://pycodestyle.readthedocs.io>`_ and `Pylint
-<https://docs.pylint.org>`_ code style checks:
+Then run `Pylint <https://docs.pylint.org>`_ code style check:
 
 .. code-block:: bash
 
     $ pip install -e .[tests]
-    $ pycodestyle mail_deduplicate
     $ pylint --rcfile=setup.cfg mail_deduplicate
 
 

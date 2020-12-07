@@ -22,7 +22,6 @@ jobs:
           poetry install
       - name: Lint
         run: |
-          poetry run pycodestyle
           poetry run pylint mail_deduplicate
 
   lint-yaml:
