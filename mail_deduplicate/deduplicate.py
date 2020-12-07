@@ -436,7 +436,9 @@ class Deduplicate:
                 if stat_id.startswith(prefix):
                     table.append(
                         [
-                            stat_id[len(prefix) :].replace("_", " - ").title(),
+                            # XXX noqa ignore pycodestyle bug.
+                            # See: https://github.com/PyCQA/pycodestyle/pull/914
+                            stat_id[len(prefix) :].replace("_", " - ").title(),  # noqa
                             self.stats[stat_id],
                             "\n".join(textwrap.wrap(desc, 60)),
                         ]
