@@ -49,7 +49,7 @@ bump2version = "^1.0.1"
 check-wheel-contents = "^0.2.0"
 coverage = {extras = ["toml"], version = "^5.3"}
 pylint = "^2.6.0"
-pytest = "^6.2.0"
+pytest = "^6.2.1"
 # More pytest plugins at: http://plugincompat.herokuapp.com .
 pytest-cov = "^2.10.1"
 pytest-randomly = "^3.5.0"
