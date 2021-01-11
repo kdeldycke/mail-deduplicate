@@ -38,8 +38,8 @@ STATS_DEF = OrderedDict(
         ("mail_found", "Total number of mails encountered from all mail sources."),
         (
             "mail_rejected",
-            "Number of mails individuality rejected because they were unparseable or "
-            "did not had enough metadata to compute hashes.",
+            "Number of mails rejected individually because they were unparseable or "
+            "did not have enough metadata to compute hashes.",
         ),
         (
             "mail_retained",
