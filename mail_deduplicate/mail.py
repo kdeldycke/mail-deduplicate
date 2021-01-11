@@ -231,7 +231,7 @@ class DedupMail:
         Returns a string ready to be printing to user or for debugging.
         """
         table = [["Header ID", "Header value"]] + list(self.canonical_headers)
-        return tabulate(table, tablefmt="fancy_grid", headers="firstrow")
+        return "\n" + tabulate(table, tablefmt="fancy_grid", headers="firstrow")
 
     @cachedproperty
     def serialized_headers(self):
