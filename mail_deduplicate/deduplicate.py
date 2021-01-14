@@ -89,7 +89,7 @@ STATS_DEF = OrderedDict(
             "too disimilar in size.",
         ),
         (
-            "set_skipeed_content",
+            "set_skipped_content",
             "Number of sets skipped from the selection process because they were "
             "too disimilar in content.",
         ),
