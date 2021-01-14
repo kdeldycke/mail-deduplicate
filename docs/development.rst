@@ -238,7 +238,7 @@ and set it back to development state by increasing the ``patch`` level.
 Version bump
 ------------
 
-Versions are automatticaly bumped to their next ``patch`` revision at release
+Versions are automatically bumped to their next ``patch`` revision at release
 (see above). In the middle of your development, if the upcoming release is no
 longer bug-fix only, or gets really important, feel free to bump to the next
 ``minor`` or ``major``:

@@ -48,7 +48,7 @@ STATS_DEF = OrderedDict(
         ("mail_hashes", "Number of unique hashes."),
         (
             "mail_unique",
-            "Number of unique mails (which where automaticcaly added to selection).",
+            "Number of unique mails (which where automatically added to selection).",
         ),
         (
             "mail_duplicates",
@@ -58,7 +58,7 @@ STATS_DEF = OrderedDict(
         (
             "mail_skipped",
             "Number of mails ignored in the selection phase because the whole set "
-            "they belongs to was skipped.",
+            "they belong to was skipped.",
         ),
         ("mail_discarded", "Number of mails discarded from the final selection."),
         (
@@ -75,8 +75,8 @@ STATS_DEF = OrderedDict(
         ("set_total", "Total number of duplicate sets."),
         (
             "set_single",
-            "Total number of sets containing a single mail and did not had to have a "
-            "strategy applied to. They were automatticaly kept in the final selection.",
+            "Total number of sets containing only a single mail with no applicable "
+            "strategy. They were automatically kept in the final selection.",
         ),
         (
             "set_skipped_encoding",
