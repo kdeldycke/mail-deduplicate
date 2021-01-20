@@ -38,8 +38,8 @@ STATS_DEF = OrderedDict(
         ("mail_found", "Total number of mails encountered from all mail sources."),
         (
             "mail_rejected",
-            "Number of mails individuality rejected because they were unparseable or "
-            "did not had enough metadata to compute hashes.",
+            "Number of mails rejected individually because they were unparseable or "
+            "did not have enough metadata to compute hashes.",
         ),
         (
             "mail_retained",
@@ -86,12 +86,12 @@ STATS_DEF = OrderedDict(
         (
             "set_skipped_size",
             "Number of sets skipped from the selection process because they were "
-            "too disimilar in size.",
+            "too dissimilar in size.",
         ),
         (
-            "set_skipeed_content",
+            "set_skipped_content",
             "Number of sets skipped from the selection process because they were "
-            "too disimilar in content.",
+            "too dissimilar in content.",
         ),
         (
             "set_skipped_strategy",
