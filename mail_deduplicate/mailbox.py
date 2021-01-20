@@ -134,7 +134,7 @@ def open_box(path, box_type=False, force_unlock=False):
     If ``box_type`` is provided, forces the opening of the box in the specified format.
     Defaults to (crude) autodetection.
     """
-    logger.info(f"Opening {choice_style(path)} ...")
+    logger.info(f"\nOpening {choice_style(path)} ...")
     path = Path(path)
     if not box_type:
         box_type = autodetect_box_type(path)
