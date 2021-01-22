@@ -74,9 +74,11 @@ __ https://github.com/kdeldycke/mail-deduplicate/tree/develop
 Setup a development environment
 -------------------------------
 
+This **step is required** for all the other sections from this page.
+
 Check out latest development branch:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
     $ git clone git@github.com:kdeldycke/mail-deduplicate.git
     $ cd ./mail-deduplicate
@@ -84,9 +86,10 @@ Check out latest development branch:
 
 Install package in editable mode with all development dependencies:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    $ pip install -e .[develop]
+    $ pip install poetry
+    $ poetry install
 
 Now you're ready to hack and abuse git!
 
@@ -96,81 +99,68 @@ Unit-tests
 
 Install test dependencies and run unit-tests:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    $ pip install -e .[tests]
-    $ pytest
+    $ poetry run pytest
 
 
 Coding style
 ------------
 
-Run `isort <https://github.com/timothycrosley/isort>`_ utility to sort Python
-imports:
+Run `black <https://github.com/psf/black>`_ to auto-format Python code:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    $ pip install -e .[develop]
-    $ isort --apply
+    $ poetry run black .
 
-Then run `Pylint <https://docs.pylint.org>`_ code style check:
+Then run `Pylint <https://docs.pylint.org>`_ code style checks:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    $ pip install -e .[tests]
-    $ pylint --rcfile=setup.cfg mail_deduplicate
+    $ poetry run pylint mail-deduplicate
 
 
-Build documentation
--------------------
+Documentation
+-------------
 
 The documentation you're currently reading can be built locally with `Sphinx
 <https://www.sphinx-doc.org>`_:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    $ pip install -e .[docs]
-    $ sphinx-apidoc -f -o ./docs .
-    $ sphinx-build -b html ./docs ./docs/html
+    $ poetry install --extras docs
+    $ poetry run sphinx-build -b html ./docs ./docs/html
 
-For a smooth release, you also need to validate the rendering of package's long
-description on PyPi, as well as metadata:
+To update the auto-generated API documention:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    $ pip install -e .[develop]
-    $ ./setup.py check -m -r -s
+    $ poetry run sphinx-apidoc -f -o ./docs .
+
+
 
 
 Release process
 ---------------
 
-Start from the ``develop`` branch:
+Check your starting from a clean ``develop`` branch:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    $ git clone git@github.com:kdeldycke/mail-deduplicate.git
-    $ cd ./mail-deduplicate
     $ git checkout develop
-
-Install development dependencies:
-
-.. code-block:: bash
-
-    $ pip install -e .[develop]
 
 Revision should already be set to the next version, so we just need to set the
 released date in the changelog:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
     $ vi ./changelog.rst
 
 Create a release commit, tag it and merge it back to ``main`` branch:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    $ git add ./mail_deduplicate/__init__.py ./changelog.rst
+    $ git add ./mail-deduplicate/__init__.py ./changelog.rst
     $ git commit -m "Release vX.Y.Z"
     $ git tag "vX.Y.Z"
     $ git push
@@ -180,40 +170,58 @@ Create a release commit, tag it and merge it back to ``main`` branch:
     $ git merge "vX.Y.Z"
     $ git push
 
-Push packaging to the `test cheeseshop
-<https://wiki.python.org/moin/TestPyPI>`_:
+The next phases of the release process are automated and should be picked up by
+GitHub actions. If not, the next section details the manual deployment process.
 
-.. code-block:: bash
 
-    $ ./setup.py register -r testpypi
-    $ ./setup.py clean --all
-    $ ./setup.py sdist bdist_egg bdist_wheel upload -r testpypi
+Manual build and deployment
+---------------------------
+
+Build packages:
+
+.. code-block:: shell-session
+
+    $ poetry build
+
+For a smooth release, you also need to `validate the rendering of package's
+long description on PyPi
+<https://packaging.python.org/guides/making-a-pypi-friendly-readme/#validating-restructuredtext-markup>`_,
+as well as metadata:
+
+.. code-block:: shell-session
+
+    $ poetry check
+    $ poetry run twine check ./dist/*
 
 Publish packaging to `PyPi <https://pypi.python.org>`_:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
-    $ ./setup.py register -r pypi
-    $ ./setup.py clean --all
-    $ ./setup.py sdist bdist_egg bdist_wheel upload -r pypi
+    $ poetry publish
 
-Update revision with `bumpversion <https://github.com/peritus/bumpversion>`_
+Update revision with `bump2version <https://github.com/c4urself/bump2version>`_
 and set it back to development state by increasing the ``patch`` level.
 
-.. code-block:: bash
+.. code-block:: shell-session
 
     $ git checkout develop
-    $ bumpversion --verbose patch
-    $ git add ./mail_deduplicate/__init__.py ./changelog.rst
+    $ poetry run bumpversion --verbose patch
+    $ git add ./mail-deduplicate/__init__.py ./changelog.rst
     $ git commit -m "Post release version bump."
     $ git push
 
-Now if the next revision is no longer bug-fix only, bump the ``minor``
-revision level instead:
 
-.. code-block:: bash
+Version bump
+------------
 
-    $ bumpversion --verbose minor
-    $ git add ./mail_deduplicate/__init__.py ./changelog.rst
+Versions are automatticaly bumped to their next ``patch`` revision at release
+(see above). In the middle of your development, if the upcoming release is no
+longer bug-fix only, or gets really important, feel free to bump to the next
+``minor`` or ``major``:
+
+.. code-block:: shell-session
+
+    $ poetry run bumpversion --verbose minor
+    $ git add ./mail-deduplicate/__init__.py ./changelog.rst
     $ git commit -m "Next release no longer bug-fix only. Bump revision."
     $ git push
