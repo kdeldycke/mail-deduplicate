@@ -7,6 +7,7 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development
 
+* Add retroactive support for Python 3.6. Closes #154 and #169.
 * Fix documentation link and generation. Closes #66.
 * Add ``tomlkit`` dependency.
 * Add test runs against new OSes and distributions: ``ubuntu-18.04`` and
