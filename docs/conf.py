@@ -1,10 +1,28 @@
+import io
 import os
-import sys
 
-# Expose package to autodoc.
-sys.path.insert(0, os.path.abspath(".."))
-import mail_deduplicate  # noqa  # isort:skip
+import tomlkit
 
+# Fetch general information about the project from pyproject.toml.
+toml_path = os.path.join(os.path.dirname(__file__), "..", "pyproject.toml")
+with io.open(toml_path, "r") as toml_file:
+    toml_config = tomlkit.loads(toml_file.read())
+
+# Redistribute pyproject.toml config to Sphinx.
+project_id = toml_config["tool"]["poetry"]["name"]
+version = toml_config["tool"]["poetry"]["version"]
+url = toml_config["tool"]["poetry"]["homepage"]
+author = ", ".join(
+    [a.split("<")[0].strip() for a in toml_config["tool"]["poetry"]["authors"]]
+)
+
+# Title-case each word of the project ID.
+project = " ".join([word.title() for word in project_id.split("-")])
+htmlhelp_basename = project_id
+
+release = version
+
+# Addons.
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.todo",
@@ -12,9 +30,6 @@ extensions = [
 ]
 
 master_doc = "index"
-
-project = "Mail Deduplicate"
-author = "Kevin Deldycke"
 
 # We use our own copyright template instead of the default as the latter strip
 # HTML content.
@@ -24,18 +39,21 @@ copyright = (
     "/graphs/contributors'>contributors</a>"
 ).format(author, url)
 
-version = release = mail_deduplicate.__version__
-
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 nitpicky = True
+
 # We need a recent sphinx because of the last update format.
-needs_sphinx = "1.4"
+needs_sphinx = "2.4"
 html_last_updated_fmt = "YYYY-MM-dd"
 templates_path = ["templates"]
 
+# Both the class’ and the __init__ method’s docstring are concatenated and
+# inserted.
+autoclass_content = "both"
 # Keep the same ordering as in original source code.
 autodoc_member_order = "bysource"
+autodoc_default_flags = ["members", "undoc-members", "show-inheritance"]
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
@@ -48,5 +66,3 @@ if not on_rtd:
 
     html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
-htmlhelp_basename = project

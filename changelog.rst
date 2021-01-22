@@ -7,6 +7,8 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development
 
+* Fix documentation link and generation. Closes #66.
+* Add ``tomlkit`` dependency.
 * Add test runs against new OSes and distributions: ``ubuntu-18.04`` and
   ``macos-11.0``.
 * Remove ``pycodestyle``, it brings nothing more now that we rely on ``black``.
