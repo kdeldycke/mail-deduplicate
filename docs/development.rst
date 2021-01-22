@@ -39,8 +39,6 @@ Branch          |main-branch|__     |develop-branch|__
 ==============  ==================  ===================
 Unittests       |build-stable|      |build-dev|
 Coverage        |coverage-stable|   |coverage-dev|
-Quality         |quality-stable|    |quality-dev|
-Dependencies    |deps-stable|       |deps-dev|
 Documentation   |docs-stable|       |docs-dev|
 ==============  ==================  ===================
 
@@ -51,12 +49,12 @@ __ https://github.com/kdeldycke/mail-deduplicate/tree/main
    ``develop``
 __ https://github.com/kdeldycke/mail-deduplicate/tree/develop
 
-.. |build-stable| image:: https://travis-ci.org/kdeldycke/mail-deduplicate.svg?branch=main
-    :target: https://travis-ci.org/kdeldycke/mail-deduplicate
-    :alt: Unit-tests status
-.. |build-dev| image:: https://travis-ci.org/kdeldycke/mail-deduplicate.svg?branch=develop
-    :target: https://travis-ci.org/kdeldycke/mail-deduplicate
-    :alt: Unit-tests status
+.. |build-stable| image:: https://github.com/kdeldycke/mail-deduplicate/workflows/Tests/badge.svg?branch=main
+    :target: https://github.com/kdeldycke/mail-deduplicate/actions?query=workflow%3ATests+branch%3Amain
+    :alt: Unittests status
+.. |build-dev| image:: https://github.com/kdeldycke/mail-deduplicate/workflows/Tests/badge.svg?branch=develop
+    :target: https://github.com/kdeldycke/mail-deduplicate/actions?query=workflow%3ATests+branch%3Adevelop
+    :alt: Unittests status
 
 .. |coverage-stable| image:: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/main
@@ -64,20 +62,6 @@ __ https://github.com/kdeldycke/mail-deduplicate/tree/develop
 .. |coverage-dev| image:: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/develop/graph/badge.svg
     :target: https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/develop
     :alt: Coverage Status
-
-.. |quality-stable| image:: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/badges/quality-score.png?b=main
-    :target: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/?branch=main
-    :alt: Code Quality
-.. |quality-dev| image:: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/badges/quality-score.png?b=develop
-    :target: https://scrutinizer-ci.com/g/kdeldycke/mail-deduplicate/?branch=develop
-    :alt: Code Quality
-
-.. |deps-stable| image:: https://requires.io/github/kdeldycke/mail-deduplicate/requirements.svg?branch=main
-    :target: https://requires.io/github/kdeldycke/mail-deduplicate/requirements/?branch=main
-    :alt: Requirements freshness
-.. |deps-dev| image:: https://requires.io/github/kdeldycke/mail-deduplicate/requirements.svg?branch=develop
-    :target: https://requires.io/github/kdeldycke/mail-deduplicate/requirements/?branch=develop
-    :alt: Requirements freshness
 
 .. |docs-stable| image:: https://readthedocs.org/projects/mail-deduplicate/badge/?version=stable
     :target: https://mail-deduplicate.readthedocs.io/en/stable/
