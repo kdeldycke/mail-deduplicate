@@ -66,7 +66,7 @@ docs = ["sphinx", "sphinx_rtd_theme"]
 mdedup = 'mail_deduplicate.cli:mdedup'
 
 [tool.black]
-target-version = ['py37', 'py38']
+target-version = ['py36', 'py37', 'py38']
 
 [tool.pylint.MASTER]
 # http://pylint.pycqa.org/en/latest/technical_reference/features.html
