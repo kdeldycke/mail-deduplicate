@@ -184,7 +184,7 @@ Create a release commit, tag it and merge it back to ``main`` branch:
 
 .. code-block:: shell-session
 
-    $ git add ./mail-deduplicate/__init__.py ./changelog.rst
+    $ git add ./mail_deduplicate/__init__.py ./changelog.rst
     $ git commit -m "Release vX.Y.Z"
     $ git tag "vX.Y.Z"
     $ git push
@@ -230,7 +230,7 @@ and set it back to development state by increasing the ``patch`` level.
 
     $ git checkout develop
     $ poetry run bumpversion --verbose patch
-    $ git add ./mail-deduplicate/__init__.py ./changelog.rst
+    $ git add ./mail_deduplicate/__init__.py ./changelog.rst
     $ git commit -m "Post release version bump."
     $ git push
 
@@ -246,6 +246,6 @@ longer bug-fix only, or gets really important, feel free to bump to the next
 .. code-block:: shell-session
 
     $ poetry run bumpversion --verbose minor
-    $ git add ./mail-deduplicate/__init__.py ./changelog.rst
+    $ git add ./mail_deduplicate/__init__.py ./changelog.rst
     $ git commit -m "Next release no longer bug-fix only. Bump revision."
     $ git push
