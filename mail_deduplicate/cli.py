@@ -129,7 +129,7 @@ def validate_regexp(ctx, param, value):
     default=DEFAULT_SIZE_THRESHOLD,
     help="Maximum difference allowed in size between mails sharing the same hash. "
     "The whole subset of duplicates will be skipped if at least one pair of mail "
-    "exceed the threshold. Set to 0 to enforce strictness and apply selection strategy "
+    "exceeds the threshold. Set to 0 to enforce strictness and apply selection strategy "
     "on the subset only if all mails are exactly the same. Set to -1 to allow any "
     "difference and apply the strategy whatever the differences. Defaults to "
     f"{DEFAULT_SIZE_THRESHOLD} bytes.",
@@ -142,7 +142,7 @@ def validate_regexp(ctx, param, value):
     default=DEFAULT_CONTENT_THRESHOLD,
     help="Maximum difference allowed in content between mails sharing the same hash. "
     "The whole subset of duplicates will be skipped if at least one pair of mail "
-    "exceed the threshold. Set to 0 to enforce strictness and apply selection strategy "
+    "exceeds the threshold. Set to 0 to enforce strictness and apply selection strategy "
     "on the subset only if all mails are exactly the same. Set to -1 to allow any "
     "difference and apply the strategy whatever the differences. Defaults to "
     f"{DEFAULT_CONTENT_THRESHOLD} bytes.",
@@ -267,7 +267,7 @@ def mdedup(
     between mails are uncovered during a fine-grained check differences in the second
     phase. Limits can be set via the --size-threshold and --content-threshold
     options, and are used as safety checks to prevent slightly different mails
-    to been seen as similiar through the lens of normalization.
+    to be seen as similar through the lens of normalization.
     """
     level = logger.level
     level_name = logging._levelToName.get(level, level)
