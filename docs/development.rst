@@ -131,11 +131,9 @@ The documentation you're currently reading can be built locally with `Sphinx
     $ poetry install --extras docs
     $ poetry run sphinx-build -b html ./docs ./docs/html
 
-To update the auto-generated API documention:
-
-.. code-block:: shell-session
-
-    $ poetry run sphinx-apidoc -f -o ./docs .
+The API documention is auto-generated from the code itself, and is taken care of
+automaticcaly by a `GitHub action workflow
+<https://github.com/kdeldycke/mail-deduplicate/blob/develop/.github/workflows/autofix.yaml>`_.
 
 
 Screenshots
