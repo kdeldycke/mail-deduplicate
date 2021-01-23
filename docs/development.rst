@@ -5,7 +5,7 @@ Development
 Philosophy
 ----------
 
-1. First create something that work (to provide business value).
+1. First create something that works (to provide business value).
 2. Then something that's beautiful (to lower maintenance costs).
 3. Finally works on performance (to avoid wasting time on premature
    optimizations).
@@ -19,7 +19,7 @@ This project follows `Semantic Versioning <https://semver.org/>`_.
 Which boils down to the following rules of thumb regarding stability:
 
 * **Patch releases** (``0.x.n`` → ``0.x.(n+1)`` upgrades) are bug-fix only.
-  These releases must not break anything and keeps backward-compatibility with
+  These releases must not break anything and keep backward-compatibility with
   ``0.x.*`` and ``0.(x-1).*`` series.
 
 * **Minor releases** (``0.n.*`` → ``0.(n+1).0`` upgrades) includes any
@@ -27,8 +27,8 @@ Which boils down to the following rules of thumb regarding stability:
   ``0.n.*`` version but are allowed to drop compatibility with the
   ``0.(n-1).*`` series and below.
 
-* **Major releases** (``n.*.*`` → ``(n+1).0.0`` upgrades) are not planned yet,
-  unless we introduce huge changes to the project.
+* **Major releases** (``n.*.*`` → ``(n+1).0.0`` upgrades) make no promises about
+  backwards-compability.  Any API change requires a new major release.
 
 
 Build status
@@ -141,8 +141,8 @@ To update the auto-generated API documention:
 Screenshots
 -----------
 
-Once in a while, refresh screenshots found in the docs and the ``readme.rst``
-file at the root of project.
+Once in a while, the maintainers of the project will refresh screenshots found
+in the documentation and the ``readme.rst`` file at the root of project.
 
 To produce clean and fancy terminals screenshots, use either:
 
@@ -154,9 +154,9 @@ To produce clean and fancy terminals screenshots, use either:
 Changelog
 ---------
 
-From time to time, especially before a release, review and rewrite the changelog
-to make it clean and readeable. The idea is to have it stays in the spirit of the
-`keep a changelog manifesto <https://keepachangelog.com>`_.
+From time to time, especially before a release, the maintainers will review and
+rewrite the changelog to make it clean and readable. The idea is to have it
+stay in the spirit of the `keep a changelog manifesto <https://keepachangelog.com>`_.
 
 Most (if not all) changes can be derived by simply comparing the last tagged
 release with the `develop` branch:
@@ -167,7 +167,7 @@ This direct link should be available at the top of the `changelog <changelog.htm
 Release process
 ---------------
 
-Check your starting from a clean ``develop`` branch:
+Check you are starting from a clean ``develop`` branch:
 
 .. code-block:: shell-session
 
@@ -238,7 +238,7 @@ and set it back to development state by increasing the ``patch`` level.
 Version bump
 ------------
 
-Versions are automatticaly bumped to their next ``patch`` revision at release
+Versions are automatically bumped to their next ``patch`` revision at release
 (see above). In the middle of your development, if the upcoming release is no
 longer bug-fix only, or gets really important, feel free to bump to the next
 ``minor`` or ``major``:

@@ -48,7 +48,7 @@ STATS_DEF = OrderedDict(
         ("mail_hashes", "Number of unique hashes."),
         (
             "mail_unique",
-            "Number of unique mails (which where automaticcaly added to selection).",
+            "Number of unique mails (which where automatically added to selection).",
         ),
         (
             "mail_duplicates",
@@ -58,7 +58,7 @@ STATS_DEF = OrderedDict(
         (
             "mail_skipped",
             "Number of mails ignored in the selection phase because the whole set "
-            "they belongs to was skipped.",
+            "they belong to was skipped.",
         ),
         ("mail_discarded", "Number of mails discarded from the final selection."),
         (
@@ -75,8 +75,8 @@ STATS_DEF = OrderedDict(
         ("set_total", "Total number of duplicate sets."),
         (
             "set_single",
-            "Total number of sets containing a single mail and did not had to have a "
-            "strategy applied to. They were automatticaly kept in the final selection.",
+            "Total number of sets containing only a single mail with no applicable "
+            "strategy. They were automatically kept in the final selection.",
         ),
         (
             "set_skipped_encoding",
@@ -119,8 +119,8 @@ class DuplicateSet:
         """Load-up the duplicate set of mail and freeze pool.
 
         Once loaded-up, the pool of parsed mails is considered frozen for the
-        rest of the duplicate set's life. This allow aggressive caching of lazy
-        instance attributes depending on the pool content.
+        rest of the duplicate set's life. This allows aggressive caching of
+        lazy instance attributes depending on the pool content.
         """
         self.hash_key = hash_key
 
@@ -205,11 +205,9 @@ class DuplicateSet:
                     raise ContentDiffAboveThreshold
 
     def diff(self, mail_a, mail_b):
-        """Return difference in bytes between two mails' normalized body.
-
-        TODO: rewrite the diff algorithm to not rely on naive unified diff
-        result parsing.
-        """
+        # TODO: rewrite the diff algorithm to not rely on naive unified diff
+        # result parsing.
+        """Return difference in bytes between two mails' normalized body."""
         return len(
             "".join(
                 unified_diff(

@@ -35,8 +35,8 @@ class DedupMail:
     """Message with deduplication-specific properties and utilities.
 
     Adds all data-cleaning primitives and heuristics to Python's standard
-    library messages from: https://github.com/python/cpython/blob
-    /e799aa8b92c195735f379940acd9925961ad04ec/Lib/mailbox.py#L1489
+    library messages from:
+    https://github.com/python/cpython/blob/e799aa8b92c195735f379940acd9925961ad04ec/Lib/mailbox.py#L1489
 
     This class should not be used directly but composed with
     ``mailbox.Message`` sub-classes.
@@ -75,7 +75,7 @@ class DedupMail:
         self.conf = None
 
     def add_box_metadata(self, box, mail_id):
-        """Post-instanciation utility to attach to mail some metadata derived from its
+        """Post-instantiation utility to attach to mail some metadata derived from its
         parent box.
 
         Called right after the ``__init__()`` constructor.
@@ -228,7 +228,7 @@ class DedupMail:
         """Renders into a table and in the same order, headers names and values
         used to produce mail's hash.
 
-        Returns a string ready to be printing to user or for debugging.
+        Returns a string ready for printing to the user or for debugging.
         """
         table = [["Header ID", "Header value"]] + list(self.canonical_headers)
         return "\n" + tabulate(table, tablefmt="fancy_grid", headers="firstrow")
