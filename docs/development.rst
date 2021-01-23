@@ -117,7 +117,7 @@ Then run `Pylint <https://docs.pylint.org>`_ code style checks:
 
 .. code-block:: shell-session
 
-    $ poetry run pylint mail-deduplicate
+    $ poetry run pylint mail_deduplicate
 
 
 Documentation
