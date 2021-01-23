@@ -5,7 +5,7 @@ Development
 Philosophy
 ----------
 
-1. First create something that work (to provide business value).
+1. First create something that works (to provide business value).
 2. Then something that's beautiful (to lower maintenance costs).
 3. Finally works on performance (to avoid wasting time on premature
    optimizations).
@@ -19,7 +19,7 @@ This project follows `Semantic Versioning <https://semver.org/>`_.
 Which boils down to the following rules of thumb regarding stability:
 
 * **Patch releases** (``0.x.n`` → ``0.x.(n+1)`` upgrades) are bug-fix only.
-  These releases must not break anything and keeps backward-compatibility with
+  These releases must not break anything and keep backward-compatibility with
   ``0.x.*`` and ``0.(x-1).*`` series.
 
 * **Minor releases** (``0.n.*`` → ``0.(n+1).0`` upgrades) includes any
