@@ -35,8 +35,8 @@ class DedupMail:
     """Message with deduplication-specific properties and utilities.
 
     Adds all data-cleaning primitives and heuristics to Python's standard
-    library messages from: https://github.com/python/cpython/blob
-    /e799aa8b92c195735f379940acd9925961ad04ec/Lib/mailbox.py#L1489
+    library messages from:
+    https://github.com/python/cpython/blob/e799aa8b92c195735f379940acd9925961ad04ec/Lib/mailbox.py#L1489
 
     This class should not be used directly but composed with
     ``mailbox.Message`` sub-classes.
