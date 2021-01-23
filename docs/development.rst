@@ -141,8 +141,8 @@ To update the auto-generated API documention:
 Screenshots
 -----------
 
-Once in a while, refresh screenshots found in the docs and the ``readme.rst``
-file at the root of project.
+Once in a while, the maintainers of the project will refresh screenshots found
+in the documentation and the ``readme.rst`` file at the root of project.
 
 To produce clean and fancy terminals screenshots, use either:
 
@@ -154,9 +154,9 @@ To produce clean and fancy terminals screenshots, use either:
 Changelog
 ---------
 
-From time to time, especially before a release, review and rewrite the changelog
-to make it clean and readeable. The idea is to have it stays in the spirit of the
-`keep a changelog manifesto <https://keepachangelog.com>`_.
+From time to time, especially before a release, the maintainers will review and
+rewrite the changelog to make it clean and readable. The idea is to have it
+stay in the spirit of the `keep a changelog manifesto <https://keepachangelog.com>`_.
 
 Most (if not all) changes can be derived by simply comparing the last tagged
 release with the `develop` branch:
@@ -167,7 +167,7 @@ This direct link should be available at the top of the `changelog <changelog.htm
 Release process
 ---------------
 
-Check your starting from a clean ``develop`` branch:
+Check you are starting from a clean ``develop`` branch:
 
 .. code-block:: shell-session
 
