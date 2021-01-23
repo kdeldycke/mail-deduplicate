@@ -27,8 +27,8 @@ Which boils down to the following rules of thumb regarding stability:
   ``0.n.*`` version but are allowed to drop compatibility with the
   ``0.(n-1).*`` series and below.
 
-* **Major releases** (``n.*.*`` → ``(n+1).0.0`` upgrades) are not planned yet,
-  unless we introduce huge changes to the project.
+* **Major releases** (``n.*.*`` → ``(n+1).0.0`` upgrades) make no promises about
+  backwards-compability.  Any API change requires a new major release.
 
 
 Build status
