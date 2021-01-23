@@ -5,4 +5,3 @@ mail-deduplicate
    :maxdepth: 4
 
    mail_deduplicate
-   setup
