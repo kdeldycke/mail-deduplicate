@@ -1,38 +1,53 @@
-mail_deduplicate.tests package
-=================================
+mail\_deduplicate.tests package
+===============================
 
 Submodules
 ----------
 
-mail_deduplicate.tests.case module
--------------------------------------
+mail\_deduplicate.tests.conftest module
+---------------------------------------
 
-.. automodule:: mail_deduplicate.tests.case
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. automodule:: mail_deduplicate.tests.conftest
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-mail_deduplicate.tests.test_cli module
------------------------------------------
+mail\_deduplicate.tests.test\_cli module
+----------------------------------------
 
 .. automodule:: mail_deduplicate.tests.test_cli
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
-mail_deduplicate.tests.test_deduplicate module
--------------------------------------------------
+mail\_deduplicate.tests.test\_mail module
+-----------------------------------------
 
-.. automodule:: mail_deduplicate.tests.test_deduplicate
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. automodule:: mail_deduplicate.tests.test_mail
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
+mail\_deduplicate.tests.test\_mailbox module
+--------------------------------------------
+
+.. automodule:: mail_deduplicate.tests.test_mailbox
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+mail\_deduplicate.tests.test\_strategy module
+---------------------------------------------
+
+.. automodule:: mail_deduplicate.tests.test_strategy
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Module contents
 ---------------
 
 .. automodule:: mail_deduplicate.tests
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   :members:
+   :undoc-members:
+   :show-inheritance:
