@@ -228,7 +228,7 @@ class DedupMail:
         """Renders into a table and in the same order, headers names and values
         used to produce mail's hash.
 
-        Returns a string ready to be printing to user or for debugging.
+        Returns a string ready for printing to the user or for debugging.
         """
         table = [["Header ID", "Header value"]] + list(self.canonical_headers)
         return "\n" + tabulate(table, tablefmt="fancy_grid", headers="firstrow")
