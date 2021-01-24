@@ -7,7 +7,7 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development
 
-* Add retroactive support for Python 3.6. Closes #154 and #169.
+* Add retroactive support for Python 3.6. Closes #154.
 * Fix documentation link and generation. Closes #66.
 * Auto-generate API documentation via a GitHub action workflow.
 * Add ``tomlkit`` dependency.
