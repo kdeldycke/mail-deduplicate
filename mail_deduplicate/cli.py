@@ -23,6 +23,7 @@ from __future__ import absolute_import, division, print_function
 import logging
 import os
 import re
+import time
 
 import click
 import click_log
@@ -55,6 +56,7 @@ logger.warning("XXX PLEASE UPDATE TO PYTHON3.6 OR LATER AND mdedup 6.1.x OR LATE
 logger.warning("XXX                                                               XXX")
 logger.warning("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 logger.warning("")
+time.sleep(5)
 
 @click.group(invoke_without_command=True)
 @click_log.simple_verbosity_option(
