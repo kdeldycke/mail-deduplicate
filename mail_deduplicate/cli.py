@@ -48,6 +48,13 @@ from .mail import Mail
 
 click_log.basic_config(logger)
 
+logger.warning("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+logger.warning("XXX                                                               XXX")
+logger.warning("XXX         THIS VERSION OF mdedup IS COMPLETELY UNSUPPORTED      XXX")
+logger.warning("XXX PLEASE UPDATE TO PYTHON3.6 OR LATER AND mdedup 6.1.x OR LATER XXX")
+logger.warning("XXX                                                               XXX")
+logger.warning("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+logger.warning("")
 
 @click.group(invoke_without_command=True)
 @click_log.simple_verbosity_option(
