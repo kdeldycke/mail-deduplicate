@@ -1,10 +1,12 @@
 ChangeLog
 =========
 
-`3.0.1 (2021-01-24) <https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v3.0.1>`_
+`3.0.1 (2021-01-25) <https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v3.0.1>`_
 ---------------------------------------------------------------------------------------------
 
-.. deprecate the 3.x branch
+* Add explicit warning in CLI output to warn about 3.x branch deprecation.
+  Refs #180.
+
 
 `3.0.0 (2020-09-03) <https://github.com/kdeldycke/mail-deduplicate/compare/v2.2.0...v3.0.0>`_
 ---------------------------------------------------------------------------------------------
@@ -15,8 +17,6 @@ ChangeLog
 
    * Github at https://github.com/kdeldycke/mail-deduplicate
    * PyPi at https://pypi.org/project/mail-deduplicate
-
-.. note:: This version is not yet released and is under active development.
 
 * Rename project from ``maildir-deduplicate`` to ``mail-deduplicate``.
 * Rename ``master`` branch to ``main``.
