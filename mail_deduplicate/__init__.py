@@ -28,7 +28,7 @@ from boltons.iterutils import unique
 # Canonical name of the CLI.
 CLI_NAME = "mdedup"
 
-__version__ = "6.1.2"
+__version__ = "6.1.3"
 
 
 # Environment data.

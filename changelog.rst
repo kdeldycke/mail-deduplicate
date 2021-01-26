@@ -2,6 +2,12 @@ ChangeLog
 =========
 
 
+`6.1.3 (2021-01-26) <https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.2...develop>`_
+----------------------------------------------------------------------------------------------
+
+.. note:: This version is not yet released and is under active development
+
+
 `6.1.2 (2021-01-26) <https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.1...v6.1.2>`_
 ---------------------------------------------------------------------------------------------
 
