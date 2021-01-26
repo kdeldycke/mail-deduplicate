@@ -117,6 +117,13 @@ ChangeLog
 * Run unittests in random to order to detect coupling.
 
 
+`3.0.1 (2021-01-25) <https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v3.0.1>`_
+---------------------------------------------------------------------------------------------
+
+* Add explicit warning in CLI output to warn about 3.x branch deprecation.
+  Refs #180.
+
+
 `3.0.0 (2020-09-03) <https://github.com/kdeldycke/maildir-deduplicate/compare/v2.2.0...v3.0.0>`_
 ------------------------------------------------------------------------------------------------
 
