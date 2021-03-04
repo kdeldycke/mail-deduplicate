@@ -118,6 +118,7 @@ class Config:
     default_conf = {
         "dry_run": False,
         "input_format": False,
+        "only_act_on_duplicates": False,
         "force_unlock": False,
         "hash_only": False,
         "hash_headers": HASH_HEADERS,

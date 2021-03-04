@@ -94,6 +94,13 @@ def validate_regexp(ctx, param, value):
     "format, or bypass unreliable detection.",
 )
 @click.option(
+    "-o",
+    "--only-act-on-duplicates",
+    is_flag=True,
+    default=False,
+    help="Perform any actions only on duplicate messages, not on unique messages.",
+)
+@click.option(
     "-u",
     "--force-unlock",
     is_flag=True,
@@ -239,6 +246,7 @@ def mdedup(
     ctx,
     dry_run,
     input_format,
+    only_act_on_duplicates,
     force_unlock,
     hash_only,
     hash_header,
@@ -346,6 +354,7 @@ def mdedup(
     conf = Config(
         dry_run=dry_run,
         input_format=input_format,
+        only_act_on_duplicates=only_act_on_duplicates,
         force_unlock=force_unlock,
         hash_only=hash_only,
         hash_headers=hash_header,
