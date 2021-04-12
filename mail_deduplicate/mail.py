@@ -49,9 +49,10 @@ class DedupMail:
         # Hunt down in our parent classes (but ourselve) the first one inheriting the
         # mailbox.Message class. That way we can get to the original factory.
         orig_message_klass = None
-        for klass in inspect.getmro(self.__class__)[1:]:
+        mro = inspect.getmro(self.__class__)
+        for i, klass in enumerate(mro[1:], 1):
             if issubclass(klass, mailbox.Message):
-                orig_message_klass = klass
+                orig_message_klass = mro[i-1]
                 break
         assert orig_message_klass
 
