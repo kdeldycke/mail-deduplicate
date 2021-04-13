@@ -52,7 +52,7 @@ class DedupMail:
         mro = inspect.getmro(self.__class__)
         for i, klass in enumerate(mro[1:], 1):
             if issubclass(klass, mailbox.Message):
-                orig_message_klass = mro[i-1]
+                orig_message_klass = mro[i - 1]
                 break
         assert orig_message_klass
 
