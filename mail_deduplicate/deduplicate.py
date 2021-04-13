@@ -48,7 +48,8 @@ STATS_DEF = OrderedDict(
         ("mail_hashes", "Number of unique hashes."),
         (
             "mail_unique",
-            "Number of unique mails (which where automatically added to selection).",
+            "Number of unique mails (which where automatically added to selection "
+            "unless --only-act-on-duplicates was passed on the command line).",
         ),
         (
             "mail_duplicates",
@@ -404,9 +405,10 @@ class Deduplicate:
             if mail_count == 1:
                 logger.debug("Add unique message to selection.")
                 self.stats["mail_unique"] += 1
-                self.stats["mail_selected"] += 1
-                self.stats["set_single"] += 1
-                candidates = mail_set
+                if self.conf.only_act_on_duplicates is False:
+                    self.stats["mail_selected"] += 1
+                    self.stats["set_single"] += 1
+                    candidates = mail_set
 
             # We need to resort to a selection strategy to discriminate mails
             # within the set.
@@ -457,9 +459,12 @@ class Deduplicate:
         # Mail grouping by hash.
         assert self.stats["mail_retained"] >= self.stats["mail_unique"]
         assert self.stats["mail_retained"] >= self.stats["mail_duplicates"]
-        assert self.stats["mail_retained"] == (
-            self.stats["mail_unique"] + self.stats["mail_duplicates"]
-        )
+        if self.conf.only_act_on_duplicates:
+            assert self.stats["mail_retained"] == self.stats["mail_duplicates"]
+        else:
+            assert self.stats["mail_retained"] == (
+                self.stats["mail_unique"] + self.stats["mail_duplicates"]
+            )
         # Mail selection stats.
         assert self.stats["mail_retained"] >= self.stats["mail_skipped"]
         assert self.stats["mail_retained"] >= self.stats["mail_discarded"]
