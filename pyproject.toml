@@ -39,7 +39,7 @@ tabulate = "^0.8.7"
 tomlkit = "^0.7.0"
 # Should have been put in dev-dependencies but extras only works from main
 # section.
-sphinx = {version = "^3.4.2", optional = true}
+sphinx = {version = ">=3.4.2,<5.0.0", optional = true}
 sphinx_rtd_theme = {version = "^0.5.1", optional = true}
 click-help-colors = ">=0.8,<0.10"
 arrow = ">=0.17,<1.2"
