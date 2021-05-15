@@ -170,7 +170,7 @@ def select_one(duplicates):
 
 def select_all_but_one(duplicates):
     """Randomly discard one duplicate, and select all others."""
-    return set(random.sample(duplicates.pool, k=len(duplicates.pool) - 1))
+    return set(random.sample(tuple(duplicates.pool), k=len(duplicates.pool) - 1))
 
 
 # Use symbols to define selection strategies.
