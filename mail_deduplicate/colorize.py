@@ -25,7 +25,6 @@ from click_log.core import ColorFormatter
 
 from . import CLI_NAME, logger
 
-
 # Help screen and log message colors.
 # Available options: https://click.palletsprojects.com/en/8.0.x/api/#click.style
 colors = {
