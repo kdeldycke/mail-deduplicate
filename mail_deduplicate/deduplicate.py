@@ -15,12 +15,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+import textwrap
 from collections import Counter, OrderedDict
 from difflib import unified_diff
 from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
-import textwrap
 
 import click
 from boltons.cacheutils import cachedproperty
@@ -30,7 +30,6 @@ from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders, 
 from .colorize import choice_style, subtitle_style
 from .mailbox import open_box
 from .strategy import apply_strategy
-
 
 # Reference all tracked statistics and their definition.
 STATS_DEF = OrderedDict(
