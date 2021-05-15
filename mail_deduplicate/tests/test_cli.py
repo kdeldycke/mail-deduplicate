@@ -57,7 +57,7 @@ def test_version(invoke):
 def test_unknown_option(invoke):
     result = invoke("--blah")
     assert result.exit_code == 2
-    assert "Error: no such option: --blah" in result.output
+    assert "Error: No such option: --blah" in result.output
 
 
 def test_unrecognized_verbosity(invoke):
