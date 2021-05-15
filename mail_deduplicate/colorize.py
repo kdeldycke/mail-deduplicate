@@ -27,7 +27,7 @@ from . import CLI_NAME, logger
 
 
 # Help screen and log message colors.
-# Available options: https://click.palletsprojects.com/en/master/api/#click.style
+# Available options: https://click.palletsprojects.com/en/8.0.x/api/#click.style
 colors = {
     "cli": dict(fg="bright_white"),
     "title": dict(fg="bright_green", bold=True),
