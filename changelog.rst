@@ -7,6 +7,8 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development
 
+* Upgrade to Click 8.x.
+
 
 `6.1.3 (2021-04-13) <https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.2...v6.1.3>`_
 ---------------------------------------------------------------------------------------------
