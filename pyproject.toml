@@ -32,7 +32,7 @@ classifiers = [
 # List of python versions and their support status:
 # https://en.wikipedia.org/wiki/History_of_Python#Support
 python = "^3.6"
-boltons = "^20.2.1"
+boltons = ">=20.2.1,<22.0.0"
 click = "^8.0.0"
 click-log = "^0.3.2"
 tabulate = "^0.8.7"
