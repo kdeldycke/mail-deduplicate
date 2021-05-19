@@ -27,7 +27,7 @@ from . import logger
 from .colorize import choice_style
 from .mail import DedupMail
 
-""" Patch and tweak Python's standard librabry mailboxes constructors to set
+""" Patch and tweak Python's standard library mailbox constructors to set
 sane defaults. Also forces out our own message factories to add deduplication
 tools and utilities. """
 
