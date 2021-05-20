@@ -34,9 +34,9 @@ List global options:
       * discard-biggest:  Discards the biggests,  keeps the smallers.
 
       File-based:
-      * discard-matching-path: Discardss all duplicates whose file path match the
+      * discard-matching-path: Discards all duplicates whose file path match the
       regular expression provided via the --regexp parameter.
-      * discard-non-matching-path: Discardss all duplicates whose file path
+      * discard-non-matching-path: Discards all duplicates whose file path
       doesn't match the regular expression provided via the --regexp parameter.
 
       Action on the selected mails in phase #3 is only performed if no major
