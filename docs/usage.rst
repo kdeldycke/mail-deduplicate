@@ -22,16 +22,16 @@ List global options:
       A dozen of strategies are available to select mails in each subset:
 
       Time-based:
-      * discard-older:    Discards the olders,    keeps the newests.
-      * discard-oldest:   Discards the oldests,   keeps the newers.
-      * discard-newer:    Discards the newers,    keeps the oldests.
-      * discard-newest:   Discards the newests,   keeps the olders.
+      * discard-older:    Discards the older,     keeps the newest.
+      * discard-oldest:   Discards the oldest,    keeps the newer.
+      * discard-newer:    Discards the newer,     keeps the oldest.
+      * discard-newest:   Discards the newest,    keeps the older.
 
       Size-based:
-      * discard-smaller:  Discards the smallers,  keeps the biggests.
-      * discard-smallest: Discards the smallests, keeps the biggers.
-      * discard-bigger:   Discards the biggers,   keeps the smallests.
-      * discard-biggest:  Discards the biggests,  keeps the smallers.
+      * discard-smaller:  Discards the smaller,  keeps the biggest.
+      * discard-smallest: Discards the smallest, keeps the bigger.
+      * discard-bigger:   Discards the bigger,   keeps the smallest.
+      * discard-biggest:  Discards the biggest,  keeps the smaller.
 
       File-based:
       * discard-matching-path: Discards all duplicates whose file path match the
