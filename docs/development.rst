@@ -132,7 +132,7 @@ The documentation you're currently reading can be built locally with `Sphinx
     $ poetry run sphinx-build -b html ./docs ./docs/html
 
 The API documention is auto-generated from the code itself, and is taken care of
-automaticcaly by a `GitHub action workflow
+automatically by a `GitHub action workflow
 <https://github.com/kdeldycke/mail-deduplicate/blob/develop/.github/workflows/autofix.yaml>`_.
 
 
