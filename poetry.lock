@@ -852,7 +852,7 @@ telegram = ["requests"]
 
 [[package]]
 name = "twine"
-version = "3.4.1"
+version = "3.4.2"
 description = "Collection of utilities for publishing packages on PyPI"
 category = "dev"
 optional = false
@@ -952,7 +952,7 @@ docs = ["sphinx", "sphinx_rtd_theme"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "bb8e6230d8c319bf2a0d3cf72118b2b6feb4271bc198340d7d5560f2dad51720"
+content-hash = "62ef4e57c19a1ab0db4b5706a941d4e73b7b59a029efef5aa2543c2e67c0d441"
 
 [metadata.files]
 alabaster = [
@@ -1492,8 +1492,8 @@ tqdm = [
     {file = "tqdm-4.61.1.tar.gz", hash = "sha256:24be966933e942be5f074c29755a95b315c69a91f839a29139bf26ffffe2d3fd"},
 ]
 twine = [
-    {file = "twine-3.4.1-py3-none-any.whl", hash = "sha256:16f706f2f1687d7ce30e7effceee40ed0a09b7c33b9abb5ef6434e5551565d83"},
-    {file = "twine-3.4.1.tar.gz", hash = "sha256:a56c985264b991dc8a8f4234eb80c5af87fa8080d0c224ad8f2cd05a2c22e83b"},
+    {file = "twine-3.4.2-py3-none-any.whl", hash = "sha256:087328e9bb405e7ce18527a2dca4042a84c7918658f951110b38bc135acab218"},
+    {file = "twine-3.4.2.tar.gz", hash = "sha256:4caec0f1ed78dc4c9b83ad537e453d03ce485725f2aea57f1bb3fdde78dae936"},
 ]
 typed-ast = [
     {file = "typed_ast-1.4.3-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:2068531575a125b87a41802130fa7e29f26c09a2833fea68d9a40cf33902eba6"},
