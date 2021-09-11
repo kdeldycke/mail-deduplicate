@@ -41,7 +41,13 @@ from .colorize import (
     choice_style,
     colors,
 )
-from .deduplicate import Deduplicate
+from .deduplicate import (
+    Deduplicate,
+    BODY_HASHERS,
+    BODY_HASHER_SKIP,
+    BODY_HASHER_RAW,
+    BODY_HASHER_NORMALIZED,
+)
 from .mailbox import BOX_TYPES, BOX_STRUCTURES
 from .action import (
     ACTIONS,
@@ -120,6 +126,18 @@ def validate_regexp(ctx, param, value):
     "entries are ignored. Defaults to: {}.".format(
         " ".join([f"-h {choice_style(h)}" for h in HASH_HEADERS])
     ),
+)
+@click.option(
+    "-b",
+    "--hash-body",
+    default=BODY_HASHER_SKIP,
+    type=click.Choice(sorted(BODY_HASHERS), case_sensitive=False),
+    help="Body hash to use to compute each mail's hash. Defaults to "
+    f"{BODY_HASHER_SKIP} as it is the fastest: it will not compute the body hash and "
+    f"header hash should be sufficient to determine duplicate set. {BODY_HASHER_RAW} use the "
+    "body as it is: keeping line breaks and spaces to compute the body hash. "
+    f"{BODY_HASHER_NORMALIZED} use a cleaned body: remove all line breaks and spaces "
+    "before computing body hash (slowest).",
 )
 @click.option(
     "-S",
@@ -242,6 +260,7 @@ def mdedup(
     force_unlock,
     hash_only,
     hash_header,
+    hash_body,
     size_threshold,
     content_threshold,
     show_diff,
@@ -257,8 +276,8 @@ def mdedup(
 
     \b
     Process:
-    * Phase #1: run a first pass to compute from their headers the canonical hash of
-                each encountered mail.
+    * Phase #1: run a first pass to compute from their headers (and optionaly their body)
+                the canonical hash of each encountered mail.
     * Phase #2: a second pass to apply the selection strategy on each subset of
                 duplicate mails sharing the same hash.
     * Phase #3: perform an action on all selected mails.
@@ -349,6 +368,7 @@ def mdedup(
         force_unlock=force_unlock,
         hash_only=hash_only,
         hash_headers=hash_header,
+        hash_body=hash_body,
         size_threshold=size_threshold,
         content_threshold=content_threshold,
         show_diff=show_diff,
