@@ -200,6 +200,24 @@ class DedupMail:
         return hash_value
 
     @cachedproperty
+    def hash_raw_body(self):
+        """ Returns the canonical body hash of a mail. """
+        serialized_raw_body = "\n".join(self.body_lines).encode("utf-8")
+        hash_value = hashlib.sha224(serialized_raw_body).hexdigest()
+        logger.debug(f"Body raw hash: {hash_value}")
+        return hash_value
+
+    @cachedproperty
+    def hash_normalized_body(self):
+        """ Returns the normalized body hash of a mail. """
+        serialized_normalized_body = "".join(
+            [re.sub(r"\s", "", l) for l in self.body_lines]
+        ).encode("utf-8")
+        hash_value = hashlib.sha224(serialized_normalized_body).hexdigest()
+        logger.debug(f"Body normalized hash: {hash_value}")
+        return hash_value
+
+    @cachedproperty
     def canonical_headers(self):
         """Returns the full list of all canonical headers names and values in
         preparation for hashing."""
