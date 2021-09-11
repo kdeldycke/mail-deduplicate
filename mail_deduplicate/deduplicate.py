@@ -116,8 +116,8 @@ BODY_HASHER_NORMALIZED = "normalized"
 BODY_HASHERS = FrozenDict(
     {
         BODY_HASHER_SKIP: lambda _: "",
-        BODY_HASHER_RAW: None,
-        BODY_HASHER_NORMALIZED: None,
+        BODY_HASHER_RAW: lambda m: m.hash_raw_body,
+        BODY_HASHER_NORMALIZED: lambda m: m.hash_normalized_body,
     }
 )
 
