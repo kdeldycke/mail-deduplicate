@@ -187,14 +187,14 @@ def open_subfolders(box, force_unlock):
     return folder_list
 
 
-def create_box(path, box_type=False):
+def create_box(path, box_type=False, allow_existing=False):
     """Creates a brand new box from scratch."""
     assert isinstance(path, Path)
     logger.info(
         f"Creating new {choice_style(box_type)} box at {choice_style(str(path))} ..."
     )
 
-    if path.exists():
+    if path.exists() and allow_existing is not True:
         raise FileExistsError(path)
 
     constructor = BOX_TYPES[box_type]
