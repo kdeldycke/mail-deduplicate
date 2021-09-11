@@ -24,6 +24,7 @@ from pathlib import Path
 
 import click
 from boltons.cacheutils import cachedproperty
+from boltons.dictutils import FrozenDict
 from tabulate import tabulate
 
 from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders, logger
@@ -103,6 +104,21 @@ STATS_DEF = OrderedDict(
             "applied.",
         ),
     ]
+)
+
+
+# Body hashers.
+BODY_HASHER_SKIP = "skip"
+BODY_HASHER_RAW = "raw"
+BODY_HASHER_NORMALIZED = "normalized"
+
+
+BODY_HASHERS = FrozenDict(
+    {
+        BODY_HASHER_SKIP: lambda _: "",
+        BODY_HASHER_RAW: None,
+        BODY_HASHER_NORMALIZED: None,
+    }
 )
 
 
@@ -368,6 +384,10 @@ class Deduplicate:
             "compute hashes."
         )
 
+        body_hasher = BODY_HASHERS.get(self.conf.hash_body)
+        if not body_hasher:
+            raise NotImplementedError(f"{self.conf.hash_body} body hasher not implemented yet.")
+
         with click.progressbar(
             length=self.stats["mail_found"],
             label="Hashed mails",
@@ -382,7 +402,7 @@ class Deduplicate:
                     mail.conf = self.conf
 
                     try:
-                        mail_hash = mail.hash_key
+                        mail_hash = mail.hash_key + body_hasher(mail)
                     except TooFewHeaders as expt:
                         logger.warning(f"Rejecting {mail!r}: {expt.args[0]}")
                         self.stats["mail_rejected"] += 1

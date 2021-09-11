@@ -121,6 +121,7 @@ class Config:
         "force_unlock": False,
         "hash_only": False,
         "hash_headers": HASH_HEADERS,
+        "hash_body": None,
         "size_threshold": DEFAULT_SIZE_THRESHOLD,
         "content_threshold": DEFAULT_CONTENT_THRESHOLD,
         "show_diff": False,
