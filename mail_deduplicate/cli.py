@@ -212,10 +212,13 @@ def validate_regexp(ctx, param, value):
     f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
 )
 @click.option(
-    "--allow-existing",
+    "--export-append",
     is_flag=True,
     default=False,
-    help="Allow the destination mail box to already exist.",
+    help="If destination mail box already exists, add mails into it "
+    "instead of interrupting (default behavior). "
+    f"Affect {COPY_SELECTED}, {COPY_DISCARDED}, "
+    f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
 )
 @click.argument(
     "mail_sources",
@@ -257,7 +260,7 @@ def mdedup(
     action,
     export,
     export_format,
-    allow_existing,
+    export_append,
     mail_sources,
 ):
     """Deduplicate mails from a set of mail boxes.
@@ -365,7 +368,7 @@ def mdedup(
         action=action,
         export=export,
         export_format=export_format,
-        allow_existing=allow_existing,
+        export_append=export_append,
     )
 
     dedup = Deduplicate(conf)

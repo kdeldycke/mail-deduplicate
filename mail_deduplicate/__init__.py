@@ -130,7 +130,7 @@ class Config:
         "action": None,
         "export": None,
         "export_format": "mbox",
-        "allow_existing": False,
+        "export_append": False,
     }
 
     def __init__(self, **kwargs):
@@ -165,7 +165,7 @@ class Config:
         # expected to exists in the first place.
         if self.export:
             self.export = Path(self.export).resolve()
-            if self.export.exists() and self.allow_existing is not True:
+            if self.export.exists() and self.export_append is not True:
                 raise FileExistsError(self.export)
 
     def __getattr__(self, attr_id):
