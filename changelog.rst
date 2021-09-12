@@ -10,6 +10,9 @@ ChangeLog
 * Upgrade to Click 8.x.
 * Implements all missing ``copy-discarded``, ``move-discarded`` and
   ``delete-discarded`` actions. Closes #270 and #146.
+* Add ``-b``/``--hash-body`` option to set the way each email body is hashed.
+* Add ``--export-append`` option to allow for the resulting deduplicated email
+  to be appended to an existing mail box.
 * Skip duplicate sets without any matching duplicate candidates. Closes #203.
 
 
