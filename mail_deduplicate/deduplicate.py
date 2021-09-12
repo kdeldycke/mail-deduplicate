@@ -123,6 +123,12 @@ class DuplicateSet:
         """
         self.hash_key = hash_key
 
+        # Mails selected after application of selection strategy.
+        self.selection = set()
+
+        # Mails discarded after application of selection strategy.
+        self.discard = set()
+
         # Global config.
         self.conf = conf
 
@@ -238,10 +244,10 @@ class DuplicateSet:
             )
         )
 
-    def select_candidates(self):
-        """Returns the list of duplicates selected for action.
+    def categorize_candidates(self):
+        """Process the list of duplicates for action.
 
-        Run preliminary checks and return the candidates fitting the configured
+        Run preliminary checks and fill the corresponding sets fitting the configured
         strategy and safety checks.
         """
         # Fine-grained checks on mail differences.
@@ -288,7 +294,8 @@ class DuplicateSet:
         self.stats["mail_selected"] += candidate_count
         self.stats["mail_discarded"] += self.size - candidate_count
         self.stats["set_deduplicated"] += 1
-        return selected
+        self.selection = selected
+        self.discard = self.pool.difference(selected)
 
 
 class Deduplicate:
@@ -310,6 +317,9 @@ class Deduplicate:
 
         # Mails selected after application of selection strategy.
         self.selection = set()
+
+        # Mails discarded after application of selection strategy.
+        self.discard = set()
 
         # Global config.
         self.conf = conf
@@ -375,8 +385,8 @@ class Deduplicate:
 
         self.stats["mail_hashes"] += len(self.mails)
 
-    def select_all(self):
-        """Gather the final selection of mails from each duplicate set.
+    def build_sets(self):
+        """Build the selected and discarded sets from each duplicate set.
 
         We apply the selection strategy one duplicate set at a time to keep memory
         footprint low and make the log easier to read.
@@ -405,18 +415,17 @@ class Deduplicate:
                 self.stats["mail_unique"] += 1
                 self.stats["mail_selected"] += 1
                 self.stats["set_single"] += 1
-                candidates = mail_set
+                self.selection.update(mail_set)
 
             # We need to resort to a selection strategy to discriminate mails
             # within the set.
             else:
                 duplicates = DuplicateSet(hash_key, mail_set, self.conf)
-                candidates = duplicates.select_candidates()
+                duplicates.categorize_candidates()
                 # Merge duplicate set's stats to global stats.
                 self.stats += duplicates.stats
-
-            if candidates:
-                self.selection.update(candidates)
+                self.selection.update(duplicates.selection)
+                self.discard.update(duplicates.discard)
 
     def close_all(self):
         """ Close all open boxes. """
