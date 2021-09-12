@@ -382,7 +382,7 @@ def mdedup(
         ctx.exit()
 
     click.echo(title_style("\n● Phase #2 - Select mails in each group"))
-    dedup.select_all()
+    dedup.build_sets()
 
     click.echo(title_style("\n● Phase #3 - Perform action on selected mails"))
     perform_action(dedup)
