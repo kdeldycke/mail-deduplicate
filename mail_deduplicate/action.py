@@ -34,7 +34,8 @@ DELETE_DISCARDED = "delete-discarded"
 
 def __copy_mails(dedup, mails):
     """Copy all mails to a brand new box."""
-    box = create_box(dedup.conf.export, dedup.conf.export_format)
+    if not dedup.conf.dry_run:
+        box = create_box(dedup.conf.export, dedup.conf.export_format)
 
     for mail in mails:
         logger.debug(f"Copying {mail!r} to {dedup.conf.export}...")
@@ -46,12 +47,14 @@ def __copy_mails(dedup, mails):
             logger.info(f"{mail!r} copied.")
 
     logger.debug(f"Close {dedup.conf.export}")
-    box.close()
+    if not dedup.conf.dry_run:
+        box.close()
 
 
 def __move_mails(dedup, mails):
     """Move all mails to a brand new box."""
-    box = create_box(dedup.conf.export, dedup.conf.export_format)
+    if not dedup.conf.dry_run:
+        box = create_box(dedup.conf.export, dedup.conf.export_format)
 
     for mail in mails:
         logger.debug(f"Move {mail!r} form {mail.source_path} to {dedup.conf.export}...")
@@ -64,7 +67,8 @@ def __move_mails(dedup, mails):
             logger.info(f"{mail!r} copied.")
 
     logger.debug(f"Close {dedup.conf.export}")
-    box.close()
+    if not dedup.conf.dry_run:
+        box.close()
 
 
 def __delete_mails(dedup, mails):
