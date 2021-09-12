@@ -8,6 +8,9 @@ ChangeLog
 .. note:: This version is not yet released and is under active development
 
 * Upgrade to Click 8.x.
+* Implements all missing ``copy-discarded``, ``move-discarded`` and
+  ``delete-discarded`` actions. Closes #270 and #146.
+* Skip duplicate sets without any matching duplicate candidates. Closes #203.
 
 
 `6.1.3 (2021-04-13) <https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.2...v6.1.3>`_
