@@ -290,6 +290,16 @@ class DuplicateSet:
             self.stats["set_skipped_strategy"] += 1
             return
 
+        # Duplicate sets matching none are skipped altogether.
+        if candidate_count == 0:
+            logger.warning(
+                f"Skip set: No mail within were selected. "
+                "The strategy criterion was not able to select some."
+            )
+            self.stats["mail_skipped"] += self.size
+            self.stats["set_skipped_strategy"] += 1
+            return
+
         logger.info(f"{candidate_count} mail candidates selected for action.")
         self.stats["mail_selected"] += candidate_count
         self.stats["mail_discarded"] += self.size - candidate_count
