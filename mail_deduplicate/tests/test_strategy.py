@@ -388,6 +388,7 @@ def test_maildir_newest_strategy(invoke, make_box, strategy_id):
 
 random_mail_1 = MailFactory(message_id=MailFactory.random_string(30))
 random_mail_2 = MailFactory(message_id=MailFactory.random_string(30))
+random_mail_3 = MailFactory(message_id=MailFactory.random_string(30))
 
 
 @pytest.mark.parametrize("strategy_id", [SELECT_ONE, DISCARD_ALL_BUT_ONE])
@@ -397,10 +398,10 @@ def test_maildir_one_strategy(invoke, make_box, strategy_id):
         Maildir,
         [
             random_mail_1,
-            random_mail_1,
-            random_mail_1,
             random_mail_2,
             random_mail_2,
+            random_mail_1,
+            random_mail_3,
             random_mail_2,
         ],
     )
@@ -408,15 +409,14 @@ def test_maildir_one_strategy(invoke, make_box, strategy_id):
     result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
-    # Newest mails are selected but not the older ones.
     check_box(
         box_path,
         box_type,
         content=[
             random_mail_1,
-            random_mail_1,
             random_mail_2,
             random_mail_2,
+            random_mail_3,
         ],
     )
 
@@ -428,10 +428,10 @@ def test_maildir_all_but_one_strategy(invoke, make_box, strategy_id):
         Maildir,
         [
             random_mail_1,
-            random_mail_1,
-            random_mail_1,
             random_mail_2,
             random_mail_2,
+            random_mail_1,
+            random_mail_3,
             random_mail_2,
         ],
     )
@@ -439,12 +439,12 @@ def test_maildir_all_but_one_strategy(invoke, make_box, strategy_id):
     result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
-    # Newest mails are selected but not the older ones.
     check_box(
         box_path,
         box_type,
         content=[
             random_mail_1,
             random_mail_2,
+            random_mail_3,
         ],
     )
