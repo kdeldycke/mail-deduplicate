@@ -22,31 +22,31 @@ import arrow
 import pytest
 
 from ..strategy import (
-    STRATEGY_METHODS,
-    DISCARD_OLDER,
-    DISCARD_OLDEST,
-    DISCARD_NEWER,
-    DISCARD_NEWEST,
-    SELECT_OLDER,
-    SELECT_OLDEST,
-    SELECT_NEWER,
-    SELECT_NEWEST,
-    DISCARD_SMALLER,
-    DISCARD_SMALLEST,
+    DISCARD_ALL_BUT_ONE,
     DISCARD_BIGGER,
     DISCARD_BIGGEST,
-    SELECT_SMALLER,
-    SELECT_SMALLEST,
+    DISCARD_MATCHING_PATH,
+    DISCARD_NEWER,
+    DISCARD_NEWEST,
+    DISCARD_NON_MATCHING_PATH,
+    DISCARD_OLDER,
+    DISCARD_OLDEST,
+    DISCARD_ONE,
+    DISCARD_SMALLER,
+    DISCARD_SMALLEST,
+    SELECT_ALL_BUT_ONE,
     SELECT_BIGGER,
     SELECT_BIGGEST,
-    DISCARD_MATCHING_PATH,
-    DISCARD_NON_MATCHING_PATH,
     SELECT_MATCHING_PATH,
+    SELECT_NEWER,
+    SELECT_NEWEST,
     SELECT_NON_MATCHING_PATH,
-    DISCARD_ONE,
-    DISCARD_ALL_BUT_ONE,
+    SELECT_OLDER,
+    SELECT_OLDEST,
     SELECT_ONE,
-    SELECT_ALL_BUT_ONE,
+    SELECT_SMALLER,
+    SELECT_SMALLEST,
+    STRATEGY_METHODS,
 )
 from .conftest import MailFactory, check_box
 
@@ -71,7 +71,7 @@ biggest_mail = MailFactory(
 )
 
 
-# List of strategies and their required dummy options.
+# List of strategies and their required dummy parameters.
 strategy_options = dict.fromkeys(STRATEGY_METHODS, [])
 # Add dummy regexps.
 strategy_options.update(
@@ -119,6 +119,39 @@ def test_maildir_dry_run(invoke, make_box, strategy_id, options):
             smaller_mail,
             bigger_mail,
         ],
+    )
+
+
+@pytest.mark.parametrize(
+    "strategy_id",
+    [
+        DISCARD_SMALLER,
+        DISCARD_SMALLEST,
+        DISCARD_BIGGER,
+        DISCARD_BIGGEST,
+        SELECT_SMALLER,
+        SELECT_SMALLEST,
+        SELECT_BIGGER,
+        SELECT_BIGGEST,
+    ],
+)
+def test_maildir_size_strategy_no_criterion(invoke, make_box, strategy_id):
+    """ Whatever the size-based strategy, the duplicate set is not actionable if no selection criterion applies. """
+    box_path, box_type = make_box(
+        Maildir,
+        [
+            biggest_mail,
+            biggest_mail,
+        ],
+    )
+
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
+
+    assert result.exit_code == 0
+    check_box(
+        box_path,
+        box_type,
+        content=[biggest_mail, biggest_mail],
     )
 
 
@@ -258,6 +291,39 @@ newest_mail = MailFactory(date=newest_date)
 newer_mail = MailFactory(date=newer_date)
 older_mail = MailFactory(date=older_date)
 oldest_mail = MailFactory(date=oldest_date)
+
+
+@pytest.mark.parametrize(
+    "strategy_id",
+    [
+        DISCARD_OLDER,
+        DISCARD_OLDEST,
+        DISCARD_NEWER,
+        DISCARD_NEWEST,
+        SELECT_OLDER,
+        SELECT_OLDEST,
+        SELECT_NEWER,
+        SELECT_NEWEST,
+    ],
+)
+def test_maildir_time_strategy_no_criterion(invoke, make_box, strategy_id):
+    """ Whatever the time-based strategy, the duplicate set is not actionable if no selection criterion applies. """
+    box_path, box_type = make_box(
+        Maildir,
+        [
+            newest_mail,
+            newest_mail,
+        ],
+    )
+
+    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
+
+    assert result.exit_code == 0
+    check_box(
+        box_path,
+        box_type,
+        content=[newest_mail, newest_mail],
+    )
 
 
 @pytest.mark.parametrize("strategy_id", [SELECT_OLDER, DISCARD_NEWEST])

@@ -174,6 +174,8 @@ def select_all_but_one(duplicates):
 
 
 # Use symbols to define selection strategies.
+
+# Time-based strategies.
 DISCARD_OLDER = "discard-older"
 DISCARD_OLDEST = "discard-oldest"
 DISCARD_NEWER = "discard-newer"
@@ -183,6 +185,7 @@ SELECT_OLDEST = "select-oldest"
 SELECT_NEWER = "select-newer"
 SELECT_NEWEST = "select-newest"
 
+# Size-based strategies.
 DISCARD_SMALLER = "discard-smaller"
 DISCARD_SMALLEST = "discard-smallest"
 DISCARD_BIGGER = "discard-bigger"
@@ -192,11 +195,13 @@ SELECT_SMALLEST = "select-smallest"
 SELECT_BIGGER = "select-bigger"
 SELECT_BIGGEST = "select-biggest"
 
+# Location-based strategies.
 DISCARD_MATCHING_PATH = "discard-matching-path"
 DISCARD_NON_MATCHING_PATH = "discard-non-matching-path"
 SELECT_MATCHING_PATH = "select-matching-path"
 SELECT_NON_MATCHING_PATH = "select-non-matching-path"
 
+# Quantity-based strategies.
 DISCARD_ONE = "discard-one"
 DISCARD_ALL_BUT_ONE = "discard-all-but-one"
 SELECT_ONE = "select-one"

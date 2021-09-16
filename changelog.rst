@@ -7,9 +7,9 @@ ChangeLog
 
 .. note:: This version is not yet released and is under active development
 
-* Add more unittest to highlight broken selection logic in
-  ``{select, discard}-all-but-one`` and ``{select, discard}-one`` strategies.
-  Refs #146.
+* Add unittest to highlight broken selection logic in quantity-based
+  strategies. Refs #146.
+* Add unittests to cover time-based and size-based selection edge-cases.
 
 
 `6.2.0 (2021-09-12) <https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.3...v6.2.0>`_
