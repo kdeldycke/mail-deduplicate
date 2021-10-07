@@ -12,6 +12,14 @@ mail\_deduplicate.tests.conftest module
    :undoc-members:
    :show-inheritance:
 
+mail\_deduplicate.tests.test\_action module
+-------------------------------------------
+
+.. automodule:: mail_deduplicate.tests.test_action
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 mail\_deduplicate.tests.test\_cli module
 ----------------------------------------
 
