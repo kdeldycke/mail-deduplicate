@@ -16,7 +16,7 @@ python-versions = "*"
 
 [[package]]
 name = "arrow"
-version = "1.1.1"
+version = "1.2.0"
 description = "Better dates & times for Python"
 category = "main"
 optional = false
@@ -964,7 +964,7 @@ docs = ["sphinx", "sphinx_rtd_theme"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "815eb0d597cc6633114f78392dc6917300d4fea0679623cf1e8890aefc630a77"
+content-hash = "e8c05579b9e49b933e2bc02adc314616925ed0131805ac50e22db27ab48b39db"
 
 [metadata.files]
 alabaster = [
@@ -976,8 +976,8 @@ appdirs = [
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
 ]
 arrow = [
-    {file = "arrow-1.1.1-py3-none-any.whl", hash = "sha256:77a60a4db5766d900a2085ce9074c5c7b8e2c99afeaa98ad627637ff6f292510"},
-    {file = "arrow-1.1.1.tar.gz", hash = "sha256:dee7602f6c60e3ec510095b5e301441bc56288cb8f51def14dcb3079f623823a"},
+    {file = "arrow-1.2.0-py3-none-any.whl", hash = "sha256:8fb7d9d3d4bf90e49e734c22fa077bdd0964135c4b8120de2510575a8d1f620c"},
+    {file = "arrow-1.2.0.tar.gz", hash = "sha256:16fc29bbd9e425e3eb0fef3018297910a0f4568f21116fc31771e2760a50e074"},
 ]
 astroid = [
     {file = "astroid-2.7.3-py3-none-any.whl", hash = "sha256:dc1e8b28427d6bbef6b8842b18765ab58f558c42bb80540bd7648c98412af25e"},
