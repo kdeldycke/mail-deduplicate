@@ -16,7 +16,7 @@ python-versions = "*"
 
 [[package]]
 name = "arrow"
-version = "1.2.0"
+version = "1.2.2"
 description = "Better dates & times for Python"
 category = "main"
 optional = false
@@ -977,8 +977,8 @@ appdirs = [
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
 ]
 arrow = [
-    {file = "arrow-1.2.0-py3-none-any.whl", hash = "sha256:8fb7d9d3d4bf90e49e734c22fa077bdd0964135c4b8120de2510575a8d1f620c"},
-    {file = "arrow-1.2.0.tar.gz", hash = "sha256:16fc29bbd9e425e3eb0fef3018297910a0f4568f21116fc31771e2760a50e074"},
+    {file = "arrow-1.2.2-py3-none-any.whl", hash = "sha256:d622c46ca681b5b3e3574fcb60a04e5cc81b9625112d5fb2b44220c36c892177"},
+    {file = "arrow-1.2.2.tar.gz", hash = "sha256:05caf1fd3d9a11a1135b2b6f09887421153b94558e5ef4d090b567b47173ac2b"},
 ]
 astroid = [
     {file = "astroid-2.8.2-py3-none-any.whl", hash = "sha256:9eaeaf92b3e21b70bec1a262e7eb118d2e96294892a5de595c92a12adc80dfc2"},
