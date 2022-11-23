@@ -34,11 +34,11 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 ## Example
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/develop/docs/cli-colored-help.png">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/cli-colored-help.png">
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/develop/docs/cli-coloured-run.png">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/cli-coloured-run.png">
 </p>
 
 
