@@ -1,16 +1,16 @@
 ---
-name: "\U0001F41B Bug Report"
+name: 🐛 Bug Report
 about: Create a report to help improve the project
-title: '\U0001F41B <CHANGE BUG REPORT TITLE HERE>'
-labels: 'bug'
-assignees: 'kdeldycke'
+title: \U0001F41B <CHANGE BUG REPORT TITLE HERE>
+labels: bug
+assignees: kdeldycke
 ---
 
 #### Preliminary checks
 
-* [ ] I am running the latest version
-* [ ] I have [read the Code of Conduct](https://github.com/kdeldycke/mail-deduplicate/blob/develop/.github/code-of-conduct.md)
-* [ ] I have checked there is not other [Issues](https://github.com/kdeldycke/mail-deduplicate/issues) or [Pull Requests](https://github.com/kdeldycke/mail-deduplicate/pulls) covering the same topic to open
+- [ ] I am running the latest version
+- [ ] I have [read the Code of Conduct](https://github.com/kdeldycke/mail-deduplicate/blob/develop/.github/code-of-conduct.md)
+- [ ] I have checked there is not other [Issues](https://github.com/kdeldycke/mail-deduplicate/issues) or [Pull Requests](https://github.com/kdeldycke/mail-deduplicate/pulls) covering the same topic to open
 
 #### Describe the bug
 
@@ -19,6 +19,7 @@ A clear and concise description of what the bug is.
 #### To reproduce
 
 Steps to reproduce the behavior:
+
 1. The full `mdedup` CLI invocation you used.
 
    ```shell-session
@@ -38,7 +39,7 @@ A clear and concise description of what you expected to happen.
 
 Add here the raw copy of some console output you were able to produce. Some exemple includes:
 
-* The `mdedup` CLI invocation and its output:
+- The `mdedup` CLI invocation and its output:
 
 ```shell-session
 $ mdedup --verbosity=DEBUG ./my_maildir/
@@ -80,7 +81,8 @@ $ mdedup --verbosity=DEBUG ./my_maildir/
   ╘══════════════════════════════════════╧══════════╛
 ```
 
-* The Python traceback you encountered:
+- The Python traceback you encountered:
+
 ```python-tb
 Traceback (most recent call last):
   File "/Users/kde/Library/Caches/pypoetry/virtualenvs/mail-deduplicate-x4bGukRb-py3.8/lib/python3.8/site-packages/click/testing.py", line 329, in invoke
@@ -100,7 +102,8 @@ Traceback (most recent call last):
 AssertionError:
 ```
 
-* The `mdedup` output, but this time the `--verbosity=DEBUG` parameter:
+- The `mdedup` output, but this time the `--verbosity=DEBUG` parameter:
+
 ```shell-session
 $ mdedup --verbosity=DEBUG ./my_maildir/
 (...)
@@ -129,6 +132,7 @@ Wisely choose to feature here the full output or excerpt relevant to the bug you
 #### Environment
 
 All data on execution context as provided by `$ mdedup --version`:
+
 ```shell-session
 $ mdedup --version
 mdedup 6.0.0
