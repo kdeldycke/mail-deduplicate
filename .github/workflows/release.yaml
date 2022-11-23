@@ -1,0 +1,15 @@
+---
+name: Build & release
+"on":
+  # Target are chosen so that all commits get a chance to have their build tested.
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+
+  release:
+    uses: kdeldycke/workflows/.github/workflows/release.yaml@v1.9.2
+    secrets:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}

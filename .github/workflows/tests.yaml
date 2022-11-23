@@ -2,48 +2,111 @@
 name: Tests
 "on":
   push:
+    branches:
+      - main
   pull_request:
   schedule:
     # Run tests every Monday at 9:17 to catch regressions.
     - cron: "17 9 * * 1"
 
+# XXX Concurrency detection sucks and jobs gets killed randonmly.
+# concurrency:
+#   # Group workflow jobs so new commits cancels in-progress execution triggered by previous commits.
+#   # Source: https://mail.python.org/archives/list/pypa-committers@python.org/thread/PCBCQMJF64JGRBOX7E2EE4YLKHT4DI55/
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+#   cancel-in-progress: true
+
 jobs:
 
-  tests:
-    name: Run unittests
-    runs-on: ${{matrix.os}}
-    strategy:
-      matrix:
-        os:
-          - ubuntu-20.04
-          - ubuntu-18.04
-          - macos-11.0
-          - macos-10.15
-          - windows-2019
-        python-version:
-          - "3.9"
-          - "3.8"
-          - "3.7"
-          - "3.6"
+  test-matrix:
+    # There is no way to selective flags collections of elements in a matrix, without having to flag all combinations.
+    # This will became unmaintainable and tedious so we use this job to pre-compute which jobs is going to get our
+    # "stable" flag.
+    name: "OS/Python/stable matrix pre-compute"
+    runs-on: ubuntu-20.04
+    outputs:
+      test_matrix: ${{ steps.create_matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v2.3.4
-      - name: Set up Python ${{matrix.python-version}}
-        uses: actions/setup-python@v2.3.1
-        with:
-          python-version: ${{matrix.python-version}}
-      - name: Install package
+      - name: Create JSON matrix
+        id: create_matrix
+        shell: python
         run: |
-          python -m pip install --upgrade pip
+          import json
+          import os
+          from itertools import product
+          from pathlib import Path
+
+          # See what each os came pre-installed with at:
+          # https://help.github.com/en/actions/reference/software-installed-on-github-hosted-runners
+          os_list = {
+              "ubuntu-22.04",
+              "ubuntu-20.04",
+              "macos-12",
+              "macos-11",
+              "windows-2022",
+              "windows-2019",
+          }
+          python_list = {
+              "3.7",
+              "3.8",
+              "3.9",
+              "3.10",
+              "3.11",
+          }
+          # Safety check to ensure there is no overlap between the 2 sets.
+          assert not os_list.intersection(python_list)
+
+          # List of unstable creiterions.
+          unstable = []
+
+          jobs = []
+          for os_id, python_version in product(os_list, python_list):
+              job = {
+                  "os": os_id,
+                  "python-version": python_version,
+                  "state": "stable",
+              }
+              for criterion in unstable:
+                  if criterion.issubset(job.values()):
+                      job["state"] = "unstable"
+                      break
+              jobs.append(job)
+          matrix = json.dumps({"include": jobs})
+
+          env_file = Path(os.getenv("GITHUB_OUTPUT"))
+          env_file.write_text(f"matrix={matrix}")
+
+      - name: Print JSON matrix
+        run: |
+          echo '${{ steps.create_matrix.outputs.matrix }}'
+          jq -aR <<< echo '${{ steps.create_matrix.outputs.matrix }}'
+
+  tests:
+    needs:
+      - test-matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.test-matrix.outputs.test_matrix) }}
+    runs-on: ${{ matrix.os }}
+    # We keep going when a job flagged as not stable fails.
+    continue-on-error: ${{ matrix.state == 'unstable' }}
+    steps:
+      - uses: actions/checkout@v3.1.0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install click-extra and its dependencies
+        run: |
+          python -m pip install --upgrade setuptools pip
           python -m pip install --upgrade poetry
-          poetry install
-      - name: Tests and coverage
-        # pyproject.toml config file is specified at CLI level instead of
-        # letting coverage find it because of this bug:
-        # https://github.com/nedbat/coveragepy/issues/512#issuecomment-399707938
-        # https://github.com/pytest-dev/pytest-cov/issues/168#issuecomment-327533847
-        # https://github.com/pytest-dev/pytest-cov/issues/243
-        run: >
-          poetry run
-          pytest --cov-config=pyproject.toml --cov=./ --cov-report=xml
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2.1.0
+          poetry install --no-interaction --no-ansi
+
+      - name: Tests
+        run: |
+          poetry run pytest --cov-config=pyproject.toml --cov=./ --cov-report=xml
+
+      - name: Codecov upload
+        uses: codecov/codecov-action@v3.1.1

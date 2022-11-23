@@ -1,20 +1,18 @@
 ---
 name: Labels
 "on":
-  # Only the develop branch has authority on the project management. This will
-  # prevent any other tagging or release activity interfer with the project.
   push:
     branches:
-      - develop
+      - main
+
+# XXX Concurrency detection sucks and jobs gets killed randonmly.
+# concurrency:
+#   # Group workflow jobs so new commits cancels in-progress execution triggered by previous commits.
+#   # Source: https://mail.python.org/archives/list/pypa-committers@python.org/thread/PCBCQMJF64JGRBOX7E2EE4YLKHT4DI55/
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+#   cancel-in-progress: true
 
 jobs:
 
   labels:
-    name: Sync labels
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2.3.4
-      - name: Sync labels
-        uses: lannonbr/issue-label-manager-action@3.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    uses: kdeldycke/workflows/.github/workflows/labels.yaml@v1.9.2
