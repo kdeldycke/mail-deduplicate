@@ -7,14 +7,13 @@
 [![Coverage status](https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/main/graph/badge.svg)](https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/main)
 [![DOI](https://zenodo.org/badge/XXXXXXXX.svg)](https://zenodo.org/badge/latestdoi/XXXXXXXX)
 
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/cli-coloured-header.png" alt="Mail Deduplicate">
-</p>
-
 **What is Mail Deduplicate?**
 
 Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/cli-coloured-header.png" alt="Mail Deduplicate">
+</p>
 
 ## Features
 
@@ -34,11 +33,11 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 ## Example
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/cli-colored-help.png">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/cli-colored-help.png">
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/cli-coloured-run.png">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/cli-coloured-run.png">
 </p>
 
 
