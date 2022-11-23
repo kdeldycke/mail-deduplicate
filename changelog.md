@@ -6,6 +6,14 @@
 This version is not released yet and is under active development.
 ```
 
+- Migrate to external workflows to automate builds, releases, autofixes, linting, documentation, changelog, mailmap maintainance and label management.
+- Simplify project management by abandoning the dual use of `main`/`develop` branches.
+- Drop Python 3.6 support.
+- Add support for Python 3.11.
+- Run unittests on Python 3.10 and Python 3.11.
+- Drop unittests on deprecated `ubuntu-18.04` and `macos-10.15`.
+- Add unittests on `ubuntu-22.04`, `macos-12` and `windows-2022`.
+- Convert changelog from RST to Markdown.
 - Add unittest to highlight broken selection logic in quantity-based
   strategies. Refs {issue}`146`.
 - Add unittests to cover time-based and size-based selection edge-cases.
