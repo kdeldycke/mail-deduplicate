@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: "Mail Deduplicate"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: "Deldycke"
+    given-names: "Kevin"
+    email: kevin@deldycke.com
+    orcid: "https://orcid.org/XXXXXXXXX"
+doi: XXXXXXXXX
+version: 6.2.1
+# The release date is kept up to date by the external workflows. See:
+# https://github.com/kdeldycke/workflows/blob/33b704b489c1aa18b7b7efbf963e153e91e1c810/.github/workflows/changelog.yaml#L135-L137
+date-released: 2022-11-14
+url: "https://github.com/kdeldycke/mail-deduplicate"
