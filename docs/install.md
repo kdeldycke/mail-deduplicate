@@ -43,7 +43,7 @@ If you have difficulties to use `pip`, see
 
 ## Run `mdedup`
 
-Meta package manager should now be available system-wide:
+Mail Deduplicate should now be available system-wide:
 
 ```shell-session
 $ mdedup --version
@@ -149,7 +149,7 @@ FYI, here is a graph of Python package dependencies:
 
 ```{image} images/dependencies.png
 ---
-alt: Meta Package Manager dependency graph
+alt: Mail Deduplicate dependency graph
 align: center
 ---
 ```
