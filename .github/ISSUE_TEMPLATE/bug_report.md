@@ -2,7 +2,7 @@
 name: 🐛 Bug Report
 about: Create a report to help improve the project
 title: \U0001F41B <CHANGE BUG REPORT TITLE HERE>
-labels: bug
+labels: "🐛 bug"
 assignees: kdeldycke
 ---
 

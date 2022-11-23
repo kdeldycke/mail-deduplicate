@@ -1,8 +1,10 @@
 ---
-name: 🆕 Feature request
+name: 🎁 Feature request
 about: Suggest an idea for this project
-title: 🆕 <CHANGE FEATURE NAME HERE>
-labels: feature request, help wanted
+title: 🎁 <CHANGE FEATURE NAME HERE>
+labels:
+    - "🎁 feature request"
+    - "🙏 help wanted"
 assignees: kdeldycke
 ---
 
