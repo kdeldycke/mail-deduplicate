@@ -1,6 +1,11 @@
 mail\_deduplicate package
 =========================
 
+.. automodule:: mail_deduplicate
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -64,14 +69,6 @@ mail\_deduplicate.strategy module
 ---------------------------------
 
 .. automodule:: mail_deduplicate.strategy
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: mail_deduplicate
    :members:
    :undoc-members:
    :show-inheritance:
