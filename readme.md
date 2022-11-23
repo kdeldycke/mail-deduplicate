@@ -40,7 +40,6 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
   <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/cli-coloured-run.png">
 </p>
 
-
 ## Quickstart
 
 Easiest way is to install `mdedup` with [`pipx`](https://pypa.github.io/pipx/):
