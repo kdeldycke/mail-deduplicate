@@ -8,10 +8,22 @@ authors = ["Kevin Deldycke <kevin@deldycke.com>"]
 readme = "readme.rst"
 homepage = 'https://github.com/kdeldycke/mail-deduplicate'
 repository = 'https://github.com/kdeldycke/mail-deduplicate'
-documentation = 'https://mail-deduplicate.readthedocs.io'
+documentation = 'https://kdeldycke.github.io/mail-deduplicate'
 keywords = [
-    'CLI', 'mail', 'email', 'maildir', 'mbox', 'deduplication', 'dedupe',
-    'cleanup', 'mailbox', 'Babyl', 'MH', 'mbox', 'MMDF']
+    'CLI',
+    'mail',
+    'email',
+    'maildir',
+    'mbox',
+    'deduplication',
+    'dedupe',
+    'cleanup',
+    'mailbox',
+    'Babyl',
+    'MH',
+    'mbox',
+    'MMDF',
+]
 classifiers = [
     # See: https://pypi.org/pypi?%3Aaction=list_classifiers
     'Development Status :: 5 - Production/Stable',
@@ -23,72 +35,73 @@ classifiers = [
     'Operating System :: POSIX',
     'Programming Language :: Python :: Implementation :: CPython',
     'Topic :: Communications :: Email',
-    'Topic :: Utilities']
+    'Topic :: Utilities',
+    'Typing :: Typed',
+]
 
 [tool.poetry.urls]
 "Funding" = "https://github.com/sponsors/kdeldycke"
+"Issues" = "https://github.com/kdeldycke/mail-deduplicate/issues"
+"Changelog" = "https://kdeldycke.github.io/mail-deduplicate/changelog.html"
 
 [tool.poetry.dependencies]
 # List of python versions and their support status:
 # https://en.wikipedia.org/wiki/History_of_Python#Support
-python = "^3.6"
-boltons = ">=20.2.1,<22.0.0"
-click = "^8.0.0"
-click-log = "^0.3.2"
-tabulate = "^0.8.7"
-tomlkit = "^0.7.0"
-# Should have been put in dev-dependencies but extras only works from main
-# section.
-sphinx = {version = ">=3.4.2,<5.0.0", optional = true}
-sphinx_rtd_theme = {version = ">=0.5.1,<1.1.0", optional = true}
-click-help-colors = ">=0.8,<0.10"
-arrow = ">=0.17,<1.3"
+python = "^3.7"
+arrow = "^0.17"
+boltons = "^21.0.0"
+click = "^8.1.2"
+click-extra = "^3.3.1"
+tabulate = { extras = ["widechars"], version = "^0.9.0" }
+typing-extensions = { version = "^4.3.0", python = "< 3.10" }
 
 [tool.poetry.dev-dependencies]
-black = "^20.8b1"
 bump2version = "^1.0.1"
-check-wheel-contents = "^0.3.3"
-coverage = {extras = ["toml"], version = "^6.0"}
-pylint = "^2.11.1"
-pytest = "^6.2.5"
-# More pytest plugins at: http://plugincompat.herokuapp.com .
-pytest-cov = "^3.0.0"
-pytest-randomly = "^3.10.1"
-pyyaml = "^6.0"
-twine = "^3.4.2"
-yamllint = "^1.26.3"
-
-[tool.poetry.extras]
-# Workaround lacks of Poetry support by RTD: https://stackoverflow.com/a/58163431
-docs = ["sphinx", "sphinx_rtd_theme"]
+coverage = { extras = ["toml"], version = "^6.5" }
+furo = "^2022.9.29"
+mypy = "^0.991"
+pytest = "^7.2.0"
+# More pytest plugins at: https://docs.pytest.org/en/latest/reference/plugin_list.html
+pytest-cov = "^4.0.0"
+pytest-randomly = "^3.12.0"
+pytest-xdist = { extras = ["psutil"], version = "^3.0.2" }
+sphinx = "^5.3.0"
+sphinx-autodoc-typehints = "^1.19.4,"
+sphinx-click = "^4.3.0"
+sphinx-copybutton = "^0.5.1"
+sphinx-design = "^0.3.0"
+sphinx-issues = "^3.0.1"
+sphinxext-opengraph = "^0.7.2"
+types-tabulate = "^0.9.0"
 
 [tool.poetry.scripts]
-mdedup = 'mail_deduplicate.cli:mdedup'
-
-[tool.black]
-target-version = ['py36', 'py37', 'py38']
+mpm = 'mail_deduplicate.cli:mdedup'
 
 [tool.pylint.MASTER]
 # http://pylint.pycqa.org/en/latest/technical_reference/features.html
-output-format = "colorized"
-fail-under = "8"
 [tool.pylint."messages control"]
 # List messages with: $ pylint --list-msgs
 # C0114: missing-module-docstring
 # W0511: fixme
 # W1203: logging-fstring-interpolation
 disable = "C0114, W0511, W1203"
-[tool.pylint.LOGGING]
-# The type of string formatting that logging methods do. `old` means using %
-# formatting, `new` is for `{}` formatting.
-logging-format-style = "new"
-[tool.pylint.FORMAT]
-# Aligns to black's config: https://github.com/psf/black/blob/master/docs/compatible_configs.md#pylint
-max-line-length = "88"
+
+[tool.mypy]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
+pretty = true
+
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = ["boltons.*"]
 
 [tool.pytest.ini_options]
 # https://docs.pytest.org/en/latest/customize.html#pyproject-toml
-addopts = "--durations=10 --cov-report term --cov=mail_deduplicate"
+# --full-trace: have a full traceback printed on KeyboardInterrupt
+addopts = "--numprocesses auto --dist loadgroup --durations=10 --cov-report term --cov=mail_deduplicate"
 xfail_strict = true
 
 [tool.coverage.paths]
@@ -101,6 +114,14 @@ omit = ["*/tests/*"]
 [tool.coverage.report]
 omit = ["*/tests/*"]
 precision = 2
+
+[tool.check-wheel-contents]
+ignore = [
+    # W002: Wheel contains duplicate files:
+    #   mail_deduplicate/managers/__init__.py
+    #   mail_deduplicate/tests/__init__.py
+    "W002",
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
