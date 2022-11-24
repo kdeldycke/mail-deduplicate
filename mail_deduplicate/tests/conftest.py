@@ -19,11 +19,10 @@ from __future__ import annotations
 
 import random
 import string
-import sys
 from email.utils import formatdate as maildate
 from functools import partial
 from mailbox import Mailbox, Maildir, Message, mbox
-from textwrap import dedent, indent
+from textwrap import dedent
 from uuid import uuid4
 
 import arrow
@@ -56,8 +55,8 @@ class MailFactory:
     def __init__(self, **custom_fields):
         """Init the mail with custom fields.
 
-        You can bypass data normalization by passing the pre-formated date
-        string with ``date_rfc2822`` custom field instead of ``date``.
+        You can bypass data normalization by passing the pre-formated date string with
+        ``date_rfc2822`` custom field instead of ``date``.
         """
         # Defaults fields values.
         self.fields = {
@@ -150,9 +149,9 @@ def make_box(tmp_path):
 def check_box(box_path, box_type, content=None):
     """Check the content of a mail box (in any of maildir of mbox format).
 
-    Does not use ``set()`` types internally to avoid silent deduplication.
-    Translates all mails provided to ``mailbox.Message`` instances to provide
-    fair comparison in a normalized space.
+    Does not use ``set()`` types internally to avoid silent deduplication. Translates
+    all mails provided to ``mailbox.Message`` instances to provide fair comparison in a
+    normalized space.
     """
     # Check provided parameters.
     assert isinstance(box_path, str)

@@ -35,8 +35,8 @@ tools and utilities. """
 def build_box_constructors():
     """Build our own mail constructors for each mailbox format.
 
-    Gather all constructors defined by the standard Python library and extend them
-    with our ``DedupMail`` class.
+    Gather all constructors defined by the standard Python library and extend them with
+    our ``DedupMail`` class.
     """
     # Only keep subclasses of the ``mailbox.Mailbox`` interface, but the latter and
     # all others starting with an underscore.

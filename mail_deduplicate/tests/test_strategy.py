@@ -52,7 +52,7 @@ from .conftest import MailFactory, check_box
 
 
 def test_strategy_definitions():
-    """ Test deduplication strategy definitions. """
+    """Test deduplication strategy definitions."""
     for strategy_id, method in STRATEGY_METHODS.items():
         # All strategies are lower cases strings, with dashes.
         assert isinstance(strategy_id, str)
@@ -100,7 +100,7 @@ strategy_options.update(
 
 @pytest.mark.parametrize("strategy_id,params", strategy_options.items())
 def test_maildir_dry_run(invoke, make_box, strategy_id, params):
-    """ Check no mail is removed in dry-run mode. """
+    """Check no mail is removed in dry-run mode."""
     box_path, box_type = make_box(
         Maildir,
         [
@@ -405,7 +405,7 @@ test_cases = [
 def test_maildir_strategy(
     invoke, make_box, strategy_id, mailbox_input, mailbox_results
 ):
-    """ Generic test to check the result of a selection strategy. """
+    """Generic test to check the result of a selection strategy."""
     box_path, box_type = make_box(Maildir, mailbox_input)
 
     result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)

@@ -21,7 +21,7 @@ from ..action import ACTIONS
 
 
 def test_action_definitions():
-    """ Test duplicate action definitions. """
+    """Test duplicate action definitions."""
     for action_id, method in ACTIONS.items():
         # All actions are lower cases strings, with dashes.
         assert isinstance(action_id, str)

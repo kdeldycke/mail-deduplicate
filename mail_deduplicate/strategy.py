@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-""" Strategy definitions. """
+"""Strategy definitions."""
 
 import random
 import re
@@ -42,8 +42,8 @@ def select_older(duplicates):
 def select_oldest(duplicates):
     """Select all the oldest duplicates.
 
-    Discards the newers, i.e. all mail of the duplicate set but those sharing
-    the oldest timestamp.
+    Discards the newers, i.e. all mail of the duplicate set but those sharing the oldest
+    timestamp.
     """
     logger.info(
         f"Select all mails sharing the oldest {duplicates.oldest_timestamp} "
@@ -73,8 +73,8 @@ def select_newer(duplicates):
 def select_newest(duplicates):
     """Select all the newest duplicates.
 
-    Discards the olders, i.e. all mail of the duplicate set but those sharing the
-    newest timestamp.
+    Discards the olders, i.e. all mail of the duplicate set but those sharing the newest
+    timestamp.
     """
     logger.info(
         f"Select all mails sharing the newest {duplicates.newest_timestamp} "
@@ -136,9 +136,8 @@ def select_biggest(duplicates):
 
 
 def select_matching_path(duplicates):
-    """Select all duplicates whose file path match the regular expression provided
-    via the --regexp parameter.
-    """
+    """Select all duplicates whose file path match the regular expression provided via
+    the --regexp parameter."""
     logger.info(
         "Select all mails with file path matching the "
         f"{duplicates.conf.regexp.pattern} regexp..."
@@ -150,8 +149,7 @@ def select_matching_path(duplicates):
 
 def select_non_matching_path(duplicates):
     """Select all duplicates whose file path doesn't match the regular expression
-    provided via the --regexp parameter.
-    """
+    provided via the --regexp parameter."""
     logger.info(
         "Select all mails with file path not matching the "
         f"{duplicates.conf.regexp.pattern} regexp..."
@@ -230,14 +228,13 @@ STRATEGY_ALIASES = frozenset(
 
 
 def get_method_id(strat_id):
-    """ Transform strategy ID to its method ID. """
+    """Transform strategy ID to its method ID."""
     return strat_id.replace("-", "_")
 
 
 def build_method_mapping():
     """Precompute the mapping of all strategy IDs to their prefered method name,
-    including aliases as fallbacks.
-    """
+    including aliases as fallbacks."""
     methods = dict()
     for strategies in STRATEGY_ALIASES:
         fallback_method = None

@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-from mailbox import Maildir, mbox
+from mailbox import Maildir
 
 from click_extra.tests.conftest import skip_windows
 
@@ -33,9 +33,11 @@ invalid_date_mail_2 = MailFactory(date_rfc2822="Thu, 13 Dec 102 15:30 WET")
 
 @skip_windows
 def test_invalid_date_parsing_noop(invoke, make_box):
-    """Mails with strange non-standard dates gets parsed anyway and
-    grouped into duplicate sets. No deduplication happen: mails groups shares
-    the same metadata."""
+    """Mails with strange non-standard dates gets parsed anyway and grouped into
+    duplicate sets.
+
+    No deduplication happen: mails groups shares the same metadata.
+    """
     box_path, box_type = make_box(
         Maildir,
         [
@@ -66,8 +68,8 @@ def test_invalid_date_parsing_noop(invoke, make_box):
 
 @skip_windows
 def test_invalid_date_parsing_dedup(invoke, make_box):
-    """Mails with strange non-standard dates gets parsed anyway and
-    deduplicated if we reduce the source of hashed headers."""
+    """Mails with strange non-standard dates gets parsed anyway and deduplicated if we
+    reduce the source of hashed headers."""
     box_path, box_type = make_box(
         Maildir,
         [
