@@ -33,14 +33,6 @@ mail\_deduplicate.cli module
    :undoc-members:
    :show-inheritance:
 
-mail\_deduplicate.colorize module
----------------------------------
-
-.. automodule:: mail_deduplicate.colorize
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 mail\_deduplicate.deduplicate module
 ------------------------------------
 
