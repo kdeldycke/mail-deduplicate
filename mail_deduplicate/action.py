@@ -15,13 +15,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-from boltons.iterutils import unique
 from boltons.dictutils import FrozenDict
+from boltons.iterutils import unique
+from click_extra.colorize import default_theme as theme
 
 from . import logger
-from .colorize import choice_style
 from .mailbox import create_box
-
 
 # Actions performed on the mail selection.
 COPY_SELECTED = "copy-selected"
@@ -131,7 +130,7 @@ ACTIONS = FrozenDict(
 
 def perform_action(dedup):
     """Performs the action on selected mail candidates."""
-    logger.info(f"Perform {choice_style(dedup.conf.action)} action...")
+    logger.info(f"Perform {theme.choice(dedup.conf.action)} action...")
 
     selection_count = len(dedup.selection)
     if selection_count == 0:

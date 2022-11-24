@@ -17,7 +17,9 @@
 
 from mailbox import Maildir, mbox
 
-from .conftest import MailFactory, check_box, skip_windows
+from click_extra.tests.conftest import skip_windows
+
+from .conftest import MailFactory, check_box
 
 """ Some invalid dates are not supported on Windows as they produce negative
 timestamps. See:

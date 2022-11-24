@@ -15,10 +15,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+from __future__ import annotations
+
 import random
 import string
 import sys
 from email.utils import formatdate as maildate
+from functools import partial
 from mailbox import Mailbox, Maildir, Message, mbox
 from textwrap import dedent, indent
 from uuid import uuid4
@@ -29,59 +32,18 @@ import pytest
 from boltons.iterutils import flatten, same
 from boltons.tbutils import ExceptionInfo
 from click.testing import CliRunner
+from click_extra.tests.conftest import create_config
+from click_extra.tests.conftest import invoke as invoke_extra
+from click_extra.tests.conftest import runner
 
-from .. import CLI_NAME
 from ..cli import mdedup
 
 """ Fixtures, configuration and helpers for tests. """
 
 
-def is_windows():
-    """ Return `True` only if current platform is of the Windows family. """
-    return sys.platform in ["win32", "cygwin"]
-
-
-skip_windows = pytest.mark.skipif(is_windows(), reason="Skip Windows")
-""" Pytest mark to skip a test if it is run on a Windows system. """
-
-
-def print_cli_output(cmd, output):
-    """ Simulate CLI output. Used to print debug traces in test results. """
-    print("\n► {}".format(click.style(" ".join(cmd), fg="white")))
-    if output:
-        print(indent(output, "  "))
-
-
 @pytest.fixture
-def runner():
-    runner = CliRunner()
-    with runner.isolated_filesystem():
-        yield runner
-
-
-@pytest.fixture
-def invoke(runner):
-    """ Executes Click's CLI, print output and return results. """
-
-    def _run(*args, color=False):
-        # We allow for nested iterables and None values as args for
-        # convenience. We just need to flatten and filters them out.
-        args = list(filter(None.__ne__, flatten(args)))
-        if args:
-            assert same(map(type, args), str)
-
-        result = runner.invoke(mdedup, args, color=color)
-
-        print_cli_output([CLI_NAME] + args, result.output)
-
-        # Print some more debug info.
-        print(result)
-        if result.exception:
-            print(ExceptionInfo.from_exc_info(*result.exc_info).get_formatted())
-
-        return result
-
-    return _run
+def invoke(invoke_extra):
+    return partial(invoke_extra, mdedup)
 
 
 class MailFactory:
@@ -120,7 +82,7 @@ class MailFactory:
             self.fields["date_rfc2822"] = maildate(self.fields["date"].float_timestamp)
 
     def render(self):
-        """ Returns the full, rendered content of the mail. """
+        """Returns the full, rendered content of the mail."""
         return dedent(
             """\
             Return-path: <none@nohost.com>
@@ -203,7 +165,7 @@ def check_box(box_path, box_type, content=None):
     # Compares the content of the box.
     box = box_type(box_path, create=False)
 
-    # TODO: use a COunter to count occurrences
+    # TODO: use a Counter to count occurrences.
 
     assert len(box) == len(content)
     mails_found = sorted([str(m) for m in box])

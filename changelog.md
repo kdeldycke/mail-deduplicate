@@ -6,14 +6,22 @@
 This version is not released yet and is under active development.
 ```
 
-- Type code.
 - Drop Python 3.6 support.
 - Add support for Python 3.11.
+- Add new `--time`/`--no-time` option to measure elapsed execution time.
+- Add new `--color`/`--no-color` and `--ansi`/`--no-ansi` alias options to deactivate CLI color rendering.
+- Add new `--color`/`--no-color` and `--ansi`/`--no-ansi` alias options to deactivate CLI color rendering.
+- Add new `-C`/`--config` option which support local and remote configuration file in TOML, YAML, JSON, INI or XML formats.
+- Add new `--show-params` option to debug default parameter value and provenance.
+- Fix incconsistent printing of help screen. Closes {issue}`160`.
+- Force linear rendering of options in help screen to improve readability.
 - Fix run on Python 3.10. Closes {issue}`361`.
 - Run unittests on Python 3.10 and Python 3.11.
 - Add dependency on `click-extra` and `typing-extensions`
 - Remove direct dependency on `click-help-colors`, `click-log` and `tomlkit`.
-- Move `sphinx` dependencies to dev requirements.
+- Add unittest to highlight broken selection logic in quantity-based
+  strategies. Refs {issue}`146`.
+- Add unittests to cover time-based and size-based selection edge-cases.
 - Drop unittests on deprecated `ubuntu-18.04` and `macos-10.15`.
 - Add unittests on `ubuntu-22.04`, `macos-12` and `windows-2022`.
 - Run tests on multiple cores.
@@ -21,9 +29,7 @@ This version is not released yet and is under active development.
 - Migrate to external workflows to automate builds, releases, autofixes, linting, documentation, changelog, mailmap maintainance and label management.
 - Convert all documentation from RST to Markdown. Closes {issue}`368`.
 - Keep CLI output in sync in documentation. Closes {issue}`23`.
-- Add unittest to highlight broken selection logic in quantity-based
-  strategies. Refs {issue}`146`.
-- Add unittests to cover time-based and size-based selection edge-cases.
+- Move `sphinx` dependencies to dev requirements.
 - Add citation file.
 
 ## {gh}`6.2.0 (2021-09-12) <compare/v6.1.3...v6.2.0>`

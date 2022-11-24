@@ -17,44 +17,21 @@
 
 """ Expose package-wide elements. """
 
-import logging
-import sys
-from operator import methodcaller
 from pathlib import Path
 
-from boltons.ecoutils import get_profile
 from boltons.iterutils import unique
-
-# Canonical name of the CLI.
-CLI_NAME = "mdedup"
 
 __version__ = "7.0.0"
 
 
-# Environment data.
-env_data = get_profile(scrub=True)
+from click_extra.logging import logger
 
-
-# Initialize global logger.
-logger = logging.getLogger(CLI_NAME)
-
-
-# Ordered list of headers to use by default to compute the hash of a mail.
 HASH_HEADERS = (
     "Date",
     "From",
     "To",
-    # No Cc since mailman apparently sometimes trims list members from the Cc
-    # header to avoid sending duplicates: https://mail.python.org/pipermail
-    # /mailman-developers/2002-September/013233.html . But this means that
-    # copies of mail reflected back from the list server will have a different
-    # Cc to the copy saved by the MUA at send-time.
     # 'Cc',
-    # No Bcc either since copies of the mail saved by the MUA at send-time
-    # will have Bcc, but copies reflected back from the list server won't.
     # 'Bcc',
-    # No Reply-To since a mail could be Cc'd to two lists with different
-    # Reply-To munging options set.
     # 'Reply-To',
     "Subject",
     "MIME-Version",
@@ -64,55 +41,75 @@ HASH_HEADERS = (
     "X-Priority",
     "Message-ID",
 )
+"""
+Ordered list of headers to use by default to compute the hash of a mail.
+
+By default we exclude:
+- `Cc` since `mailman` apparently sometimes trims list members from the `Cc`
+    header to avoid sending duplicates(see: https://mail.python.org/pipermail
+    /mailman-developers/2002-September/013233.html). But this means that
+    copies of mail reflected back from the list server will have a different
+    `Cc` to the copy saved by the MUA at send-time.
+- `Bcc` either since copies of the mail saved by the MUA at send-time
+    will have `Bcc`, but copies reflected back from the list server won't.
+- `Reply-To` since a mail could be `Cc`'d to two lists with different
+    `Reply-To` munging options set.
+"""
 
 
-# Below this value, we consider not having enough data to compute a solid hash.
 MINIMAL_HEADERS_COUNT = 4
+"""Below this value, we consider not having enough data to compute a solid hash."""
 
 
-# Since we're ignoring the Content-Length header for the reasons stated above,
-# we limit the allowed difference between the sizes of the message payloads. If
-# this is exceeded, a warning is issued and the messages are not considered
-# duplicates, because this could point to message corruption somewhere, or a
-# false positive. Note that the headers are not counted towards this threshold,
-# because many headers can be added by mailing list software such as mailman,
-# or even by the process of sending the mail through various MTAs - one copy
-# could have been stored by the sender's MUA prior to sending, without any
-# Received: headers, and another copy could be reflected back via a Cc-to-self
-# mechanism or mailing list server. But this threshold has to be at least large
-# enough to allow for footers added by mailing list servers.
-DEFAULT_SIZE_THRESHOLD = 512  # bytes
+DEFAULT_SIZE_THRESHOLD = 512
+"""
+Default size threshold in bytes.
 
+Since we're ignoring the `Content-Length` header for the reasons stated above,
+we limit the allowed difference between the sizes of the message payloads. If
+this is exceeded, a warning is issued and the messages are not considered
+duplicates, because this could point to message corruption somewhere, or a
+false positive. Note that the headers are not counted towards this threshold,
+because many headers can be added by mailing list software such as mailman,
+or even by the process of sending the mail through various MTAs - one copy
+could have been stored by the sender's MUA prior to sending, without any
+Received: headers, and another copy could be reflected back via a Cc-to-self
+mechanism or mailing list server. But this threshold has to be at least large
+enough to allow for footers added by mailing list servers.
+"""
 
-# Similarly, we generated unified diffs of duplicates and ensure that the diff
-# is not greater than a certain size.
-DEFAULT_CONTENT_THRESHOLD = 768  # bytes
+DEFAULT_CONTENT_THRESHOLD = 768
+"""
+Default content threshold in bytes.
 
+Similarly, we generated unified diffs of duplicates and ensure that the diff
+is not greater than a certain size.
+"""
 
-# Sources from which we compute a mail's canonical timestamp.
 DATE_HEADER = "date-header"
 CTIME = "ctime"
 TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
+""" Sources from which we compute a mail's canonical timestamp. """
 
 
 class TooFewHeaders(Exception):
 
-    """ Not enough headers were found to produce a solid hash. """
+    """Not enough headers were found to produce a solid hash."""
 
 
 class SizeDiffAboveThreshold(Exception):
 
-    """ Difference in mail size is greater than threshold. """
+    """Difference in mail size is greater than threshold."""
 
 
 class ContentDiffAboveThreshold(Exception):
 
-    """ Difference in mail content is greater than threshold. """
+    """Difference in mail content is greater than threshold."""
 
 
 class Config:
 
-    """ Holds global configuration. """
+    """Holds global configuration."""
 
     # Keep these defaults in sync with CLI option definitions.
     default_conf = {
@@ -135,7 +132,7 @@ class Config:
     }
 
     def __init__(self, **kwargs):
-        """ Validates configuration parameter types and values. """
+        """Validates configuration parameter types and values."""
         # Load default values.
         self.conf = self.default_conf.copy()
 
@@ -170,6 +167,6 @@ class Config:
                 raise FileExistsError(self.export)
 
     def __getattr__(self, attr_id):
-        """ Expose configuration entries as properties. """
+        """Expose configuration entries as properties."""
         if attr_id in self.conf:
             return self.conf[attr_id]

@@ -25,10 +25,10 @@ from pathlib import Path
 import click
 from boltons.cacheutils import cachedproperty
 from boltons.dictutils import FrozenDict
+from click_extra.colorize import default_theme as theme
 from tabulate import tabulate
 
 from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders, logger
-from .colorize import choice_style, subtitle_style
 from .mailbox import open_box
 from .strategy import apply_strategy
 
@@ -160,12 +160,12 @@ class DuplicateSet:
         logger.debug(f"{self!r} created.")
 
     def __repr__(self):
-        """ Print internal raw states for debugging. """
+        """Print internal raw states for debugging."""
         return f"<{self.__class__.__name__} hash={self.hash_key} size={self.size}>"
 
     @cachedproperty
     def size(self):
-        """ Return the size of the duplicate set. """
+        """Return the size of the duplicate set."""
         return len(self.pool)
 
     @cachedproperty
@@ -354,7 +354,7 @@ class Deduplicate:
         self.stats = Counter(dict.fromkeys(STATS_DEF, 0))
 
     def add_source(self, source_path):
-        """Registers a source of mails, validates and opens it. """
+        """Registers a source of mails, validates and opens it."""
         # Make the path absolute, resolving any symlinks. Do not allow duplicates in
         # our sources, as we use the path as a unique key to tie back a mail from its
         # source when performing the action later.
@@ -380,7 +380,7 @@ class Deduplicate:
         Displays a progress bar as the operation might be slow.
         """
         logger.info(
-            f"Use [{', '.join(map(choice_style, self.conf.hash_headers))}] headers to "
+            f"Use [{', '.join(map(theme.choice, self.conf.hash_headers))}] headers to "
             "compute hashes."
         )
 
@@ -425,7 +425,7 @@ class Deduplicate:
         """
         if self.conf.strategy:
             logger.info(
-                f"{choice_style(self.conf.strategy)} strategy will be applied on each "
+                f"{theme.choice(self.conf.strategy)} strategy will be applied on each "
                 "duplicate set to select candidates."
             )
         else:
@@ -438,7 +438,7 @@ class Deduplicate:
             # Alter log level depending on set length.
             mail_count = len(mail_set)
             log_level = logger.debug if mail_count == 1 else logger.info
-            log_level(subtitle_style(f"◼ {mail_count} mails sharing hash {hash_key}"))
+            log_level(theme.subheading(f"◼ {mail_count} mails sharing hash {hash_key}"))
 
             # Unique mails are always selected. No need to mobilize the whole
             # DuplicateSet machinery.
@@ -460,13 +460,13 @@ class Deduplicate:
                 self.discard.update(duplicates.discard)
 
     def close_all(self):
-        """ Close all open boxes. """
+        """Close all open boxes."""
         for source_path, box in self.sources.items():
             logger.debug(f"Close {source_path}")
             box.close()
 
     def report(self):
-        """ Returns a text report of user-friendly statistics and metrics. """
+        """Returns a text report of user-friendly statistics and metrics."""
         output = ""
         for prefix, title in (("mail_", "Mails"), ("set_", "Duplicate sets")):
             table = [[title, "Metric", "Description"]]

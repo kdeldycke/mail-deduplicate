@@ -22,9 +22,9 @@ from pathlib import Path
 
 from boltons.dictutils import FrozenDict
 from boltons.iterutils import flatten
+from click_extra.colorize import default_theme as theme
 
 from . import logger
-from .colorize import choice_style
 from .mail import DedupMail
 
 """ Patch and tweak Python's standard library mailbox constructors to set
@@ -122,7 +122,7 @@ def autodetect_box_type(path):
     if not box_type:
         raise ValueError("Unrecognized mail source type.")
 
-    logger.info(f"{choice_style(box_type)} detected.")
+    logger.info(f"{theme.choice(box_type)} detected.")
     return box_type
 
 
@@ -134,7 +134,7 @@ def open_box(path, box_type=False, force_unlock=False):
     If ``box_type`` is provided, forces the opening of the box in the specified format.
     Defaults to (crude) autodetection.
     """
-    logger.info(f"\nOpening {choice_style(path)} ...")
+    logger.info(f"\nOpening {theme.choice(path)} ...")
     path = Path(path)
     if not box_type:
         box_type = autodetect_box_type(path)
@@ -191,7 +191,7 @@ def create_box(path, box_type=False, export_append=False):
     """Creates a brand new box from scratch."""
     assert isinstance(path, Path)
     logger.info(
-        f"Creating new {choice_style(box_type)} box at {choice_style(str(path))} ..."
+        f"Creating new {theme.choice(box_type)} box at {theme.choice(str(path))} ..."
     )
 
     if path.exists() and export_append is not True:
