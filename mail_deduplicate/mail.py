@@ -21,7 +21,6 @@ import inspect
 import mailbox
 import os
 import re
-import time
 
 import arrow
 from boltons.cacheutils import cachedproperty
@@ -43,9 +42,8 @@ class DedupMail:
     """
 
     def __init__(self, message=None):
-        """Initialize a pre-parsed ``Message`` instance the same way the default
-        factory in Python's ``mailbox`` module does.
-        """
+        """Initialize a pre-parsed ``Message`` instance the same way the default factory
+        in Python's ``mailbox`` module does."""
         # Hunt down in our parent classes (but ourselve) the first one inheriting the
         # mailbox.Message class. That way we can get to the original factory.
         orig_message_klass = None
@@ -103,8 +101,8 @@ class DedupMail:
     def timestamp(self):
         """Compute the normalized canonical timestamp of the mail.
 
-        Sourced from the message's header by default. In the case of maildir,
-        can be sourced from the email's file from the filesystem.
+        Sourced from the message's header by default. In the case of maildir, can be
+        sourced from the email's file from the filesystem.
         """
         # XXX ctime does not refer to creation time on POSIX systems, but
         # rather the last time the inode data changed. Source:
@@ -128,9 +126,9 @@ class DedupMail:
     def size(self):
         """Returns canonical mail size.
 
-        Size is computed as the length of the message body, i.e. the payload of
-        the mail stripped of all its headers, not from the mail file
-        persisting on the file-system.
+        Size is computed as the length of the message body, i.e. the payload of the mail
+        stripped of all its headers, not from the mail file persisting on the file-
+        system.
         """
         return len("".join(self.body_lines))
 
@@ -140,7 +138,7 @@ class DedupMail:
 
     @cachedproperty
     def body_lines(self):
-        """ Return a normalized list of lines from message's body. """
+        """Return a normalized list of lines from message's body."""
         body = []
         if self.preamble is not None:
             body.extend(self.preamble.splitlines(keepends=True))
@@ -193,7 +191,7 @@ class DedupMail:
 
     @cachedproperty
     def hash_key(self):
-        """ Returns the canonical hash of a mail. """
+        """Returns the canonical hash of a mail."""
         logger.debug(f"Serialized headers: {self.serialized_headers!r}")
         hash_value = hashlib.sha224(self.serialized_headers).hexdigest()
         logger.debug(f"Hash: {hash_value}")
@@ -201,7 +199,7 @@ class DedupMail:
 
     @cachedproperty
     def hash_raw_body(self):
-        """ Returns the canonical body hash of a mail. """
+        """Returns the canonical body hash of a mail."""
         serialized_raw_body = "\n".join(self.body_lines).encode("utf-8")
         hash_value = hashlib.sha224(serialized_raw_body).hexdigest()
         logger.debug(f"Body raw hash: {hash_value}")
@@ -209,7 +207,7 @@ class DedupMail:
 
     @cachedproperty
     def hash_normalized_body(self):
-        """ Returns the normalized body hash of a mail. """
+        """Returns the normalized body hash of a mail."""
         serialized_normalized_body = "".join(
             [re.sub(r"\s", "", l) for l in self.body_lines]
         ).encode("utf-8")
@@ -244,8 +242,8 @@ class DedupMail:
 
     @cachedproperty
     def pretty_canonical_headers(self):
-        """Renders into a table and in the same order, headers names and values
-        used to produce mail's hash.
+        """Renders into a table and in the same order, headers names and values used to
+        produce mail's hash.
 
         Returns a string ready for printing to the user or for debugging.
         """
@@ -254,7 +252,7 @@ class DedupMail:
 
     @cachedproperty
     def serialized_headers(self):
-        """ Serialize the canonical headers into a single string ready to be hashed. """
+        """Serialize the canonical headers into a single string ready to be hashed."""
         # At this point we should have at an absolute minimum of headers.
         headers_count = len(self.canonical_headers)
         if headers_count < MINIMAL_HEADERS_COUNT:

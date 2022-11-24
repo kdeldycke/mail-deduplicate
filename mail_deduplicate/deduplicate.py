@@ -133,9 +133,9 @@ class DuplicateSet:
     def __init__(self, hash_key, mail_set, conf):
         """Load-up the duplicate set of mail and freeze pool.
 
-        Once loaded-up, the pool of parsed mails is considered frozen for the
-        rest of the duplicate set's life. This allows aggressive caching of
-        lazy instance attributes depending on the pool content.
+        Once loaded-up, the pool of parsed mails is considered frozen for the rest of
+        the duplicate set's life. This allows aggressive caching of lazy instance
+        attributes depending on the pool content.
         """
         self.hash_key = hash_key
 
@@ -188,9 +188,9 @@ class DuplicateSet:
         """Ensures all mail differs in the limits imposed by size and content
         thresholds.
 
-        Compare all mails of the duplicate set with each other, both in size
-        and content. Raise an error if we're not within the limits imposed by
-        the threshold settings.
+        Compare all mails of the duplicate set with each other, both in size and
+        content. Raise an error if we're not within the limits imposed by the threshold
+        settings.
         """
         logger.info("Check mail differences are below the thresholds.")
         if self.conf.size_threshold < 0:
@@ -326,8 +326,8 @@ class DuplicateSet:
 
 class Deduplicate:
 
-    """Load-up messages, search for duplicates, apply selection strategy and perform
-    the action.
+    """Load-up messages, search for duplicates, apply selection strategy and perform the
+    action.
 
     Similar messages sharing the same hash are grouped together in a ``DuplicateSet``.
     """
