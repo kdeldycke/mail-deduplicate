@@ -32,7 +32,6 @@ from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders, 
 from .mailbox import open_box
 from .strategy import apply_strategy
 
-# Reference all tracked statistics and their definition.
 STATS_DEF = OrderedDict(
     [
         ("mail_found", "Total number of mails encountered from all mail sources."),
@@ -105,14 +104,12 @@ STATS_DEF = OrderedDict(
         ),
     ]
 )
+"""All tracked statistics and their definition."""
 
 
-# Body hashers.
 BODY_HASHER_SKIP = "skip"
 BODY_HASHER_RAW = "raw"
 BODY_HASHER_NORMALIZED = "normalized"
-
-
 BODY_HASHERS = FrozenDict(
     {
         BODY_HASHER_SKIP: lambda _: "",
@@ -120,11 +117,12 @@ BODY_HASHERS = FrozenDict(
         BODY_HASHER_NORMALIZED: lambda m: m.hash_normalized_body,
     }
 )
+"""Body hashers."""
 
 
 class DuplicateSet:
 
-    """A duplicate set of mails sharing the same hash.
+    """A set of mails sharing the same hash.
 
     Implements all the safety checks required before we can apply any selection
     strategy.
@@ -224,9 +222,11 @@ class DuplicateSet:
                     raise ContentDiffAboveThreshold
 
     def diff(self, mail_a, mail_b):
-        # TODO: rewrite the diff algorithm to not rely on naive unified diff
-        # result parsing.
-        """Return difference in bytes between two mails' normalized body."""
+        """Return difference in bytes between two mails' normalized body.
+
+        .. todo::
+            Rewrite the diff algorithm to not rely on naive unified diff result parsing.
+        """
         return len(
             "".join(
                 unified_diff(

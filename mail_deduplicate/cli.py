@@ -295,6 +295,7 @@ def mdedup(
     """
     # Print help screen and exit if no mail source provided.
     if not mail_sources:
+        # Same as click_extra.colorize.HelpOption.print_help.
         echo(ctx.get_help(), color=ctx.color)
         ctx.exit()
 

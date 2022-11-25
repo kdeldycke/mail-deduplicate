@@ -26,12 +26,8 @@ from textwrap import dedent
 from uuid import uuid4
 
 import arrow
-import click
 import pytest
-from boltons.iterutils import flatten, same
-from boltons.tbutils import ExceptionInfo
-from click.testing import CliRunner
-from click_extra.tests.conftest import create_config
+from boltons.iterutils import same
 from click_extra.tests.conftest import invoke as invoke_extra
 from click_extra.tests.conftest import runner
 
