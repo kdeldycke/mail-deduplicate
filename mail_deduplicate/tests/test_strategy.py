@@ -396,7 +396,7 @@ test_cases = [
             strategy_id,
             mailbox_input,
             mailbox_results,
-            id=f"{case_id}_{strategy_id}_strategy",
+            id=f"{case_id}|{strategy_id}",
         )
         for case_id, strategy_ids, mailbox_input, mailbox_results in test_cases
         for strategy_id in strategy_ids

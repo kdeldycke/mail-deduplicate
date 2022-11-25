@@ -150,8 +150,6 @@ class DuplicateSet:
 
         # Pool referencing all duplicated mails and their attributes.
         self.pool = frozenset(mail_set)
-        # There is no point creating a duplicate set with a single mail.
-        assert self.size > 1
 
         # Set metrics.
         self.stats = Counter()
@@ -440,24 +438,13 @@ class Deduplicate:
             log_level = logger.debug if mail_count == 1 else logger.info
             log_level(theme.subheading(f"◼ {mail_count} mails sharing hash {hash_key}"))
 
-            # Unique mails are always selected. No need to mobilize the whole
-            # DuplicateSet machinery.
-            if mail_count == 1:
-                logger.debug("Add unique message to selection.")
-                self.stats["mail_unique"] += 1
-                self.stats["mail_selected"] += 1
-                self.stats["set_single"] += 1
-                self.selection.update(mail_set)
-
-            # We need to resort to a selection strategy to discriminate mails
-            # within the set.
-            else:
-                duplicates = DuplicateSet(hash_key, mail_set, self.conf)
-                duplicates.categorize_candidates()
-                # Merge duplicate set's stats to global stats.
-                self.stats += duplicates.stats
-                self.selection.update(duplicates.selection)
-                self.discard.update(duplicates.discard)
+            # Apply the selection strategy to discriminate mails within the set.
+            duplicates = DuplicateSet(hash_key, mail_set, self.conf)
+            duplicates.categorize_candidates()
+            # Merge duplicate set's stats to global stats.
+            self.stats += duplicates.stats
+            self.selection.update(duplicates.selection)
+            self.discard.update(duplicates.discard)
 
     def close_all(self):
         """Close all open boxes."""
