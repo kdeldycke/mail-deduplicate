@@ -17,8 +17,6 @@
 
 from mailbox import Maildir
 
-from .. import __version__
-
 
 def test_bare_call(invoke):
     result = invoke()
