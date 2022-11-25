@@ -23,7 +23,7 @@ from .. import __version__
 def test_bare_call(invoke):
     result = invoke()
     assert result.exit_code == 0
-    assert "Usage: " in result.output
+    assert "Usage: " in result.stdout
 
 
 def test_early_export_file_check(invoke, make_box, tmp_path):
@@ -35,13 +35,13 @@ def test_early_export_file_check(invoke, make_box, tmp_path):
 
     result = invoke("--export=non_existing.file", box_path)
     assert result.exit_code == 0
-    assert "0 mails found." in result.output
-    assert "● Phase #0" in result.output
-    assert "non_existing.file" not in result.output
+    assert "0 mails found." in result.stderr
+    assert "● Phase #0" in result.stdout
+    assert "non_existing.file" not in result.stderr
 
     file = tmp_path.joinpath("existing.file")
     file.touch()
     result = invoke(f"--export={file!s}", box_path)
     assert result.exit_code == 1
-    assert result.output == ""
+    assert result.stderr == ""
     assert str(result.exception) == str(file)
