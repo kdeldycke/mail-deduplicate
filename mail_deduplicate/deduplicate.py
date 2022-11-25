@@ -224,8 +224,8 @@ class DuplicateSet:
     def diff(self, mail_a, mail_b):
         """Return difference in bytes between two mails' normalized body.
 
-        .. todo::
-            Rewrite the diff algorithm to not rely on naive unified diff result parsing.
+        .. todo::     Rewrite the diff algorithm to not rely on naive unified diff
+        result parsing.
         """
         return len(
             "".join(
