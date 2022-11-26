@@ -233,8 +233,8 @@ class DuplicateSet:
     def diff(self, mail_a, mail_b):
         """Return difference in bytes between two mails' normalized body.
 
-        .. todo::
-           Rewrite the diff algorithm to not rely on naive unified diff result parsing.
+        .. todo::    Rewrite the diff algorithm to not rely on naive unified diff result
+        parsing.
         """
         return len(
             "".join(
@@ -364,8 +364,8 @@ class Deduplicate:
     def add_source(self, source_path):
         """Registers a source of mails, validates and opens it.
 
-        Duplicate sources of mails are not allowed, as when we perform the action, we use the path
-        as a unique key to tie back a mail from its source.
+        Duplicate sources of mails are not allowed, as when we perform the action, we
+        use the path as a unique key to tie back a mail from its source.
         """
         # Make the path absolute and resolve any symlinks.
         source_path = str(Path(source_path).resolve(strict=True))
