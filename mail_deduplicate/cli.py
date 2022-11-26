@@ -60,7 +60,7 @@ from .strategy import (
 
 
 def validate_regexp(ctx, param, value):
-    """Validate and compile regular expression."""
+    """Validate and compile regular expression provided as parameters to the CLI."""
     if value:
         try:
             value = re.compile(value)
@@ -71,7 +71,7 @@ def validate_regexp(ctx, param, value):
 
 class MdedupCommand(ExtraCommand):
     def format_help(self, ctx, formatter):
-        """Feed our custom formatter instance with the keywords to highlight."""
+        """Extend the help screen with the description of all available strategies."""
         # Populate the formatter with the default help screen content.
         super().format_help(ctx, formatter)
 
@@ -86,7 +86,6 @@ class MdedupCommand(ExtraCommand):
             ]
         )
 
-        # Extend the default help screen by adding our strategy as an epilog.
         with formatter.section("Available strategies"):
             formatter.write_dl(strat_table)
 
@@ -124,14 +123,6 @@ class MdedupCommand(ExtraCommand):
     help="Remove the lock on mail source opening if one is found.",
 )
 @option(
-    "-H",
-    "--hash-only",
-    is_flag=True,
-    default=False,
-    help="Compute and display the internal hashes used to identify duplicates. Do not "
-    "performs any selection or action.",
-)
-@option(
     "-h",
     "--hash-header",
     multiple=True,
@@ -147,12 +138,19 @@ class MdedupCommand(ExtraCommand):
     "--hash-body",
     default=BODY_HASHER_SKIP,
     type=Choice(sorted(BODY_HASHERS), case_sensitive=False),
-    help="Body hash to use to compute each mail's hash. Defaults to "
-    f"{BODY_HASHER_SKIP} as it is the fastest: it will not compute the body hash and "
-    f"header hash should be sufficient to determine duplicate set. {BODY_HASHER_RAW} use the "
-    "body as it is: keeping line breaks and spaces to compute the body hash. "
-    f"{BODY_HASHER_NORMALIZED} use a cleaned body: remove all line breaks and spaces "
-    "before computing body hash (slowest).",
+    help=f"Method used to hash the body of mails. Defaults to {BODY_HASHER_SKIP}, "
+    "which does't hash the body at all: it is the fastest method and header-based "
+    f"hash should be sufficient to determine duplicate set. {BODY_HASHER_RAW} use the "
+    f"body as it is (slow). {BODY_HASHER_NORMALIZED} pre-process the body before "
+    "hashing, by removing all line breaks and spaces (slowest).",
+)
+@option(
+    "-H",
+    "--hash-only",
+    is_flag=True,
+    default=False,
+    help="Compute and display the internal hashes used to identify duplicates. Do not "
+    "performs any selection or action.",
 )
 @option(
     "-S",
@@ -262,9 +260,9 @@ def mdedup(
     dry_run,
     input_format,
     force_unlock,
-    hash_only,
     hash_header,
     hash_body,
+    hash_only,
     size_threshold,
     content_threshold,
     show_diff,
@@ -343,9 +341,9 @@ def mdedup(
         dry_run=dry_run,
         input_format=input_format,
         force_unlock=force_unlock,
-        hash_only=hash_only,
         hash_headers=hash_header,
         hash_body=hash_body,
+        hash_only=hash_only,
         size_threshold=size_threshold,
         content_threshold=content_threshold,
         show_diff=show_diff,

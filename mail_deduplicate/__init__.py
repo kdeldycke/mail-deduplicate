@@ -42,54 +42,75 @@ HASH_HEADERS = (
     "Message-ID",
 )
 """
-Ordered list of headers to use by default to compute the hash of a mail.
+Default ordered list of headers to use to compute the unique hash of a mail.
 
-By default we exclude:
-- `Cc` since `mailman` apparently sometimes trims list members from the `Cc`
-    header to avoid sending duplicates(see: https://mail.python.org/pipermail
-    /mailman-developers/2002-September/013233.html). But this means that
-    copies of mail reflected back from the list server will have a different
-    `Cc` to the copy saved by the MUA at send-time.
-- `Bcc` either since copies of the mail saved by the MUA at send-time
-    will have `Bcc`, but copies reflected back from the list server won't.
-- `Reply-To` since a mail could be `Cc`'d to two lists with different
-    `Reply-To` munging options set.
+By default we choose to exclude:
+
+``Cc``
+  Since ``mailman`` apparently `sometimes trims list members <https://mail.python.org/pipermail/mailman-developers/2002-September/013233.html>`_
+  from the ``Cc`` header
+  to avoid sending duplicates. Which means that
+  copies of mail reflected back from the list server will have a different
+  ``Cc`` to the copy saved by the MUA at send-time.
+
+``Bcc``
+  Because copies of the mail saved by the MUA at send-time
+  will have ``Bcc``, but copies reflected back from the list server won't.
+
+``Reply-To``
+  Since a mail could be ``Cc``'d to two lists with different
+  ``Reply-To`` munging options set.
 """
 
 
 MINIMAL_HEADERS_COUNT = 4
-"""Below this value, we consider not having enough data to compute a solid hash."""
+"""Below this value, we consider not having enough headers to compute a solid hash."""
 
 
 DEFAULT_SIZE_THRESHOLD = 512
 """
 Default size threshold in bytes.
 
-Since we're ignoring the `Content-Length` header for the reasons stated above,
-we limit the allowed difference between the sizes of the message payloads. If
-this is exceeded, a warning is issued and the messages are not considered
+Since we're ignoring the ``Content-Length`` header by default
+`because of mailing-list effects <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_,
+we introduced a limit on the allowed difference between the sizes of the message payloads.
+
+If this is exceeded, a warning is issued and the messages are not considered
 duplicates, because this could point to message corruption somewhere, or a
-false positive. Note that the headers are not counted towards this threshold,
-because many headers can be added by mailing list software such as mailman,
-or even by the process of sending the mail through various MTAs - one copy
-could have been stored by the sender's MUA prior to sending, without any
-Received: headers, and another copy could be reflected back via a Cc-to-self
-mechanism or mailing list server. But this threshold has to be at least large
-enough to allow for footers added by mailing list servers.
+false positive.
+
+.. note::
+    Headers are not counted towards this threshold,
+    because many `headers can be added by mailing list software <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_ such as ``mailman``,
+    or even by the process of sending the mail through various MTAs.
+
+    One copy
+    could have been stored by the sender's MUA prior to sending, without any
+    ``Received:`` headers, and another copy could be reflected back via a ``Cc``-to-self
+    mechanism or mailing list server.
+
+    This threshold has to be large
+    enough to allow for footers added by mailing list servers.
 """
 
 DEFAULT_CONTENT_THRESHOLD = 768
 """
 Default content threshold in bytes.
 
-Similarly, we generated unified diffs of duplicates and ensure that the diff
-is not greater than a certain size.
+As above, we similarly generates unified diffs of duplicates and ensure that the diff
+is not greater than a certain size to limit false-positives.
 """
 
 DATE_HEADER = "date-header"
 CTIME = "ctime"
 TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
-""" Sources from which we compute a mail's canonical timestamp. """
+""" Methods used to extract a mail's canonical timestamp:
+
+- ``date-header``: sourced from the message's ``Date`` header.
+- ``ctime``: sourced from the email's file from the filesystem. Only available for ``maildir`` sources.
+
+Also see: https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mail.DedupMail.timestamp
+"""
 
 
 class TooFewHeaders(Exception):
@@ -99,12 +120,12 @@ class TooFewHeaders(Exception):
 
 class SizeDiffAboveThreshold(Exception):
 
-    """Difference in mail size is greater than threshold."""
+    """Difference in mail size is greater than `threshold <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_SIZE_THRESHOLD>`_."""
 
 
 class ContentDiffAboveThreshold(Exception):
 
-    """Difference in mail content is greater than threshold."""
+    """Difference in mail content is greater than `threshold <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD>`_."""
 
 
 class Config:
@@ -116,9 +137,9 @@ class Config:
         "dry_run": False,
         "input_format": False,
         "force_unlock": False,
-        "hash_only": False,
         "hash_headers": HASH_HEADERS,
         "hash_body": None,
+        "hash_only": False,
         "size_threshold": DEFAULT_SIZE_THRESHOLD,
         "content_threshold": DEFAULT_CONTENT_THRESHOLD,
         "show_diff": False,

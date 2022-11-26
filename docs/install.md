@@ -47,7 +47,7 @@ Mail Deduplicate should now be available system-wide:
 
 ```shell-session
 $ mdedup --version
-mdedup, version 4.13.0
+mdedup, version 7.0.0
 (...)
 ```
 
@@ -55,7 +55,7 @@ If not, you can directly execute the module from Python:
 
 ```shell-session
 $ python -m mail_deduplicate --version
-mdedup, version 4.13.0
+mdedup, version 7.0.0
 (...)
 ```
 
@@ -63,7 +63,7 @@ Or on some systems:
 
 ```shell-session
 $ python3 -m mail_deduplicate --version
-mdedup, version 4.13.0
+mdedup, version 7.0.0
 (...)
 ```
 

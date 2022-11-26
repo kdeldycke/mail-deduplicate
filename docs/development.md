@@ -62,7 +62,7 @@ After the steps above, you are free to play with the bleeding edge version of `m
 
 ```shell-session
 $ poetry run mdedup --version
-mdedup, version 4.13.0-dev
+mdedup, version 7.0.0-dev
 (...)
 ```
 

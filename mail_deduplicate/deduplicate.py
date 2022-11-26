@@ -122,7 +122,7 @@ BODY_HASHERS = FrozenDict(
         BODY_HASHER_NORMALIZED: lambda m: m.hash_normalized_body,
     }
 )
-"""Body hashers."""
+"""Method used to hash the body of mails."""
 
 
 class DuplicateSet:
@@ -166,23 +166,27 @@ class DuplicateSet:
 
     @cached_property
     def size(self):
-        """Return the size of the duplicate set."""
+        """Returns the number of mails in the duplicate set."""
         return len(self.pool)
 
     @cached_property
     def newest_timestamp(self):
+        """Returns the newest timestamp among all mails in the set."""
         return max(map(attrgetter("timestamp"), self.pool))
 
     @cached_property
     def oldest_timestamp(self):
+        """Returns the oldest timestamp among all mails in the set."""
         return min(map(attrgetter("timestamp"), self.pool))
 
     @cached_property
     def biggest_size(self):
+        """Returns the biggest size among all mails in the set."""
         return max(map(attrgetter("size"), self.pool))
 
     @cached_property
     def smallest_size(self):
+        """Returns the smallest size among all mails in the set."""
         return min(map(attrgetter("size"), self.pool))
 
     def check_differences(self):
@@ -229,8 +233,8 @@ class DuplicateSet:
     def diff(self, mail_a, mail_b):
         """Return difference in bytes between two mails' normalized body.
 
-        .. todo::     Rewrite the diff algorithm to not rely on naive unified diff
-        result parsing.
+        .. todo::
+           Rewrite the diff algorithm to not rely on naive unified diff result parsing.
         """
         return len(
             "".join(
@@ -266,8 +270,9 @@ class DuplicateSet:
     def categorize_candidates(self):
         """Process the list of duplicates for action.
 
-        Run preliminary checks and fill the corresponding sets fitting the configured
-        strategy and safety checks.
+        Run preliminary checks, then apply the strategy to the pool of mails.
+
+        The process results in two subsets of mails: the selected and the discarded.
         """
         # Fine-grained checks on mail differences.
         try:
@@ -357,10 +362,12 @@ class Deduplicate:
         self.stats = Counter(dict.fromkeys(STATS_DEF, 0))
 
     def add_source(self, source_path):
-        """Registers a source of mails, validates and opens it."""
-        # Make the path absolute, resolving any symlinks. Do not allow duplicates in
-        # our sources, as we use the path as a unique key to tie back a mail from its
-        # source when performing the action later.
+        """Registers a source of mails, validates and opens it.
+
+        Duplicate sources of mails are not allowed, as when we perform the action, we use the path
+        as a unique key to tie back a mail from its source.
+        """
+        # Make the path absolute and resolve any symlinks.
         source_path = str(Path(source_path).resolve(strict=True))
         if source_path in self.sources:
             raise ValueError(f"{source_path} already added.")

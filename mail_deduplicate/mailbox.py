@@ -15,6 +15,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+""" Patch and tweak `Python's standard library mail box constructors <https://docs.python.org/3.11/library/mailbox.html>`_ to set
+sane defaults.
+
+Also forces out our own message factories to add deduplication tools and utilities.
+"""
+
+
 import inspect
 import mailbox
 from functools import partial
@@ -27,13 +34,9 @@ from click_extra.colorize import default_theme as theme
 from . import logger
 from .mail import DedupMail
 
-""" Patch and tweak Python's standard library mailbox constructors to set
-sane defaults. Also forces out our own message factories to add deduplication
-tools and utilities. """
-
 
 def build_box_constructors():
-    """Build our own mail constructors for each mailbox format.
+    """Build our own mail constructors for each subclass of ``mailbox.Mailbox``.
 
     Gather all constructors defined by the standard Python library and extend them with
     our ``DedupMail`` class.
@@ -70,52 +73,57 @@ def build_box_constructors():
             yield box_type_id, constructor
 
 
-# Mapping between supported box type IDs and their constructors.
 BOX_TYPES = FrozenDict(build_box_constructors())
+"""Mapping between supported box type IDs and their constructors."""
 
 
-# Categorize each box type into its structure type.
 BOX_STRUCTURES = FrozenDict(
     {
         "file": {"mbox", "mmdf", "babyl"},
         "folder": {"maildir", "mh"},
     }
 )
+"""Categorize each box type into its structure type."""
+
+
 # Check we did not forgot any box type.
 assert set(flatten(BOX_STRUCTURES.values())) == set(BOX_TYPES)
 
 
-# List of required sub-folders defining a properly structured maildir.
 MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
+"""List of required sub-folders defining a properly structured maildir."""
 
 
 def autodetect_box_type(path):
     """Auto-detect the format of the mailbox located at the provided path.
 
-    Returns a box type as indexed in the ``box_types`` dictionnary above.
+    Returns a box type as indexed in the `BOX_TYPES <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.BOX_TYPES>`_ dictionnary above.
 
-    If the path is a file, then it is considered as an ``mbox``. Else, if th
-    provided path is a folder and feature the expecteed sub-directories, it is
+    If the path is a file, then it is considered as an ``mbox``. Else, if the
+    provided path is a folder and feature the `expecteed sub-directories <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.MAILDIR_SUBDIRS>`_, it is
     parsed as a ``maildir``.
 
-    Future finer autodetection heuristics should be implemented here. Some ideas:
-        * single mail from a maildir
-        * plain text mail content
-        * other mailbox formats supported in Python's std lib:
-            * ``MH``
-            * ``Babyl``
-            * ``MMDF``
+    .. note::
+        Future finer autodetection heuristics should be implemented here.
+
+        Some ideas:
+            * single mail from a ``maildir``
+            * plain text mail content
+            * other mailbox formats supported in Python's standard library:
+                * ``MH``
+                * ``Babyl``
+                * ``MMDF``
     """
     box_type = None
 
-    # Validates folder is a maildir.
+    # Validates folder as a maildir.
     if path.is_dir():
         for subdir in MAILDIR_SUBDIRS:
             if not path.joinpath(subdir).is_dir():
                 raise ValueError(f"Missing sub-directory {subdir!r}")
         box_type = "maildir"
 
-    # Validates folder is a mbox.
+    # Validates folder as an mbox.
     elif path.is_file():
         box_type = "mbox"
 
@@ -127,12 +135,11 @@ def autodetect_box_type(path):
 
 
 def open_box(path, box_type=False, force_unlock=False):
-    """Open a mailbox.
+    """Open a mail box.
 
     Returns a list of boxes, one per sub-folder. All are locked, ready for operations.
 
-    If ``box_type`` is provided, forces the opening of the box in the specified format.
-    Defaults to (crude) autodetection.
+    If ``box_type`` is provided, forces the opening of the box in the specified format. Else, defaults to autodetection.
     """
     logger.info(f"\nOpening {theme.choice(path)} ...")
     path = Path(path)
@@ -176,10 +183,11 @@ def open_subfolders(box, force_unlock):
     """Browse recursively the subfolder tree of a box.
 
     Returns a list of opened and locked boxes, each for one subfolder.
+
+    Skips box types not supporting subfolders.
     """
     folder_list = [lock_box(box, force_unlock)]
 
-    # Skip box types not supporting subfolders.
     if hasattr(box, "list_folders"):
         for folder_id in box.list_folders():
             logger.info(f"Opening subfolder {folder_id} ...")

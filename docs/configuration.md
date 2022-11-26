@@ -14,6 +14,17 @@ Location depends on OS (see
 - Windows (roaming):
   `C:\Users\<user>\AppData\Roaming\mdedup\*.{toml,yaml,yml,json,ini,xml}`
 
+## TOML sample
+
+```toml
+# My default configuration file.
+
+[mdedup]
+verbosity = "DEBUG"
+strategy = "discard-older"
+action = "delete-discarded"
+```
+
 ## Troubleshooting
 
 You can easely debug the way `mdedup` source its configuration with the `--show-params`:

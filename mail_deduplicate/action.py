@@ -22,17 +22,17 @@ from click_extra.colorize import default_theme as theme
 from . import logger
 from .mailbox import create_box
 
-# Actions performed on the mail selection.
 COPY_SELECTED = "copy-selected"
 COPY_DISCARDED = "copy-discarded"
 MOVE_SELECTED = "move-selected"
 MOVE_DISCARDED = "move-discarded"
 DELETE_SELECTED = "delete-selected"
 DELETE_DISCARDED = "delete-discarded"
+"""Define all available action IDs."""
 
 
-def __copy_mails(dedup, mails):
-    """Copy all mails to a brand new box or an existing one."""
+def copy_mails(dedup, mails):
+    """Copy provided ``mails`` to a brand new box or an existing one."""
     if not dedup.conf.dry_run:
         box = create_box(
             dedup.conf.export, dedup.conf.export_format, dedup.conf.export_append
@@ -52,8 +52,8 @@ def __copy_mails(dedup, mails):
         box.close()
 
 
-def __move_mails(dedup, mails):
-    """Move all mails to a brand new box or an existing one."""
+def move_mails(dedup, mails):
+    """Move provided ``mails`` to a brand new box or an existing one."""
     if not dedup.conf.dry_run:
         box = create_box(
             dedup.conf.export, dedup.conf.export_format, dedup.conf.export_append
@@ -74,8 +74,8 @@ def __move_mails(dedup, mails):
         box.close()
 
 
-def __delete_mails(dedup, mails):
-    """Remove all mails in-place, from their original boxes."""
+def delete_mails(dedup, mails):
+    """Remove provided ``mails`` in-place, from their original boxes."""
     for mail in mails:
         logger.debug(f"Deleting {mail!r} in-place...")
         dedup.stats["mail_deleted"] += 1
@@ -87,33 +87,33 @@ def __delete_mails(dedup, mails):
 
 
 def copy_selected(dedup):
-    """Copy all mails selected to a brand new box."""
-    __copy_mails(dedup, dedup.selection)
+    """Copy all selected mails to a brand new box."""
+    copy_mails(dedup, dedup.selection)
 
 
 def copy_discarded(dedup):
-    """Copy all mails discarded to a brand new box."""
-    __copy_mails(dedup, dedup.discard)
+    """Copy all discarded mails to a brand new box."""
+    copy_mails(dedup, dedup.discard)
 
 
 def move_selected(dedup):
-    """Move all mails selected to a brand new box."""
-    __move_mails(dedup, dedup.selection)
+    """Move all selected mails to a brand new box."""
+    move_mails(dedup, dedup.selection)
 
 
 def move_discarded(dedup):
-    """Move all mails discarded to a brand new box."""
-    __move_mails(dedup, dedup.discard)
+    """Move all discarded mails to a brand new box."""
+    move_mails(dedup, dedup.discard)
 
 
 def delete_selected(dedup):
-    """Remove all mails selected in-place, from their original boxes."""
-    __delete_mails(dedup, dedup.selection)
+    """Remove in-place all selected mails, from their original boxes."""
+    delete_mails(dedup, dedup.selection)
 
 
 def delete_discarded(dedup):
-    """Remove all mails discarded in-place, from their original boxes."""
-    __delete_mails(dedup, dedup.discard)
+    """Remove in-place all discarded mails, from their original boxes."""
+    delete_mails(dedup, dedup.discard)
 
 
 ACTIONS = FrozenDict(
@@ -126,6 +126,7 @@ ACTIONS = FrozenDict(
         DELETE_DISCARDED: delete_discarded,
     }
 )
+"""Map action ID's to their implementation."""
 
 
 def perform_action(dedup):

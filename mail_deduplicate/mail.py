@@ -38,12 +38,8 @@ class DedupMail:
 
     """Message with deduplication-specific properties and utilities.
 
-    Adds all data-cleaning primitives and heuristics to Python's standard
-    library messages from:
-    https://github.com/python/cpython/blob/e799aa8b92c195735f379940acd9925961ad04ec/Lib/mailbox.py#L1489
-
-    This class should not be used directly but composed with
-    ``mailbox.Message`` sub-classes.
+    Extends `standard library's mailbox.Message <https://github.com/python/cpython/blob/45ffab40e86777ecd49786a2c18c0c044ef0cb5b/Lib/mailbox.py#L1489-L1523>`_,
+    and shouln't be used directly, but composed with ``mailbox.Message`` sub-classes.
     """
 
     def __init__(self, message=None):
@@ -106,13 +102,18 @@ class DedupMail:
     def timestamp(self):
         """Compute the normalized canonical timestamp of the mail.
 
-        Sourced from the message's header by default. In the case of maildir, can be
+        Sourced from the message's ``Date`` header by default. In the case of ``maildir``, can be
         sourced from the email's file from the filesystem.
+
+        .. warning::
+            ``ctime`` does not refer to creation time on POSIX systems, but
+            rather `the last time the inode data
+            changed <https://userprimary.net/posts/2007/11/18/ctime-in-unix-means-last-change-time-not-create-time/>`_.
+
+        .. todo::
+            Investigate what `mailbox.MaildirMessage.get_date() <https://docs.python.org/3.11/library/mailbox.html#mailbox.MaildirMessage.get_date>`_
+            does and if we can use it.
         """
-        # XXX ctime does not refer to creation time on POSIX systems, but
-        # rather the last time the inode data changed. Source:
-        # https://userprimary.net/posts/2007/11/18
-        # /ctime-in-unix-means-last-change-time-not-create-time/
         if self.conf.time_source == CTIME:
             return os.path.getctime(self.path)
 
@@ -131,12 +132,14 @@ class DedupMail:
         Size is computed as the length of the message body, i.e. the payload of the mail
         stripped of all its headers, not from the mail file persisting on the file-
         system.
+
+        .. todo::
+            Allow customization of the way the size is computed, by getting the file size instead for example:
+            ```python
+            size = os.path.getsize(mail_file)
+            ```
         """
         return len("".join(self.body_lines))
-
-        # TODO: Allow customization of the way the size is computed, by getting
-        # the file size instead for example.
-        # size = os.path.getsize(mail_file)
 
     @cached_property
     def body_lines(self):
@@ -186,7 +189,6 @@ class DedupMail:
 
         Only used for debugging and human-friendly logging.
         """
-        # Fetch subject from first message.
         subject = self.get("Subject", "")
         subject, _ = re.subn(r"\s+", " ", subject)
         return subject
@@ -244,18 +246,19 @@ class DedupMail:
 
     @cached_property
     def pretty_canonical_headers(self):
-        """Renders into a table and in the same order, headers names and values used to
-        produce mail's hash.
+        """Renders a table of headers names and values used to produce the mail's hash.
 
-        Returns a string ready for printing to the user or for debugging.
+        Returns a string ready to be printed.
         """
         table = [["Header ID", "Header value"]] + list(self.canonical_headers)
         return "\n" + tabulate(table, tablefmt="fancy_grid", headers="firstrow")
 
     @cached_property
     def serialized_headers(self):
-        """Serialize the canonical headers into a single string ready to be hashed."""
-        # At this point we should have at an absolute minimum of headers.
+        """Serialize the canonical headers into a single string ready to be hashed.
+
+        At this point we should have at an absolute minimum of headers.
+        """
         headers_count = len(self.canonical_headers)
         if headers_count < MINIMAL_HEADERS_COUNT:
             logger.warning(self.pretty_canonical_headers)
