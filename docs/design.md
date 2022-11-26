@@ -29,6 +29,7 @@ have been crafted to limit the effects
 of mailing-lists on both the mail headers and body.
 
 Mailing lists effects includes:
+
 - having an extra footer in the mail's body, thus changing the `Content-Length`
   header;
 - mails with a new path described by the `Received` headers which would not
@@ -40,7 +41,6 @@ Mailing lists effects includes:
   `Precedence`, `X-BeenThere`, `List-*`, `Sender`, `Errors-To`, and so
   on;
 - adding a prefix to the `Subject` header.
-
 
 For added protection against accidentally removing mails due to false
 positives, duplicates are verified by comparing body sizes and also
