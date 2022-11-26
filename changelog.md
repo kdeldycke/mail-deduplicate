@@ -19,8 +19,7 @@ This version is not released yet and is under active development.
 - Run unittests on Python 3.10 and Python 3.11.
 - Add dependency on `click-extra` and `typing-extensions`
 - Remove direct dependency on `click-help-colors`, `click-log` and `tomlkit`.
-- Add unittest to highlight broken selection logic in quantity-based
-  strategies. Refs {issue}`146`.
+- Fix broken selection logic in quantity-based strategies. Refs {issue}`146`.
 - Add unittests to cover time-based and size-based selection edge-cases.
 - Drop unittests on deprecated `ubuntu-18.04` and `macos-10.15`.
 - Add unittests on `ubuntu-22.04`, `macos-12` and `windows-2022`.
