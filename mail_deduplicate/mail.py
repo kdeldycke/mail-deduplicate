@@ -21,9 +21,14 @@ import inspect
 import mailbox
 import os
 import re
+import sys
+
+if sys.version_info >= (3, 8):
+    from functools import cached_property
+else:
+    from boltons.cacheutils import cachedproperty as cached_property
 
 import arrow
-from boltons.cacheutils import cachedproperty
 from tabulate import tabulate
 
 from . import CTIME, MINIMAL_HEADERS_COUNT, TooFewHeaders, logger
@@ -92,12 +97,12 @@ class DedupMail:
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.source_path}:{self.mail_id}>"
 
-    @cachedproperty
+    @cached_property
     def uid(self):
         """Unique ID of the mail."""
         return self.source_path, self.mail_id
 
-    @cachedproperty
+    @cached_property
     def timestamp(self):
         """Compute the normalized canonical timestamp of the mail.
 
@@ -119,10 +124,7 @@ class DedupMail:
             pass
         return value
 
-        # XXX Also investigate what https://docs.python.org/2/library
-        # /mailbox.html#mailbox.MaildirMessage.get_date does.
-
-    @cachedproperty
+    @cached_property
     def size(self):
         """Returns canonical mail size.
 
@@ -136,7 +138,7 @@ class DedupMail:
         # the file size instead for example.
         # size = os.path.getsize(mail_file)
 
-    @cachedproperty
+    @cached_property
     def body_lines(self):
         """Return a normalized list of lines from message's body."""
         body = []
@@ -178,7 +180,7 @@ class DedupMail:
             body.extend(self.epilogue.splitlines(keepends=True))
         return body
 
-    @cachedproperty
+    @cached_property
     def subject(self):
         """Normalized subject.
 
@@ -189,7 +191,7 @@ class DedupMail:
         subject, _ = re.subn(r"\s+", " ", subject)
         return subject
 
-    @cachedproperty
+    @cached_property
     def hash_key(self):
         """Returns the canonical hash of a mail."""
         logger.debug(f"Serialized headers: {self.serialized_headers!r}")
@@ -197,7 +199,7 @@ class DedupMail:
         logger.debug(f"Hash: {hash_value}")
         return hash_value
 
-    @cachedproperty
+    @cached_property
     def hash_raw_body(self):
         """Returns the canonical body hash of a mail."""
         serialized_raw_body = "\n".join(self.body_lines).encode("utf-8")
@@ -205,7 +207,7 @@ class DedupMail:
         logger.debug(f"Body raw hash: {hash_value}")
         return hash_value
 
-    @cachedproperty
+    @cached_property
     def hash_normalized_body(self):
         """Returns the normalized body hash of a mail."""
         serialized_normalized_body = "".join(
@@ -215,7 +217,7 @@ class DedupMail:
         logger.debug(f"Body normalized hash: {hash_value}")
         return hash_value
 
-    @cachedproperty
+    @cached_property
     def canonical_headers(self):
         """Returns the full list of all canonical headers names and values in
         preparation for hashing."""
@@ -240,7 +242,7 @@ class DedupMail:
         # Cast to a tuple to prevent any modification.
         return tuple(canonical_headers)
 
-    @cachedproperty
+    @cached_property
     def pretty_canonical_headers(self):
         """Renders into a table and in the same order, headers names and values used to
         produce mail's hash.
@@ -250,7 +252,7 @@ class DedupMail:
         table = [["Header ID", "Header value"]] + list(self.canonical_headers)
         return "\n" + tabulate(table, tablefmt="fancy_grid", headers="firstrow")
 
-    @cachedproperty
+    @cached_property
     def serialized_headers(self):
         """Serialize the canonical headers into a single string ready to be hashed."""
         # At this point we should have at an absolute minimum of headers.

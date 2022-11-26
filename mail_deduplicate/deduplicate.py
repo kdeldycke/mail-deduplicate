@@ -15,6 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+import sys
 import textwrap
 from collections import Counter, OrderedDict
 from difflib import unified_diff
@@ -22,8 +23,12 @@ from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
 
+if sys.version_info >= (3, 8):
+    from functools import cached_property
+else:
+    from boltons.cacheutils import cachedproperty as cached_property
+
 import click
-from boltons.cacheutils import cachedproperty
 from boltons.dictutils import FrozenDict
 from click_extra.colorize import default_theme as theme
 from tabulate import tabulate
@@ -159,24 +164,24 @@ class DuplicateSet:
         """Print internal raw states for debugging."""
         return f"<{self.__class__.__name__} hash={self.hash_key} size={self.size}>"
 
-    @cachedproperty
+    @cached_property
     def size(self):
         """Return the size of the duplicate set."""
         return len(self.pool)
 
-    @cachedproperty
+    @cached_property
     def newest_timestamp(self):
         return max(map(attrgetter("timestamp"), self.pool))
 
-    @cachedproperty
+    @cached_property
     def oldest_timestamp(self):
         return min(map(attrgetter("timestamp"), self.pool))
 
-    @cachedproperty
+    @cached_property
     def biggest_size(self):
         return max(map(attrgetter("size"), self.pool))
 
-    @cachedproperty
+    @cached_property
     def smallest_size(self):
         return min(map(attrgetter("size"), self.pool))
 
