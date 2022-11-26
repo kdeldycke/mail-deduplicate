@@ -21,7 +21,7 @@ from pathlib import Path
 
 from boltons.iterutils import unique
 
-__version__ = "7.0.0"
+__version__ = "7.0.1"
 
 
 from click_extra.logging import logger
