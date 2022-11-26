@@ -1,4 +1,4 @@
-# CLI help
+# CLI parameters
 
 ```{eval-rst}
 .. click:: mail_deduplicate.cli:mdedup

@@ -12,7 +12,7 @@ hidden:
 ---
 install
 design
-cli-help
+cli-parameters
 configuration
 ```
 
