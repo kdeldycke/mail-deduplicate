@@ -62,7 +62,7 @@ STATS_DEF = OrderedDict(
         ),
         (
             "mail_skipped",
-            "Number of mails ignored in the selection phase because the whole set "
+            "Number of mails ignored in the selection step because the whole set "
             "they belong to was skipped.",
         ),
         ("mail_discarded", "Number of mails discarded from the final selection."),

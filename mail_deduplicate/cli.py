@@ -21,7 +21,16 @@ import re
 
 from click_extra import BadParameter, Choice
 from click_extra import Path as ClickPath
-from click_extra import argument, echo, extra_command, option, pass_context, progressbar
+from click_extra import (
+    argument,
+    echo,
+    extra_command,
+    extra_group,
+    option,
+    option_group,
+    pass_context,
+    progressbar,
+)
 from click_extra.colorize import default_theme as theme
 from click_extra.commands import ExtraCommand
 
@@ -97,156 +106,170 @@ class MdedupCommand(ExtraCommand):
     # Force linear layout for definition lists. See:
     # https://cloup.readthedocs.io/en/stable/pages/formatting.html#the-linear-layout-for-definition-lists
     formatter_settings={"col2_min_width": 9999999999},
+    context_settings={"help_option_names": ("--help",)},
 )
-@option(
-    "-n",
-    "--dry-run",
-    is_flag=True,
-    default=False,
-    help="Do not perform any action but act as if it was, and report which action "
-    "would have been performed otherwise.",
+@option_group(
+    "Mail sources (step #0)",
+    option(
+        "-i",
+        "--input-format",
+        type=Choice(sorted(BOX_TYPES), case_sensitive=False),
+        help="Force all provided mail sources to be parsed in the specified format. "
+        "If not set, auto-detect the format of sources independently. Auto-detection "
+        "only supports maildir and mbox format. Use this option to open up other box "
+        "format, or bypass unreliable detection.",
+    ),
+    option(
+        "-u",
+        "--force-unlock",
+        is_flag=True,
+        default=False,
+        help="Remove the lock on mail source opening if one is found.",
+    ),
 )
-@option(
-    "-i",
-    "--input-format",
-    type=Choice(sorted(BOX_TYPES), case_sensitive=False),
-    help="Force all provided mail sources to be parsed in the specified format. If "
-    "not set, auto-detect the format of sources independently. Auto-detection only "
-    "supports maildir and mbox format. Use this option to open up other box "
-    "format, or bypass unreliable detection.",
+@option_group(
+    "Hashing (step #1)",
+    option(
+        "-h",
+        "--hash-header",
+        multiple=True,
+        type=str,
+        metavar="Header-ID",
+        default=HASH_HEADERS,
+        help="Headers to use to compute each mail's hash. Must be repeated multiple "
+        "times to set an ordered list of headers. Header IDs are case-insensitive. "
+        "Repeating entries are ignored.",
+    ),
+    option(
+        "-b",
+        "--hash-body",
+        default=BODY_HASHER_SKIP,
+        type=Choice(sorted(BODY_HASHERS), case_sensitive=False),
+        help=f"Method used to hash the body of mails. Defaults to {BODY_HASHER_SKIP}, "
+        "which does't hash the body at all: it is the fastest method and header-based "
+        f"hash should be sufficient to determine duplicate set. {BODY_HASHER_RAW} use "
+        f"the body as it is (slow). {BODY_HASHER_NORMALIZED} pre-process the body "
+        "before hashing, by removing all line breaks and spaces (slowest).",
+    ),
+    option(
+        "-H",
+        "--hash-only",
+        is_flag=True,
+        default=False,
+        help="Compute and display the internal hashes used to identify duplicates. Do "
+        "not performs any selection or action.",
+    ),
 )
-@option(
-    "-u",
-    "--force-unlock",
-    is_flag=True,
-    default=False,
-    help="Remove the lock on mail source opening if one is found.",
+@option_group(
+    "Deduplication (step #2)",
+    option(
+        "-s",
+        "--strategy",
+        type=Choice(sorted(STRATEGY_METHODS), case_sensitive=False),
+        help="Selection strategy to apply within a subset of duplicates. If not set, "
+        "duplicates will be grouped and counted but all be skipped, selection will be "
+        "empty, and no action will be performed. Description of each strategy is "
+        "available further down that help screen.",
+    ),
+    option(
+        "-t",
+        "--time-source",
+        default=DATE_HEADER,
+        type=Choice(sorted(TIME_SOURCES), case_sensitive=False),
+        help="Source of a mail's time reference used in time-sensitive strategies.",
+    ),
+    option(
+        "-r",
+        "--regexp",
+        callback=validate_regexp,
+        metavar="REGEXP",
+        help="Regular expression on a mail's file path. Applies to real, individual "
+        "mail location for folder-based boxed "
+        f"({', '.join(sorted(BOX_STRUCTURES['folder']))}). But for file-based boxes "
+        f"({', '.join(sorted(BOX_STRUCTURES['file']))}), applies to the whole box's "
+        "path, as all mails are packed into one single file. Required in "
+        f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, "
+        f"{SELECT_MATCHING_PATH} and {SELECT_NON_MATCHING_PATH} strategies.",
+    ),
+    option(
+        "-S",
+        "--size-threshold",
+        type=int,
+        metavar="BYTES",
+        default=DEFAULT_SIZE_THRESHOLD,
+        help="Maximum difference allowed in size between mails sharing the same hash. "
+        "The whole subset of duplicates will be skipped if at least one pair of mail "
+        "exceeds the threshold. Set to 0 to enforce strictness and apply selection "
+        "strategy on the subset only if all mails are exactly the same. Set to -1 to "
+        "allow any difference and apply the strategy whatever the differences.",
+    ),
+    option(
+        "-C",
+        "--content-threshold",
+        type=int,
+        metavar="BYTES",
+        default=DEFAULT_CONTENT_THRESHOLD,
+        help="Maximum difference allowed in content between mails sharing the same "
+        "hash. The whole subset of duplicates will be skipped if at least one pair of "
+        "mail exceeds the threshold. Set to 0 to enforce strictness and apply "
+        "selection strategy on the subset only if all mails are exactly the same. Set "
+        "to -1 to allow any difference and apply the strategy whatever the "
+        "differences.",
+    ),
+    option(
+        "-d",
+        "--show-diff",
+        is_flag=True,
+        default=False,
+        help="Show the unified diff of duplicates not within thresholds.",
+    ),
 )
-@option(
-    "-h",
-    "--hash-header",
-    multiple=True,
-    type=str,
-    metavar="Header-ID",
-    default=HASH_HEADERS,
-    help="Headers to use to compute each mail's hash. Must be repeated multiple times "
-    "to set an ordered list of headers. Header IDs are case-insensitive. Repeating "
-    "entries are ignored.",
-)
-@option(
-    "-b",
-    "--hash-body",
-    default=BODY_HASHER_SKIP,
-    type=Choice(sorted(BODY_HASHERS), case_sensitive=False),
-    help=f"Method used to hash the body of mails. Defaults to {BODY_HASHER_SKIP}, "
-    "which does't hash the body at all: it is the fastest method and header-based "
-    f"hash should be sufficient to determine duplicate set. {BODY_HASHER_RAW} use the "
-    f"body as it is (slow). {BODY_HASHER_NORMALIZED} pre-process the body before "
-    "hashing, by removing all line breaks and spaces (slowest).",
-)
-@option(
-    "-H",
-    "--hash-only",
-    is_flag=True,
-    default=False,
-    help="Compute and display the internal hashes used to identify duplicates. Do not "
-    "performs any selection or action.",
-)
-@option(
-    "-S",
-    "--size-threshold",
-    type=int,
-    metavar="BYTES",
-    default=DEFAULT_SIZE_THRESHOLD,
-    help="Maximum difference allowed in size between mails sharing the same hash. "
-    "The whole subset of duplicates will be skipped if at least one pair of mail "
-    "exceeds the threshold. Set to 0 to enforce strictness and apply selection strategy "
-    "on the subset only if all mails are exactly the same. Set to -1 to allow any "
-    "difference and apply the strategy whatever the differences.",
-)
-@option(
-    "-C",
-    "--content-threshold",
-    type=int,
-    metavar="BYTES",
-    default=DEFAULT_CONTENT_THRESHOLD,
-    help="Maximum difference allowed in content between mails sharing the same hash. "
-    "The whole subset of duplicates will be skipped if at least one pair of mail "
-    "exceeds the threshold. Set to 0 to enforce strictness and apply selection strategy "
-    "on the subset only if all mails are exactly the same. Set to -1 to allow any "
-    "difference and apply the strategy whatever the differences.",
-)
-@option(
-    "-d",
-    "--show-diff",
-    is_flag=True,
-    default=False,
-    help="Show the unified diff of duplicates not within thresholds.",
-)
-@option(
-    "-s",
-    "--strategy",
-    type=Choice(sorted(STRATEGY_METHODS), case_sensitive=False),
-    help="Selection strategy to apply within a subset of duplicates. If not set, "
-    "duplicates will be grouped and counted but all be skipped, selection will be "
-    "empty, and no action will be performed. Description of each strategy is "
-    "available further down that help screen.",
-)
-@option(
-    "-t",
-    "--time-source",
-    default=DATE_HEADER,
-    type=Choice(sorted(TIME_SOURCES), case_sensitive=False),
-    help="Source of a mail's time reference used in time-sensitive strategies.",
-)
-@option(
-    "-r",
-    "--regexp",
-    callback=validate_regexp,
-    metavar="REGEXP",
-    help="Regular expression on a mail's file path. Applies to real, individual "
-    "mail location for folder-based boxed "
-    f"({', '.join(sorted(BOX_STRUCTURES['folder']))}). But for file-based boxes "
-    f"({', '.join(sorted(BOX_STRUCTURES['file']))}), applies to the whole box's path, "
-    "as all mails are packed into one single file. Required in "
-    f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, {SELECT_MATCHING_PATH} and "
-    f"{SELECT_NON_MATCHING_PATH} strategies.",
-)
-@option(
-    "-a",
-    "--action",
-    default=COPY_SELECTED,
-    type=Choice(sorted(ACTIONS), case_sensitive=False),
-    help=f"Action performed on the selected mails. Defaults to {COPY_SELECTED} as it "
-    "is the safest: it only reads the mail sources and create a brand new mail box "
-    "with the selection results.",
-)
-@option(
-    "-E",
-    "--export",
-    metavar="MAIL_BOX_PATH",
-    type=ClickPath(resolve_path=True),
-    help="Location of the destination mail box to where to copy or move deduplicated "
-    f"mails. Required in {COPY_SELECTED}, {COPY_DISCARDED}, "
-    f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
-)
-@option(
-    "-e",
-    "--export-format",
-    default="mbox",
-    type=Choice(sorted(BOX_TYPES), case_sensitive=False),
-    help="Format of the mail box to which deduplication mails will be exported to. "
-    f"Only affects {COPY_SELECTED}, {COPY_DISCARDED}, "
-    f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
-)
-@option(
-    "--export-append",
-    is_flag=True,
-    default=False,
-    help="If destination mail box already exists, add mails into it "
-    "instead of interrupting (default behavior). "
-    f"Affect {COPY_SELECTED}, {COPY_DISCARDED}, "
-    f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
+@option_group(
+    "Action (step #4)",
+    option(
+        "-a",
+        "--action",
+        default=COPY_SELECTED,
+        type=Choice(sorted(ACTIONS), case_sensitive=False),
+        help=f"Action performed on the selected mails. Defaults to {COPY_SELECTED} as it "
+        "is the safest: it only reads the mail sources and create a brand new mail box "
+        "with the selection results.",
+    ),
+    option(
+        "-E",
+        "--export",
+        metavar="MAIL_BOX_PATH",
+        type=ClickPath(resolve_path=True),
+        help="Location of the destination mail box to where to copy or move deduplicated "
+        f"mails. Required in {COPY_SELECTED}, {COPY_DISCARDED}, "
+        f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
+    ),
+    option(
+        "-e",
+        "--export-format",
+        default="mbox",
+        type=Choice(sorted(BOX_TYPES), case_sensitive=False),
+        help="Format of the mail box to which deduplication mails will be exported to. "
+        f"Only affects {COPY_SELECTED}, {COPY_DISCARDED}, "
+        f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
+    ),
+    option(
+        "--export-append",
+        is_flag=True,
+        default=False,
+        help="If destination mail box already exists, add mails into it "
+        "instead of interrupting (default behavior). "
+        f"Affect {COPY_SELECTED}, {COPY_DISCARDED}, "
+        f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
+    ),
+    option(
+        "-n",
+        "--dry-run",
+        is_flag=True,
+        default=False,
+        help="Do not perform any action but act as if it was, and report which action "
+        "would have been performed otherwise.",
+    ),
 )
 @argument(
     "mail_sources",
@@ -257,7 +280,6 @@ class MdedupCommand(ExtraCommand):
 @pass_context
 def mdedup(
     ctx,
-    dry_run,
     input_format,
     force_unlock,
     hash_header,
@@ -273,21 +295,23 @@ def mdedup(
     export,
     export_format,
     export_append,
+    dry_run,
     mail_sources,
 ):
-    """Deduplicate mails from a set of mail boxes.
+    """Deduplicate mails from multiple sources.
 
     \b
     Process:
-    ● Phase #1: run a first pass to compute from their headers (and optionaly their body)
-                the canonical hash of each encountered mail.
-    ● Phase #2: a second pass to apply the selection strategy on each subset of
-                duplicate mails sharing the same hash.
-    ● Phase #3: perform an action on all selected mails.
+    ● Step #1: load mails from their sources.
+    ● Step #2: compute the canonical hash of each mail based on their headers (and
+               optionaly their body), and regroup mails sharing the same hash.
+    ● Step #3: apply a selection strategy on each subset of duplicate mails.
+    ● Step #4: perform an action on all selected mails.
+    ● Step #5: report statistics.
 
-    Action on the selected mails in phase #3 is only performed if no major differences
-    between mails are uncovered during a fine-grained check differences in the second
-    phase. Limits can be set via the --size-threshold and --content-threshold
+    Action on the selected mails in step #4 is only performed if no major differences
+    between mails are uncovered during a fine-grained check differences in step #3.
+    Limits can be set via the --size-threshold and --content-threshold
     options, and are used as safety checks to prevent slightly different mails
     to be seen as similar through the lens of normalization.
     """
@@ -358,7 +382,7 @@ def mdedup(
 
     dedup = Deduplicate(conf)
 
-    echo(theme.heading("\n● Phase #0 - Load mails"))
+    echo(theme.heading("\n● Step #1 - Load mails"))
     with progressbar(
         mail_sources,
         length=len(mail_sources),
@@ -368,7 +392,7 @@ def mdedup(
         for source in progress:
             dedup.add_source(source)
 
-    echo(theme.heading("\n● Phase #1 - Compute hashes and group duplicates"))
+    echo(theme.heading("\n● Step #2 - Compute hashes and group duplicates"))
     dedup.hash_all()
     if hash_only:
         for all_mails in dedup.mails.values():
@@ -377,14 +401,14 @@ def mdedup(
                 echo(f"Hash: {mail.hash_key}")
         ctx.exit()
 
-    echo(theme.heading("\n● Phase #2 - Select mails in each group"))
+    echo(theme.heading("\n● Step #3 - Select mails in each group"))
     dedup.build_sets()
 
-    echo(theme.heading("\n● Phase #3 - Perform action on selected mails"))
+    echo(theme.heading("\n● Step #4 - Perform action on selected mails"))
     perform_action(dedup)
     dedup.close_all()
 
-    echo(theme.heading("\n● Phase #4 - Report and statistics"))
+    echo(theme.heading("\n● Step #5 - Report and statistics"))
     # Print deduplication statistics, then performs a self-check on them.
     echo(dedup.report())
     dedup.check_stats()

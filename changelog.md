@@ -6,6 +6,8 @@
 This version is not released yet and is under active development.
 ```
 
+- Renumber and rename phases to steps.
+- Group options per steps.
 - Add minimal code typing and checking.
 - Add logo.
 
