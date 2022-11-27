@@ -1,4 +1,8 @@
-# Mail Deduplicate
+<p align="center">
+  <a href="https://github.com/kdeldycke/mail-deduplicate/">
+    <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/mail-deduplicate-logo-header.png" alt="Mail Deduplicate">
+  </a>
+</p>
 
 [![Last release](https://img.shields.io/pypi/v/mail-deduplicate.svg)](https://pypi.python.org/pypi/mail-deduplicate)
 [![Python versions](https://img.shields.io/pypi/pyversions/mail-deduplicate.svg)](https://pypi.python.org/pypi/mail-deduplicate)

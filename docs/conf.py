@@ -88,7 +88,7 @@ autosectionlabel_prefix_document = True
 # Theme config.
 html_theme = "furo"
 html_title = project
-html_logo = "images/logo-square.svg"
+html_logo = "images/mail-deduplicate-logo-square.png"
 html_theme_options = {
     "sidebar_hide_name": True,
     # Activates edit links.
