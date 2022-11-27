@@ -16,6 +16,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 """Expose package-wide elements."""
+from __future__ import annotations
 
 from pathlib import Path
 

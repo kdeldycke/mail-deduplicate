@@ -14,9 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+from __future__ import annotations
 
 from mailbox import Maildir
 from string import ascii_lowercase
+from typing import List
 
 import arrow
 import pytest
@@ -86,7 +88,7 @@ random_mail_3 = MailFactory(message_id=MailFactory.random_string(30))
 
 
 # List of strategies and their required dummy parameters.
-strategy_options = dict.fromkeys(STRATEGY_METHODS, [])
+strategy_options: dict[str, List[str]] = dict.fromkeys(STRATEGY_METHODS, [])
 # Add dummy regexps.
 strategy_options.update(
     {

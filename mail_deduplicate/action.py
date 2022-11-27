@@ -14,12 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+from __future__ import annotations
 
 from boltons.dictutils import FrozenDict
 from boltons.iterutils import unique
 from click_extra.colorize import default_theme as theme
 
 from . import logger
+from .deduplicate import Deduplicate
 from .mailbox import create_box
 
 COPY_SELECTED = "copy-selected"
@@ -31,7 +33,7 @@ DELETE_DISCARDED = "delete-discarded"
 """Define all available action IDs."""
 
 
-def copy_mails(dedup, mails):
+def copy_mails(dedup: Deduplicate, mails) -> None:
     """Copy provided ``mails`` to a brand new box or an existing one."""
     if not dedup.conf.dry_run:
         box = create_box(
@@ -52,7 +54,7 @@ def copy_mails(dedup, mails):
         box.close()
 
 
-def move_mails(dedup, mails):
+def move_mails(dedup: Deduplicate, mails) -> None:
     """Move provided ``mails`` to a brand new box or an existing one."""
     if not dedup.conf.dry_run:
         box = create_box(
@@ -74,7 +76,7 @@ def move_mails(dedup, mails):
         box.close()
 
 
-def delete_mails(dedup, mails):
+def delete_mails(dedup: Deduplicate, mails) -> None:
     """Remove provided ``mails`` in-place, from their original boxes."""
     for mail in mails:
         logger.debug(f"Deleting {mail!r} in-place...")
@@ -86,32 +88,32 @@ def delete_mails(dedup, mails):
             logger.info(f"{mail!r} deleted.")
 
 
-def copy_selected(dedup):
+def copy_selected(dedup: Deduplicate) -> None:
     """Copy all selected mails to a brand new box."""
     copy_mails(dedup, dedup.selection)
 
 
-def copy_discarded(dedup):
+def copy_discarded(dedup: Deduplicate) -> None:
     """Copy all discarded mails to a brand new box."""
     copy_mails(dedup, dedup.discard)
 
 
-def move_selected(dedup):
+def move_selected(dedup: Deduplicate) -> None:
     """Move all selected mails to a brand new box."""
     move_mails(dedup, dedup.selection)
 
 
-def move_discarded(dedup):
+def move_discarded(dedup: Deduplicate) -> None:
     """Move all discarded mails to a brand new box."""
     move_mails(dedup, dedup.discard)
 
 
-def delete_selected(dedup):
+def delete_selected(dedup: Deduplicate) -> None:
     """Remove in-place all selected mails, from their original boxes."""
     delete_mails(dedup, dedup.selection)
 
 
-def delete_discarded(dedup):
+def delete_discarded(dedup: Deduplicate) -> None:
     """Remove in-place all discarded mails, from their original boxes."""
     delete_mails(dedup, dedup.discard)
 
@@ -129,7 +131,7 @@ ACTIONS = FrozenDict(
 """Map action ID's to their implementation."""
 
 
-def perform_action(dedup):
+def perform_action(dedup: Deduplicate) -> None:
     """Performs the action on selected mail candidates."""
     logger.info(f"Perform {theme.choice(dedup.conf.action)} action...")
 

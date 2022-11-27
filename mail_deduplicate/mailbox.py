@@ -21,6 +21,7 @@
 Also forces out our own message factories to add deduplication tools and utilities.
 """
 
+from __future__ import annotations
 
 import inspect
 import mailbox
