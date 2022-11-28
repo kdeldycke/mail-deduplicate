@@ -109,7 +109,7 @@ class MdedupCommand(ExtraCommand):
     context_settings={"help_option_names": ("--help",)},
 )
 @option_group(
-    "Mail sources (step #0)",
+    "Mail sources (step #1)",
     option(
         "-i",
         "--input-format",
@@ -128,7 +128,7 @@ class MdedupCommand(ExtraCommand):
     ),
 )
 @option_group(
-    "Hashing (step #1)",
+    "Hashing (step #2)",
     option(
         "-h",
         "--hash-header",
@@ -161,7 +161,14 @@ class MdedupCommand(ExtraCommand):
     ),
 )
 @option_group(
-    "Deduplication (step #2)",
+    "Deduplication (step #3)",
+    (
+        "Process each set of mails sharing the same hash and apply the "
+        "selection --strategy. Fine-grained checks on size and content are performed "
+        "beforehand. If differences are above safety "
+        "levels, the whole duplicate set will be skipped. Limits can be set via "
+        "the --size-threshold and --content-threshold options."
+    ),
     option(
         "-s",
         "--strategy",
@@ -308,12 +315,6 @@ def mdedup(
     ● Step #3: apply a selection strategy on each subset of duplicate mails.
     ● Step #4: perform an action on all selected mails.
     ● Step #5: report statistics.
-
-    Action on the selected mails in step #4 is only performed if no major differences
-    between mails are uncovered during a fine-grained check differences in step #3.
-    Limits can be set via the --size-threshold and --content-threshold
-    options, and are used as safety checks to prevent slightly different mails
-    to be seen as similar through the lens of normalization.
     """
     # Print help screen and exit if no mail source provided.
     if not mail_sources:
