@@ -30,8 +30,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
   or random choice.
 - Copy, move or delete the resulting set of duplicates.
 - Dry-run mode.
-- Protection against false-positives by checking for size and content
-  differences.
+- Protection against false-positives with safety checks on size and content differences.
 - Supports macOS, Linux and Windows.
 - Shell auto-completion for Bash, Zsh and Fish.
 
