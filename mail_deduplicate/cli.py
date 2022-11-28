@@ -283,6 +283,7 @@ class MdedupCommand(ExtraCommand):
     nargs=-1,
     metavar="MAIL_SOURCE_1 MAIL_SOURCE_2 ...",
     type=ClickPath(exists=True, resolve_path=True),
+    help="Mail sources to deduplicate. Can be a single mail box or a list of mails.",
 )
 @pass_context
 def mdedup(
