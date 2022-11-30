@@ -88,7 +88,7 @@ random_mail_3 = MailFactory(message_id=MailFactory.random_string(30))
 
 
 # List of strategies and their required dummy parameters.
-strategy_options: dict[str, List[str]] = dict.fromkeys(STRATEGY_METHODS, [])
+strategy_options: dict[str, list[str]] = dict.fromkeys(STRATEGY_METHODS, [])
 # Add dummy regexps.
 strategy_options.update(
     {
