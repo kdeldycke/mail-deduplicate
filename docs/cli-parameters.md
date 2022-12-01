@@ -1,6 +1,5 @@
 # CLI parameters
 
-
 ## Help screen
 
 ```{eval-rst}
