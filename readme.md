@@ -37,10 +37,6 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 ## Example
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/cli-colored-help.png">
-</p>
-
-<p align="center">
   <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/cli-coloured-run.png">
 </p>
 
