@@ -15,7 +15,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-"""Patch and tweak `Python's standard library mail box constructors
+"""Patch and tweak `Python's standard library mail box constructors.
+
 <https://docs.python.org/3.11/library/mailbox.html>`_ to set sane defaults.
 
 Also forces out our own message factories to add deduplication tools and utilities.

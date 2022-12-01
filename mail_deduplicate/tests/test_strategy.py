@@ -18,7 +18,6 @@ from __future__ import annotations
 
 from mailbox import Maildir
 from string import ascii_lowercase
-from typing import List
 
 import arrow
 import pytest
