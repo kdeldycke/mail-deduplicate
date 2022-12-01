@@ -29,7 +29,8 @@ action = "delete-discarded"
 
 You can easely debug the way `mdedup` source its configuration with the `--show-params`:
 
-```shell-session
-$ mdedup --show-params
-<TODO: insert result here>
+```{eval-rst}
+.. click:run::
+    from mail_deduplicate.cli import mdedup
+    invoke(mdedup, args=["--show-params"])
 ```
