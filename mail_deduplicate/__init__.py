@@ -121,16 +121,20 @@ class TooFewHeaders(Exception):
 
 class SizeDiffAboveThreshold(Exception):
 
-    """Difference in mail size is greater than `threshold
+    """Difference in mail size is greater than `threshold.
+
     <https://kdeldycke.github.io/mail-
-    deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_SIZE_THRESHOLD>`_."""
+    deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_SIZE_THRESHOLD>`_.
+    """
 
 
 class ContentDiffAboveThreshold(Exception):
 
-    """Difference in mail content is greater than `threshold
+    """Difference in mail content is greater than `threshold.
+
     <https://kdeldycke.github.io/mail-
-    deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD>`_."""
+    deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD>`_.
+    """
 
 
 class Config:
