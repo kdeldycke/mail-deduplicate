@@ -1,10 +1,6 @@
 # ChangeLog
 
-## {gh}`7.1.0 (unreleased) <compare/v7.0.0...main>`
-
-```{important}
-This version is not released yet and is under active development.
-```
+## {gh}`7.1.0 (2022-12-02) <compare/v7.0.0...v7.1.0>`
 
 - Renumber and rename phases to steps.
 - Group options per steps.
