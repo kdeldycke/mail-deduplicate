@@ -17,4 +17,4 @@ name: Autofix
 jobs:
 
   autofix:
-    uses: kdeldycke/workflows/.github/workflows/autofix.yaml@v1.9.2
+    uses: kdeldycke/workflows/.github/workflows/autofix.yaml@v1.10.0
