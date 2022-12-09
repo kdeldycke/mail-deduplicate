@@ -34,12 +34,14 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 - Supports macOS, Linux and Windows.
 - Shell auto-completion for Bash, Zsh and Fish.
 
-```{attention}
+---
+⚠️ **Warning**: Performances
+
 `mdedup` implementation is quite naive at the moment and everything resides in memory.
 
-If this is good enough for a volume of a couple of gigabytes, the more emails `mdedup` try to parse, the closer
-you'll reach the memory limits of your machine. In which case [`mdedup` will exit abrubtly](https://github.com/kdeldycke/mail-deduplicate/issues/362#issuecomment-1266743045), zapped by the [OOM killer](https://en.wikipedia.org/wiki/Out_of_memory) of your OS. Of course your mileage may vary depending on your hardware.
-```
+If this is good enough for a volume of a couple of gigabytes, the more emails `mdedup` try to parse, the closer you'll reach the memory limits of your machine. In which case [`mdedup` will exit abrubtly](https://github.com/kdeldycke/mail-deduplicate/issues/362#issuecomment-1266743045), zapped by the [OOM killer](https://en.wikipedia.org/wiki/Out_of_memory) of your OS. Of course your mileage may vary depending on your hardware.
+
+You can influence implementation of this feature with pull requests, or [purchase of business support 🤝 and sponsorship 🫶](https://github.com/sponsors/kdeldycke).
 
 ## Example
 
