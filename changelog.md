@@ -6,6 +6,8 @@
 This version is not released yet and is under active development.
 ```
 
+- Run tests on Python `3.12-dev`.
+
 ## {gh}`7.1.0 (2022-12-02) <compare/v7.0.0...v7.1.0>`
 
 - Renumber and rename phases to steps.
