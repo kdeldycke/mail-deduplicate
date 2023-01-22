@@ -22,7 +22,7 @@ from pathlib import Path
 
 from boltons.iterutils import unique
 
-__version__ = "7.1.1"
+__version__ = "7.2.0"
 
 
 from click_extra.logging import logger
