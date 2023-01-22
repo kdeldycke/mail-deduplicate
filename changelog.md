@@ -1,10 +1,6 @@
 # ChangeLog
 
-## {gh}`7.2.0 (unreleased) <compare/v7.1.0...main>`
-
-```{important}
-This version is not released yet and is under active development.
-```
+## {gh}`7.2.0 (2023-01-22) <compare/v7.1.0...v7.2.0>`
 
 - Build standalone executable for macOS, Linux and Windows.
 - Generates dependency graph in Graphviz format.
