@@ -32,6 +32,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 - Dry-run mode.
 - Protection against false-positives with safety checks on size and content differences.
 - Supports macOS, Linux and Windows.
+- Standalone `x86_64` executables: [`mdedup.exe` for Windows](https://github.com/kdeldycke/mail-deduplicate/releases/latest), `mdedup.bin` [for Linux](https://github.com/kdeldycke/mail-deduplicate/releases/latest) and [for macOS](https://github.com/kdeldycke/mail-deduplicate/releases/latest).
 - Shell auto-completion for Bash, Zsh and Fish.
 
 > ⚠️ **Warning**: Performances
@@ -48,9 +49,11 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
   <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/cli-coloured-run.png">
 </p>
 
-## Quickstart
+## Installation
 
-Easiest way is to install `mdedup` with [`pipx`](https://pypa.github.io/pipx/):
+### From sources
+
+Easiest way is to install `mdedup` from sources with [`pipx`](https://pypa.github.io/pipx/):
 
 ```shell-session
 $ pipx install mail-deduplicate
@@ -59,3 +62,15 @@ $ pipx install mail-deduplicate
 Other
 [alternatives installation methods](https://kdeldycke.github.io/mail-deduplicate/install.html)
 are available in the documentation.
+
+### Binaries
+
+Binaries are available so you can skip the installation process above and download the standalone executables directly:
+
+| Platform  | `x86_64` |
+| ---- | ------------ |
+| **Linux** |  [Download `mdedup.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_linux_x64.bin)     |
+| **macOS** |  [Download `mdedup.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_macos_x64.bin)     |
+| **Windows** |  [Download `mdedup.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_windows_x64.bin)     |
+
+All links above points to the latest release version.
