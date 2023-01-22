@@ -6,6 +6,7 @@
 This version is not released yet and is under active development.
 ```
 
+- Build standalone executable for macOS, Linux and Windows.
 - Generates dependency graph in Graphviz format.
 - Run tests on Python `3.12-dev`.
 
