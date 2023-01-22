@@ -67,10 +67,10 @@ are available in the documentation.
 
 Binaries are available so you can skip the installation process above and download the standalone executables directly:
 
-| Platform  | `x86_64` |
-| ---- | ------------ |
-| **Linux** |  [Download `mdedup.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_linux_x64.bin)     |
-| **macOS** |  [Download `mdedup.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_macos_x64.bin)     |
-| **Windows** |  [Download `mdedup.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_windows_x64.bin)     |
+| Platform    | `x86_64`                                                                                                               |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Linux**   | [Download `mdedup.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_linux_x64.bin)   |
+| **macOS**   | [Download `mdedup.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_macos_x64.bin)   |
+| **Windows** | [Download `mdedup.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_windows_x64.bin) |
 
 All links above points to the latest release version.
