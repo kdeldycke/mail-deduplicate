@@ -147,9 +147,7 @@ _MDEDUP_COMPLETE=fish_source mdedup > ~/.config/fish/completions/mdedup.fish
 
 FYI, here is a graph of Python package dependencies:
 
-```{image} images/dependencies.png
----
-alt: Mail Deduplicate dependency graph
-align: center
----
+```{eval-rst}
+.. graphviz:: images/dependencies.dot
+   :align: center
 ```
