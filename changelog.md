@@ -1,6 +1,6 @@
 # ChangeLog
 
-## {gh}`7.1.1 (unreleased) <compare/v7.1.0...main>`
+## {gh}`7.2.0 (unreleased) <compare/v7.1.0...main>`
 
 ```{important}
 This version is not released yet and is under active development.
