@@ -15,6 +15,7 @@ This version is not released yet and is under active development.
 - Group options per steps.
 - Add minimal code typing and checking.
 - Add logo.
+- Execute all workflows with Python 3.11.
 
 ## {gh}`7.0.0 (2022-11-26) <compare/v6.2.0...v7.0.0>`
 
