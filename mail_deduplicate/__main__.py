@@ -55,5 +55,6 @@ def main():
 
     mdedup(prog_name=mdedup.name)
 
+
 if __name__ == "__main__":
     main()
