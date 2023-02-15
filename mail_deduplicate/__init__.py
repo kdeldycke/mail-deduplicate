@@ -24,7 +24,6 @@ from boltons.iterutils import unique
 __version__ = "7.2.0"
 
 
-from click_extra.logging import logger
 
 HASH_HEADERS = (
     "Date",
@@ -47,19 +46,19 @@ Default ordered list of headers to use to compute the unique hash of a mail.
 By default we choose to exclude:
 
 ``Cc``
-  Since ``mailman`` apparently `sometimes trims list members <https://mail.python.org/pipermail/mailman-developers/2002-September/013233.html>`_
-  from the ``Cc`` header
-  to avoid sending duplicates. Which means that
-  copies of mail reflected back from the list server will have a different
-  ``Cc`` to the copy saved by the MUA at send-time.
+  Since ``mailman`` apparently `sometimes trims list members
+  <https://mail.python.org/pipermail/mailman-developers/2002-September/013233.html>`_
+  from the ``Cc`` header to avoid sending duplicates. Which means that copies of mail
+  reflected back from the list server will have a different ``Cc`` to the copy saved by
+  the MUA at send-time.
 
 ``Bcc``
-  Because copies of the mail saved by the MUA at send-time
-  will have ``Bcc``, but copies reflected back from the list server won't.
+  Because copies of the mail saved by the MUA at send-time will have ``Bcc``, but copies
+  reflected back from the list server won't.
 
 ``Reply-To``
-  Since a mail could be ``Cc``'d to two lists with different
-  ``Reply-To`` munging options set.
+  Since a mail could be ``Cc``'d to two lists with different ``Reply-To`` munging
+  options set.
 """
 
 
@@ -71,26 +70,25 @@ DEFAULT_SIZE_THRESHOLD = 512
 """
 Default size threshold in bytes.
 
-Since we're ignoring the ``Content-Length`` header by default
-`because of mailing-list effects <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_,
-we introduced a limit on the allowed difference between the sizes of the message payloads.
+Since we're ignoring the ``Content-Length`` header by default `because of mailing-list
+effects <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_, we
+introduced a limit on the allowed difference between the sizes of the message payloads.
 
-If this is exceeded, a warning is issued and the messages are not considered
-duplicates, because this could point to message corruption somewhere, or a
-false positive.
+If this is exceeded, a warning is issued and the messages are not considered duplicates,
+because this could point to message corruption somewhere, or a false positive.
 
 .. note::
-    Headers are not counted towards this threshold,
-    because many `headers can be added by mailing list software <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_ such as ``mailman``,
-    or even by the process of sending the mail through various MTAs.
+    Headers are not counted towards this threshold, because many `headers can be added
+    by mailing list software
+    <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_ such as
+    ``mailman``, or even by the process of sending the mail through various MTAs.
 
-    One copy
-    could have been stored by the sender's MUA prior to sending, without any
+    One copy could have been stored by the sender's MUA prior to sending, without any
     ``Received:`` headers, and another copy could be reflected back via a ``Cc``-to-self
     mechanism or mailing list server.
 
-    This threshold has to be large
-    enough to allow for footers added by mailing list servers.
+    This threshold has to be large enough to allow for footers added by mailing list
+    servers.
 """
 
 DEFAULT_CONTENT_THRESHOLD = 768
@@ -107,9 +105,11 @@ TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
 """ Methods used to extract a mail's canonical timestamp:
 
 - ``date-header``: sourced from the message's ``Date`` header.
-- ``ctime``: sourced from the email's file from the filesystem. Only available for ``maildir`` sources.
+- ``ctime``: sourced from the email's file from the filesystem. Only available for
+  ``maildir`` sources.
 
-Also see: https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mail.DedupMail.timestamp
+Also see:
+https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mail.DedupMail.timestamp
 """
 
 

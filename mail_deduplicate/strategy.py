@@ -224,8 +224,8 @@ STRATEGY_ALIASES = frozenset(
 )
 """Groups strategy aliases and their definitions.
 
-Aliases are great useability features as it helps users to better reason about the selection operators
-dependening on their mental models.
+Aliases are great useability features as it helps users to better reason about the
+selection operators dependening on their mental models.
 """
 
 

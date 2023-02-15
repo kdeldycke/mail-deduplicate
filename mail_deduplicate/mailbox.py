@@ -98,11 +98,14 @@ MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 def autodetect_box_type(path):
     """Auto-detect the format of the mailbox located at the provided path.
 
-    Returns a box type as indexed in the `BOX_TYPES <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.BOX_TYPES>`_ dictionnary above.
+    Returns a box type as indexed in the `BOX_TYPES
+    <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.BOX_TYPES>`_
+    dictionnary above.
 
     If the path is a file, then it is considered as an ``mbox``. Else, if the
-    provided path is a folder and feature the `expecteed sub-directories <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.MAILDIR_SUBDIRS>`_, it is
-    parsed as a ``maildir``.
+    provided path is a folder and feature the `expecteed sub-directories
+    <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.MAILDIR_SUBDIRS>`_,
+    it is parsed as a ``maildir``.
 
     .. note::
         Future finer autodetection heuristics should be implemented here.
@@ -140,7 +143,8 @@ def open_box(path, box_type=False, force_unlock=False):
 
     Returns a list of boxes, one per sub-folder. All are locked, ready for operations.
 
-    If ``box_type`` is provided, forces the opening of the box in the specified format. Else, defaults to autodetection.
+    If ``box_type`` is provided, forces the opening of the box in the specified format.
+    Else, defaults to autodetection.
     """
     logger.info(f"\nOpening {theme.choice(path)} ...")
     path = Path(path)

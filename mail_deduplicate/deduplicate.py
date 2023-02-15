@@ -317,7 +317,7 @@ class DuplicateSet:
         # Duplicate sets matching none are skipped altogether.
         if candidate_count == 0:
             logger.warning(
-                f"Skip set: No mail within were selected. "
+                "Skip set: No mail within were selected. "
                 "The strategy criterion was not able to select some."
             )
             self.stats["mail_skipped"] += self.size

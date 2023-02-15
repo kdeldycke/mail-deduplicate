@@ -18,18 +18,18 @@ from __future__ import annotations
 
 import re
 
-from click_extra import BadParameter, Choice
-from click_extra import Path as ClickPath
 from click_extra import (
+    BadParameter,
+    Choice,
     argument,
     echo,
     extra_command,
-    extra_group,
     option,
     option_group,
     pass_context,
     progressbar,
 )
+from click_extra import Path as ClickPath
 from click_extra.colorize import default_theme as theme
 from click_extra.commands import ExtraCommand
 
@@ -237,17 +237,17 @@ class MdedupCommand(ExtraCommand):
         "--action",
         default=COPY_SELECTED,
         type=Choice(sorted(ACTIONS), case_sensitive=False),
-        help=f"Action performed on the selected mails. Defaults to {COPY_SELECTED} as it "
-        "is the safest: it only reads the mail sources and create a brand new mail box "
-        "with the selection results.",
+        help=f"Action performed on the selected mails. Defaults to {COPY_SELECTED} as "
+        "it is the safest: it only reads the mail sources and create a brand new mail "
+        "box with the selection results.",
     ),
     option(
         "-E",
         "--export",
         metavar="MAIL_BOX_PATH",
         type=ClickPath(resolve_path=True),
-        help="Location of the destination mail box to where to copy or move deduplicated "
-        f"mails. Required in {COPY_SELECTED}, {COPY_DISCARDED}, "
+        help="Location of the destination mail box to where to copy or move "
+        f"deduplicated mails. Required in {COPY_SELECTED}, {COPY_DISCARDED}, "
         f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
     ),
     option(

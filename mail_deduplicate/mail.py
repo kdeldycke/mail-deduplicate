@@ -38,7 +38,8 @@ class DedupMail:
 
     """Message with deduplication-specific properties and utilities.
 
-    Extends `standard library's mailbox.Message <https://github.com/python/cpython/blob/45ffab40e86777ecd49786a2c18c0c044ef0cb5b/Lib/mailbox.py#L1489-L1523>`_,
+    Extends `standard library's mailbox.Message
+    <https://github.com/python/cpython/blob/45ffab40e86777ecd49786a2c18c0c044ef0cb5b/Lib/mailbox.py#L1489-L1523>`_,
     and shouln't be used directly, but composed with ``mailbox.Message`` sub-classes.
     """
 
@@ -102,16 +103,17 @@ class DedupMail:
     def timestamp(self):
         """Compute the normalized canonical timestamp of the mail.
 
-        Sourced from the message's ``Date`` header by default. In the case of ``maildir``, can be
-        sourced from the email's file from the filesystem.
+        Sourced from the message's ``Date`` header by default. In the case of
+        ``maildir``, can be sourced from the email's file from the filesystem.
 
         .. warning::
             ``ctime`` does not refer to creation time on POSIX systems, but
-            rather `the last time the inode data
-            changed <https://userprimary.net/posts/2007/11/18/ctime-in-unix-means-last-change-time-not-create-time/>`_.
+            rather `the last time the inode data changed
+            <https://userprimary.net/posts/2007/11/18/ctime-in-unix-means-last-change-time-not-create-time/>`_.
 
         .. todo::
-            Investigate what `mailbox.MaildirMessage.get_date() <https://docs.python.org/3.11/library/mailbox.html#mailbox.MaildirMessage.get_date>`_
+            Investigate what `mailbox.MaildirMessage.get_date()
+            <https://docs.python.org/3.11/library/mailbox.html#mailbox.MaildirMessage.get_date>`_
             does and if we can use it.
         """
         if self.conf.time_source == CTIME:
@@ -134,7 +136,8 @@ class DedupMail:
         system.
 
         .. todo::
-            Allow customization of the way the size is computed, by getting the file size instead for example:
+            Allow customization of the way the size is computed, by getting the file
+            size instead for example:
             ```python
             size = os.path.getsize(mail_file)
             ```
@@ -213,7 +216,7 @@ class DedupMail:
     def hash_normalized_body(self):
         """Returns the normalized body hash of a mail."""
         serialized_normalized_body = "".join(
-            [re.sub(r"\s", "", l) for l in self.body_lines]
+            [re.sub(r"\s", "", line) for line in self.body_lines]
         ).encode("utf-8")
         hash_value = hashlib.sha224(serialized_normalized_body).hexdigest()
         logger.debug(f"Body normalized hash: {hash_value}")
