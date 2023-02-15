@@ -23,7 +23,7 @@ from boltons.iterutils import unique
 
 __version__ = "7.2.0"
 
-
+from click_extra.logging import logger  # noqa: F401
 
 HASH_HEADERS = (
     "Date",
