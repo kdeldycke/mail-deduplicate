@@ -32,7 +32,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 - Dry-run mode.
 - Protection against false-positives with safety checks on size and content differences.
 - Supports macOS, Linux and Windows.
-- Standalone `x86_64` executables: [`mdedup.exe` for Windows](https://github.com/kdeldycke/mail-deduplicate/releases/latest), `mdedup.bin` [for Linux](https://github.com/kdeldycke/mail-deduplicate/releases/latest) and [for macOS](https://github.com/kdeldycke/mail-deduplicate/releases/latest).
+- [Standalone executables](#executables) for Linux, macOS and Windows.
 - Shell auto-completion for Bash, Zsh and Fish.
 
 > ⚠️ **Warning**: Performances
@@ -63,14 +63,12 @@ Other
 [alternatives installation methods](https://kdeldycke.github.io/mail-deduplicate/install.html)
 are available in the documentation.
 
-### Binaries
+### Executables
 
-Binaries are available so you can skip the installation process above and download the standalone executables directly:
+Standalone executables of `mdedup`'s latest version are available for several platforms and architectures:
 
-| Platform    | `x86_64`                                                                                                               |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **Linux**   | [Download `mdedup.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_linux_x64.bin)   |
-| **macOS**   | [Download `mdedup.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_macos_x64.bin)   |
-| **Windows** | [Download `mdedup.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup_windows_x64.bin) |
-
-All links above points to the latest release version.
+| Platform    | `x86_64`                                                                                                             |
+| ----------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Linux**   | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-x64.bin)   |
+| **macOS**   | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)   |
+| **Windows** | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-x64.exe) |
