@@ -1,5 +1,11 @@
 # ChangeLog
 
+## {gh}`7.2.1 (unreleased) <compare/v7.2.0...main>`
+
+```{important}
+This version is not released yet and is under active development.
+```
+
 ## {gh}`7.2.0 (2023-02-15) <compare/v7.1.0...v7.2.0>`
 
 - Build standalone executable for macOS, Linux and Windows.
