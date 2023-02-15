@@ -42,7 +42,7 @@ digraph {
     "mail-deduplicate" -> boltons [label=">=21.0.0,<22.0.0"]
     "mail-deduplicate" -> click [label=">=8.1.2,<9.0.0"]
     "mail-deduplicate" -> tabulate [label=">=0.9.0,<0.10.0"]
-    "mail-deduplicate" [label="mail-deduplicate\n7.2.0"]
+    "mail-deduplicate" [label="mail-deduplicate\n7.2.1"]
     "pallets-sphinx-themes" -> packaging [label=any]
     "pallets-sphinx-themes" -> sphinx [label=any]
     "pallets-sphinx-themes" [label="Pallets-Sphinx-Themes\n2.0.3"]
