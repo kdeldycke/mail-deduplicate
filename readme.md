@@ -67,8 +67,8 @@ are available in the documentation.
 
 Standalone executables of `mdedup`'s latest version are available for several platforms and architectures:
 
-| Platform    | `x86_64`                                                                                                             |
-| ----------- | -------------------------------------------------------------------------------------------------------------------- |
-| **Linux**   | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-x64.bin)   |
-| **macOS**   | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)   |
+| Platform    | `x86_64`                                                                                                                           |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Linux**   | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-x64.bin)     |
+| **macOS**   | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)     |
 | **Windows** | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-x64.exe) |

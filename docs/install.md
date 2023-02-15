@@ -49,8 +49,8 @@ Binaries are compiled at each release, so you can skip the installation process 
 
 This is the prefered way of testing `mdedup` without polluting your machine. They also offer the possibility of running the CLI on older systems not supporting the minimal Python version required by `mdedup`.
 
-| Platform    | `x86_64`                                                                                                                         |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Platform    | `x86_64`                                                                                                                           |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | **Linux**   | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-x64.bin)     |
 | **macOS**   | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)     |
 | **Windows** | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-x64.exe) |
