@@ -40,8 +40,7 @@ HASH_HEADERS = (
     "X-Priority",
     "Message-ID",
 )
-"""
-Default ordered list of headers to use to compute the unique hash of a mail.
+"""Default ordered list of headers to use to compute the unique hash of a mail.
 
 By default we choose to exclude:
 
@@ -67,8 +66,7 @@ MINIMAL_HEADERS_COUNT = 4
 
 
 DEFAULT_SIZE_THRESHOLD = 512
-"""
-Default size threshold in bytes.
+"""Default size threshold in bytes.
 
 Since we're ignoring the ``Content-Length`` header by default `because of mailing-list
 effects <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_, we
@@ -92,17 +90,16 @@ because this could point to message corruption somewhere, or a false positive.
 """
 
 DEFAULT_CONTENT_THRESHOLD = 768
-"""
-Default content threshold in bytes.
+"""Default content threshold in bytes.
 
-As above, we similarly generates unified diffs of duplicates and ensure that the diff
-is not greater than a certain size to limit false-positives.
+As above, we similarly generates unified diffs of duplicates and ensure that the diff is
+not greater than a certain size to limit false-positives.
 """
 
 DATE_HEADER = "date-header"
 CTIME = "ctime"
 TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
-""" Methods used to extract a mail's canonical timestamp:
+"""Methods used to extract a mail's canonical timestamp:
 
 - ``date-header``: sourced from the message's ``Date`` header.
 - ``ctime``: sourced from the email's file from the filesystem. Only available for
@@ -114,12 +111,10 @@ https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplic
 
 
 class TooFewHeaders(Exception):
-
     """Not enough headers were found to produce a solid hash."""
 
 
 class SizeDiffAboveThreshold(Exception):
-
     """Difference in mail size is greater than `threshold.
 
     <https://kdeldycke.github.io/mail-
@@ -128,7 +123,6 @@ class SizeDiffAboveThreshold(Exception):
 
 
 class ContentDiffAboveThreshold(Exception):
-
     """Difference in mail content is greater than `threshold.
 
     <https://kdeldycke.github.io/mail-
@@ -137,7 +131,6 @@ class ContentDiffAboveThreshold(Exception):
 
 
 class Config:
-
     """Holds global configuration."""
 
     # Keep these defaults in sync with CLI option definitions.
