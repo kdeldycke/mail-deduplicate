@@ -35,7 +35,6 @@ from . import CTIME, MINIMAL_HEADERS_COUNT, TooFewHeaders, logger
 
 
 class DedupMail:
-
     """Message with deduplication-specific properties and utilities.
 
     Extends `standard library's mailbox.Message
@@ -229,7 +228,6 @@ class DedupMail:
         canonical_headers = []
 
         for header_id in self.conf.hash_headers:
-
             # Skip absent header.
             if header_id not in self:
                 continue

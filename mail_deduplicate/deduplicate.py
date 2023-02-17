@@ -126,7 +126,6 @@ BODY_HASHERS = FrozenDict(
 
 
 class DuplicateSet:
-
     """A set of mails sharing the same hash.
 
     Implements all the safety checks required before we can apply any selection
@@ -207,7 +206,6 @@ class DuplicateSet:
 
         # Compute differences of mail against one another.
         for mail_a, mail_b in combinations(self.pool, 2):
-
             # Compare mails on size.
             if self.conf.size_threshold > -1:
                 size_difference = abs(mail_a.size - mail_b.size)
@@ -333,7 +331,6 @@ class DuplicateSet:
 
 
 class Deduplicate:
-
     """Load-up messages, search for duplicates, apply selection strategy and perform the
     action.
 
@@ -405,10 +402,8 @@ class Deduplicate:
             label="Hashed mails",
             show_pos=True,
         ) as progress:
-
             for box in self.sources.values():
                 for mail_id, mail in box.iteritems():
-
                     mail.add_box_metadata(box, mail_id)
 
                     mail.conf = self.conf
@@ -444,7 +439,6 @@ class Deduplicate:
         self.stats["set_total"] = len(self.mails)
 
         for hash_key, mail_set in self.mails.items():
-
             # Alter log level depending on set length.
             mail_count = len(mail_set)
             log_level = logger.debug if mail_count == 1 else logger.info
