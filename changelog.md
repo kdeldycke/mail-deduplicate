@@ -6,6 +6,8 @@
 This version is not released yet and is under active development.
 ```
 
+- Produce dependency graph in Mermaid instead of Graphviz. Add new dev dependency on `sphinxcontrib-mermaid`.
+
 ## {gh}`7.2.0 (2023-02-15) <compare/v7.1.0...v7.2.0>`
 
 - Build standalone executable for macOS, Linux and Windows.
