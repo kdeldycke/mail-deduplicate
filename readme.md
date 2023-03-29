@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/kdeldycke/mail-deduplicate/">
-    <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/mail-deduplicate-logo-header.png" alt="Mail Deduplicate">
+    <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mail-deduplicate-logo-header.png" alt="Mail Deduplicate">
   </a>
 </p>
 
@@ -16,7 +16,7 @@
 Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/cli-coloured-header.png" alt="Mail Deduplicate">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/cli-coloured-header.png" alt="Mail Deduplicate">
 </p>
 
 ## Features
@@ -46,7 +46,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 ## Example
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/images/cli-coloured-run.png">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/cli-coloured-run.png">
 </p>
 
 ## Installation
