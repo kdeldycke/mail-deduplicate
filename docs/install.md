@@ -191,7 +191,6 @@ _MDEDUP_COMPLETE=fish_source mdedup > ~/.config/fish/completions/mdedup.fish
 
 FYI, here is a graph of Python package dependencies:
 
-```{eval-rst}
-.. mermaid:: images/dependencies.mmd
-   :align: center
+```mermaid images/dependencies.mmd
+:align: center
 ```
