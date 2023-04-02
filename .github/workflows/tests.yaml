@@ -107,7 +107,7 @@ jobs:
 
       - name: Tests
         run: |
-          poetry run pytest --cov-config=pyproject.toml --cov=./ --cov-report=xml
+          poetry run pytest
 
       - name: Codecov upload
         uses: codecov/codecov-action@v3.1.1
