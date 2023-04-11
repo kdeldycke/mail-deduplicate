@@ -110,4 +110,4 @@ jobs:
           poetry run pytest
 
       - name: Codecov upload
-        uses: codecov/codecov-action@v3.1.1
+        uses: codecov/codecov-action@3.1.2
