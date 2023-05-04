@@ -105,6 +105,7 @@ class MdedupCommand(ExtraCommand):
     # Force linear layout for definition lists. See:
     # https://cloup.readthedocs.io/en/stable/pages/formatting.html#the-linear-layout-for-definition-lists
     formatter_settings={"col2_min_width": 9999999999},
+    # Removes the -h short option as we reserve it for --hash-header.
     context_settings={"help_option_names": ("--help",)},
 )
 @option_group(
