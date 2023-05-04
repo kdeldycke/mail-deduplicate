@@ -20,7 +20,7 @@ from pathlib import Path
 
 from boltons.iterutils import unique
 
-__version__ = "7.2.2"
+__version__ = "7.2.3"
 
 from click_extra.logging import logger  # noqa: F401
 

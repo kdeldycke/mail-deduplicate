@@ -1,5 +1,11 @@
 # ChangeLog
 
+## {gh}`7.2.3 (unreleased) <compare/v7.2.2...main>`
+
+```{important}
+This version is not released yet and is under active development.
+```
+
 ## {gh}`7.2.2 (2023-05-04) <compare/v7.2.1...v7.2.2>`
 
 - Redo release to fix trusted publisher on PyPi.
