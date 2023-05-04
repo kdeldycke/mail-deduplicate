@@ -65,8 +65,7 @@ pytest = "^7.2.1"
 # More pytest plugins at: https://docs.pytest.org/en/latest/reference/plugin_list.html
 pytest-cov = "^4.0.0"
 pytest-randomly = "^3.12.0"
-pytest-xdist = { extras = ["psutil"], version = "^3.2.1" }
-sphinx = "^6"
+sphinx = "^5.3.0"
 sphinx-autodoc-typehints = "^1.22"
 sphinx-click = "^4.4.0"
 sphinx-copybutton = "^0.5.1"
@@ -94,22 +93,23 @@ module = ["boltons.*"]
 
 [tool.pytest.ini_options]
 # https://docs.pytest.org/en/latest/customize.html#pyproject-toml
+# XXX The ``testpaths`` parameter has no effect since pytest is only looking for a ``conftest.py`` right next to this
+# ``pyproject.toml`` file. This issue is tracked upstream at: https://github.com/pytest-dev/pytest/issues/10665
+# In the meantime, we have to rely on the ``addopts`` parameter to hard-code the test path and have our custom options
+# recognized.
+testpaths = ["mail_deduplicate/tests/"]
 # --cov-config=pyproject.toml : is specified at CLI level instead of letting coverage find it because of this bug:
 #   https://github.com/nedbat/coveragepy/issues/512#issuecomment-399707938
 #   https://github.com/pytest-dev/pytest-cov/issues/168#issuecomment-327533847
 #   https://github.com/pytest-dev/pytest-cov/issues/243
 addopts = "--durations=10 --cov-report=term --cov-report=xml --cov-config=pyproject.toml --cov=."
+# Make sure tests that are expected to fail do not resurect and start working all of a sudden.
 xfail_strict = true
 
-[tool.coverage.paths]
 # https://coverage.readthedocs.io/en/latest/config.html
-source = ["mail_deduplicate"]
 [tool.coverage.run]
-source = ["mail_deduplicate"]
 branch = true
-omit = ["*/tests/*"]
 [tool.coverage.report]
-omit = ["*/tests/*"]
 precision = 2
 
 [tool.check-wheel-contents]
