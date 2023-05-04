@@ -6,11 +6,13 @@
 This version is not released yet and is under active development.
 ```
 
+- Redo release to fix trusted publisher on PyPi.
+
 ## {gh}`7.2.1 (2023-05-04) <compare/v7.2.0...v7.2.1>`
 
 - Produce dependency graph in Mermaid instead of Graphviz. Add new dev dependency on `sphinxcontrib-mermaid`.
 - Move all documentation assets to `assets` subfolder.
-- Distribute package via a trusted publisher channel.
+- Distribute package on PyPi via a trusted publisher channel.
 
 ## {gh}`7.2.0 (2023-02-15) <compare/v7.1.0...v7.2.0>`
 

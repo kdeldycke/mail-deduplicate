@@ -11,5 +11,3 @@ jobs:
 
   release:
     uses: kdeldycke/workflows/.github/workflows/release.yaml@v2.14.0
-    secrets:
-      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
