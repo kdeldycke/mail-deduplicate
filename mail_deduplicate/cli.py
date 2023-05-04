@@ -27,9 +27,9 @@ from click_extra import (
     option,
     option_group,
     pass_context,
+    path,
     progressbar,
 )
-from click_extra import Path as ClickPath
 from click_extra.colorize import default_theme as theme
 from click_extra.commands import ExtraCommand
 
@@ -246,7 +246,7 @@ class MdedupCommand(ExtraCommand):
         "-E",
         "--export",
         metavar="MAIL_BOX_PATH",
-        type=ClickPath(resolve_path=True),
+        type=path(resolve_path=True),
         help="Location of the destination mail box to where to copy or move "
         f"deduplicated mails. Required in {COPY_SELECTED}, {COPY_DISCARDED}, "
         f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
@@ -282,7 +282,7 @@ class MdedupCommand(ExtraCommand):
     "mail_sources",
     nargs=-1,
     metavar="MAIL_SOURCE_1 MAIL_SOURCE_2 ...",
-    type=ClickPath(exists=True, resolve_path=True),
+    type=path(exists=True, resolve_path=True),
     help="Mail sources to deduplicate. Can be a single mail box or a list of mails.",
 )
 @pass_context

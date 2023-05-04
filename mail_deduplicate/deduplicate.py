@@ -28,8 +28,8 @@ if sys.version_info >= (3, 8):
 else:
     from boltons.cacheutils import cachedproperty as cached_property
 
-import click
 from boltons.dictutils import FrozenDict
+from click_extra import progressbar
 from click_extra.colorize import default_theme as theme
 from tabulate import tabulate
 
@@ -397,7 +397,7 @@ class Deduplicate:
                 f"{self.conf.hash_body} body hasher not implemented yet."
             )
 
-        with click.progressbar(
+        with progressbar(
             length=self.stats["mail_found"],
             label="Hashed mails",
             show_pos=True,
