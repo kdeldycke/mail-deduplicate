@@ -1,10 +1,6 @@
 # ChangeLog
 
-## {gh}`7.2.3 (unreleased) <compare/v7.2.2...main>`
-
-```{important}
-This version is not released yet and is under active development.
-```
+## {gh}`7.2.3 (2023-05-04) <compare/v7.2.2...v7.2.3>`
 
 - Reverts distribution of package via trusted channel.
 
