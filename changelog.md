@@ -1,5 +1,11 @@
 # ChangeLog
 
+## {gh}`7.2.2 (unreleased) <compare/v7.2.1...main>`
+
+```{important}
+This version is not released yet and is under active development.
+```
+
 ## {gh}`7.2.1 (2023-05-04) <compare/v7.2.0...v7.2.1>`
 
 - Produce dependency graph in Mermaid instead of Graphviz. Add new dev dependency on `sphinxcontrib-mermaid`.
