@@ -117,6 +117,7 @@ def make_box(tmp_path):
     library, by the way of the ``box_type`` parameter. Supported values: only
     ``Maildir`` and ``mbox`` for the moment.
     """
+
     def _make_box(box_type, mails=None):
         """Create a fake maildir and populate it with mails."""
         # Check parameters.
