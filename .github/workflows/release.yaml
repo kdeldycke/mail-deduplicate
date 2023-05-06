@@ -13,3 +13,25 @@ jobs:
     uses: kdeldycke/workflows/.github/workflows/release.yaml@v2.14.1
     secrets:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+
+  test-binaries:
+    needs: release
+    strategy:
+      matrix: ${{ fromJSON(needs.release.outputs.nuitka_matrix) }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3.0.2
+        id: artifacts
+        with:
+          name: ${{ matrix.bin_name }}
+      - name: Set binary permissions
+        if: runner.os != 'Windows'
+        run: |
+          chmod +x ${{ steps.artifacts.outputs.download-path }}/${{ matrix.bin_name }}
+      - name: Run mdedup --version
+        run: |
+          ${{ steps.artifacts.outputs.download-path }}/${{ matrix.bin_name }} --version
+      - name: Run mdedup --help
+        run: |
+          ${{ steps.artifacts.outputs.download-path }}/${{ matrix.bin_name }} --help
