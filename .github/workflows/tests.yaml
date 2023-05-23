@@ -103,7 +103,7 @@ jobs:
         run: |
           python -m pip install --upgrade setuptools pip
           python -m pip install --upgrade poetry
-          poetry install --no-interaction --no-ansi
+          poetry install --no-interaction
 
       - name: Tests
         run: |
