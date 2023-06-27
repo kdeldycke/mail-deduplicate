@@ -304,7 +304,7 @@ This is the last version of the project known under the name *Maildir Deduplicat
 
 ## {gh}`1.0.1 (2015-11-23) <compare/v1.0.0...v1.0.1>`
 
-- Switch from coveralls.io to codecov.io.
+- Switch from coveralls to codecov.
 
 ## {gh}`1.0.0 (2015-10-03) <compare/v0.1.0...v1.0.0>`
 
