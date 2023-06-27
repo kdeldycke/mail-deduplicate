@@ -14,7 +14,7 @@ Explain the motivation for making this change. What existing problem does the pu
 
 #### Preliminary checks
 
-- [ ] I have [read the Code of Conduct](https://github.com/kdeldycke/mail-deduplicate/blob/develop/.github/code-of-conduct.md)
+- [ ] I have [read the Code of Conduct](https://github.com/kdeldycke/mail-deduplicate/blob/main/.github/code-of-conduct.md)
 - [ ] I have referenced above all [issues](https://github.com/kdeldycke/mail-deduplicate/issues) related to the changes I'm bringing
 - [ ] I have checked there is no other [Pull Requests](https://github.com/kdeldycke/mail-deduplicate/pulls) covering the same thing I'm about to address
 
