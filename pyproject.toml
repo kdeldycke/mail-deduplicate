@@ -55,7 +55,6 @@ click-extra = "^3.10.0"
 tabulate = { extras = ["widechars"], version = "^0.9.0" }
 
 [tool.poetry.group.dev.dependencies]
-bump2version = "^1.0.1"
 coverage = { extras = ["toml"], version = "^7.2" }
 furo = "^2023.03.27"
 mypy = "^1.0"
@@ -118,6 +117,28 @@ ignore = [
     #   mail_deduplicate/tests/__init__.py
     "W002",
 ]
+
+[tool.bumpversion]
+current_version = "7.2.4"
+allow_dirty = true
+
+[[tool.bumpversion.files]]
+filename = "./mail_deduplicate/__init__.py"
+
+[[tool.bumpversion.files]]
+filename = "./pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "./changelog.md"
+search = "{{gh}}`{current_version} (unreleased)"
+replace = "{{gh}}`{new_version} (unreleased)"
+
+[[tool.bumpversion.files]]
+filename = "./citation.cff"
+search = "version: {current_version}"
+replace = "version: {new_version}"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
