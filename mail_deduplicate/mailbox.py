@@ -144,7 +144,9 @@ def autodetect_box_type(path: Path) -> str:
 
 
 def open_box(
-    path: Path, box_type: str | Literal[False] = False, force_unlock: bool = False
+    path: Path,
+    box_type: str | Literal[False] = False,
+    force_unlock: bool = False,
 ):
     """Open a mail box.
 
@@ -191,7 +193,8 @@ def lock_box(box, force_unlock):
 
 
 def open_subfolders(
-    box: py_mailbox.Mailbox, force_unlock: bool
+    box: py_mailbox.Mailbox,
+    force_unlock: bool,
 ) -> list[py_mailbox.Mailbox]:
     """Browse recursively the subfolder tree of a box.
 
@@ -212,7 +215,9 @@ def open_subfolders(
 
 
 def create_box(
-    path: Path, box_type: str, export_append: bool = False
+    path: Path,
+    box_type: str,
+    export_append: bool = False,
 ) -> py_mailbox.Mailbox:
     """Creates a brand new box from scratch."""
     logger.info(
