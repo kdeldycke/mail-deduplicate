@@ -6,6 +6,7 @@
 This version is not released yet and is under active development.
 ```
 
+- Drop support of Python 3.7.
 - Replace unmaintained `bump2version` by `bump-my-version`.
 - Test `mdedup` binaries.
 

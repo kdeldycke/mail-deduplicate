@@ -15,18 +15,13 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 from __future__ import annotations
 
-import sys
 import textwrap
 from collections import Counter, OrderedDict
 from difflib import unified_diff
+from functools import cached_property
 from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
-
-if sys.version_info >= (3, 8):
-    from functools import cached_property
-else:
-    from boltons.cacheutils import cachedproperty as cached_property
 
 from boltons.dictutils import FrozenDict
 from click_extra import progressbar
