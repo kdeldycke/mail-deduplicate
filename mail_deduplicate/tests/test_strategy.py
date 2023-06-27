@@ -21,14 +21,12 @@ from string import ascii_lowercase
 import arrow
 import pytest
 
-from ..strategy import (
+from mail_deduplicate.strategy import (
     DISCARD_ALL_BUT_ONE,
     DISCARD_BIGGER,
     DISCARD_BIGGEST,
-    DISCARD_MATCHING_PATH,  # noqa: F401
     DISCARD_NEWER,
     DISCARD_NEWEST,
-    DISCARD_NON_MATCHING_PATH,  # noqa: F401
     DISCARD_OLDER,
     DISCARD_OLDEST,
     DISCARD_ONE,
@@ -37,10 +35,8 @@ from ..strategy import (
     SELECT_ALL_BUT_ONE,
     SELECT_BIGGER,
     SELECT_BIGGEST,
-    SELECT_MATCHING_PATH,  # noqa: F401
     SELECT_NEWER,
     SELECT_NEWEST,
-    SELECT_NON_MATCHING_PATH,  # noqa: F401
     SELECT_OLDER,
     SELECT_OLDEST,
     SELECT_ONE,
@@ -48,6 +44,7 @@ from ..strategy import (
     SELECT_SMALLEST,
     STRATEGY_METHODS,
 )
+
 from .conftest import MailFactory, check_box
 
 
@@ -72,10 +69,10 @@ oldest_mail = MailFactory(date=now.shift(minutes=-3))
 smallest_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
 smaller_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
 bigger_mail = MailFactory(
-    body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++"
+    body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++",
 )
 biggest_mail = MailFactory(
-    body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++++++"
+    body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++++++",
 )
 
 
@@ -94,11 +91,11 @@ strategy_options.update(
         "discard-non-matching-path": ["--regexp=.*"],
         "select-matching-path": ["--regexp=.*"],
         "select-non-matching-path": ["--regexp=.*"],
-    }
+    },
 )
 
 
-@pytest.mark.parametrize("strategy_id,params", strategy_options.items())
+@pytest.mark.parametrize(("strategy_id", "params"), strategy_options.items())
 def test_maildir_dry_run(invoke, make_box, strategy_id, params):
     """Check no mail is removed in dry-run mode."""
     box_path, box_type = make_box(
@@ -390,7 +387,7 @@ test_cases = [
 
 
 @pytest.mark.parametrize(
-    "strategy_id,mailbox_input,mailbox_results",
+    ("strategy_id", "mailbox_input", "mailbox_results"),
     [
         pytest.param(
             strategy_id,
@@ -403,7 +400,11 @@ test_cases = [
     ],
 )
 def test_maildir_strategy(
-    invoke, make_box, strategy_id, mailbox_input, mailbox_results
+    invoke,
+    make_box,
+    strategy_id,
+    mailbox_input,
+    mailbox_results,
 ):
     """Generic test to check the result of a selection strategy."""
     box_path, box_type = make_box(Maildir, mailbox_input)

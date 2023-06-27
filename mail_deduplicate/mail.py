@@ -15,18 +15,14 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 from __future__ import annotations
 
+import contextlib
 import email
 import hashlib
 import inspect
 import mailbox
 import os
 import re
-import sys
-
-if sys.version_info >= (3, 8):
-    from functools import cached_property
-else:
-    from boltons.cacheutils import cachedproperty as cached_property
+from functools import cached_property
 
 import arrow
 from tabulate import tabulate
@@ -42,9 +38,10 @@ class DedupMail:
     and shouln't be used directly, but composed with ``mailbox.Message`` sub-classes.
     """
 
-    def __init__(self, message=None):
+    def __init__(self, message=None) -> None:
         """Initialize a pre-parsed ``Message`` instance the same way the default factory
-        in Python's ``mailbox`` module does."""
+        in Python's ``mailbox`` module does.
+        """
         # Hunt down in our parent classes (but ourselve) the first one inheriting the
         # mailbox.Message class. That way we can get to the original factory.
         orig_message_klass = None
@@ -90,7 +87,7 @@ class DedupMail:
         self.path = mail_file._file.name
         mail_file.close()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.source_path}:{self.mail_id}>"
 
     @cached_property
@@ -120,11 +117,8 @@ class DedupMail:
 
         # Fetch from the date header.
         value = self.get("Date")
-        try:
-            value = email.utils.mktime_tz(email.utils.parsedate_tz(value))
-        except ValueError:
-            pass
-        return value
+        with contextlib.suppress(ValueError):
+            return email.utils.mktime_tz(email.utils.parsedate_tz(value))
 
     @cached_property
     def size(self):
@@ -215,7 +209,7 @@ class DedupMail:
     def hash_normalized_body(self):
         """Returns the normalized body hash of a mail."""
         serialized_normalized_body = "".join(
-            [re.sub(r"\s", "", line) for line in self.body_lines]
+            [re.sub(r"\s", "", line) for line in self.body_lines],
         ).encode("utf-8")
         hash_value = hashlib.sha224(serialized_normalized_body).hexdigest()
         logger.debug(f"Body normalized hash: {hash_value}")
@@ -251,7 +245,7 @@ class DedupMail:
 
         Returns a string ready to be printed.
         """
-        table = [["Header ID", "Header value"]] + list(self.canonical_headers)
+        table = [["Header ID", "Header value"], *list(self.canonical_headers)]
         return "\n" + tabulate(table, tablefmt="fancy_grid", headers="firstrow")
 
     @cached_property
@@ -263,14 +257,15 @@ class DedupMail:
         headers_count = len(self.canonical_headers)
         if headers_count < MINIMAL_HEADERS_COUNT:
             logger.warning(self.pretty_canonical_headers)
+            msg = f"{headers_count} headers found out of {MINIMAL_HEADERS_COUNT}."
             raise TooFewHeaders(
-                f"{headers_count} headers found out of {MINIMAL_HEADERS_COUNT}."
+                msg,
             )
         else:
             logger.debug(self.pretty_canonical_headers)
 
         return "\n".join(
-            [f"{h_id}: {h_value}" for h_id, h_value in self.canonical_headers]
+            [f"{h_id}: {h_value}" for h_id, h_value in self.canonical_headers],
         ).encode("utf-8")
 
     @staticmethod
@@ -297,7 +292,9 @@ class DedupMail:
             subject = value
             while True:
                 matching = re.match(
-                    r"([Rr]e: )*(\[\w[\w_-]+\w\] )+(.+)", subject, re.DOTALL
+                    r"([Rr]e: )*(\[\w[\w_-]+\w\] )+(.+)",
+                    subject,
+                    re.DOTALL,
                 )
                 if not matching:
                     break

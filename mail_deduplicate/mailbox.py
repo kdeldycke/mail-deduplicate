@@ -60,7 +60,7 @@ def build_box_constructors():
                 (DedupMail, message_klass, object),
                 {
                     "__doc__": f"Extend the default message factory for {klass} with "
-                    "our own ``DedupMail`` class to add deduplication utilities."
+                    "our own ``DedupMail`` class to add deduplication utilities.",
                 },
             )
 
@@ -81,7 +81,7 @@ BOX_STRUCTURES = FrozenDict(
     {
         "file": {"mbox", "mmdf", "babyl"},
         "folder": {"maildir", "mh"},
-    }
+    },
 )
 """Categorize each box type into its structure type."""
 
@@ -123,7 +123,8 @@ def autodetect_box_type(path):
     if path.is_dir():
         for subdir in MAILDIR_SUBDIRS:
             if not path.joinpath(subdir).is_dir():
-                raise ValueError(f"Missing sub-directory {subdir!r}")
+                msg = f"Missing sub-directory {subdir!r}"
+                raise ValueError(msg)
         box_type = "maildir"
 
     # Validates folder as an mbox.
@@ -131,7 +132,8 @@ def autodetect_box_type(path):
         box_type = "mbox"
 
     if not box_type:
-        raise ValueError("Unrecognized mail source type.")
+        msg = "Unrecognized mail source type."
+        raise ValueError(msg)
 
     logger.info(f"{theme.choice(box_type)} detected.")
     return box_type
@@ -203,7 +205,7 @@ def create_box(path, box_type=False, export_append=False):
     """Creates a brand new box from scratch."""
     assert isinstance(path, Path)
     logger.info(
-        f"Creating new {theme.choice(box_type)} box at {theme.choice(str(path))} ..."
+        f"Creating new {theme.choice(box_type)} box at {theme.choice(str(path))} ...",
     )
 
     if path.exists() and export_append is not True:

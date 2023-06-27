@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from string import ascii_lowercase
 
-from ..action import ACTIONS
+from mail_deduplicate.action import ACTIONS
 
 
 def test_action_definitions():

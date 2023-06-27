@@ -152,14 +152,15 @@ class Config:
         "export_append": False,
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         """Validates configuration parameter types and values."""
         # Load default values.
         self.conf = self.default_conf.copy()
 
         unrecognized_options = set(kwargs) - set(self.default_conf)
         if unrecognized_options:
-            raise ValueError(f"Unrecognized {unrecognized_options} options.")
+            msg = f"Unrecognized {unrecognized_options} options."
+            raise ValueError(msg)
 
         # Replace defaults values with our config.
         self.conf.update(kwargs)
@@ -191,3 +192,4 @@ class Config:
         """Expose configuration entries as properties."""
         if attr_id in self.conf:
             return self.conf[attr_id]
+        return None

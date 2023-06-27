@@ -31,7 +31,7 @@ def select_older(duplicates):
     """
     logger.info(
         f"Select all mails strictly older than the {duplicates.newest_timestamp} "
-        "timestamp..."
+        "timestamp...",
     )
     return {
         mail for mail in duplicates.pool if mail.timestamp < duplicates.newest_timestamp
@@ -46,7 +46,7 @@ def select_oldest(duplicates):
     """
     logger.info(
         f"Select all mails sharing the oldest {duplicates.oldest_timestamp} "
-        "timestamp..."
+        "timestamp...",
     )
     return {
         mail
@@ -62,7 +62,7 @@ def select_newer(duplicates):
     """
     logger.info(
         f"Select all mails strictly newer than the {duplicates.oldest_timestamp} "
-        "timestamp..."
+        "timestamp...",
     )
     return {
         mail for mail in duplicates.pool if mail.timestamp > duplicates.oldest_timestamp
@@ -77,7 +77,7 @@ def select_newest(duplicates):
     """
     logger.info(
         f"Select all mails sharing the newest {duplicates.newest_timestamp} "
-        "timestamp..."
+        "timestamp...",
     )
     return {
         mail
@@ -92,7 +92,7 @@ def select_smaller(duplicates):
     Discards the biggests, i.e. the subset sharing the biggest size.
     """
     logger.info(
-        f"Select all mails strictly smaller than {duplicates.biggest_size} bytes..."
+        f"Select all mails strictly smaller than {duplicates.biggest_size} bytes...",
     )
     return {mail for mail in duplicates.pool if mail.size < duplicates.biggest_size}
 
@@ -105,7 +105,7 @@ def select_smallest(duplicates):
     """
     logger.info(
         f"Select all mails sharing the smallest size of {duplicates.smallest_size} "
-        "bytes..."
+        "bytes...",
     )
     return {mail for mail in duplicates.pool if mail.size == duplicates.smallest_size}
 
@@ -116,7 +116,7 @@ def select_bigger(duplicates):
     Discards the smallests, i.e. the subset sharing the smallest size.
     """
     logger.info(
-        f"Select all mails strictly bigger than {duplicates.smallest_size} bytes..."
+        f"Select all mails strictly bigger than {duplicates.smallest_size} bytes...",
     )
     return {mail for mail in duplicates.pool if mail.size > duplicates.smallest_size}
 
@@ -129,7 +129,7 @@ def select_biggest(duplicates):
     """
     logger.info(
         f"Select all mails sharing the biggest size of {duplicates.biggest_size} "
-        "bytes..."
+        "bytes...",
     )
     return {mail for mail in duplicates.pool if mail.size == duplicates.biggest_size}
 
@@ -139,7 +139,7 @@ def select_matching_path(duplicates):
     the --regexp parameter."""
     logger.info(
         "Select all mails with file path matching the "
-        f"{duplicates.conf.regexp.pattern} regexp..."
+        f"{duplicates.conf.regexp.pattern} regexp...",
     )
     return {
         mail for mail in duplicates.pool if re.search(duplicates.conf.regexp, mail.path)
@@ -151,7 +151,7 @@ def select_non_matching_path(duplicates):
     provided via the --regexp parameter."""
     logger.info(
         "Select all mails with file path not matching the "
-        f"{duplicates.conf.regexp.pattern} regexp..."
+        f"{duplicates.conf.regexp.pattern} regexp...",
     )
     return {
         mail
@@ -219,7 +219,7 @@ STRATEGY_ALIASES = frozenset(
         (SELECT_MATCHING_PATH, DISCARD_NON_MATCHING_PATH),
         (SELECT_ALL_BUT_ONE, DISCARD_ONE),
         (SELECT_ONE, DISCARD_ALL_BUT_ONE),
-    ]
+    ],
 )
 """Groups strategy aliases and their definitions.
 
@@ -236,7 +236,7 @@ def get_method_id(strat_id):
 def build_method_mapping():
     """Precompute the mapping of all strategy IDs to their prefered method name,
     including aliases as fallbacks."""
-    methods = dict()
+    methods = {}
     for strategies in STRATEGY_ALIASES:
         fallback_method = None
         for strat_id in strategies:
@@ -245,7 +245,8 @@ def build_method_mapping():
             if method:
                 fallback_method = method
             if not fallback_method:
-                raise NotImplementedError(f"Can't find {mid}() method.")
+                msg = f"Can't find {mid}() method."
+                raise NotImplementedError(msg)
             methods[strat_id] = fallback_method
     return methods
 
@@ -259,7 +260,8 @@ def apply_strategy(strat_id, duplicates):
     Returns a set of selected mails objects.
     """
     if strat_id not in STRATEGY_METHODS:
-        raise ValueError(f"Unknown {strat_id} strategy.")
+        msg = f"Unknown {strat_id} strategy."
+        raise ValueError(msg)
     method = STRATEGY_METHODS[strat_id]
     logger.debug(f"Apply {method!r}...")
     return set(method(duplicates))

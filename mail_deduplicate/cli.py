@@ -73,7 +73,8 @@ def validate_regexp(ctx, param, value):
         try:
             value = re.compile(value)
         except ValueError:
-            raise BadParameter("invalid regular expression.")
+            msg = "invalid regular expression."
+            raise BadParameter(msg)
     return value
 
 
@@ -91,7 +92,7 @@ class MdedupCommand(ExtraCommand):
             [
                 (f"[{'|'.join(strat_ids)}]", " ".join(method.__doc__.split()))
                 for method, strat_ids in method_to_ids.items()
-            ]
+            ],
         )
 
         with formatter.section("Available strategies"):
@@ -355,12 +356,14 @@ def mdedup(
         for param_value, param_name, required_values in requirements:
             if conf_value in required_values:
                 if not param_value:
+                    msg = f"{conf_value} requires the {param_name} parameter."
                     raise BadParameter(
-                        f"{conf_value} requires the {param_name} parameter."
+                        msg,
                     )
             elif param_value:
+                msg = f"{param_name} parameter not allowed in {conf_value}."
                 raise BadParameter(
-                    f"{param_name} parameter not allowed in {conf_value}."
+                    msg,
                 )
 
     conf = Config(
