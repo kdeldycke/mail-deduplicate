@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
 """Patch and Python's standard library mail box constructors.
 
 Python's `mailbox module<https://docs.python.org/3.11/library/mailbox.html>`_ needs
@@ -25,8 +24,7 @@ from __future__ import annotations
 import inspect
 import mailbox as py_mailbox
 from functools import partial
-from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from boltons.dictutils import FrozenDict
 from boltons.iterutils import flatten
@@ -34,6 +32,9 @@ from click_extra.colorize import default_theme as theme
 
 from . import logger
 from .mail import DedupMail
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def build_box_constructors():
@@ -142,7 +143,9 @@ def autodetect_box_type(path: Path) -> str:
     return box_type
 
 
-def open_box(path: Path, box_type: str | Literal[False]=False, force_unlock: bool=False):
+def open_box(
+    path: Path, box_type: str | Literal[False] = False, force_unlock: bool = False
+):
     """Open a mail box.
 
     Returns a list of boxes, one per sub-folder. All are locked, ready for operations.
@@ -187,7 +190,9 @@ def lock_box(box, force_unlock):
     return box
 
 
-def open_subfolders(box: py_mailbox.Mailbox, force_unlock: bool) -> list[py_mailbox.Mailbox]:
+def open_subfolders(
+    box: py_mailbox.Mailbox, force_unlock: bool
+) -> list[py_mailbox.Mailbox]:
     """Browse recursively the subfolder tree of a box.
 
     Returns a list of opened and locked boxes, each for one subfolder.
@@ -206,7 +211,9 @@ def open_subfolders(box: py_mailbox.Mailbox, force_unlock: bool) -> list[py_mail
     return folder_list
 
 
-def create_box(path: Path, box_type: str, export_append: bool=False) -> py_mailbox.Mailbox:
+def create_box(
+    path: Path, box_type: str, export_append: bool = False
+) -> py_mailbox.Mailbox:
     """Creates a brand new box from scratch."""
     logger.info(
         f"Creating new {theme.choice(box_type)} box at {theme.choice(str(path))} ...",
