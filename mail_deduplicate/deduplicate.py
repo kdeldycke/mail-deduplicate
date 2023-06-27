@@ -22,7 +22,7 @@ from functools import cached_property
 from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
-from mailbox import Mailbox, Message
+from typing import TYPE_CHECKING
 
 from boltons.dictutils import FrozenDict
 from click_extra import progressbar
@@ -32,6 +32,9 @@ from tabulate import tabulate
 from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders, logger
 from .mailbox import open_box
 from .strategy import apply_strategy
+
+if TYPE_CHECKING:
+    from mailbox import Mailbox, Message
 
 STATS_DEF = OrderedDict(
     [
