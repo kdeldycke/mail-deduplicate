@@ -21,7 +21,7 @@ from mailbox import Maildir
 def test_bare_call(invoke):
     result = invoke()
     assert result.exit_code == 0
-    assert "Usage: " in result.stdout
+    assert "Usage:" in result.stdout
 
 
 def test_early_export_file_check(invoke, make_box, tmp_path):
