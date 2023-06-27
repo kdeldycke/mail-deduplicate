@@ -13,17 +13,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-"""Patch and tweak `Python's standard library mail box constructors.
 
-<https://docs.python.org/3.11/library/mailbox.html>`_ to set sane defaults.
+"""Patch and Python's standard library mail box constructors.
 
-Also forces out our own message factories to add deduplication tools and utilities.
+Python's `mailbox module<https://docs.python.org/3.11/library/mailbox.html>`_ needs
+some tweaks and sane defaults.
 """
 
 from __future__ import annotations
 
 import inspect
-import mailbox
+import mailbox as py_mailbox
 from functools import partial
 from pathlib import Path
 
@@ -38,23 +38,25 @@ from .mail import DedupMail
 def build_box_constructors():
     """Build our own mail constructors for each subclass of ``mailbox.Mailbox``.
 
-    Gather all constructors defined by the standard Python library and extend them with
-    our ``DedupMail`` class.
+    Gather all constructors defined by the standard Python library and augments them
+    with our ``DedupMail`` class.
+
+    Only augment direct subclasses of the ``mailbox.Mailbox`` interface. Ignore
+    ``mailbox.Mailbox`` itself but the latter and all others starting with an
+    underscore.
     """
-    # Only keep subclasses of the ``mailbox.Mailbox`` interface, but the latter and
-    # all others starting with an underscore.
-    for _, klass in inspect.getmembers(mailbox, inspect.isclass):
+    for _, klass in inspect.getmembers(py_mailbox, inspect.isclass):
         if (
-            klass != mailbox.Mailbox
+            klass != py_mailbox.Mailbox
             and not klass.__name__.startswith("_")
-            and issubclass(klass, mailbox.Mailbox)
+            and issubclass(klass, py_mailbox.Mailbox)
         ):
             # Fetch the default factory for each mailbox type based on naming
             # conventions.
-            message_klass = getattr(mailbox, f"{klass.__name__}Message")
-            assert issubclass(message_klass, mailbox.Message)
+            message_klass = getattr(py_mailbox, f"{klass.__name__}Message")
+            assert issubclass(message_klass, py_mailbox.Message)
 
-            # Extend the default factory with DedupMail class.
+            # Augment the default factory with DedupMail class.
             factory_klass = type(
                 f"{klass.__name__}DedupMail",
                 (DedupMail, message_klass, object),
@@ -169,7 +171,7 @@ def lock_box(box, force_unlock):
     try:
         logger.debug("Locking box...")
         box.lock()
-    except mailbox.ExternalClashError:
+    except py_mailbox.ExternalClashError:
         logger.error("Box already locked!")
         # Remove the lock manually and re-lock.
         if force_unlock:
