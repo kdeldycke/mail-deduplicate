@@ -22,6 +22,7 @@ from functools import cached_property
 from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
+from mailbox import Mailbox, Message
 
 from boltons.dictutils import FrozenDict
 from click_extra import progressbar
@@ -127,20 +128,20 @@ class DuplicateSet:
     strategy.
     """
 
-    def __init__(self, hash_key, mail_set, conf) -> None:
+    def __init__(self, hash_key: str, mail_set: set[Message], conf) -> None:
         """Load-up the duplicate set of mail and freeze pool.
 
         Once loaded-up, the pool of parsed mails is considered frozen for the rest of
         the duplicate set's life. This allows aggressive caching of lazy instance
         attributes depending on the pool content.
         """
-        self.hash_key = hash_key
+        self.hash_key: str = hash_key
 
         # Mails selected after application of selection strategy.
-        self.selection = set()
+        self.selection: set[Message] = set()
 
         # Mails discarded after application of selection strategy.
-        self.discard = set()
+        self.discard: set[Message] = set()
 
         # Global config.
         self.conf = conf
@@ -149,7 +150,7 @@ class DuplicateSet:
         self.pool = frozenset(mail_set)
 
         # Set metrics.
-        self.stats = Counter()
+        self.stats: Counter = Counter()
         self.stats["mail_duplicates"] += self.size
 
         logger.debug(f"{self!r} created.")
@@ -159,7 +160,7 @@ class DuplicateSet:
         return f"<{self.__class__.__name__} hash={self.hash_key} size={self.size}>"
 
     @cached_property
-    def size(self):
+    def size(self) -> int:
         """Returns the number of mails in the duplicate set."""
         return len(self.pool)
 
@@ -336,38 +337,38 @@ class Deduplicate:
         # Index of mail sources by their full, normalized path. So we can refer
         # to them in Mail instances. Also have the nice side effect of natural
         # deduplication of sources themselves.
-        self.sources = {}
+        self.sources: dict[str, Mailbox] = {}
 
         # All mails grouped by hashes.
-        self.mails = {}
+        self.mails: dict[str, set[Message]] = {}
 
         # Mails selected after application of selection strategy.
-        self.selection = set()
+        self.selection: set[Message] = set()
 
         # Mails discarded after application of selection strategy.
-        self.discard = set()
+        self.discard: set[Message] = set()
 
         # Global config.
         self.conf = conf
 
         # Deduplication statistics.
-        self.stats = Counter(dict.fromkeys(STATS_DEF, 0))
+        self.stats: Counter = Counter(dict.fromkeys(STATS_DEF, 0))
 
-    def add_source(self, source_path):
+    def add_source(self, source_path: Path | str) -> None:
         """Registers a source of mails, validates and opens it.
 
         Duplicate sources of mails are not allowed, as when we perform the action, we
         use the path as a unique key to tie back a mail from its source.
         """
         # Make the path absolute and resolve any symlinks.
-        source_path = str(Path(source_path).resolve(strict=True))
-        if source_path in self.sources:
-            msg = f"{source_path} already added."
+        path = Path(source_path).resolve(strict=True)
+        if str(path) in self.sources:
+            msg = f"{path} already added."
             raise ValueError(msg)
 
         # Open and register the mail source. Subfolders will be registered as their
         # own box.
-        boxes = open_box(source_path, self.conf.input_format, self.conf.force_unlock)
+        boxes = open_box(path, self.conf.input_format, self.conf.force_unlock)
         for box in boxes:
             self.sources[box._path] = box
 

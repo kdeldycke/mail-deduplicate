@@ -24,7 +24,7 @@ __version__ = "7.3.0"
 
 from click_extra.logging import logger  # noqa: F401
 
-HASH_HEADERS = (
+HASH_HEADERS: tuple[str, ...] = (
     "Date",
     "From",
     "To",
@@ -170,7 +170,7 @@ class Config:
         assert self.content_threshold >= -1
 
         # Headers are case-insensitive in Python implementation.
-        normalized_headers = [h.lower() for h in self.hash_headers]
+        normalized_headers = (h.lower() for h in self.hash_headers)  # type: ignore[has-type]
         # Remove duplicate entries.
         normalized_headers = unique(normalized_headers)
         # Mail headers are composed of ASCII characters between 33 and 126
@@ -183,8 +183,8 @@ class Config:
 
         # Export mail box will always be created from scratch and is not
         # expected to exists in the first place.
-        if self.export:
-            self.export = Path(self.export).resolve()
+        if self.export:  # type: ignore[has-type]
+            self.export = Path(self.export).resolve()  # type: ignore[has-type]
             if self.export.exists() and self.export_append is not True:
                 raise FileExistsError(self.export)
 

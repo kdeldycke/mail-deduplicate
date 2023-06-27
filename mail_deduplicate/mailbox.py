@@ -26,6 +26,7 @@ import inspect
 import mailbox as py_mailbox
 from functools import partial
 from pathlib import Path
+from typing import Literal
 
 from boltons.dictutils import FrozenDict
 from boltons.iterutils import flatten
@@ -96,7 +97,7 @@ MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 """List of required sub-folders defining a properly structured maildir."""
 
 
-def autodetect_box_type(path):
+def autodetect_box_type(path: Path) -> str:
     """Auto-detect the format of the mailbox located at the provided path.
 
     Returns a box type as indexed in the `BOX_TYPES
@@ -141,7 +142,7 @@ def autodetect_box_type(path):
     return box_type
 
 
-def open_box(path, box_type=False, force_unlock=False):
+def open_box(path: Path, box_type: str | Literal[False]=False, force_unlock: bool=False):
     """Open a mail box.
 
     Returns a list of boxes, one per sub-folder. All are locked, ready for operations.
@@ -149,8 +150,7 @@ def open_box(path, box_type=False, force_unlock=False):
     If ``box_type`` is provided, forces the opening of the box in the specified format.
     Else, defaults to autodetection.
     """
-    logger.info(f"\nOpening {theme.choice(path)} ...")
-    path = Path(path)
+    logger.info(f"\nOpening {theme.choice(str(path))} ...")
     if not box_type:
         box_type = autodetect_box_type(path)
     else:
@@ -187,7 +187,7 @@ def lock_box(box, force_unlock):
     return box
 
 
-def open_subfolders(box, force_unlock):
+def open_subfolders(box: py_mailbox.Mailbox, force_unlock: bool) -> list[py_mailbox.Mailbox]:
     """Browse recursively the subfolder tree of a box.
 
     Returns a list of opened and locked boxes, each for one subfolder.
@@ -199,13 +199,15 @@ def open_subfolders(box, force_unlock):
     if hasattr(box, "list_folders"):
         for folder_id in box.list_folders():
             logger.info(f"Opening subfolder {folder_id} ...")
-            folder_list += open_subfolders(box.get_folder(folder_id), force_unlock)
+            folder_list += open_subfolders(
+                box.get_folder(folder_id),  # type: ignore[attr-defined]
+                force_unlock,
+            )
     return folder_list
 
 
-def create_box(path, box_type=False, export_append=False):
+def create_box(path: Path, box_type: str, export_append: bool=False) -> py_mailbox.Mailbox:
     """Creates a brand new box from scratch."""
-    assert isinstance(path, Path)
     logger.info(
         f"Creating new {theme.choice(box_type)} box at {theme.choice(str(path))} ...",
     )
@@ -220,4 +222,4 @@ def create_box(path, box_type=False, export_append=False):
 
     logger.debug("Locking box...")
     box.lock()
-    return box
+    return box  # type: ignore[no-any-return]

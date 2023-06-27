@@ -54,7 +54,7 @@ class DedupMail:
 
         # Call original object initialization from the right message class we
         # inherits from mailbox.Message.
-        super(orig_message_klass, self).__init__(message)
+        super(orig_message_klass, self).__init__(message)  # type: ignore[arg-type]
 
         # Normalized path to the mailbox this message originates from.
         self.source_path = None

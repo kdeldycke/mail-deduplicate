@@ -72,7 +72,9 @@ class MailFactory:
 
         # Derive RFC-2822 date from arrow object if not set.
         if not self.fields.get("date_rfc2822"):
-            self.fields["date_rfc2822"] = maildate(self.fields["date"].float_timestamp)
+            self.fields["date_rfc2822"] = maildate(
+                self.fields["date"].float_timestamp  # type: ignore[attr-defined]
+            )
 
     def render(self):
         """Returns the full, rendered content of the mail."""
