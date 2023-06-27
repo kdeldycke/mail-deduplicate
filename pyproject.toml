@@ -1,7 +1,7 @@
 [tool.poetry]
 # Docs: https://python-poetry.org/docs/pyproject/
 name = "mail-deduplicate"
-version = "7.2.4"
+version = "7.3.0"
 description = "📧 CLI to deduplicate mails from mail boxes."
 license = 'GPL-2.0-or-later'
 authors = ["Kevin Deldycke <kevin@deldycke.com>"]
@@ -119,7 +119,7 @@ ignore = [
 ]
 
 [tool.bumpversion]
-current_version = "7.2.4"
+current_version = "7.3.0"
 allow_dirty = true
 
 [[tool.bumpversion.files]]
