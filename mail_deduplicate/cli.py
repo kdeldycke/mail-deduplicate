@@ -357,14 +357,10 @@ def mdedup(
             if conf_value in required_values:
                 if not param_value:
                     msg = f"{conf_value} requires the {param_name} parameter."
-                    raise BadParameter(
-                        msg,
-                    )
+                    raise BadParameter(msg)
             elif param_value:
                 msg = f"{param_name} parameter not allowed in {conf_value}."
-                raise BadParameter(
-                    msg,
-                )
+                raise BadParameter(msg)
 
     conf = Config(
         dry_run=dry_run,

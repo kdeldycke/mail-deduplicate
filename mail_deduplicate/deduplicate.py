@@ -390,9 +390,7 @@ class Deduplicate:
         body_hasher = BODY_HASHERS.get(self.conf.hash_body)
         if not body_hasher:
             msg = f"{self.conf.hash_body} body hasher not implemented yet."
-            raise NotImplementedError(
-                msg,
-            )
+            raise NotImplementedError(msg)
 
         with progressbar(
             length=self.stats["mail_found"],
