@@ -102,7 +102,7 @@ STATS_DEF = OrderedDict(
             "Number of valid sets on which the selection strategy was successfully "
             "applied.",
         ),
-    ]
+    ],
 )
 """All tracked statistics and their definition."""
 
@@ -115,7 +115,7 @@ BODY_HASHERS = FrozenDict(
         BODY_HASHER_SKIP: lambda _: "",
         BODY_HASHER_RAW: lambda m: m.hash_raw_body,
         BODY_HASHER_NORMALIZED: lambda m: m.hash_normalized_body,
-    }
+    },
 )
 """Method used to hash the body of mails."""
 
@@ -127,7 +127,7 @@ class DuplicateSet:
     strategy.
     """
 
-    def __init__(self, hash_key, mail_set, conf):
+    def __init__(self, hash_key, mail_set, conf) -> None:
         """Load-up the duplicate set of mail and freeze pool.
 
         Once loaded-up, the pool of parsed mails is considered frozen for the rest of
@@ -154,7 +154,7 @@ class DuplicateSet:
 
         logger.debug(f"{self!r} created.")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Print internal raw states for debugging."""
         return f"<{self.__class__.__name__} hash={self.hash_key} size={self.size}>"
 
@@ -206,7 +206,7 @@ class DuplicateSet:
                 size_difference = abs(mail_a.size - mail_b.size)
                 logger.debug(
                     f"{mail_a!r} and {mail_b!r} differs by {size_difference} bytes "
-                    "in size."
+                    "in size.",
                 )
                 if size_difference > self.conf.size_threshold:
                     raise SizeDiffAboveThreshold
@@ -216,7 +216,7 @@ class DuplicateSet:
                 content_difference = self.diff(mail_a, mail_b)
                 logger.debug(
                     f"{mail_a!r} and {mail_b!r} differs by {content_difference} bytes "
-                    "in content."
+                    "in content.",
                 )
                 if content_difference > self.conf.content_threshold:
                     if self.conf.show_diff:
@@ -241,8 +241,8 @@ class DuplicateSet:
                     tofiledate="",
                     n=0,
                     lineterm="\n",
-                )
-            )
+                ),
+            ),
         )
 
     def pretty_diff(self, mail_a, mail_b):
@@ -257,7 +257,7 @@ class DuplicateSet:
                 tofiledate=f"{mail_b.timestamp:0.2f}",
                 n=0,
                 lineterm="\n",
-            )
+            ),
         )
 
     def categorize_candidates(self):
@@ -301,7 +301,7 @@ class DuplicateSet:
         if candidate_count == self.size:
             logger.warning(
                 f"Skip set: all {candidate_count} mails within were selected. "
-                "The strategy criterion was not able to discard some."
+                "The strategy criterion was not able to discard some.",
             )
             self.stats["mail_skipped"] += self.size
             self.stats["set_skipped_strategy"] += 1
@@ -311,7 +311,7 @@ class DuplicateSet:
         if candidate_count == 0:
             logger.warning(
                 "Skip set: No mail within were selected. "
-                "The strategy criterion was not able to select some."
+                "The strategy criterion was not able to select some.",
             )
             self.stats["mail_skipped"] += self.size
             self.stats["set_skipped_strategy"] += 1
@@ -332,7 +332,7 @@ class Deduplicate:
     Similar messages sharing the same hash are grouped together in a ``DuplicateSet``.
     """
 
-    def __init__(self, conf):
+    def __init__(self, conf) -> None:
         # Index of mail sources by their full, normalized path. So we can refer
         # to them in Mail instances. Also have the nice side effect of natural
         # deduplication of sources themselves.
@@ -362,7 +362,8 @@ class Deduplicate:
         # Make the path absolute and resolve any symlinks.
         source_path = str(Path(source_path).resolve(strict=True))
         if source_path in self.sources:
-            raise ValueError(f"{source_path} already added.")
+            msg = f"{source_path} already added."
+            raise ValueError(msg)
 
         # Open and register the mail source. Subfolders will be registered as their
         # own box.
@@ -383,13 +384,14 @@ class Deduplicate:
         """
         logger.info(
             f"Use [{', '.join(map(theme.choice, self.conf.hash_headers))}] headers to "
-            "compute hashes."
+            "compute hashes.",
         )
 
         body_hasher = BODY_HASHERS.get(self.conf.hash_body)
         if not body_hasher:
+            msg = f"{self.conf.hash_body} body hasher not implemented yet."
             raise NotImplementedError(
-                f"{self.conf.hash_body} body hasher not implemented yet."
+                msg,
             )
 
         with progressbar(
@@ -426,7 +428,7 @@ class Deduplicate:
         if self.conf.strategy:
             logger.info(
                 f"{theme.choice(self.conf.strategy)} strategy will be applied on each "
-                "duplicate set to select candidates."
+                "duplicate set to select candidates.",
             )
         else:
             logger.warning("No strategy configured, skip selection.")
@@ -465,7 +467,7 @@ class Deduplicate:
                             stat_id[len(prefix) :].replace("_", " - ").title(),
                             self.stats[stat_id],
                             "\n".join(textwrap.wrap(desc, 60)),
-                        ]
+                        ],
                     )
             output += tabulate(table, tablefmt="fancy_grid", headers="firstrow")
             output += "\n"

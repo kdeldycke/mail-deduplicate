@@ -30,12 +30,12 @@ from boltons.iterutils import same
 from click_extra.tests.conftest import invoke as invoke_extra  # noqa: F401
 from click_extra.tests.conftest import runner  # noqa: F401
 
-from ..cli import mdedup
+from mail_deduplicate.cli import mdedup
 
 """ Fixtures, configuration and helpers for tests. """
 
 
-@pytest.fixture
+@pytest.fixture()
 def invoke(invoke_extra):  # noqa: F811
     return partial(invoke_extra, mdedup)
 
@@ -46,7 +46,7 @@ class MailFactory:
     Help production of either random, customized or deterministic mail message.
     """
 
-    def __init__(self, **custom_fields):
+    def __init__(self, **custom_fields) -> None:
         """Init the mail with custom fields.
 
         You can bypass data normalization by passing the pre-formated date string with
@@ -96,8 +96,8 @@ class MailFactory:
             Content-Type: text/plain; charset="utf-8"
             Content-Transfer-Encoding: 8bit
             {body}""".format(
-                **self.fields
-            )
+                **self.fields,
+            ),
         ).encode("utf-8")
 
     def as_message(self):
@@ -109,7 +109,7 @@ class MailFactory:
         return "".join(random.choice(string.ascii_lowercase) for i in range(length))
 
 
-@pytest.fixture
+@pytest.fixture()
 def make_box(tmp_path):
     """A generic fixture to produce a temporary box of mails.
 

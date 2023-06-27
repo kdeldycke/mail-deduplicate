@@ -15,13 +15,17 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from boltons.dictutils import FrozenDict
 from boltons.iterutils import unique
 from click_extra.colorize import default_theme as theme
 
 from . import logger
-from .deduplicate import Deduplicate
 from .mailbox import create_box
+
+if TYPE_CHECKING:
+    from .deduplicate import Deduplicate
 
 COPY_SELECTED = "copy-selected"
 COPY_DISCARDED = "copy-discarded"
@@ -36,7 +40,9 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
     """Copy provided ``mails`` to a brand new box or an existing one."""
     if not dedup.conf.dry_run:
         box = create_box(
-            dedup.conf.export, dedup.conf.export_format, dedup.conf.export_append
+            dedup.conf.export,
+            dedup.conf.export_format,
+            dedup.conf.export_append,
         )
 
     for mail in mails:
@@ -57,7 +63,9 @@ def move_mails(dedup: Deduplicate, mails) -> None:
     """Move provided ``mails`` to a brand new box or an existing one."""
     if not dedup.conf.dry_run:
         box = create_box(
-            dedup.conf.export, dedup.conf.export_format, dedup.conf.export_append
+            dedup.conf.export,
+            dedup.conf.export_format,
+            dedup.conf.export_append,
         )
 
     for mail in mails:
@@ -125,7 +133,7 @@ ACTIONS = FrozenDict(
         MOVE_DISCARDED: move_discarded,
         DELETE_SELECTED: delete_selected,
         DELETE_DISCARDED: delete_discarded,
-    }
+    },
 )
 """Map action ID's to their implementation."""
 
@@ -148,6 +156,7 @@ def perform_action(dedup: Deduplicate) -> None:
     # Hunt down for action implementation.
     method = ACTIONS.get(dedup.conf.action)
     if not method:
-        raise NotImplementedError(f"{dedup.conf.action} action not implemented yet.")
+        msg = f"{dedup.conf.action} action not implemented yet."
+        raise NotImplementedError(msg)
 
     method(dedup)
