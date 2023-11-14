@@ -189,9 +189,13 @@ class DedupMail:
         subject, _ = re.subn(r"\s+", " ", subject)
         return subject
 
-    # Do not cache to reduce memory
     def hash_key(self):
-        """Returns the canonical hash of a mail."""
+        """Returns the canonical hash of a mail.
+
+        .. caution::
+            This method hasn't been made explicitely into a cached property in order to
+            reduce the overal memory footprint.
+        """
         logger.debug(f"Serialized headers: {self.serialized_headers()!r}")
         hash_value = hashlib.sha224(self.serialized_headers()).hexdigest()
         logger.debug(f"Hash: {hash_value}")
@@ -239,20 +243,26 @@ class DedupMail:
         # Cast to a tuple to prevent any modification.
         return tuple(canonical_headers)
 
-    # Do not cache to reduce memory
     def pretty_canonical_headers(self):
         """Renders a table of headers names and values used to produce the mail's hash.
+
+        .. caution::
+            This method hasn't been made explicitely into a cached property in order to
+            reduce the overal memory footprint.
 
         Returns a string ready to be printed.
         """
         table = [["Header ID", "Header value"], *list(self.canonical_headers)]
         return "\n" + tabulate(table, tablefmt="fancy_grid", headers="firstrow")
 
-    # Do not cache to reduce memory
     def serialized_headers(self):
         """Serialize the canonical headers into a single string ready to be hashed.
 
         At this point we should have at an absolute minimum of headers.
+
+        .. caution::
+            This method hasn't been made explicitely into a cached property in order to
+            reduce the overal memory footprint.
         """
         headers_count = len(self.canonical_headers)
         if headers_count < MINIMAL_HEADERS_COUNT:
