@@ -517,7 +517,8 @@ class Deduplicate:
         )
         # Action stats.
         assert self.stats["mail_selected"] >= self.stats["mail_copied"]
-        assert self.stats["mail_selected"] >= self.stats["mail_moved"]
+        if self.conf.action != "move-discarded":
+            assert self.stats["mail_selected"] >= self.stats["mail_moved"]
         assert self.stats["mail_selected"] >= self.stats["mail_deleted"]
         assert self.stats["mail_selected"] in (
             self.stats["mail_copied"],
