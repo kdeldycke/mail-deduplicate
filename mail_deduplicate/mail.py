@@ -189,11 +189,11 @@ class DedupMail:
         subject, _ = re.subn(r"\s+", " ", subject)
         return subject
 
-    @cached_property
+    # Do not cache to reduce memory
     def hash_key(self):
         """Returns the canonical hash of a mail."""
-        logger.debug(f"Serialized headers: {self.serialized_headers!r}")
-        hash_value = hashlib.sha224(self.serialized_headers).hexdigest()
+        logger.debug(f"Serialized headers: {self.serialized_headers()!r}")
+        hash_value = hashlib.sha224(self.serialized_headers()).hexdigest()
         logger.debug(f"Hash: {hash_value}")
         return hash_value
 
@@ -239,7 +239,7 @@ class DedupMail:
         # Cast to a tuple to prevent any modification.
         return tuple(canonical_headers)
 
-    @cached_property
+    # Do not cache to reduce memory
     def pretty_canonical_headers(self):
         """Renders a table of headers names and values used to produce the mail's hash.
 
@@ -248,7 +248,7 @@ class DedupMail:
         table = [["Header ID", "Header value"], *list(self.canonical_headers)]
         return "\n" + tabulate(table, tablefmt="fancy_grid", headers="firstrow")
 
-    @cached_property
+    # Do not cache to reduce memory
     def serialized_headers(self):
         """Serialize the canonical headers into a single string ready to be hashed.
 
@@ -256,13 +256,13 @@ class DedupMail:
         """
         headers_count = len(self.canonical_headers)
         if headers_count < MINIMAL_HEADERS_COUNT:
-            logger.warning(self.pretty_canonical_headers)
+            logger.warning(self.pretty_canonical_headers())
             msg = f"{headers_count} headers found out of {MINIMAL_HEADERS_COUNT}."
             raise TooFewHeaders(
                 msg,
             )
         else:
-            logger.debug(self.pretty_canonical_headers)
+            logger.debug(self.pretty_canonical_headers())
 
         return "\n".join(
             [f"{h_id}: {h_value}" for h_id, h_value in self.canonical_headers],
