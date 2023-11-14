@@ -104,7 +104,6 @@ class MdedupCommand(ExtraCommand):
 
 @extra_command(
     cls=MdedupCommand,
-    version=__version__,
     short_help="Deduplicate mail boxes.",
     # Force linear layout for definition lists. See:
     # https://cloup.readthedocs.io/en/stable/pages/formatting.html#the-linear-layout-for-definition-lists
