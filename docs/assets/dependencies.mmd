@@ -1,20 +1,17 @@
 flowchart TD
     classDef missing stroke-dasharray: 5
     alabaster["alabaster\n0.7.13"]
-    arrow["arrow\n1.2.3"]
-    babel["Babel\n2.12.1"]
-    beautifulsoup4["beautifulsoup4\n4.12.2"]
-    boltons["boltons\n23.0.0"]
-    bracex["bracex\n2.3.post1"]
-    certifi["certifi\n2023.5.7"]
-    charset-normalizer["charset-normalizer\n3.1.0"]
-    click-extra["click-extra\n3.10.0"]
-    click-log["click-log\n0.4.0"]
-    click_0["click\n8.1.3"]
-    cloup["cloup\n2.1.1"]
+    arrow["arrow\n1.3.0"]
+    babel["Babel\n2.13.1"]
+    boltons["boltons\n23.1.1"]
+    bracex["bracex\n2.4"]
+    certifi["certifi\n2023.7.22"]
+    charset-normalizer["charset-normalizer\n3.3.2"]
+    click-extra["click-extra\n4.7.2"]
+    click_0["click\n8.1.7"]
+    cloup["cloup\n3.0.3"]
     commentjson["commentjson\n0.9.0"]
-    docutils["docutils\n0.19"]
-    furo["furo\n2023.3.27"]
+    docutils["docutils\n0.20.1"]
     idna["idna\n3.4"]
     imagesize["imagesize\n1.4.1"]
     jinja2["Jinja2\n3.1.2"]
@@ -22,19 +19,18 @@ flowchart TD
     mail-deduplicate["mail-deduplicate\n7.3.0"]
     markupsafe["MarkupSafe\n2.1.3"]
     mergedeep["mergedeep\n1.3.4"]
-    packaging["packaging\n23.1"]
+    packaging["packaging\n23.2"]
     pallets-sphinx-themes["Pallets-Sphinx-Themes\n2.1.1"]
-    pygments-ansi-color["pygments-ansi-color\n0.2.0"]
-    pygments["Pygments\n2.15.1"]
+    pygments-ansi-color["pygments-ansi-color\n0.3.0"]
+    pygments["Pygments\n2.16.1"]
     python-dateutil["python-dateutil\n2.8.2"]
-    pyyaml["PyYAML\n6.0"]
-    regex["regex\n2022.10.31"]
+    pyyaml["PyYAML\n6.0.1"]
+    regex["regex\n2023.10.3"]
     requests["requests\n2.31.0"]
+    setuptools["setuptools\n68.2.2"]
     six["six\n1.16.0"]
     snowballstemmer["snowballstemmer\n2.2.0"]
-    soupsieve["soupsieve\n2.4.1"]
-    sphinx-basic-ng["sphinx-basic-ng\n1.0.0b1"]
-    sphinx["sphinx\n5.3.0"]
+    sphinx["sphinx\n7.1.2"]
     sphinxcontrib-applehelp["sphinxcontrib-applehelp\n1.0.4"]
     sphinxcontrib-devhelp["sphinxcontrib-devhelp\n1.0.2"]
     sphinxcontrib-htmlhelp["sphinxcontrib-htmlhelp\n2.0.1"]
@@ -42,41 +38,35 @@ flowchart TD
     sphinxcontrib-qthelp["sphinxcontrib-qthelp\n1.0.3"]
     sphinxcontrib-serializinghtml["sphinxcontrib-serializinghtml\n1.1.5"]
     tabulate["tabulate\n0.9.0"]
-    urllib3["urllib3\n2.0.3"]
-    wcmatch["wcmatch\n8.4.1"]
+    types-python-dateutil["types-python-dateutil\n2.8.19.14"]
+    urllib3["urllib3\n2.1.0"]
+    wcmatch["wcmatch\n8.5"]
     xmltodict["xmltodict\n0.13.0"]
     arrow -- ">=2.7.0" --> python-dateutil
-    beautifulsoup4 -- ">1.2" --> soupsieve
+    arrow -- ">=2.8.10" --> types-python-dateutil
+    babel -- "any" --> setuptools
     click-extra -- ">=0.13.0,<0.14.0" --> xmltodict
-    click-extra -- ">=0.2.0,<0.3.0" --> pygments-ansi-color
-    click-extra -- ">=0.4.0,<0.5.0" --> click-log
+    click-extra -- ">=0.3.0,<0.4.0" --> pygments-ansi-color
+    click-extra -- ">=0.9,<0.10" --> tabulate
     click-extra -- ">=0.9.0,<0.10.0" --> commentjson
-    click-extra -- ">=0.9.0,<0.10.0" --> tabulate
     click-extra -- ">=1.3.4,<2.0.0" --> mergedeep
-    click-extra -- ">=2.0.0.post1,<3.0.0" --> cloup
-    click-extra -- ">=2.0.2,<3.0.0" --> pallets-sphinx-themes
-    click-extra -- ">=2.14.0,<3.0.0" --> pygments
-    click-extra -- ">=2.27.1,<3.0.0" --> requests
-    click-extra -- ">=2022.3.15,<2023.0.0" --> regex
-    click-extra -- ">=2023.03.27,<2024.0.0" --> furo
+    click-extra -- ">=2.1.1,<3.0.0" --> pallets-sphinx-themes
+    click-extra -- ">=2.14,<3.0" --> pygments
+    click-extra -- ">=2.28.2,<3.0.0" --> requests
+    click-extra -- ">=2023.3.22,<2024.0.0" --> regex
     click-extra -- ">=23.0.0,<24.0.0" --> boltons
-    click-extra -- ">=5.3.0,<6.0.0" --> sphinx
+    click-extra -- ">=3.0.1,<4.0.0" --> cloup
+    click-extra -- ">=6" --> sphinx
     click-extra -- ">=6.0.0,<7.0.0" --> pyyaml
-    click-extra -- ">=8.1.1,<9.0.0" --> click_0
-    click-extra -- ">=8.4,<9.0" --> wcmatch
-    click-log -- "any" --> click_0
+    click-extra -- ">=8.1.4,<9.0.0" --> click_0
+    click-extra -- ">=8.4.1,<9.0.0" --> wcmatch
     cloup -- ">=8.0,<9.0" --> click_0
     commentjson -- ">=0.7.1,<0.8.0" --> lark-parser
-    furo -- ">=2.7" --> pygments
-    furo -- ">=5.0,<7.0" --> sphinx
-    furo -- "any" --> beautifulsoup4
-    furo -- "any" --> sphinx-basic-ng
     jinja2 -- ">=2.0" --> markupsafe
     mail-deduplicate -- ">=0.9.0,<0.10.0" --> tabulate
     mail-deduplicate -- ">=1.2.3,<2.0.0" --> arrow
     mail-deduplicate -- ">=23.0.0,<24.0.0" --> boltons
-    mail-deduplicate -- ">=3.10.0,<4.0.0" --> click-extra
-    mail-deduplicate -- ">=8.1.2,<9.0.0" --> click_0
+    mail-deduplicate -- ">=4.7.2,<5.0.0" --> click-extra
     pallets-sphinx-themes -- ">=3" --> sphinx
     pallets-sphinx-themes -- "any" --> packaging
     pygments-ansi-color -- "!=2.7.3" --> pygments
@@ -85,14 +75,14 @@ flowchart TD
     requests -- ">=2,<4" --> charset-normalizer
     requests -- ">=2.5,<4" --> idna
     requests -- ">=2017.4.17" --> certifi
-    sphinx -- ">=0.14,<0.20" --> docutils
+    sphinx -- ">=0.18.1,<0.21" --> docutils
     sphinx -- ">=0.7,<0.8" --> alabaster
     sphinx -- ">=1.1.5" --> sphinxcontrib-serializinghtml
     sphinx -- ">=1.3" --> imagesize
     sphinx -- ">=2.0" --> snowballstemmer
     sphinx -- ">=2.0.0" --> sphinxcontrib-htmlhelp
-    sphinx -- ">=2.12" --> pygments
-    sphinx -- ">=2.5.0" --> requests
+    sphinx -- ">=2.13" --> pygments
+    sphinx -- ">=2.25.0" --> requests
     sphinx -- ">=2.9" --> babel
     sphinx -- ">=21.0" --> packaging
     sphinx -- ">=3.0" --> jinja2
@@ -100,6 +90,5 @@ flowchart TD
     sphinx -- "any" --> sphinxcontrib-devhelp
     sphinx -- "any" --> sphinxcontrib-jsmath
     sphinx -- "any" --> sphinxcontrib-qthelp
-    sphinx-basic-ng -- ">=4.0" --> sphinx
     wcmatch -- ">=2.1.1" --> bracex
 
