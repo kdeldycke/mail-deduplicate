@@ -49,10 +49,10 @@ mail\_deduplicate.mail module
    :undoc-members:
    :show-inheritance:
 
-mail\_deduplicate.mailbox module
---------------------------------
+mail\_deduplicate.mail\_box module
+----------------------------------
 
-.. automodule:: mail_deduplicate.mailbox
+.. automodule:: mail_deduplicate.mail_box
    :members:
    :undoc-members:
    :show-inheritance:
