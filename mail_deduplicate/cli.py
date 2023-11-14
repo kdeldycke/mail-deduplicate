@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import re
+from typing import Pattern, Callable
 
 from click_extra import (
     BadParameter,
@@ -69,36 +70,43 @@ from .strategy import (
 )
 
 
-def validate_regexp(ctx: Context, param: Parameter, value: str) -> str:
+def validate_regexp(ctx: Context, param: Parameter, value: str) -> str | Pattern[str]:
     """Validate and compile regular expression provided as parameters to the CLI."""
-    if value:
-        try:
-            value = re.compile(value)
-        except ValueError:
-            msg = "invalid regular expression."
-            raise BadParameter(msg)
-    return value
+    if not value:
+        return ""
+
+    try:
+        return re.compile(value)
+    except ValueError:
+        msg = "invalid regular expression."
+        raise BadParameter(msg)
 
 
 class MdedupCommand(ExtraCommand):
-    def format_help(self, ctx: Context, formatter: HelpExtraFormatter) -> None:
+    def format_help(
+        self,
+        ctx: Context,
+        formatter: HelpExtraFormatter,  # type: ignore[override]
+    ) -> None:
         """Extend the help screen with the description of all available strategies."""
         # Populate the formatter with the default help screen content.
         super().format_help(ctx, formatter)
 
         # Produce the strategy reference table, with grouped aliases.
-        method_to_ids = {}
+        method_to_ids: dict[Callable, list[str]] = {}
         for strat_id, method in sorted(STRATEGY_METHODS.items(), reverse=True):
             method_to_ids.setdefault(method, []).append(strat_id)
-        strat_table = sorted(
-            [
-                (f"[{'|'.join(strat_ids)}]", " ".join(method.__doc__.split()))
-                for method, strat_ids in method_to_ids.items()
-            ],
-        )
+
+        strat_table: list[tuple[str, str]] = []
+        for method, strat_ids in method_to_ids.items():
+            row_title = f"[{'|'.join(strat_ids)}]"
+            row_desc = ""
+            if method.__doc__:
+                row_desc = " ".join(method.__doc__.split())
+            strat_table.append((row_title, row_desc))
 
         with formatter.section("Available strategies"):
-            formatter.write_dl(strat_table)
+            formatter.write_dl(sorted(strat_table))
 
 
 @extra_command(
