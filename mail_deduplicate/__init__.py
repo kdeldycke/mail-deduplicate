@@ -20,7 +20,7 @@ from pathlib import Path
 
 from boltons.iterutils import unique
 
-__version__ = "7.3.0"
+__version__ = "7.3.1"
 
 
 HASH_HEADERS: tuple[str, ...] = (
