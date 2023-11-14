@@ -169,9 +169,7 @@ class Config:
         assert self.content_threshold >= -1
 
         # Headers are case-insensitive in Python implementation.
-        normalized_headers = (
-            h.lower() for h in self.hash_headers
-        )  # type: ignore[has-type]
+        normalized_headers = (h.lower() for h in self.hash_headers)  # type: ignore[has-type]
         # Remove duplicate entries.
         normalized_headers = unique(normalized_headers)
         # Mail headers are composed of ASCII characters between 33 and 126

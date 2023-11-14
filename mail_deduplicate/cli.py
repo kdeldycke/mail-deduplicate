@@ -24,14 +24,17 @@ from click_extra import (
     argument,
     echo,
     extra_command,
+    Context,
     option,
     option_group,
+    HelpExtraFormatter,
+    Parameter,
     pass_context,
     path,
     progressbar,
+    ExtraCommand,
 )
 from click_extra.colorize import default_theme as theme
-from click_extra.commands import ExtraCommand
 
 from . import (
     DATE_HEADER,
@@ -67,7 +70,7 @@ from .strategy import (
 )
 
 
-def validate_regexp(ctx, param, value):
+def validate_regexp(ctx: Context, param: Parameter, value: str) -> str:
     """Validate and compile regular expression provided as parameters to the CLI."""
     if value:
         try:
@@ -79,7 +82,7 @@ def validate_regexp(ctx, param, value):
 
 
 class MdedupCommand(ExtraCommand):
-    def format_help(self, ctx, formatter):
+    def format_help(self, ctx: Context, formatter: HelpExtraFormatter) -> None:
         """Extend the help screen with the description of all available strategies."""
         # Populate the formatter with the default help screen content.
         super().format_help(ctx, formatter)
