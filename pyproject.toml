@@ -106,14 +106,6 @@ branch = true
 [tool.coverage.report]
 precision = 2
 
-[tool.check-wheel-contents]
-ignore = [
-    # W002: Wheel contains duplicate files:
-    #   mail_deduplicate/managers/__init__.py
-    #   mail_deduplicate/tests/__init__.py
-    "W002",
-]
-
 [tool.bumpversion]
 current_version = "7.3.0"
 allow_dirty = true
