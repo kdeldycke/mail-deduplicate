@@ -37,7 +37,7 @@ from click_extra import (
 )
 from click_extra.colorize import default_theme as theme
 
-from . import (
+from mail_deduplicate import (
     DATE_HEADER,
     DEFAULT_CONTENT_THRESHOLD,
     DEFAULT_SIZE_THRESHOLD,
@@ -45,7 +45,7 @@ from . import (
     TIME_SOURCES,
     Config,
 )
-from .action import (
+from mail_deduplicate.action import (
     ACTIONS,
     COPY_DISCARDED,
     COPY_SELECTED,
@@ -53,15 +53,15 @@ from .action import (
     MOVE_SELECTED,
     perform_action,
 )
-from .deduplicate import (
+from mail_deduplicate.deduplicate import (
     BODY_HASHER_NORMALIZED,
     BODY_HASHER_RAW,
     BODY_HASHER_SKIP,
     BODY_HASHERS,
     Deduplicate,
 )
-from .mailbox import BOX_STRUCTURES, BOX_TYPES
-from .strategy import (
+from mail_deduplicate.mailbox import BOX_STRUCTURES, BOX_TYPES
+from mail_deduplicate.strategy import (
     DISCARD_MATCHING_PATH,
     DISCARD_NON_MATCHING_PATH,
     SELECT_MATCHING_PATH,

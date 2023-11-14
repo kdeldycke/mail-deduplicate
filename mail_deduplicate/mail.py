@@ -28,7 +28,7 @@ import logging
 import arrow
 from tabulate import tabulate
 
-from . import CTIME, MINIMAL_HEADERS_COUNT, TooFewHeaders
+from mail_deduplicate import CTIME, MINIMAL_HEADERS_COUNT, TooFewHeaders
 
 
 class DedupMail:

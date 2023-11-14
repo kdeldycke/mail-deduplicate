@@ -16,13 +16,13 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+import logging
 
 from boltons.dictutils import FrozenDict
 from boltons.iterutils import unique
 from click_extra.colorize import default_theme as theme
 
-import logging
-from .mailbox import create_box
+from mail_deduplicate.mailbox import create_box
 
 if TYPE_CHECKING:
     from .deduplicate import Deduplicate

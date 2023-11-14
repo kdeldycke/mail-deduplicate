@@ -23,16 +23,20 @@ from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
 from typing import TYPE_CHECKING
+import logging
 
 from boltons.dictutils import FrozenDict
 from click_extra import progressbar
 from click_extra.colorize import default_theme as theme
 from tabulate import tabulate
 
-import logging
-from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders
-from .mailbox import open_box
-from .strategy import apply_strategy
+from mail_deduplicate import (
+    ContentDiffAboveThreshold,
+    SizeDiffAboveThreshold,
+    TooFewHeaders,
+)
+from mail_deduplicate.mailbox import open_box
+from mail_deduplicate.strategy import apply_strategy
 
 if TYPE_CHECKING:
     from mailbox import Mailbox, Message

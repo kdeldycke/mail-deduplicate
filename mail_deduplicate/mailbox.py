@@ -31,7 +31,7 @@ from boltons.dictutils import FrozenDict
 from boltons.iterutils import flatten
 from click_extra.colorize import default_theme as theme
 
-from .mail import DedupMail
+from mail_deduplicate.mail import DedupMail
 
 if TYPE_CHECKING:
     from pathlib import Path
