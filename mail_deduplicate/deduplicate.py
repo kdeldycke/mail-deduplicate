@@ -451,7 +451,10 @@ class Deduplicate:
             self.selection.update(duplicates.selection)
             self.discard.update(duplicates.discard)
 
-            # Free memory of mail
+            # Remove from mail objects all attributes we no longer need, now that we
+            # have built the sets of selected and discarded mails. This will save
+            # memory and speed-up the action.
+            # See: https://github.com/kdeldycke/mail-deduplicate/issues/362
             delete_names = ["canonical_headers", "body_lines", "subject"]
             for mail in duplicates.discard:
                 for name in delete_names:
@@ -518,6 +521,8 @@ class Deduplicate:
         # Action stats.
         assert self.stats["mail_selected"] >= self.stats["mail_copied"]
         if self.conf.action != "move-discarded":
+            # The number of moved mails may be larger than the number of selected
+            # mails for move-discarded action, because discarded mails are moved.
             assert self.stats["mail_selected"] >= self.stats["mail_moved"]
         assert self.stats["mail_selected"] >= self.stats["mail_deleted"]
         assert self.stats["mail_selected"] in (
