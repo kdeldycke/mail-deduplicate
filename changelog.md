@@ -1,10 +1,6 @@
 # ChangeLog
 
-## {gh}`7.3.0 (unreleased) <compare/v7.2.3...main>`
-
-```{important}
-This version is not released yet and is under active development.
-```
+## {gh}`7.3.0 (2023-11-14) <compare/v7.2.3...v7.3.0>`
 
 - Drop support of Python 3.7.
 - Reduce memory usage.
