@@ -193,7 +193,7 @@ class DedupMail:
         """Returns the canonical hash of a mail.
 
         .. caution::
-            This method hasn't been made explicitely into a cached property in order to
+            This method hasn't been made explicitly into a cached property in order to
             reduce the overal memory footprint.
         """
         logging.debug(f"Serialized headers: {self.serialized_headers()!r}")
@@ -247,7 +247,7 @@ class DedupMail:
         """Renders a table of headers names and values used to produce the mail's hash.
 
         .. caution::
-            This method hasn't been made explicitely into a cached property in order to
+            This method hasn't been made explicitly into a cached property in order to
             reduce the overal memory footprint.
 
         Returns a string ready to be printed.
@@ -261,7 +261,7 @@ class DedupMail:
         At this point we should have at an absolute minimum of headers.
 
         .. caution::
-            This method hasn't been made explicitely into a cached property in order to
+            This method hasn't been made explicitly into a cached property in order to
             reduce the overal memory footprint.
         """
         headers_count = len(self.canonical_headers)
