@@ -41,8 +41,7 @@ class DedupMail:
 
     def __init__(self, message=None) -> None:
         """Initialize a pre-parsed ``Message`` instance the same way the default factory
-        in Python's ``mailbox`` module does.
-        """
+        in Python's ``mailbox`` module does."""
         # Hunt down in our parent classes (but ourselve) the first one inheriting the
         # mailbox.Message class. That way we can get to the original factory.
         orig_message_klass = None
