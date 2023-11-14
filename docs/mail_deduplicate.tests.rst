@@ -41,10 +41,10 @@ mail\_deduplicate.tests.test\_mail module
    :undoc-members:
    :show-inheritance:
 
-mail\_deduplicate.tests.test\_mailbox module
---------------------------------------------
+mail\_deduplicate.tests.test\_mail\_box module
+----------------------------------------------
 
-.. automodule:: mail_deduplicate.tests.test_mailbox
+.. automodule:: mail_deduplicate.tests.test_mail_box
    :members:
    :undoc-members:
    :show-inheritance:
