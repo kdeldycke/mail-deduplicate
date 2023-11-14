@@ -9,6 +9,8 @@ This version is not released yet and is under active development.
 - Drop support of Python 3.7.
 - Replace unmaintained `bump2version` by `bump-my-version`.
 - Test `mdedup` binaries.
+- Run tests and actions on released Python 3.12 version.
+- Run tests on macos-13. Remove tests on macos-11.
 
 ## {gh}`7.2.3 (2023-05-04) <compare/v7.2.2...v7.2.3>`
 
