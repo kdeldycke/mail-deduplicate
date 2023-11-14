@@ -22,7 +22,7 @@ from boltons.dictutils import FrozenDict
 from boltons.iterutils import unique
 from click_extra.colorize import default_theme as theme
 
-from mail_deduplicate.mailbox import create_box
+from mail_deduplicate.mail_box import create_box
 
 if TYPE_CHECKING:
     from .deduplicate import Deduplicate

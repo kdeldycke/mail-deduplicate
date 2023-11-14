@@ -60,7 +60,7 @@ from mail_deduplicate.deduplicate import (
     BODY_HASHERS,
     Deduplicate,
 )
-from mail_deduplicate.mailbox import BOX_STRUCTURES, BOX_TYPES
+from mail_deduplicate.mail_box import BOX_STRUCTURES, BOX_TYPES
 from mail_deduplicate.strategy import (
     DISCARD_MATCHING_PATH,
     DISCARD_NON_MATCHING_PATH,

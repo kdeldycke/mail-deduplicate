@@ -35,7 +35,7 @@ from mail_deduplicate import (
     SizeDiffAboveThreshold,
     TooFewHeaders,
 )
-from mail_deduplicate.mailbox import open_box
+from mail_deduplicate.mail_box import open_box
 from mail_deduplicate.strategy import apply_strategy
 
 if TYPE_CHECKING:
