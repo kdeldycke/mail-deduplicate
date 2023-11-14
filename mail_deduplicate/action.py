@@ -21,7 +21,7 @@ from boltons.dictutils import FrozenDict
 from boltons.iterutils import unique
 from click_extra.colorize import default_theme as theme
 
-from . import logger
+import logging
 from .mailbox import create_box
 
 if TYPE_CHECKING:
@@ -46,15 +46,15 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
         )
 
     for mail in mails:
-        logger.debug(f"Copying {mail!r} to {dedup.conf.export}...")
+        logging.debug(f"Copying {mail!r} to {dedup.conf.export}...")
         dedup.stats["mail_copied"] += 1
         if dedup.conf.dry_run:
-            logger.warning("DRY RUN: Skip action.")
+            logging.warning("DRY RUN: Skip action.")
         else:
             box.add(mail)
-            logger.info(f"{mail!r} copied.")
+            logging.info(f"{mail!r} copied.")
 
-    logger.debug(f"Close {dedup.conf.export}")
+    logging.debug(f"Close {dedup.conf.export}")
     if not dedup.conf.dry_run:
         box.close()
 
@@ -69,16 +69,18 @@ def move_mails(dedup: Deduplicate, mails) -> None:
         )
 
     for mail in mails:
-        logger.debug(f"Move {mail!r} form {mail.source_path} to {dedup.conf.export}...")
+        logging.debug(
+            f"Move {mail!r} form {mail.source_path} to {dedup.conf.export}..."
+        )
         dedup.stats["mail_moved"] += 1
         if dedup.conf.dry_run:
-            logger.warning("DRY RUN: Skip action.")
+            logging.warning("DRY RUN: Skip action.")
         else:
             box.add(mail)
             dedup.sources[mail.source_path].remove(mail.mail_id)
-            logger.info(f"{mail!r} copied.")
+            logging.info(f"{mail!r} copied.")
 
-    logger.debug(f"Close {dedup.conf.export}")
+    logging.debug(f"Close {dedup.conf.export}")
     if not dedup.conf.dry_run:
         box.close()
 
@@ -86,13 +88,13 @@ def move_mails(dedup: Deduplicate, mails) -> None:
 def delete_mails(dedup: Deduplicate, mails) -> None:
     """Remove provided ``mails`` in-place, from their original boxes."""
     for mail in mails:
-        logger.debug(f"Deleting {mail!r} in-place...")
+        logging.debug(f"Deleting {mail!r} in-place...")
         dedup.stats["mail_deleted"] += 1
         if dedup.conf.dry_run:
-            logger.warning("DRY RUN: Skip action.")
+            logging.warning("DRY RUN: Skip action.")
         else:
             dedup.sources[mail.source_path].remove(mail.mail_id)
-            logger.info(f"{mail!r} deleted.")
+            logging.info(f"{mail!r} deleted.")
 
 
 def copy_selected(dedup: Deduplicate) -> None:
@@ -140,13 +142,13 @@ ACTIONS = FrozenDict(
 
 def perform_action(dedup: Deduplicate) -> None:
     """Performs the action on selected mail candidates."""
-    logger.info(f"Perform {theme.choice(dedup.conf.action)} action...")
+    logging.info(f"Perform {theme.choice(dedup.conf.action)} action...")
 
     selection_count = len(dedup.selection)
     if selection_count == 0:
-        logger.warning("No mail selected to perform action on.")
+        logging.warning("No mail selected to perform action on.")
         return
-    logger.info(f"{selection_count} mails selected for action.")
+    logging.info(f"{selection_count} mails selected for action.")
 
     # Check our indexing and selection methods are not flagging candidates
     # several times.

@@ -29,7 +29,8 @@ from click_extra import progressbar
 from click_extra.colorize import default_theme as theme
 from tabulate import tabulate
 
-from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders, logger
+import logging
+from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders
 from .mailbox import open_box
 from .strategy import apply_strategy
 
@@ -156,7 +157,7 @@ class DuplicateSet:
         self.stats: Counter = Counter()
         self.stats["mail_duplicates"] += self.size
 
-        logger.debug(f"{self!r} created.")
+        logging.debug(f"{self!r} created.")
 
     def __repr__(self) -> str:
         """Print internal raw states for debugging."""
@@ -195,11 +196,11 @@ class DuplicateSet:
         content. Raise an error if we're not within the limits imposed by the threshold
         settings.
         """
-        logger.info("Check mail differences are below the thresholds.")
+        logging.info("Check mail differences are below the thresholds.")
         if self.conf.size_threshold < 0:
-            logger.info("Skip checking for size differences.")
+            logging.info("Skip checking for size differences.")
         if self.conf.content_threshold < 0:
-            logger.info("Skip checking for content differences.")
+            logging.info("Skip checking for content differences.")
         if self.conf.size_threshold < 0 and self.conf.content_threshold < 0:
             return
 
@@ -208,7 +209,7 @@ class DuplicateSet:
             # Compare mails on size.
             if self.conf.size_threshold > -1:
                 size_difference = abs(mail_a.size - mail_b.size)
-                logger.debug(
+                logging.debug(
                     f"{mail_a!r} and {mail_b!r} differs by {size_difference} bytes "
                     "in size.",
                 )
@@ -218,13 +219,13 @@ class DuplicateSet:
             # Compare mails on content.
             if self.conf.content_threshold > -1:
                 content_difference = self.diff(mail_a, mail_b)
-                logger.debug(
+                logging.debug(
                     f"{mail_a!r} and {mail_b!r} differs by {content_difference} bytes "
                     "in content.",
                 )
                 if content_difference > self.conf.content_threshold:
                     if self.conf.show_diff:
-                        logger.info(self.pretty_diff(mail_a, mail_b))
+                        logging.info(self.pretty_diff(mail_a, mail_b))
                     raise ContentDiffAboveThreshold
 
     def diff(self, mail_a, mail_b):
@@ -275,24 +276,24 @@ class DuplicateSet:
         try:
             self.check_differences()
         except UnicodeDecodeError as expt:
-            logger.warning("Skip set: unparseable mails due to bad encoding.")
-            logger.debug(f"{expt}")
+            logging.warning("Skip set: unparseable mails due to bad encoding.")
+            logging.debug(f"{expt}")
             self.stats["mail_skipped"] += self.size
             self.stats["set_skipped_encoding"] += 1
             return
         except SizeDiffAboveThreshold:
-            logger.warning("Skip set: mails are too dissimilar in size.")
+            logging.warning("Skip set: mails are too dissimilar in size.")
             self.stats["mail_skipped"] += self.size
             self.stats["set_skipped_size"] += 1
             return
         except ContentDiffAboveThreshold:
-            logger.warning("Skip set: mails are too dissimilar in content.")
+            logging.warning("Skip set: mails are too dissimilar in content.")
             self.stats["mail_skipped"] += self.size
             self.stats["set_skipped_content"] += 1
             return
 
         if not self.conf.strategy:
-            logger.warning("Skip set: no strategy to apply.")
+            logging.warning("Skip set: no strategy to apply.")
             self.stats["mail_skipped"] += self.size
             self.stats["set_skipped_strategy"] += 1
             return
@@ -303,7 +304,7 @@ class DuplicateSet:
 
         # Duplicate sets matching as a whole are skipped altogether.
         if candidate_count == self.size:
-            logger.warning(
+            logging.warning(
                 f"Skip set: all {candidate_count} mails within were selected. "
                 "The strategy criterion was not able to discard some.",
             )
@@ -313,7 +314,7 @@ class DuplicateSet:
 
         # Duplicate sets matching none are skipped altogether.
         if candidate_count == 0:
-            logger.warning(
+            logging.warning(
                 "Skip set: No mail within were selected. "
                 "The strategy criterion was not able to select some.",
             )
@@ -321,7 +322,7 @@ class DuplicateSet:
             self.stats["set_skipped_strategy"] += 1
             return
 
-        logger.info(f"{candidate_count} mail candidates selected for action.")
+        logging.info(f"{candidate_count} mail candidates selected for action.")
         self.stats["mail_selected"] += candidate_count
         self.stats["mail_discarded"] += self.size - candidate_count
         self.stats["set_deduplicated"] += 1
@@ -377,7 +378,7 @@ class Deduplicate:
 
             # Track global mail count.
             mail_found = len(box)
-            logger.info(f"{mail_found} mails found.")
+            logging.info(f"{mail_found} mails found.")
             self.stats["mail_found"] += mail_found
 
     def hash_all(self):
@@ -386,7 +387,7 @@ class Deduplicate:
 
         Displays a progress bar as the operation might be slow.
         """
-        logger.info(
+        logging.info(
             f"Use [{', '.join(map(theme.choice, self.conf.hash_headers))}] headers to "
             "compute hashes.",
         )
@@ -410,7 +411,7 @@ class Deduplicate:
                     try:
                         mail_hash = mail.hash_key() + body_hasher(mail)
                     except TooFewHeaders as expt:
-                        logger.warning(f"Rejecting {mail!r}: {expt.args[0]}")
+                        logging.warning(f"Rejecting {mail!r}: {expt.args[0]}")
                         self.stats["mail_rejected"] += 1
                     else:
                         # Use a set to deduplicate entries pointing to the same file.
@@ -428,19 +429,19 @@ class Deduplicate:
         footprint low and make the log easier to read.
         """
         if self.conf.strategy:
-            logger.info(
+            logging.info(
                 f"{theme.choice(self.conf.strategy)} strategy will be applied on each "
                 "duplicate set to select candidates.",
             )
         else:
-            logger.warning("No strategy configured, skip selection.")
+            logging.warning("No strategy configured, skip selection.")
 
         self.stats["set_total"] = len(self.mails)
 
         for hash_key, mail_set in self.mails.items():
             # Alter log level depending on set length.
             mail_count = len(mail_set)
-            log_level = logger.debug if mail_count == 1 else logger.info
+            log_level = logging.debug if mail_count == 1 else logging.info
             log_level(theme.subheading(f"◼ {mail_count} mails sharing hash {hash_key}"))
 
             # Apply the selection strategy to discriminate mails within the set.
@@ -471,7 +472,7 @@ class Deduplicate:
     def close_all(self):
         """Close all open boxes."""
         for source_path, box in self.sources.items():
-            logger.debug(f"Close {source_path}")
+            logging.debug(f"Close {source_path}")
             box.close()
 
     def report(self):

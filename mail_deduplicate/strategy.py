@@ -18,10 +18,9 @@ from __future__ import annotations
 
 import random
 import re
+import logging
 
 from boltons.dictutils import FrozenDict
-
-from . import logger
 
 
 def select_older(duplicates):
@@ -29,7 +28,7 @@ def select_older(duplicates):
 
     Discards the newests, i.e. the subset sharing the most recent timestamp.
     """
-    logger.info(
+    logging.info(
         f"Select all mails strictly older than the {duplicates.newest_timestamp} "
         "timestamp...",
     )
@@ -44,7 +43,7 @@ def select_oldest(duplicates):
     Discards the newers, i.e. all mail of the duplicate set but those sharing the oldest
     timestamp.
     """
-    logger.info(
+    logging.info(
         f"Select all mails sharing the oldest {duplicates.oldest_timestamp} "
         "timestamp...",
     )
@@ -60,7 +59,7 @@ def select_newer(duplicates):
 
     Discards the oldest, i.e. the subset sharing the most ancient timestamp.
     """
-    logger.info(
+    logging.info(
         f"Select all mails strictly newer than the {duplicates.oldest_timestamp} "
         "timestamp...",
     )
@@ -75,7 +74,7 @@ def select_newest(duplicates):
     Discards the olders, i.e. all mail of the duplicate set but those sharing the newest
     timestamp.
     """
-    logger.info(
+    logging.info(
         f"Select all mails sharing the newest {duplicates.newest_timestamp} "
         "timestamp...",
     )
@@ -91,7 +90,7 @@ def select_smaller(duplicates):
 
     Discards the biggests, i.e. the subset sharing the biggest size.
     """
-    logger.info(
+    logging.info(
         f"Select all mails strictly smaller than {duplicates.biggest_size} bytes...",
     )
     return {mail for mail in duplicates.pool if mail.size < duplicates.biggest_size}
@@ -103,7 +102,7 @@ def select_smallest(duplicates):
     Discards the biggers. i.e. all mail of the duplicate set but those sharing the
     smallest size.
     """
-    logger.info(
+    logging.info(
         f"Select all mails sharing the smallest size of {duplicates.smallest_size} "
         "bytes...",
     )
@@ -115,7 +114,7 @@ def select_bigger(duplicates):
 
     Discards the smallests, i.e. the subset sharing the smallest size.
     """
-    logger.info(
+    logging.info(
         f"Select all mails strictly bigger than {duplicates.smallest_size} bytes...",
     )
     return {mail for mail in duplicates.pool if mail.size > duplicates.smallest_size}
@@ -127,7 +126,7 @@ def select_biggest(duplicates):
     Discards the smallers, i.e. all mail of the duplicate set but those sharing the
     biggest size.
     """
-    logger.info(
+    logging.info(
         f"Select all mails sharing the biggest size of {duplicates.biggest_size} "
         "bytes...",
     )
@@ -137,7 +136,7 @@ def select_biggest(duplicates):
 def select_matching_path(duplicates):
     """Select all duplicates whose file path match the regular expression provided via
     the --regexp parameter."""
-    logger.info(
+    logging.info(
         "Select all mails with file path matching the "
         f"{duplicates.conf.regexp.pattern} regexp...",
     )
@@ -149,7 +148,7 @@ def select_matching_path(duplicates):
 def select_non_matching_path(duplicates):
     """Select all duplicates whose file path doesn't match the regular expression
     provided via the --regexp parameter."""
-    logger.info(
+    logging.info(
         "Select all mails with file path not matching the "
         f"{duplicates.conf.regexp.pattern} regexp...",
     )
@@ -263,5 +262,5 @@ def apply_strategy(strat_id, duplicates):
         msg = f"Unknown {strat_id} strategy."
         raise ValueError(msg)
     method = STRATEGY_METHODS[strat_id]
-    logger.debug(f"Apply {method!r}...")
+    logging.debug(f"Apply {method!r}...")
     return set(method(duplicates))

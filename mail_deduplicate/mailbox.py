@@ -25,12 +25,12 @@ import inspect
 import mailbox as py_mailbox
 from functools import partial
 from typing import TYPE_CHECKING, Literal
+import logging
 
 from boltons.dictutils import FrozenDict
 from boltons.iterutils import flatten
 from click_extra.colorize import default_theme as theme
 
-from . import logger
 from .mail import DedupMail
 
 if TYPE_CHECKING:
@@ -139,7 +139,7 @@ def autodetect_box_type(path: Path) -> str:
         msg = "Unrecognized mail source type."
         raise ValueError(msg)
 
-    logger.info(f"{theme.choice(box_type)} detected.")
+    logging.info(f"{theme.choice(box_type)} detected.")
     return box_type
 
 
@@ -155,11 +155,11 @@ def open_box(
     If ``box_type`` is provided, forces the opening of the box in the specified format.
     Else, defaults to autodetection.
     """
-    logger.info(f"\nOpening {theme.choice(str(path))} ...")
+    logging.info(f"\nOpening {theme.choice(str(path))} ...")
     if not box_type:
         box_type = autodetect_box_type(path)
     else:
-        logger.warning(f"Forcing {box_type} format.")
+        logging.warning(f"Forcing {box_type} format.")
 
     constructor = BOX_TYPES[box_type]
     # Do not allow the constructor to create a new mailbox if not found.
@@ -174,13 +174,13 @@ def lock_box(box, force_unlock):
     Returns the locked box.
     """
     try:
-        logger.debug("Locking box...")
+        logging.debug("Locking box...")
         box.lock()
     except py_mailbox.ExternalClashError:
-        logger.error("Box already locked!")
+        logging.error("Box already locked!")
         # Remove the lock manually and re-lock.
         if force_unlock:
-            logger.warning("Forcing removal of lock...")
+            logging.warning("Forcing removal of lock...")
             # Forces internal metadata.
             box._locked = True
             box.unlock()
@@ -188,7 +188,7 @@ def lock_box(box, force_unlock):
         # Re-raise error.
         else:
             raise
-    logger.debug("Box opened.")
+    logging.debug("Box opened.")
     return box
 
 
@@ -206,7 +206,7 @@ def open_subfolders(
 
     if hasattr(box, "list_folders"):
         for folder_id in box.list_folders():
-            logger.info(f"Opening subfolder {folder_id} ...")
+            logging.info(f"Opening subfolder {folder_id} ...")
             folder_list += open_subfolders(
                 box.get_folder(folder_id),  # type: ignore[attr-defined]
                 force_unlock,
@@ -220,7 +220,7 @@ def create_box(
     export_append: bool = False,
 ) -> py_mailbox.Mailbox:
     """Creates a brand new box from scratch."""
-    logger.info(
+    logging.info(
         f"Creating new {theme.choice(box_type)} box at {theme.choice(str(path))} ...",
     )
 
@@ -232,6 +232,6 @@ def create_box(
     # beforehand it does not exist.
     box = constructor(path, create=True)
 
-    logger.debug("Locking box...")
+    logging.debug("Locking box...")
     box.lock()
     return box  # type: ignore[no-any-return]

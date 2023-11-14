@@ -23,11 +23,12 @@ import mailbox
 import os
 import re
 from functools import cached_property
+import logging
 
 import arrow
 from tabulate import tabulate
 
-from . import CTIME, MINIMAL_HEADERS_COUNT, TooFewHeaders, logger
+from . import CTIME, MINIMAL_HEADERS_COUNT, TooFewHeaders
 
 
 class DedupMail:
@@ -196,9 +197,9 @@ class DedupMail:
             This method hasn't been made explicitely into a cached property in order to
             reduce the overal memory footprint.
         """
-        logger.debug(f"Serialized headers: {self.serialized_headers()!r}")
+        logging.debug(f"Serialized headers: {self.serialized_headers()!r}")
         hash_value = hashlib.sha224(self.serialized_headers()).hexdigest()
-        logger.debug(f"Hash: {hash_value}")
+        logging.debug(f"Hash: {hash_value}")
         return hash_value
 
     @cached_property
@@ -206,7 +207,7 @@ class DedupMail:
         """Returns the canonical body hash of a mail."""
         serialized_raw_body = "\n".join(self.body_lines).encode("utf-8")
         hash_value = hashlib.sha224(serialized_raw_body).hexdigest()
-        logger.debug(f"Body raw hash: {hash_value}")
+        logging.debug(f"Body raw hash: {hash_value}")
         return hash_value
 
     @cached_property
@@ -216,7 +217,7 @@ class DedupMail:
             [re.sub(r"\s", "", line) for line in self.body_lines],
         ).encode("utf-8")
         hash_value = hashlib.sha224(serialized_normalized_body).hexdigest()
-        logger.debug(f"Body normalized hash: {hash_value}")
+        logging.debug(f"Body normalized hash: {hash_value}")
         return hash_value
 
     @cached_property
@@ -266,13 +267,13 @@ class DedupMail:
         """
         headers_count = len(self.canonical_headers)
         if headers_count < MINIMAL_HEADERS_COUNT:
-            logger.warning(self.pretty_canonical_headers())
+            logging.warning(self.pretty_canonical_headers())
             msg = f"{headers_count} headers found out of {MINIMAL_HEADERS_COUNT}."
             raise TooFewHeaders(
                 msg,
             )
         else:
-            logger.debug(self.pretty_canonical_headers())
+            logging.debug(self.pretty_canonical_headers())
 
         return "\n".join(
             [f"{h_id}: {h_value}" for h_id, h_value in self.canonical_headers],
