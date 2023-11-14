@@ -27,8 +27,8 @@ from uuid import uuid4
 import arrow
 import pytest
 from boltons.iterutils import same
-from click_extra.tests.conftest import invoke as invoke_extra  # noqa: F401
-from click_extra.tests.conftest import runner  # noqa: F401
+
+from click_extra.tests.conftest import extra_runner  # noqa: F401
 
 from mail_deduplicate.cli import mdedup
 
@@ -36,8 +36,8 @@ from mail_deduplicate.cli import mdedup
 
 
 @pytest.fixture()
-def invoke(invoke_extra):  # noqa: F811
-    return partial(invoke_extra, mdedup)
+def invoke(extra_runner):  # noqa: F811
+    return partial(extra_runner.invoke, mdedup)
 
 
 class MailFactory:
