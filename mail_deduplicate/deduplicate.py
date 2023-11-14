@@ -408,7 +408,7 @@ class Deduplicate:
                     mail.conf = self.conf
 
                     try:
-                        mail_hash = mail.hash_key + body_hasher(mail)
+                        mail_hash = mail.hash_key() + body_hasher(mail)
                     except TooFewHeaders as expt:
                         logger.warning(f"Rejecting {mail!r}: {expt.args[0]}")
                         self.stats["mail_rejected"] += 1
@@ -450,6 +450,20 @@ class Deduplicate:
             self.stats += duplicates.stats
             self.selection.update(duplicates.selection)
             self.discard.update(duplicates.discard)
+
+            # Free memory of mail
+            delete_names = ["canonical_headers", "body_lines", "subject"]
+            for mail in duplicates.discard:
+                for name in delete_names:
+                    if name in mail.__dict__:
+                        del mail.__dict__[name]
+            for mail in duplicates.selection:
+                for name in delete_names:
+                    if name in mail.__dict__:
+                        del mail.__dict__[name]
+                if self.conf.action == "move-discarded":
+                    # Selection mails are not moved, delete payload.
+                    del mail.__dict__["_payload"]
 
     def close_all(self):
         """Close all open boxes."""
