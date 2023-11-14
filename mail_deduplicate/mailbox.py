@@ -23,6 +23,9 @@ from __future__ import annotations
 
 import inspect
 import mailbox as py_mailbox
+from mailbox import Mailbox as py_Mailbox
+from mailbox import Message as py_Message
+
 from functools import partial
 from typing import TYPE_CHECKING, Literal
 import logging
@@ -49,14 +52,14 @@ def build_box_constructors():
     """
     for _, klass in inspect.getmembers(py_mailbox, inspect.isclass):
         if (
-            klass != py_mailbox.Mailbox
+            klass != py_Mailbox
             and not klass.__name__.startswith("_")
-            and issubclass(klass, py_mailbox.Mailbox)
+            and issubclass(klass, py_Mailbox)
         ):
             # Fetch the default factory for each mailbox type based on naming
             # conventions.
             message_klass = getattr(py_mailbox, f"{klass.__name__}Message")
-            assert issubclass(message_klass, py_mailbox.Message)
+            assert issubclass(message_klass, py_Message)
 
             # Augment the default factory with DedupMail class.
             factory_klass = type(
