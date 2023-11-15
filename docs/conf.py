@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import tomllib  # type: ignore[import-untyped]
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib  # type: ignore[import]
 
 
 project_path = Path(__file__).parent.parent.resolve()
