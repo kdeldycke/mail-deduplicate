@@ -9,7 +9,7 @@ This version is not released yet and is under active development.
 ## {gh}`7.3.0 (2023-11-14) <compare/v7.2.3...v7.3.0>`
 
 - Drop support of Python 3.7.
-- Reduce memory usage.
+- Reduce memory usage. Addresses {issue}`362`.
 - Replace unmaintained `bump2version` by `bump-my-version`.
 - Test `mdedup` binaries.
 - Run tests and actions on released Python 3.12 version.
