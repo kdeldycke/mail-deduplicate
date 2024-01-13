@@ -53,7 +53,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 
 ### From sources
 
-Easiest way is to install `mdedup` from sources with [`pipx`](https://pypa.github.io/pipx/):
+Easiest way is to install `mdedup` from sources with [`pipx`](https://pipx.pypa.io):
 
 ```shell-session
 $ pipx install mail-deduplicate

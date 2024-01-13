@@ -5,7 +5,7 @@
 `````{tab-set}
 
 ````{tab-item} pipx
-Easiest way is to [install `pipx`](https://pypa.github.io/pipx/installation/), then use it to install `mdedup`:
+Easiest way is to [install `pipx`](https://pipx.pypa.io/stable/installation/), then use it to install `mdedup`:
 
 ```{code-block} shell-session
 $ pipx install mail-deduplicate
