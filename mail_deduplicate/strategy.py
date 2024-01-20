@@ -14,11 +14,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """Strategy definitions."""
+
 from __future__ import annotations
 
+import logging
 import random
 import re
-import logging
 
 from boltons.dictutils import FrozenDict
 

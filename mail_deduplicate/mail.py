@@ -19,11 +19,11 @@ import contextlib
 import email
 import hashlib
 import inspect
+import logging
 import mailbox
 import os
 import re
 from functools import cached_property
-import logging
 
 import arrow
 from tabulate import tabulate

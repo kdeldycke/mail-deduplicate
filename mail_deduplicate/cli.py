@@ -17,23 +17,23 @@
 from __future__ import annotations
 
 import re
-from typing import Pattern, Callable
+from typing import Callable, Pattern
 
 from click_extra import (
     BadParameter,
     Choice,
+    Context,
+    ExtraCommand,
+    HelpExtraFormatter,
+    Parameter,
     argument,
     echo,
     extra_command,
-    Context,
     option,
     option_group,
-    HelpExtraFormatter,
-    Parameter,
     pass_context,
     path,
     progressbar,
-    ExtraCommand,
 )
 from click_extra.colorize import default_theme as theme
 
