@@ -1,0 +1,19 @@
+---
+name: Labeller (content-based)
+"on":
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+# XXX Concurrency detection sucks and jobs gets killed randonmly.
+# concurrency:
+#   # Group workflow jobs so new commits cancels in-progress execution triggered by previous commits.
+#   # Source: https://mail.python.org/archives/list/pypa-committers@python.org/thread/PCBCQMJF64JGRBOX7E2EE4YLKHT4DI55/
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+#   cancel-in-progress: true
+
+jobs:
+
+  labeller:
+    uses: kdeldycke/workflows/.github/workflows/labeller-file-based.yaml@v2.26.0
