@@ -27,7 +27,7 @@ action = "delete-discarded"
 
 ## Troubleshooting
 
-You can easely debug the way `mdedup` source its configuration with the `--show-params`:
+You can easily debug the way `mdedup` source its configuration with the `--show-params`:
 
 ```{eval-rst}
 .. click:run::

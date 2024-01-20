@@ -49,7 +49,7 @@ class MailFactory:
     def __init__(self, **custom_fields) -> None:
         """Init the mail with custom fields.
 
-        You can bypass data normalization by passing the pre-formated date string with
+        You can bypass data normalization by passing the pre-formatted date string with
         ``date_rfc2822`` custom field instead of ``date``.
         """
         # Defaults fields values.
@@ -83,7 +83,7 @@ class MailFactory:
             Return-path: <none@nohost.com>
             Envelope-to: me@host.com
             Delivery-date: {date_rfc2822}
-            Received: from [11.11.11.11] (helo=nope.com)
+            Received: from [11.11.11.11] (hello=nope.com)
             \tby host.com with esmtp (Exim 4.80)
             \t(envelope-from <noone@nohost.com>)
             \tid 1CX8OJ-0014c9-Ii

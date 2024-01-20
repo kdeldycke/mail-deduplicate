@@ -224,7 +224,7 @@ STRATEGY_ALIASES = frozenset(
 """Groups strategy aliases and their definitions.
 
 Aliases are great useability features as it helps users to better reason about the
-selection operators dependening on their mental models.
+selection operators depending on their mental models.
 """
 
 
@@ -234,7 +234,7 @@ def get_method_id(strategy_id):
 
 
 def build_method_mapping():
-    """Precompute the mapping of all strategy IDs to their prefered method name,
+    """Precompute the mapping of all strategy IDs to their preferred method name,
     including aliases as fallbacks."""
     methods = {}
     for strategies in STRATEGY_ALIASES:

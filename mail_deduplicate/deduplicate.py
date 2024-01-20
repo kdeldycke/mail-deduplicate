@@ -46,7 +46,7 @@ STATS_DEF = OrderedDict(
         ("mail_found", "Total number of mails encountered from all mail sources."),
         (
             "mail_rejected",
-            "Number of mails rejected individually because they were unparseable or "
+            "Number of mails rejected individually because they were unparsable or "
             "did not have enough metadata to compute hashes.",
         ),
         (
@@ -280,7 +280,7 @@ class DuplicateSet:
         try:
             self.check_differences()
         except UnicodeDecodeError as expt:
-            logging.warning("Skip set: unparseable mails due to bad encoding.")
+            logging.warning("Skip set: unparsable mails due to bad encoding.")
             logging.debug(f"{expt}")
             self.stats["mail_skipped"] += self.size
             self.stats["set_skipped_encoding"] += 1

@@ -194,7 +194,7 @@ class DedupMail:
 
         .. caution::
             This method hasn't been made explicitly into a cached property in order to
-            reduce the overal memory footprint.
+            reduce the overall memory footprint.
         """
         logging.debug(f"Serialized headers: {self.serialized_headers()!r}")
         hash_value = hashlib.sha224(self.serialized_headers()).hexdigest()
@@ -248,7 +248,7 @@ class DedupMail:
 
         .. caution::
             This method hasn't been made explicitly into a cached property in order to
-            reduce the overal memory footprint.
+            reduce the overall memory footprint.
 
         Returns a string ready to be printed.
         """
@@ -262,7 +262,7 @@ class DedupMail:
 
         .. caution::
             This method hasn't been made explicitly into a cached property in order to
-            reduce the overal memory footprint.
+            reduce the overall memory footprint.
         """
         headers_count = len(self.canonical_headers)
         if headers_count < MINIMAL_HEADERS_COUNT:
