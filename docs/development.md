@@ -26,7 +26,7 @@ Which boils down to the following rules of thumb regarding stability:
 
 - **Major releases**: `n.*.*` → `(n+1).0.0` upgrades
 
-  Make no promises about backwards-compability. Any API change requires a new
+  Make no promises about backwards-compatibility. Any API change requires a new
   major release.
 
 ## Build status

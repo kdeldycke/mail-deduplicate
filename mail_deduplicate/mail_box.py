@@ -106,7 +106,7 @@ def autodetect_box_type(path: Path) -> str:
 
     Returns a box type as indexed in the `BOX_TYPES
     <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.BOX_TYPES>`_
-    dictionnary above.
+    dictionary above.
 
     If the path is a file, then it is considered as an ``mbox``. Else, if the
     provided path is a folder and feature the `expecteed sub-directories

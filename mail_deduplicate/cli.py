@@ -327,7 +327,7 @@ def mdedup(
     Process:
     ● Step #1: load mails from their sources.
     ● Step #2: compute the canonical hash of each mail based on their headers (and
-               optionaly their body), and regroup mails sharing the same hash.
+               optionally their body), and regroup mails sharing the same hash.
     ● Step #3: apply a selection strategy on each subset of duplicate mails.
     ● Step #4: perform an action on all selected mails.
     ● Step #5: report statistics.

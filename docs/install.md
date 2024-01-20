@@ -47,7 +47,7 @@ If you have difficulties to use `pip`, see
 
 Binaries are compiled at each release, so you can skip the installation process above and download the standalone executables directly.
 
-This is the prefered way of testing `mdedup` without polluting your machine. They also offer the possibility of running the CLI on older systems not supporting the minimal Python version required by `mdedup`.
+This is the preferred way of testing `mdedup` without polluting your machine. They also offer the possibility of running the CLI on older systems not supporting the minimal Python version required by `mdedup`.
 
 | Platform    | `x86_64`                                                                                                                           |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |

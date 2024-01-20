@@ -67,7 +67,7 @@ This version is not released yet and is under active development.
 - Add unittests on `ubuntu-22.04`, `macos-12` and `windows-2022`.
 - Run tests on multiple cores.
 - Simplify project management by abandoning the dual use of `main`/`develop` branches.
-- Migrate to external workflows to automate builds, releases, autofixes, linting, documentation, changelog, mailmap maintainance and label management.
+- Migrate to external workflows to automate builds, releases, autofixes, linting, documentation, changelog, mailmap maintenance and label management.
 - Convert all documentation from RST to Markdown. Closes {issue}`368`.
 - Keep CLI output in sync in documentation. Closes {issue}`23`.
 - Move `sphinx` dependencies to dev requirements.
@@ -168,7 +168,7 @@ This version is not released yet and is under active development.
 - Removes the `hash` subcommand. Replaced it with a `--hash-only`
   parameter to the main dedupe command.
 - Removes `deduplicate` subcommand. `mdedup` is now a simple CLI.
-- Fix calls to deduplication stategy. Closes {issue}`86` and {issue}`88`.
+- Fix calls to deduplication strategy. Closes {issue}`86` and {issue}`88`.
 - Fix computation of stats. Closes {issue}`89`.
 - Drop support for Python 2. Refs {issue}`90`.
 - Bump minimal Python requirement to 3.7.
@@ -235,9 +235,9 @@ This is the last version of the project known under the name *Maildir Deduplicat
 - Fix rendering of changelog link in RST.
 - Show selected log level in debug mode.
 - Test builds against Python 3.6 and 3.7-dev, and most recent PyPy
-  targetting Python 2.7 and 3.3.
+  targeting Python 2.7 and 3.3.
 - Bump requirement to `readme_renderer >= 16.0`.
-- Skip sets with unparseable mails because of incorrect encoding. Closes
+- Skip sets with unparsable mails because of incorrect encoding. Closes
   {issue}`47`, {issue}`41` and {issue}`39`.
 - Require the `-s`/`--strategy` CLI parameter to be set. Closes {issue}`44`.
 
