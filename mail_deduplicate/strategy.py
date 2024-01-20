@@ -227,9 +227,9 @@ selection operators dependening on their mental models.
 """
 
 
-def get_method_id(strat_id):
+def get_method_id(strategy_id):
     """Transform strategy ID to its method ID."""
-    return strat_id.replace("-", "_")
+    return strategy_id.replace("-", "_")
 
 
 def build_method_mapping():
@@ -238,29 +238,29 @@ def build_method_mapping():
     methods = {}
     for strategies in STRATEGY_ALIASES:
         fallback_method = None
-        for strat_id in strategies:
-            mid = get_method_id(strat_id)
+        for strategy_id in strategies:
+            mid = get_method_id(strategy_id)
             method = globals().get(mid)
             if method:
                 fallback_method = method
             if not fallback_method:
                 msg = f"Can't find {mid}() method."
                 raise NotImplementedError(msg)
-            methods[strat_id] = fallback_method
+            methods[strategy_id] = fallback_method
     return methods
 
 
 STRATEGY_METHODS = FrozenDict(build_method_mapping())
 
 
-def apply_strategy(strat_id, duplicates):
+def apply_strategy(strategy_id, duplicates):
     """Perform the selection strategy on the provided duplicate set.
 
     Returns a set of selected mails objects.
     """
-    if strat_id not in STRATEGY_METHODS:
-        msg = f"Unknown {strat_id} strategy."
+    if strategy_id not in STRATEGY_METHODS:
+        msg = f"Unknown {strategy_id} strategy."
         raise ValueError(msg)
-    method = STRATEGY_METHODS[strat_id]
+    method = STRATEGY_METHODS[strategy_id]
     logging.debug(f"Apply {method!r}...")
     return set(method(duplicates))
