@@ -97,16 +97,16 @@ class MdedupCommand(ExtraCommand):
         for strategy_id, method in sorted(STRATEGY_METHODS.items(), reverse=True):
             method_to_ids.setdefault(method, []).append(strategy_id)
 
-        strat_table: list[tuple[str, str]] = []
+        strategy_table: list[tuple[str, str]] = []
         for method, strategy_ids in method_to_ids.items():
             row_title = f"[{'|'.join(strategy_ids)}]"
             row_desc = ""
             if method.__doc__:
                 row_desc = " ".join(method.__doc__.split())
-            strat_table.append((row_title, row_desc))
+            strategy_table.append((row_title, row_desc))
 
         with formatter.section("Available strategies"):
-            formatter.write_dl(sorted(strat_table))
+            formatter.write_dl(sorted(strategy_table))
 
 
 @extra_command(
