@@ -36,8 +36,7 @@ jobs:
           from itertools import product
           from pathlib import Path
 
-          # See what each os came pre-installed with at:
-          # https://help.github.com/en/actions/reference/software-installed-on-github-hosted-runners
+          # Available OSes: https://github.com/actions/runner-images#available-images
           os_list = {
               "ubuntu-22.04",
               "ubuntu-20.04",
