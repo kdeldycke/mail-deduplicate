@@ -16,4 +16,4 @@ name: Labeller (content-based)
 jobs:
 
   labeller:
-    uses: kdeldycke/workflows/.github/workflows/labeller-file-based.yaml@v2.26.0
+    uses: kdeldycke/workflows/.github/workflows/labeller-file-based.yaml@v2.26.6
