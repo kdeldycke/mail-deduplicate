@@ -161,7 +161,7 @@ class MdedupCommand(ExtraCommand):
         default=BODY_HASHER_SKIP,
         type=Choice(sorted(BODY_HASHERS), case_sensitive=False),
         help=f"Method used to hash the body of mails. Defaults to {BODY_HASHER_SKIP}, "
-        "which does't hash the body at all: it is the fastest method and header-based "
+        "which doesn't hash the body at all: it is the fastest method and header-based "
         f"hash should be sufficient to determine duplicate set. {BODY_HASHER_RAW} use "
         f"the body as it is (slow). {BODY_HASHER_NORMALIZED} pre-process the body "
         "before hashing, by removing all line breaks and spaces (slowest).",
