@@ -36,7 +36,7 @@ class DedupMail:
 
     Extends `standard library's mailbox.Message
     <https://github.com/python/cpython/blob/45ffab40e86777ecd49786a2c18c0c044ef0cb5b/Lib/mailbox.py#L1489-L1523>`_,
-    and shouln't be used directly, but composed with ``mailbox.Message`` sub-classes.
+    and shouldn't be used directly, but composed with ``mailbox.Message`` sub-classes.
     """
 
     def __init__(self, message=None) -> None:

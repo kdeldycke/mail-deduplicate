@@ -37,7 +37,7 @@ A clear and concise description of what you expected to happen.
 
 #### CLI output
 
-Add here the raw copy of some console output you were able to produce. Some exemple includes:
+Add here the raw copy of some console output you were able to produce. Some example includes:
 
 - The `mdedup` CLI invocation and its output:
 
