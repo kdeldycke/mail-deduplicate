@@ -31,7 +31,7 @@ Which boils down to the following rules of thumb regarding stability:
 
 ## Build status
 
-{gh}`main branch <tree/main>`:
+[`main` branch](https://github.com/kdeldycke/mail-deduplicate/tree/main):
 [![Unittests status](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/tests.yaml?query=branch%3Amain)
 [![Coverage status](https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/main/graph/badge.svg)](https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/main)
 
@@ -76,7 +76,7 @@ $ poetry run pytest
 
 ## Coding style
 
-{gh}`Code linting is handled by a workflow <blob/main/.github/workflows/lint.yaml>`.
+[Code linting is handled by a workflow](https://github.com/kdeldycke/mail-deduplicate/blob/main/.github/workflows/lint.yaml).
 
 ## Documentation
 
@@ -88,7 +88,7 @@ $ poetry run sphinx-build -b html ./docs ./docs/html
 ```
 
 The generation of API documentation is
-{gh}`covered by a dedicated workflow <blob/main/.github/workflows/docs.yaml>`.
+[covered by a dedicated workflow](https://github.com/kdeldycke/mail-deduplicate/blob/main/.github/workflows/docs.yaml).
 
 ## Screenshots
 
@@ -114,12 +114,12 @@ version and the `main` branch. This link is available at the top of the
 ## Release process
 
 All steps of the release process and version management are automated in the
-{gh}`changelog.yaml <blob/main/.github/workflows/changelog.yaml>` and
-{gh}`release.yaml <blob/main/.github/workflows/release.yaml>` and workflows.
+[`changelog.yaml`](https://github.com/kdeldycke/mail-deduplicate/blob/main/.github/workflows/changelog.yaml) and
+[`release.yaml`](https://github.com/kdeldycke/mail-deduplicate/blob/main/.github/workflows/release.yaml) and workflows.
 
 All there's left to do is to:
 
-- {gh}`check the open draft prepare-release PR <workflows/pulls?q=is%3Apr+is%3Aopen+head%3Aprepare-release>`
+- [check the open draft prepare-release PR](https://github.com/kdeldycke/mail-deduplicate/workflows/pulls?q=is%3Apr+is%3Aopen+head%3Aprepare-release)
   and its changes,
 - click the `Ready for review` button,
 - click the `Rebase and merge` button,
@@ -130,7 +130,7 @@ All there's left to do is to:
 
 Versions are bumped to their next `patch` revision during the release process
 above by the
-{gh}`release.yaml workflow <blob/main/.github/workflows/release.yaml>`.
+[`release.yaml` workflow](https://github.com/kdeldycke/mail-deduplicate/blob/main/.github/workflows/release.yaml).
 
 At any point during development, you can bump the version by merging either the
 `minor-version-increment` or `major-version-increment` branch, each available
