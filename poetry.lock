@@ -216,13 +216,13 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "click-extra"
-version = "4.7.3"
+version = "4.7.4"
 description = "🌈 Extra colorization and configuration loading for Click."
 optional = false
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "click_extra-4.7.3-py3-none-any.whl", hash = "sha256:79f9b6e75db39f181c76d975f5086d1295f7bc5e76e7602cba89172e3bb22a18"},
-    {file = "click_extra-4.7.3.tar.gz", hash = "sha256:ce4bff859283fb7dc5c8da023bf286e3171ece3555dcb94809843f870d50085c"},
+    {file = "click_extra-4.7.4-py3-none-any.whl", hash = "sha256:6ba6d20bc0084f3e7733e1278040f83cf5843248a4bde032160290e9184a6d86"},
+    {file = "click_extra-4.7.4.tar.gz", hash = "sha256:7244e8ad8861c25472cda7d5563cd14d97306272f2335dbe335e567d50ba10fb"},
 ]
 
 [package.dependencies]
@@ -240,7 +240,7 @@ requests = ">=2.28.2,<3.0.0"
 sphinx = ">=6"
 tabulate = {version = ">=0.9,<0.10", extras = ["widechars"]}
 tomli = {version = ">=2.0.1,<3.0.0", markers = "python_version < \"3.11\""}
-wcmatch = ">=8.4.1,<9.0.0"
+wcmatch = ">=8.5,<9.0"
 xmltodict = ">=0.13.0,<0.14.0"
 
 [[package]]
