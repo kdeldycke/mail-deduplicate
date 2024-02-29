@@ -1,5 +1,11 @@
 # ChangeLog
 
+## [7.3.2 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.3.1...main)
+
+```{important}
+This version is not released yet and is under active development.
+```
+
 ## [7.3.1 (2024-02-29)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.3.0...v7.3.1)
 
 - Run tests on Python `3.13-dev`.
