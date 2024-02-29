@@ -1,0 +1,809 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
+
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
+        <title>mail_deduplicate.deduplicate - Mail Deduplicate</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=d3572542" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Mail Deduplicate works fine, but its sole maintainer is distracted by life 😶‍🌫️.<br/>You can influence it with purchase of <strong><a class='reference external' href='https://github.com/sponsors/kdeldycke'>business support 🤝 and sponsorship 🫶</a></strong>. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">Mail Deduplicate</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/mail-deduplicate-logo-square.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cli-parameters.html">CLI parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../development.html">Development</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../mail_deduplicate.html">API</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../mail_deduplicate.tests.html">mail_deduplicate.tests package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../code-of-conduct.html">Code of conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate">GitHub Repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/sponsors/kdeldycke">Funding</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for mail_deduplicate.deduplicate</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright Kevin Deldycke &lt;kevin@deldycke.com&gt; and contributors.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is Free Software; you can redistribute it and/or</span>
+<span class="c1"># modify it under the terms of the GNU General Public License</span>
+<span class="c1"># as published by the Free Software Foundation; either version 2</span>
+<span class="c1"># of the License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with this program; if not, write to the Free Software</span>
+<span class="c1"># Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span> <span class="nn">textwrap</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">difflib</span> <span class="kn">import</span> <span class="n">unified_diff</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">cached_property</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">boltons.dictutils</span> <span class="kn">import</span> <span class="n">FrozenDict</span>
+<span class="kn">from</span> <span class="nn">click_extra</span> <span class="kn">import</span> <span class="n">progressbar</span>
+<span class="kn">from</span> <span class="nn">click_extra.colorize</span> <span class="kn">import</span> <span class="n">default_theme</span> <span class="k">as</span> <span class="n">theme</span>
+<span class="kn">from</span> <span class="nn">tabulate</span> <span class="kn">import</span> <span class="n">tabulate</span>
+
+<span class="kn">from</span> <span class="nn">mail_deduplicate</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ContentDiffAboveThreshold</span><span class="p">,</span>
+    <span class="n">SizeDiffAboveThreshold</span><span class="p">,</span>
+    <span class="n">TooFewHeaders</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">mail_deduplicate.mail_box</span> <span class="kn">import</span> <span class="n">open_box</span>
+<span class="kn">from</span> <span class="nn">mail_deduplicate.strategy</span> <span class="kn">import</span> <span class="n">apply_strategy</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">mailbox</span> <span class="kn">import</span> <span class="n">Mailbox</span><span class="p">,</span> <span class="n">Message</span>
+
+<span class="n">STATS_DEF</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="s2">&quot;mail_found&quot;</span><span class="p">,</span> <span class="s2">&quot;Total number of mails encountered from all mail sources.&quot;</span><span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;mail_rejected&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of mails rejected individually because they were unparsable or &quot;</span>
+            <span class="s2">&quot;did not have enough metadata to compute hashes.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;mail_retained&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of valid mails parsed and retained for deduplication.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;mail_hashes&quot;</span><span class="p">,</span> <span class="s2">&quot;Number of unique hashes.&quot;</span><span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;mail_unique&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of unique mails (which where automatically added to selection).&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;mail_duplicates&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of duplicate mails (sum of mails in all duplicate sets with at &quot;</span>
+            <span class="s2">&quot;least 2 mails).&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;mail_skipped&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of mails ignored in the selection step because the whole set &quot;</span>
+            <span class="s2">&quot;they belong to was skipped.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;mail_discarded&quot;</span><span class="p">,</span> <span class="s2">&quot;Number of mails discarded from the final selection.&quot;</span><span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;mail_selected&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of mails kept in the final selection on which the &quot;</span>
+            <span class="s2">&quot;action will be performed.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;mail_copied&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of mails copied from their original mailbox to another.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;mail_moved&quot;</span><span class="p">,</span> <span class="s2">&quot;Number of mails moved from their original mailbox to another.&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;mail_deleted&quot;</span><span class="p">,</span> <span class="s2">&quot;Number of mails deleted from their mailbox in-place.&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;set_total&quot;</span><span class="p">,</span> <span class="s2">&quot;Total number of duplicate sets.&quot;</span><span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;set_single&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Total number of sets containing only a single mail with no applicable &quot;</span>
+            <span class="s2">&quot;strategy. They were automatically kept in the final selection.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;set_skipped_encoding&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of sets skipped from the selection process because they had &quot;</span>
+            <span class="s2">&quot;encoding issues.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;set_skipped_size&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of sets skipped from the selection process because they were &quot;</span>
+            <span class="s2">&quot;too dissimilar in size.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;set_skipped_content&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of sets skipped from the selection process because they were &quot;</span>
+            <span class="s2">&quot;too dissimilar in content.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;set_skipped_strategy&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of sets skipped from the selection process because the strategy &quot;</span>
+            <span class="s2">&quot;could not be applied.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="p">(</span>
+            <span class="s2">&quot;set_deduplicated&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Number of valid sets on which the selection strategy was successfully &quot;</span>
+            <span class="s2">&quot;applied.&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;All tracked statistics and their definition.&quot;&quot;&quot;</span>
+
+
+<span class="n">BODY_HASHER_SKIP</span> <span class="o">=</span> <span class="s2">&quot;skip&quot;</span>
+<span class="n">BODY_HASHER_RAW</span> <span class="o">=</span> <span class="s2">&quot;raw&quot;</span>
+<span class="n">BODY_HASHER_NORMALIZED</span> <span class="o">=</span> <span class="s2">&quot;normalized&quot;</span>
+<span class="n">BODY_HASHERS</span> <span class="o">=</span> <span class="n">FrozenDict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="n">BODY_HASHER_SKIP</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">BODY_HASHER_RAW</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">hash_raw_body</span><span class="p">,</span>
+        <span class="n">BODY_HASHER_NORMALIZED</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">m</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">hash_normalized_body</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;Method used to hash the body of mails.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="DuplicateSet"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.DuplicateSet">[docs]</a><span class="k">class</span> <span class="nc">DuplicateSet</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A set of mails sharing the same hash.</span>
+
+<span class="sd">    Implements all the safety checks required before we can apply any selection</span>
+<span class="sd">    strategy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hash_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">mail_set</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Message</span><span class="p">],</span> <span class="n">conf</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load-up the duplicate set of mail and freeze pool.</span>
+
+<span class="sd">        Once loaded-up, the pool of parsed mails is considered frozen for the rest of</span>
+<span class="sd">        the duplicate set&#39;s life. This allows aggressive caching of lazy instance</span>
+<span class="sd">        attributes depending on the pool content.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hash_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">hash_key</span>
+
+        <span class="c1"># Mails selected after application of selection strategy.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selection</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="c1"># Mails discarded after application of selection strategy.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discard</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="c1"># Global config.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conf</span> <span class="o">=</span> <span class="n">conf</span>
+
+        <span class="c1"># Pool referencing all duplicated mails and their attributes.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">mail_set</span><span class="p">)</span>
+
+        <span class="c1"># Set metrics.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">:</span> <span class="n">Counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_duplicates&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="si">!r}</span><span class="s2"> created.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print internal raw states for debugging.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> hash=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">hash_key</span><span class="si">}</span><span class="s2"> size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the number of mails in the duplicate set.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">)</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span> <span class="nf">newest_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the newest timestamp among all mails in the set.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;timestamp&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">))</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span> <span class="nf">oldest_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the oldest timestamp among all mails in the set.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;timestamp&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">))</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span> <span class="nf">biggest_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the biggest size among all mails in the set.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;size&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">))</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span> <span class="nf">smallest_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the smallest size among all mails in the set.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">attrgetter</span><span class="p">(</span><span class="s2">&quot;size&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">))</span>
+
+<div class="viewcode-block" id="DuplicateSet.check_differences"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.DuplicateSet.check_differences">[docs]</a>    <span class="k">def</span> <span class="nf">check_differences</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensures all mail differs in the limits imposed by size and content</span>
+<span class="sd">        thresholds.</span>
+
+<span class="sd">        Compare all mails of the duplicate set with each other, both in size and</span>
+<span class="sd">        content. Raise an error if we&#39;re not within the limits imposed by the threshold</span>
+<span class="sd">        settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Check mail differences are below the thresholds.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">size_threshold</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Skip checking for size differences.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">content_threshold</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Skip checking for content differences.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">size_threshold</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">content_threshold</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Compute differences of mail against one another.</span>
+        <span class="k">for</span> <span class="n">mail_a</span><span class="p">,</span> <span class="n">mail_b</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="c1"># Compare mails on size.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">size_threshold</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">size_difference</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mail_a</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">mail_b</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mail_a</span><span class="si">!r}</span><span class="s2"> and </span><span class="si">{</span><span class="n">mail_b</span><span class="si">!r}</span><span class="s2"> differs by </span><span class="si">{</span><span class="n">size_difference</span><span class="si">}</span><span class="s2"> bytes &quot;</span>
+                    <span class="s2">&quot;in size.&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">size_difference</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">size_threshold</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">SizeDiffAboveThreshold</span>
+
+            <span class="c1"># Compare mails on content.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">content_threshold</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">content_difference</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mail_a</span><span class="p">,</span> <span class="n">mail_b</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mail_a</span><span class="si">!r}</span><span class="s2"> and </span><span class="si">{</span><span class="n">mail_b</span><span class="si">!r}</span><span class="s2"> differs by </span><span class="si">{</span><span class="n">content_difference</span><span class="si">}</span><span class="s2"> bytes &quot;</span>
+                    <span class="s2">&quot;in content.&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">content_difference</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">content_threshold</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">show_diff</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretty_diff</span><span class="p">(</span><span class="n">mail_a</span><span class="p">,</span> <span class="n">mail_b</span><span class="p">))</span>
+                    <span class="k">raise</span> <span class="n">ContentDiffAboveThreshold</span></div>
+
+<div class="viewcode-block" id="DuplicateSet.diff"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.DuplicateSet.diff">[docs]</a>    <span class="k">def</span> <span class="nf">diff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mail_a</span><span class="p">,</span> <span class="n">mail_b</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return difference in bytes between two mails&#39; normalized body.</span>
+
+<span class="sd">        .. todo::    Rewrite the diff algorithm to not rely on naive unified diff result</span>
+<span class="sd">        parsing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">unified_diff</span><span class="p">(</span>
+                    <span class="n">mail_a</span><span class="o">.</span><span class="n">body_lines</span><span class="p">,</span>
+                    <span class="n">mail_b</span><span class="o">.</span><span class="n">body_lines</span><span class="p">,</span>
+                    <span class="c1"># Ignore difference in filename lengths and timestamps.</span>
+                    <span class="n">fromfile</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">,</span>
+                    <span class="n">tofile</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span>
+                    <span class="n">fromfiledate</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="n">tofiledate</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">lineterm</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DuplicateSet.pretty_diff"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.DuplicateSet.pretty_diff">[docs]</a>    <span class="k">def</span> <span class="nf">pretty_diff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mail_a</span><span class="p">,</span> <span class="n">mail_b</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a verbose unified diff between two mails&#39; normalized body.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">unified_diff</span><span class="p">(</span>
+                <span class="n">mail_a</span><span class="o">.</span><span class="n">body_lines</span><span class="p">,</span>
+                <span class="n">mail_b</span><span class="o">.</span><span class="n">body_lines</span><span class="p">,</span>
+                <span class="n">fromfile</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Normalized body of </span><span class="si">{</span><span class="n">mail_a</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">tofile</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Normalized body of </span><span class="si">{</span><span class="n">mail_b</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">fromfiledate</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mail_a</span><span class="o">.</span><span class="n">timestamp</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">tofiledate</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mail_b</span><span class="o">.</span><span class="n">timestamp</span><span class="si">:</span><span class="s2">0.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                <span class="n">lineterm</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="DuplicateSet.categorize_candidates"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.DuplicateSet.categorize_candidates">[docs]</a>    <span class="k">def</span> <span class="nf">categorize_candidates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process the list of duplicates for action.</span>
+
+<span class="sd">        Run preliminary checks, then apply the strategy to the pool of mails.</span>
+
+<span class="sd">        The process results in two subsets of mails: the selected and the discarded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Fine-grained checks on mail differences.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_differences</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">expt</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Skip set: unparsable mails due to bad encoding.&quot;</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">expt</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_skipped&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_skipped_encoding&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span>
+        <span class="k">except</span> <span class="n">SizeDiffAboveThreshold</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Skip set: mails are too dissimilar in size.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_skipped&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_skipped_size&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span>
+        <span class="k">except</span> <span class="n">ContentDiffAboveThreshold</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Skip set: mails are too dissimilar in content.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_skipped&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_skipped_content&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">strategy</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Skip set: no strategy to apply.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_skipped&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_skipped_strategy&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Fetch the subset of selected mails from the set by applying strategy.</span>
+        <span class="n">selected</span> <span class="o">=</span> <span class="n">apply_strategy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">strategy</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="n">candidate_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span>
+
+        <span class="c1"># Duplicate sets matching as a whole are skipped altogether.</span>
+        <span class="k">if</span> <span class="n">candidate_count</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Skip set: all </span><span class="si">{</span><span class="n">candidate_count</span><span class="si">}</span><span class="s2"> mails within were selected. &quot;</span>
+                <span class="s2">&quot;The strategy criterion was not able to discard some.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_skipped&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_skipped_strategy&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Duplicate sets matching none are skipped altogether.</span>
+        <span class="k">if</span> <span class="n">candidate_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Skip set: No mail within were selected. &quot;</span>
+                <span class="s2">&quot;The strategy criterion was not able to select some.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_skipped&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_skipped_strategy&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">return</span>
+
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">candidate_count</span><span class="si">}</span><span class="s2"> mail candidates selected for action.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_selected&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">candidate_count</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_discarded&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="n">candidate_count</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_deduplicated&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selection</span> <span class="o">=</span> <span class="n">selected</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discard</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pool</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">selected</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Deduplicate"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.Deduplicate">[docs]</a><span class="k">class</span> <span class="nc">Deduplicate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load-up messages, search for duplicates, apply selection strategy and perform the</span>
+<span class="sd">    action.</span>
+
+<span class="sd">    Similar messages sharing the same hash are grouped together in a ``DuplicateSet``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conf</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Index of mail sources by their full, normalized path. So we can refer</span>
+        <span class="c1"># to them in Mail instances. Also have the nice side effect of natural</span>
+        <span class="c1"># deduplication of sources themselves.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Mailbox</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># All mails grouped by hashes.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mails</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="n">Message</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Mails selected after application of selection strategy.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">selection</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="c1"># Mails discarded after application of selection strategy.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discard</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">Message</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="c1"># Global config.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conf</span> <span class="o">=</span> <span class="n">conf</span>
+
+        <span class="c1"># Deduplication statistics.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">:</span> <span class="n">Counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">STATS_DEF</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Deduplicate.add_source"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.Deduplicate.add_source">[docs]</a>    <span class="k">def</span> <span class="nf">add_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Registers a source of mails, validates and opens it.</span>
+
+<span class="sd">        Duplicate sources of mails are not allowed, as when we perform the action, we</span>
+<span class="sd">        use the path as a unique key to tie back a mail from its source.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Make the path absolute and resolve any symlinks.</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">source_path</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> already added.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># Open and register the mail source. Subfolders will be registered as their</span>
+        <span class="c1"># own box.</span>
+        <span class="n">boxes</span> <span class="o">=</span> <span class="n">open_box</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">input_format</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">force_unlock</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="n">boxes</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="n">box</span><span class="o">.</span><span class="n">_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">box</span>
+
+            <span class="c1"># Track global mail count.</span>
+            <span class="n">mail_found</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">mail_found</span><span class="si">}</span><span class="s2"> mails found.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_found&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">mail_found</span></div>
+
+<div class="viewcode-block" id="Deduplicate.hash_all"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.Deduplicate.hash_all">[docs]</a>    <span class="k">def</span> <span class="nf">hash_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Browse all mails from all registered sources, compute hashes and group mails</span>
+<span class="sd">        by hash.</span>
+
+<span class="sd">        Displays a progress bar as the operation might be slow.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Use [</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">theme</span><span class="o">.</span><span class="n">choice</span><span class="p">,</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">hash_headers</span><span class="p">))</span><span class="si">}</span><span class="s2">] headers to &quot;</span>
+            <span class="s2">&quot;compute hashes.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">body_hasher</span> <span class="o">=</span> <span class="n">BODY_HASHERS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">hash_body</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">body_hasher</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">hash_body</span><span class="si">}</span><span class="s2"> body hasher not implemented yet.&quot;</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">progressbar</span><span class="p">(</span>
+            <span class="n">length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_found&quot;</span><span class="p">],</span>
+            <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Hashed mails&quot;</span><span class="p">,</span>
+            <span class="n">show_pos</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">progress</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">mail_id</span><span class="p">,</span> <span class="n">mail</span> <span class="ow">in</span> <span class="n">box</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+                    <span class="n">mail</span><span class="o">.</span><span class="n">add_box_metadata</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">mail_id</span><span class="p">)</span>
+
+                    <span class="n">mail</span><span class="o">.</span><span class="n">conf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span>
+
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">mail_hash</span> <span class="o">=</span> <span class="n">mail</span><span class="o">.</span><span class="n">hash_key</span><span class="p">()</span> <span class="o">+</span> <span class="n">body_hasher</span><span class="p">(</span><span class="n">mail</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">TooFewHeaders</span> <span class="k">as</span> <span class="n">expt</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rejecting </span><span class="si">{</span><span class="n">mail</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">expt</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_rejected&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Use a set to deduplicate entries pointing to the same file.</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">mails</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">mail_hash</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">mail</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_retained&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                    <span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_hashes&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mails</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Deduplicate.build_sets"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.Deduplicate.build_sets">[docs]</a>    <span class="k">def</span> <span class="nf">build_sets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the selected and discarded sets from each duplicate set.</span>
+
+<span class="sd">        We apply the selection strategy one duplicate set at a time to keep memory</span>
+<span class="sd">        footprint low and make the log easier to read.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">strategy</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">theme</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">strategy</span><span class="p">)</span><span class="si">}</span><span class="s2"> strategy will be applied on each &quot;</span>
+                <span class="s2">&quot;duplicate set to select candidates.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No strategy configured, skip selection.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_total&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mails</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">hash_key</span><span class="p">,</span> <span class="n">mail_set</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mails</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Alter log level depending on set length.</span>
+            <span class="n">mail_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mail_set</span><span class="p">)</span>
+            <span class="n">log_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">debug</span> <span class="k">if</span> <span class="n">mail_count</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">logging</span><span class="o">.</span><span class="n">info</span>
+            <span class="n">log_level</span><span class="p">(</span><span class="n">theme</span><span class="o">.</span><span class="n">subheading</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;◼ </span><span class="si">{</span><span class="n">mail_count</span><span class="si">}</span><span class="s2"> mails sharing hash </span><span class="si">{</span><span class="n">hash_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
+
+            <span class="c1"># Apply the selection strategy to discriminate mails within the set.</span>
+            <span class="n">duplicates</span> <span class="o">=</span> <span class="n">DuplicateSet</span><span class="p">(</span><span class="n">hash_key</span><span class="p">,</span> <span class="n">mail_set</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="p">)</span>
+            <span class="n">duplicates</span><span class="o">.</span><span class="n">categorize_candidates</span><span class="p">()</span>
+            <span class="c1"># Merge duplicate set&#39;s stats to global stats.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">+=</span> <span class="n">duplicates</span><span class="o">.</span><span class="n">stats</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">selection</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">duplicates</span><span class="o">.</span><span class="n">selection</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">discard</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">duplicates</span><span class="o">.</span><span class="n">discard</span><span class="p">)</span>
+
+            <span class="c1"># Remove from mail objects all attributes we no longer need, now that we</span>
+            <span class="c1"># have built the sets of selected and discarded mails. This will save</span>
+            <span class="c1"># memory and speed-up the action.</span>
+            <span class="c1"># See: https://github.com/kdeldycke/mail-deduplicate/issues/362</span>
+            <span class="n">delete_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;canonical_headers&quot;</span><span class="p">,</span> <span class="s2">&quot;body_lines&quot;</span><span class="p">,</span> <span class="s2">&quot;subject&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">mail</span> <span class="ow">in</span> <span class="n">duplicates</span><span class="o">.</span><span class="n">discard</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">delete_names</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">mail</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+                        <span class="k">del</span> <span class="n">mail</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">mail</span> <span class="ow">in</span> <span class="n">duplicates</span><span class="o">.</span><span class="n">selection</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">delete_names</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">mail</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+                        <span class="k">del</span> <span class="n">mail</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;move-discarded&quot;</span><span class="p">:</span>
+                    <span class="c1"># Selection mails are not moved, delete payload.</span>
+                    <span class="k">del</span> <span class="n">mail</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;_payload&quot;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Deduplicate.close_all"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.Deduplicate.close_all">[docs]</a>    <span class="k">def</span> <span class="nf">close_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close all open boxes.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">source_path</span><span class="p">,</span> <span class="n">box</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Close </span><span class="si">{</span><span class="n">source_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">box</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Deduplicate.report"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.Deduplicate.report">[docs]</a>    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a text report of user-friendly statistics and metrics.&quot;&quot;&quot;</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">title</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">&quot;mail_&quot;</span><span class="p">,</span> <span class="s2">&quot;Mails&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;set_&quot;</span><span class="p">,</span> <span class="s2">&quot;Duplicate sets&quot;</span><span class="p">)):</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="p">[[</span><span class="n">title</span><span class="p">,</span> <span class="s2">&quot;Metric&quot;</span><span class="p">,</span> <span class="s2">&quot;Description&quot;</span><span class="p">]]</span>
+            <span class="k">for</span> <span class="n">stat_id</span><span class="p">,</span> <span class="n">desc</span> <span class="ow">in</span> <span class="n">STATS_DEF</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">stat_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
+                    <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">[</span>
+                            <span class="n">stat_id</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span> <span class="p">:]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot; - &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">(),</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="n">stat_id</span><span class="p">],</span>
+                            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">textwrap</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="mi">60</span><span class="p">)),</span>
+                        <span class="p">],</span>
+                    <span class="p">)</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="n">tabulate</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">tablefmt</span><span class="o">=</span><span class="s2">&quot;fancy_grid&quot;</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="s2">&quot;firstrow&quot;</span><span class="p">)</span>
+            <span class="n">output</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="Deduplicate.check_stats"><a class="viewcode-back" href="../../mail_deduplicate.html#mail_deduplicate.deduplicate.Deduplicate.check_stats">[docs]</a>    <span class="k">def</span> <span class="nf">check_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Perform some high-level consistency checks on metrics.</span>
+
+<span class="sd">        Helps users reports tricky edge-cases.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Box opening stats.</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_found&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_rejected&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_found&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_retained&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_found&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_rejected&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_retained&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Mail grouping by hash.</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_retained&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_unique&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_retained&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_duplicates&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_retained&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_unique&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_duplicates&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Mail selection stats.</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_retained&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_skipped&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_retained&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_discarded&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_retained&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_selected&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_retained&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_skipped&quot;</span><span class="p">]</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_discarded&quot;</span><span class="p">]</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_selected&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Action stats.</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_selected&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_copied&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">action</span> <span class="o">!=</span> <span class="s2">&quot;move-discarded&quot;</span><span class="p">:</span>
+            <span class="c1"># The number of moved mails may be larger than the number of selected</span>
+            <span class="c1"># mails for move-discarded action, because discarded mails are moved.</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_selected&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_moved&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_selected&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_deleted&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_selected&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_copied&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_moved&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_deleted&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="c1"># Sets accounting.</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_total&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_hashes&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_single&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;mail_unique&quot;</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_total&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_single&quot;</span><span class="p">]</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_skipped_encoding&quot;</span><span class="p">]</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_skipped_size&quot;</span><span class="p">]</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_skipped_content&quot;</span><span class="p">]</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_skipped_strategy&quot;</span><span class="p">]</span>
+            <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;set_deduplicated&quot;</span><span class="p">]</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; Kevin Deldycke and contributors
+            </div>
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2024-02-29</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=fb9832d5"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="https://unpkg.com/mermaid@10.2.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    </body>
+</html>
