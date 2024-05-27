@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from mailbox import Maildir
 
-from click_extra.tests.conftest import skip_windows
+from click_extra.pytest import skip_windows
 
 from .conftest import MailFactory, check_box
 

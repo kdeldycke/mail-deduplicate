@@ -27,8 +27,7 @@ from uuid import uuid4
 import arrow
 import pytest
 from boltons.iterutils import same
-
-from click_extra.tests.conftest import extra_runner  # noqa: F401
+from click_extra.pytest import extra_runner  # noqa: F401
 
 from mail_deduplicate.cli import mdedup
 
