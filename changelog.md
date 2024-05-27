@@ -6,6 +6,7 @@
 This version is not released yet and is under active development.
 ```
 
+- Slim down package by moving unit tests out of the main package.
 - Run tests on Python `3.13-dev`.
 
 ## [7.3.0 (2023-11-14)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.3...v7.3.0)
