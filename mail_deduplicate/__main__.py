@@ -18,19 +18,9 @@
 .. code-block:: shell-session
 
     $ python -m mail_deduplicate
-
-Removes empty string and current working directory from the first entry of
-``sys.path``, if present to avoid using current directory
-in subcommands when invoked as ``python -m mail_deduplicate <command>``.
 """
 
 from __future__ import annotations
-
-import os
-import sys
-
-if sys.path[0] in ("", os.getcwd()):
-    sys.path.pop(0)
 
 
 def main():
