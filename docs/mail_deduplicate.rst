@@ -6,14 +6,6 @@ mail\_deduplicate package
    :undoc-members:
    :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   mail_deduplicate.tests
-
 Submodules
 ----------
 
