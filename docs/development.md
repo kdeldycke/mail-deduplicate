@@ -119,7 +119,7 @@ All steps of the release process and version management are automated in the
 
 All there's left to do is to:
 
-- [check the open draft prepare-release PR](https://github.com/kdeldycke/mail-deduplicate/workflows/pulls?q=is%3Apr+is%3Aopen+head%3Aprepare-release)
+- [check the open draft prepare-release PR](https://github.com/kdeldycke/mail-deduplicate/pulls?q=is%3Apr+is%3Aopen+head%3Aprepare-release)
   and its changes,
 - click the `Ready for review` button,
 - click the `Rebase and merge` button,
