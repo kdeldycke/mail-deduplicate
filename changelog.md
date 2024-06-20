@@ -2,9 +2,8 @@
 
 ## [7.4.0 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.3.0...main)
 
-```{important}
-This version is not released yet and is under active development.
-```
+> \[!IMPORTANT\]
+> This version is not released yet and is under active development.
 
 - Slim down package by moving unit tests out of the main package.
 - Split `dev` dependency groups into optional `test`, `typing` and `docs` groups.
@@ -202,13 +201,12 @@ This version is not released yet and is under active development.
 
 ## [3.0.0 (2020-09-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.2.0...v3.0.0)
 
-```{danger}
-As of `v3.0.0`, the project has been renamed to *Mail Deduplicate* and is
-now available on:
-
-- Github at https://github.com/kdeldycke/mail-deduplicate
-- PyPi at https://pypi.org/project/mail-deduplicate
-```
+> \[!CAUTION\]
+> As of `v3.0.0`, the project has been renamed to *Mail Deduplicate* and is
+> now available on:
+>
+> - Github at https://github.com/kdeldycke/mail-deduplicate
+> - PyPi at https://pypi.org/project/mail-deduplicate
 
 - Rename project from `maildir-deduplicate` to `mail-deduplicate`.
 - Rename `master` branch to `main`.
@@ -219,10 +217,9 @@ now available on:
 
 ## [2.2.0 (2020-09-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.1.0...v2.2.0)
 
-```{warning}
-This is the last version of the project known under the name *Maildir Deduplicate*
-(a.k.a. `maildir-deduplicate`).
-```
+> \[!WARNING\]
+> This is the last version of the project known under the name *Maildir Deduplicate*
+> (a.k.a. `maildir-deduplicate`).
 
 - Add disclaimer to prepare project name change.
 - Fix Header being object instead of string (#61).
