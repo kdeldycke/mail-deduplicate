@@ -75,7 +75,7 @@ Look at the [list of latest binary builds](https://github.com/kdeldycke/mail-ded
 
 ````{admonition} ABI targets
 ---
-class: seelalso
+class: note
 ---
 ```{code-block} shell-session
 $ file ./mdedup*
