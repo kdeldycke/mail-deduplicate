@@ -69,6 +69,10 @@ jobs:
               #   ERROR: Could not build wheels for cffi, which is required to install pyproject.toml-based projects
               {"python-version": "3.13-dev", "os": "macos-14"},
               {"python-version": "3.13-dev", "os": "macos-13"},
+              # Python 3.13-dev is also segfaulting on older Ubuntu:
+              #   /home/runner/work/_temp/811b96aa-a536-4b79-81b2-f28fc3641bd6.sh:
+              #   line 1:  3176 Segmentation fault      (core dumped) poetry run pytest
+              {"python-version": "3.13-dev", "os": "ubuntu-20.04"},
           ]
 
           # Build the job matrix.
