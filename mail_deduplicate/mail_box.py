@@ -21,6 +21,7 @@ some tweaks and sane defaults.
 
 from __future__ import annotations
 
+from enum import Enum
 import inspect
 import mailbox as py_mailbox
 from mailbox import Mailbox as py_Mailbox

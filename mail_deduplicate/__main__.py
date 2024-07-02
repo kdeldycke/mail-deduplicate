@@ -38,7 +38,7 @@ def main():
         - Nuitka's main module invocation requirement:
           ``python -m nuitka (...) mail_deduplicate/__main__.py``
 
-    That way we can deduce all three cases from the Poetry entry point.
+    That way we can deduce all three cases from the entry point.
     """
     from mail_deduplicate.cli import mdedup
 

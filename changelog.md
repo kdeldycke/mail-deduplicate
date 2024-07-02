@@ -5,6 +5,8 @@
 > \[!IMPORTANT\]
 > This version is not released yet and is under active development.
 
+- Switch from Poetry to `uv`.
+
 ## [7.4.0 (2024-06-20)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.3.0...v7.4.0)
 
 - Slim down package by moving unit tests out of the main package.

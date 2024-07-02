@@ -125,15 +125,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install click-extra and its dependencies
+      - name: Install uv
         run: |
-          python -m pip install --upgrade setuptools pip
-          python -m pip install --upgrade poetry
-          poetry install --with test --no-interaction
+          python -m pip install -r https://raw.githubusercontent.com/kdeldycke/workflows/main/requirements/uv.txt
+      - name: Install project
+        run: |
+          uv venv --system
+          uv pip install .[test]
 
       - name: Tests
         run: |
-          poetry run pytest
+          uv run pytest
 
       - name: Codecov upload
         uses: codecov/codecov-action@v4.5.0
