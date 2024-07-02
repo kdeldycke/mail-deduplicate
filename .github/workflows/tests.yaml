@@ -131,7 +131,7 @@ jobs:
       - name: Install project
         run: |
           uv venv --system
-          uv pip install .[test]
+          uv pip install ".[test]"
 
       - name: Tests
         run: |
