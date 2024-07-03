@@ -4,7 +4,7 @@ name = "mail-deduplicate"
 version = "7.5.0"
 # Python versions and their status: https://devguide.python.org/versions/
 requires-python = ">= 3.9"
-description = "📧 CLI to deduplicate mails from mail boxes."
+description = "📧 CLI to deduplicate mails from mail boxes"
 authors = [{ name = "Kevin Deldycke", email = "kevin@deldycke.com" }]
 readme = "readme.md"
 keywords = [
@@ -87,6 +87,16 @@ docs = [
 
 [project.scripts]
 mdedup = "mail_deduplicate.__main__:main"
+
+[tool.nuitka]
+product-name = "Mail Deduplicate"
+file-description = "📧 CLI to deduplicate mails from mail boxes"
+copyright = "Kevin Deldycke <kevin@deldycke.com> and contributors. Distributed under GPL-2.0-or-later license."
+file-version = "7.5.0"
+product-version = "7.5.0"
+macos-app-icon = "docs/assets/icon.png"
+linux-icon = "docs/assets/icon.png"
+windows-icon-from-ico = "docs/assets/icon.png"
 
 [tool.mypy]
 warn_unused_configs = true
