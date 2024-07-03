@@ -19,7 +19,7 @@ toml_config = tomllib.loads(toml_path.read_text())
 project_id = toml_config["project"]["name"]
 version = release = toml_config["project"]["version"]
 url = toml_config["project"]["urls"]["Homepage"]
-author = ", ".join(author.name for author in toml_config["project"]["authors"])
+author = ", ".join(author["name"] for author in toml_config["project"]["authors"])
 
 # Title-case each word of the project ID.
 project = " ".join(word.title() for word in project_id.split("-"))
