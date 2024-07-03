@@ -50,8 +50,10 @@ $ git checkout main
 Install package in editable mode with all development dependencies:
 
 ```shell-session
-$ python3 -m pip install poetry
-$ poetry install
+$ python -m pip install uv
+$ uv venv
+$ source .venv/bin/activate
+$ uv pip install --all-extras .
 ```
 
 Now you’re ready to hack and abuse git!
@@ -61,9 +63,9 @@ Now you’re ready to hack and abuse git!
 After the steps above, you are free to play with the bleeding edge version of `mdedup`:
 
 ```shell-session
-$ poetry run mdedup --version
-mdedup, version 7.0.0-dev
+$ uv run mdedup --version
 (...)
+mdedup, version 7.3.1
 ```
 
 ## Unit-tests
@@ -71,7 +73,7 @@ mdedup, version 7.0.0-dev
 Run unit-tests with:
 
 ```shell-session
-$ poetry run pytest
+$ uv run pytest
 ```
 
 ## Coding style
@@ -84,7 +86,7 @@ The documentation you’re currently reading can be built locally with
 [Sphinx](https://www.sphinx-doc.org):
 
 ```shell-session
-$ poetry run sphinx-build -b html ./docs ./docs/html
+$ uv run sphinx-build -b html ./docs ./docs/html
 ```
 
 The generation of API documentation is
