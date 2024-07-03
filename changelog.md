@@ -7,6 +7,7 @@
 
 - Switch from Poetry to `uv`.
 - Drop support for Python 3.8.
+- Mark Python 3.13-dev tests as stable.
 
 ## [7.4.0 (2024-06-20)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.3.0...v7.4.0)
 

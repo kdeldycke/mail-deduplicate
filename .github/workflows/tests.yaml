@@ -61,18 +61,7 @@ jobs:
           exclude: list[dict[str, str]] = []
 
           # List of unstable criterions.
-          unstable: list[dict[str, str]] = [
-              # Python 3.13-dev is only failing on macOS:
-              #   Building wheel for cffi (pyproject.toml) did not run successfully.
-              #   Failed to build cffi
-              #   ERROR: Could not build wheels for cffi, which is required to install pyproject.toml-based projects
-              {"python-version": "3.13-dev", "os": "macos-14"},
-              {"python-version": "3.13-dev", "os": "macos-13"},
-              # Python 3.13-dev is also segfaulting on older Ubuntu:
-              #   /home/runner/work/_temp/811b96aa-a536-4b79-81b2-f28fc3641bd6.sh:
-              #   line 1:  3176 Segmentation fault      (core dumped) poetry run pytest
-              {"python-version": "3.13-dev", "os": "ubuntu-20.04"},
-          ]
+          unstable: list[dict[str, str]] = []
 
           # Build the job matrix.
           jobs: list[dict[str, str]] = []
