@@ -34,7 +34,7 @@ def main():
     <https://github.com/python-poetry/poetry/issues/5981>`_:
 
         - plain inline package call: ``python -m mail_deduplicate``,
-        - Poetry's script entry point: ``mdedup = 'mail_deduplicate.__main__:main``,
+        - ``pyproject.toml`` entry point: ``mdedup = 'mail_deduplicate.__main__:main``,
         - Nuitka's main module invocation requirement:
           ``python -m nuitka (...) mail_deduplicate/__main__.py``
 
