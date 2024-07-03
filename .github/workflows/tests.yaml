@@ -121,7 +121,15 @@ jobs:
           uv venv --system
           uv pip install ".[test]"
 
-      - name: Tests
+      # CLI tests.
+      - name: mdedup --help
+        run: |
+          uv run mdedup --help
+      - name: mdedup --verbosity DEBUG --version
+        run: |
+          uv run mdedup --verbosity DEBUG --version
+
+      - name: Unittests
         run: |
           uv run pytest
 
