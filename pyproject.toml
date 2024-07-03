@@ -3,7 +3,7 @@
 name = "mail-deduplicate"
 version = "7.4.1"
 # Python versions and their status: https://devguide.python.org/versions/
-requires-python = ">= 3.8"
+requires-python = ">= 3.9"
 description = "📧 CLI to deduplicate mails from mail boxes."
 authors = [{ name = "Kevin Deldycke", email = "kevin@deldycke.com" }]
 readme = "readme.md"
@@ -33,7 +33,6 @@ classifiers = [
     'Operating System :: Microsoft :: Windows',
     'Operating System :: POSIX',
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -60,9 +59,7 @@ test = [
     "pytest-github-actions-annotate-failures ~= 0.2.0",
     "pytest-randomly ~= 3.15.0",
 ]
-typing = [
-    "types-tabulate ~= 0.9.0.2",
-]
+typing = ["types-tabulate ~= 0.9.0.2"]
 docs = [
     "click-extra [sphinx] ~= 4.8.3",
     "furo ~= 2024.1.29",
