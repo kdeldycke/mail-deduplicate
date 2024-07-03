@@ -1,5 +1,10 @@
 # ChangeLog
 
+## [7.5.1 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.5.0...main)
+
+> \[!IMPORTANT\]
+> This version is not released yet and is under active development.
+
 ## [7.5.0 (2024-07-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.4.0...v7.5.0)
 
 - Switch from Poetry to `uv`.
