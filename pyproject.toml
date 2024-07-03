@@ -1,7 +1,7 @@
 [project]
 # Docs: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 name = "mail-deduplicate"
-version = "7.4.1"
+version = "7.5.0"
 # Python versions and their status: https://devguide.python.org/versions/
 requires-python = ">= 3.9"
 description = "📧 CLI to deduplicate mails from mail boxes."
@@ -113,7 +113,7 @@ branch = true
 precision = 2
 
 [tool.bumpversion]
-current_version = "7.4.1"
+current_version = "7.5.0"
 allow_dirty = true
 
 [[tool.bumpversion.files]]
