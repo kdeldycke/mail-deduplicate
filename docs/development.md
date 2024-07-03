@@ -11,7 +11,7 @@
 
 This project more or less follows [Semantic Versioning](https://semver.org/).
 
-Which boils down to the following rules of thumb regarding stability:
+Which boils down to the following these rules of thumb regarding stability:
 
 - **Patch releases**: `0.x.n` → `0.x.(n+1)` upgrades
 
@@ -56,7 +56,7 @@ $ source .venv/bin/activate
 $ uv pip install --all-extras .
 ```
 
-Now you’re ready to hack and abuse git!
+Now you’re ready to hack and abuse `git`.
 
 ## Test `mdedup` development version
 
@@ -73,6 +73,7 @@ mdedup, version 7.3.1
 Run unit-tests with:
 
 ```shell-session
+$ uv install ".[test]"
 $ uv run pytest
 ```
 
@@ -102,6 +103,7 @@ To produce clean and fancy terminals screenshots, use either:
 - [Graphite Shot](https://graphite-shot.now.sh)
 - [Carbon](https://github.com/carbon-app/carbon)
 - [CodeKeep](https://codekeep.io/screenshot)
+- [chalk.ist](https://chalk.ist)
 
 ## Changelog
 

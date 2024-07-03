@@ -11,7 +11,9 @@ Easiest way is to [install `pipx`](https://pipx.pypa.io/stable/installation/), t
 $ pipx install mail-deduplicate
 ```
 
+```{note}
 `pipx` is to `pip` what `npx` is to `npm`: a clean way to install and run Python applications in isolated environments.
+```
 ````
 
 ````{tab-item} pip
