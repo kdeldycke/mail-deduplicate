@@ -400,7 +400,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/34/b8/aa7d6cf2d5efdd2fc
 
 [[distribution]]
 name = "mail-deduplicate"
-version = "7.5.0"
+version = "7.5.1"
 source = { editable = "." }
 dependencies = [
     { name = "arrow" },
