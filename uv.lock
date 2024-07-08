@@ -12,14 +12,15 @@ wheels = [
 
 [[distribution]]
 name = "arrow"
-version = "1.2.3"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/7f/c0/c601ea7811f422700ef809f167683899cdfddec5aa3f83597edf97349962/arrow-1.2.3.tar.gz", hash = "sha256:3934b30ca1b9f292376d9db15b19446088d12ec58629bc3f0da28fd55fb633a1", size = 127552 }
+sdist = { url = "https://files.pythonhosted.org/packages/2e/00/0f6e8fcdb23ea632c866620cc872729ff43ed91d284c866b515c6342b173/arrow-1.3.0.tar.gz", hash = "sha256:d4540617648cb5f895730f1ad8c82a65f2dad0166f57b75f3ca54759c4d67a85", size = 131960 }
 dependencies = [
     { name = "python-dateutil" },
+    { name = "types-python-dateutil" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/67/67/4bca5a595e2f89bff271724ddb1098e6c9e16f7f3d018d120255e3c30313/arrow-1.2.3-py3-none-any.whl", hash = "sha256:5a49ab92e3b7b71d96cd6bfcc4df14efefc9dfa96ea19045815914a6ab6b1fe2", size = 66391 },
+    { url = "https://files.pythonhosted.org/packages/f8/ed/e97229a566617f2ae958a6b13e7cc0f585470eac730a73e9e82c32a3cdd2/arrow-1.3.0-py3-none-any.whl", hash = "sha256:c728b120ebc00eb84e01882a6f5e7927a53960aa990ce7dd2b10f39005a67f80", size = 66419 },
 ]
 
 [[distribution]]
@@ -328,9 +329,9 @@ wheels = [
 
 [[distribution]]
 name = "furo"
-version = "2024.1.29"
+version = "2024.5.6"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/00/6d/7d0f35b9fba4394675bd90d44baadde8f20fe6e38c2481ef42cf05cd74f8/furo-2024.1.29.tar.gz", hash = "sha256:4d6b2fe3f10a6e36eb9cc24c1e7beb38d7a23fc7b3c382867503b7fcac8a1e02", size = 1657869 }
+sdist = { url = "https://files.pythonhosted.org/packages/66/c3/259585edebac22f97d6af6043d20fba6b0aea906a2f9d57346a53d2d77a5/furo-2024.5.6.tar.gz", hash = "sha256:81f205a6605ebccbb883350432b4831c0196dd3d1bc92f61e1f459045b3d2b0b", size = 1661282 }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "pygments" },
@@ -338,7 +339,7 @@ dependencies = [
     { name = "sphinx-basic-ng" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/88/1b/6e2c959476fcdaea2aeb8fe5807ed6df8189086a7cd17904de5272db53e9/furo-2024.1.29-py3-none-any.whl", hash = "sha256:3548be2cef45a32f8cdc0272d415fcb3e5fa6a0eb4ddfe21df3ecf1fe45a13cf", size = 325212 },
+    { url = "https://files.pythonhosted.org/packages/85/bf/dd5333ddd6318e04871e96b2567cb3b87955588f30fc705e8692c6865ac8/furo-2024.5.6-py3-none-any.whl", hash = "sha256:490a00d08c0a37ecc90de03ae9227e8eb5d6f7f750edf9807f398a2bdf2358de", size = 341199 },
 ]
 
 [[distribution]]
@@ -965,14 +966,14 @@ wheels = [
 
 [[distribution]]
 name = "sphinx-issues"
-version = "4.0.0"
+version = "4.1.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/dd/8b/d0c10bb1a98273c08cbe6fe773bada84597d250960c91dbe7d1a97f6df7d/sphinx_issues-4.0.0.tar.gz", hash = "sha256:5b8fcc229ffaeaef53fef0dca88dc89bc14b4aa81f221d9682a64ecced02e25d", size = 13945 }
+sdist = { url = "https://files.pythonhosted.org/packages/ba/fb/fa7829987e801056f16d8c63ace3f1d6f91e44940ad00f512450581ed63f/sphinx_issues-4.1.0.tar.gz", hash = "sha256:a67f7ef31d164b420b2f21b6c9b020baeb4a014afd4045f5be314c984e8ee520", size = 14148 }
 dependencies = [
     { name = "sphinx" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b0/a6/47612ac521feed91757ad78284072a50ad9f64f49d7237c47c59a75d14df/sphinx_issues-4.0.0-py3-none-any.whl", hash = "sha256:ce1ee87682eb8e661d2d500672756916f113ac0a37da3678aa474b7d8ce3d039", size = 8118 },
+    { url = "https://files.pythonhosted.org/packages/d0/7c/0a7c1a38392f2922b4b693dd8acd6a4c7e662ee66db058bdf314bd22ce3f/sphinx_issues-4.1.0-py3-none-any.whl", hash = "sha256:d779dddff441175c9fddb7a4018eca38f9f6cdb1e0a2fe31d93b4f89587c7ba1", size = 8248 },
 ]
 
 [[distribution]]
@@ -1071,6 +1072,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c0/3f/d7af728f075fb08564c5949a9c95e44352e23dee646869fa104a3b2060a3/tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f", size = 15164 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/97/75/10a9ebee3fd790d20926a90a2547f0bf78f371b2f13aa822c759680ca7b9/tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc", size = 12757 },
+]
+
+[[distribution]]
+name = "types-python-dateutil"
+version = "2.9.0.20240316"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/61/c5/c3a4d72ffa8efc2e78f7897b1c69ec760553246b67d3ce8c4431fac5d4e3/types-python-dateutil-2.9.0.20240316.tar.gz", hash = "sha256:5d2f2e240b86905e40944dd787db6da9263f0deabef1076ddaed797351ec0202", size = 9067 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c7/1b/af4f4c4f3f7339a4b7eb3c0ab13416db98f8ac09de3399129ee5fdfa282b/types_python_dateutil-2.9.0.20240316-py3-none-any.whl", hash = "sha256:6b8cb66d960771ce5ff974e9dd45e38facb81718cc1e208b10b1baccbfdbee3b", size = 9663 },
 ]
 
 [[distribution]]
