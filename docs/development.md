@@ -63,7 +63,7 @@ Now you’re ready to hack and abuse `git`.
 After the steps above, you are free to play with the bleeding edge version of `mdedup`:
 
 ```shell-session
-$ uv run mdedup --version
+$ uv run -- mdedup --version
 (...)
 mdedup, version 7.3.1
 ```
@@ -74,7 +74,7 @@ Run unit-tests with:
 
 ```shell-session
 $ uv install ".[test]"
-$ uv run pytest
+$ uv run -- pytest
 ```
 
 ## Coding style
@@ -87,7 +87,7 @@ The documentation you’re currently reading can be built locally with
 [Sphinx](https://www.sphinx-doc.org):
 
 ```shell-session
-$ uv run sphinx-build -b html ./docs ./docs/html
+$ uv run -- sphinx-build -b html ./docs ./docs/html
 ```
 
 The generation of API documentation is

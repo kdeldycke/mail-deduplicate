@@ -128,14 +128,14 @@ jobs:
         #   character maps to <undefined>
         if: runner.os != 'Windows'
         run: |
-          uv run mdedup --help
+          uv run -- mdedup --help
       - name: mdedup --verbosity DEBUG --version
         run: |
-          uv run mdedup --verbosity DEBUG --version
+          uv run -- mdedup --verbosity DEBUG --version
 
       - name: Unittests
         run: |
-          uv run pytest
+          uv run -- pytest
 
       - name: Codecov upload
         uses: codecov/codecov-action@v4.5.0
