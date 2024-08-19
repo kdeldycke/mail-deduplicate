@@ -1,12 +1,15 @@
----
+______________________________________________________________________
+
 name: 🎁 Feature request
 about: Suggest an idea for this project
 title: 🎁 <CHANGE FEATURE NAME HERE>
 labels:
-  - 🎁 feature request
-  - 🙏 help wanted
-assignees: kdeldycke
----
+
+- 🎁 feature request
+- 🙏 help wanted
+  assignees: kdeldycke
+
+______________________________________________________________________
 
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when \[...\]
