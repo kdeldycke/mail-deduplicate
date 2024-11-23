@@ -219,7 +219,7 @@
 
 ## [3.0.0 (2020-09-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.2.0...v3.0.0)
 
-> \[!CAUTION\]
+> [!CAUTION]
 > As of `v3.0.0`, the project has been renamed to *Mail Deduplicate* and is
 > now available on:
 >
@@ -235,7 +235,7 @@
 
 ## [2.2.0 (2020-09-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.1.0...v2.2.0)
 
-> \[!WARNING\]
+> [!WARNING]
 > This is the last version of the project known under the name *Maildir Deduplicate*
 > (a.k.a. `maildir-deduplicate`).
 
