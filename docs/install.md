@@ -108,7 +108,7 @@ mdedup, version 7.0.0
 ## Shell completion
 
 Completion for popular shell
-[rely on Click feature](https://click.palletsprojects.com/en/8.1.x/shell-completion/).
+[rely on Click feature](https://click.palletsprojects.com/en/stable/shell-completion/).
 
 `````{tab-set}
 

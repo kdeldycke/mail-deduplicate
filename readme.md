@@ -51,7 +51,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 
 ## Installation
 
-### From sources
+### Python
 
 Easiest way is to install `mdedup` from sources with [`pipx`](https://pipx.pypa.io):
 
@@ -65,7 +65,7 @@ are available in the documentation.
 
 ### Executables
 
-Standalone executables of `mdedup`'s latest version are available for several platforms and architectures:
+Standalone binaries of `mdedup`'s latest version are available for several platforms and architectures:
 
 | Platform    | `x86_64`                                                                                                                           |`arm64`                                                                                                                          |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |-------------------------------------------------------------------------------------------------------------------------------- |

@@ -82,7 +82,7 @@ docs = [
 "Repository" = 'https://github.com/kdeldycke/mail-deduplicate'
 "Funding" = "https://github.com/sponsors/kdeldycke"
 "Issues" = "https://github.com/kdeldycke/mail-deduplicate/issues"
-"Changelog" = "https://kdeldycke.github.io/mail-deduplicate/changelog.html"
+"Changelog" = "https://github.com/kdeldycke/mail-deduplicate/blob/main/changelog.md"
 
 [project.scripts]
 mdedup = "mail_deduplicate.__main__:main"
