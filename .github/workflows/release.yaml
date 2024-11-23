@@ -10,28 +10,13 @@ name: Build & release
 jobs:
 
   release:
-    uses: kdeldycke/workflows/.github/workflows/release.yaml@v4.1.4
+    uses: kdeldycke/workflows/.github/workflows/release.yaml@v4.8.4
     secrets:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+    with:
+      binaries-test-plan: |
+        # Test combination of version and verbosity.
+        --verbosity DEBUG --version
 
-  test-binaries:
-    needs: release
-    strategy:
-      matrix: ${{ fromJSON(needs.release.outputs.nuitka_matrix) }}
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4.1.8
-        id: artifacts
-        with:
-          name: ${{ matrix.bin_name }}
-      - name: Set binary permissions
-        if: runner.os != 'Windows'
-        run: |
-          chmod +x ${{ steps.artifacts.outputs.download-path }}/${{ matrix.bin_name }}
-      - name: Run mdedup --version
-        run: |
-          ${{ steps.artifacts.outputs.download-path }}/${{ matrix.bin_name }} --version
-      - name: Run mdedup --help
-        run: |
-          ${{ steps.artifacts.outputs.download-path }}/${{ matrix.bin_name }} --help
+        # Test help output.
+        --help

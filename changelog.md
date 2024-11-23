@@ -2,7 +2,7 @@
 
 ## [7.5.1 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.5.0...main)
 
-> \[!IMPORTANT\]
+> [!IMPORTANT]
 > This version is not released yet and is under active development.
 
 - Add official support for Python 3.13.
@@ -13,6 +13,7 @@
 - Move `macos-14` tests to `macos-15`.
 - Add tests on `ubuntu-24.04`. Remove tests on `ubuntu-20.04`.
 - Run workflows on `ubuntu-24.04`.
+- Rely on frozen `uv.lock` for reproducibility.
 
 ## [7.5.0 (2024-07-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.4.0...v7.5.0)
 

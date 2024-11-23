@@ -53,7 +53,7 @@ Install package in editable mode with all development dependencies:
 $ python -m pip install uv
 $ uv venv
 $ source .venv/bin/activate
-$ uv pip install --all-extras --requirement pyproject.toml .
+$ uv sync --all-extras
 ```
 
 Now you’re ready to hack and abuse `git`.
@@ -73,7 +73,7 @@ mdedup, version 7.3.1
 Run unit-tests with:
 
 ```shell-session
-$ uv install ".[test]"
+$ uv sync --extra test
 $ uv run -- pytest
 ```
 
@@ -87,6 +87,7 @@ The documentation you’re currently reading can be built locally with
 [Sphinx](https://www.sphinx-doc.org):
 
 ```shell-session
+$ uv sync --extra docs
 $ uv run -- sphinx-build -b html ./docs ./docs/html
 ```
 
