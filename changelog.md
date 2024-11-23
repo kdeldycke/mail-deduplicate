@@ -5,6 +5,9 @@
 > \[!IMPORTANT\]
 > This version is not released yet and is under active development.
 
+- Drop support for Python 3.9.
+- Add dependency on `extra-platforms`. Closes {issue}`784`.
+
 ## [7.5.0 (2024-07-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.4.0...v7.5.0)
 
 - Switch from Poetry to `uv`.

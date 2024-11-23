@@ -187,5 +187,4 @@ FYI, here is a graph of Python package dependencies:
 
 ```mermaid assets/dependencies.mmd
 :align: center
-:zoom:
 ```
