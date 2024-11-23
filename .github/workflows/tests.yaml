@@ -23,7 +23,7 @@ jobs:
     # This will became unmaintainable and tedious so we use this job to pre-compute which jobs is going to get our
     # "stable" flag.
     name: "OS/Python/stable matrix pre-compute"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
       test_matrix: ${{ steps.create_matrix.outputs.matrix }}
     steps:
@@ -39,18 +39,19 @@ jobs:
           variants: dict[str, set[str]] = {
               "os": {
                   # Available OSes: https://github.com/actions/runner-images#available-images
-                  "ubuntu-22.04",
-                  "ubuntu-20.04",
-                  "macos-14",
-                  "macos-13",
-                  "windows-2022",
-                  "windows-2019",
+                  "ubuntu-24.04", # x86
+                  "ubuntu-22.04", # x86
+                  "macos-15",     # arm64
+                  "macos-13",     # x86
+                  "windows-2022", # x86
+                  "windows-2019", # x86
               },
               "python-version": {
                   "3.10",
                   "3.11",
                   "3.12",
-                  "3.13-dev",
+                  "3.13",
+                  "3.14-dev",
               }
           }
           # TODO: List of additional variants to include in the matrix.
@@ -60,7 +61,11 @@ jobs:
           exclude: list[dict[str, str]] = []
 
           # List of unstable criterions.
-          unstable: list[dict[str, str]] = []
+          unstable: list[dict[str, str]] = [
+                # XXX error: the configured Python interpreter version (3.14) is
+                # newer than PyO3's maximum supported version (3.13)
+                {"python-version": "3.14-dev"},
+          ]
 
           # Build the job matrix.
           jobs: list[dict[str, str]] = []

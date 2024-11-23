@@ -5,8 +5,14 @@
 > \[!IMPORTANT\]
 > This version is not released yet and is under active development.
 
+- Add official support for Python 3.13.
 - Drop support for Python 3.9.
 - Add dependency on `extra-platforms`. Closes {issue}`784`.
+- Run tests on stable Python 3.13 release.
+- Run tests on Python 3.14-dev, mark them as unstable.
+- Move `macos-14` tests to `macos-15`.
+- Add tests on `ubuntu-24.04`. Remove tests on `ubuntu-20.04`.
+- Run workflows on `ubuntu-24.04`.
 
 ## [7.5.0 (2024-07-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.4.0...v7.5.0)
 
