@@ -135,7 +135,7 @@ jobs:
 
       - name: Unittests
         run: |
-          uv --no-progress run -- pytest
+          uv --no-progress run --frozen -- pytest
 
       - name: Codecov upload
         uses: codecov/codecov-action@v5.0.7
