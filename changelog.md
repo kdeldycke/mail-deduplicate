@@ -6,7 +6,7 @@
 > This version is not released yet and is under active development.
 
 - Add official support for Python 3.13.
-- Drop support for Python 3.9.
+- Drop support for Python 3.9. Refs {issue}`787`.
 - Add dependency on `extra-platforms`. Closes {issue}`784`.
 - Run tests on stable Python 3.13 release.
 - Run tests on Python 3.14-dev, mark them as unstable.
