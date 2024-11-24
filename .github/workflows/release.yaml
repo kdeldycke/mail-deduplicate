@@ -19,29 +19,4 @@ jobs:
         --verbosity DEBUG --version
 
         # Test help output.
-        # XXX Fails on windows:
-        #
-        #   Traceback (most recent call last):
-        #     File "C:\...\__main__.py", line 49, in <module>
-        #     File "C:\...\__main__.py", line 45, in main
-        #     File "C:\...\click\core.py", line 1157, in __call__
-        #     File "C:\...\click_extra\commands.py", line 347, in main
-        #     File "C:\...\click\core.py", line 1077, in main
-        #     File "C:\...\click_extra\commands.py", line 371, in make_context
-        #     File "C:\...\click\core.py", line 943, in make_context
-        #     File "C:\...\cloup\constraints\_support.py", line 183, in parse_args
-        #     File "C:\...\click\core.py", line 1408, in parse_args
-        #     File "C:\...\click\core.py", line 2400, in handle_parse_result
-        #     File "C:\...\click\core.py", line 2362, in process_value
-        #     File "C:\...\click_extra\colorize.py", line 344, in print_help
-        #     File "C:\...\click\utils.py", line 318, in echo
-        #     File "C:\...\click\_compat.py", line 542, in _safe_write
-        #     File "C:\...\colorama\ansitowin32.py", line 47, in write
-        #     File "C:\...\colorama\ansitowin32.py", line 177, in write
-        #     File "C:\...\colorama\ansitowin32.py", line 202, in write_and_convert
-        #     File "C:\...\colorama\ansitowin32.py", line 210, in write_plain_text
-        #     File "encodings\cp1252.py", line 19, in encode
-        #   UnicodeEncodeError: 'charmap' codec can't encode character '\u25cf' in position 64:
-        #   character maps to <undefined>
-        #
-        # --help
+        --help
