@@ -1,5 +1,10 @@
 # ChangeLog
 
+## [7.6.1 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.0...main)
+
+> [!IMPORTANT]
+> This version is not released yet and is under active development.
+
 ## [7.6.0 (2024-11-24)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.5.0...v7.6.0)
 
 - Add official support for Python 3.13.
