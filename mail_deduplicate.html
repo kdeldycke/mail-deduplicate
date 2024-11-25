@@ -1,0 +1,1347 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="mail_deduplicate package" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="mail_deduplicate.html" />
+<meta property="og:site_name" content="Mail Deduplicate" />
+<meta property="og:description" content="Expose package-wide elements. Submodules: mail_deduplicate.action module: mail_deduplicate.cli module: mail_deduplicate.deduplicate module: mail_deduplicate.mail module: mail_deduplicate.mail_box m..." />
+<meta name="description" content="Expose package-wide elements. Submodules: mail_deduplicate.action module: mail_deduplicate.cli module: mail_deduplicate.deduplicate module: mail_deduplicate.mail module: mail_deduplicate.mail_box m..." />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Development" href="development.html" />
+
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
+        <title>mail_deduplicate package - Mail Deduplicate</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d3572542" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Mail Deduplicate works fine, but its sole maintainer is distracted by life 😶‍🌫️.<br/>You can influence it with purchase of <strong><a class='reference external' href='https://github.com/sponsors/kdeldycke'>business support 🤝 and sponsorship 🫶</a></strong>. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">Mail Deduplicate</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/mail-deduplicate-logo-square.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design.html">Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli-parameters.html">CLI parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="todolist.html">Todo-list</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">ChangeLog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code-of-conduct.html">Code of conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate">GitHub Repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/sponsors/kdeldycke">Funding</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/kdeldycke/mail-deduplicate/blob/main/docs/mail_deduplicate.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/kdeldycke/mail-deduplicate/edit/main/docs/mail_deduplicate.rst" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-mail_deduplicate">
+<span id="mail-deduplicate-package"></span><h1>mail_deduplicate package<a class="headerlink" href="#module-mail_deduplicate" title="Link to this heading">¶</a></h1>
+<p>Expose package-wide elements.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.HASH_HEADERS">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.</span></span><span class="sig-name descname"><span class="pre">HASH_HEADERS</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.13)"><span class="pre">tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('Date',</span> <span class="pre">'From',</span> <span class="pre">'To',</span> <span class="pre">'Subject',</span> <span class="pre">'MIME-Version',</span> <span class="pre">'Content-Type',</span> <span class="pre">'Content-Disposition',</span> <span class="pre">'User-Agent',</span> <span class="pre">'X-Priority',</span> <span class="pre">'Message-ID')</span></em><a class="headerlink" href="#mail_deduplicate.HASH_HEADERS" title="Link to this definition">¶</a></dt>
+<dd><p>Default ordered list of headers to use to compute the unique hash of a mail.</p>
+<p>By default we choose to exclude:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">Cc</span></code></dt><dd><p>Since <code class="docutils literal notranslate"><span class="pre">mailman</span></code> apparently <a class="reference external" href="https://mail.python.org/pipermail/mailman-developers/2002-September/013233.html">sometimes trims list members</a>
+from the <code class="docutils literal notranslate"><span class="pre">Cc</span></code> header to avoid sending duplicates. Which means that copies of mail
+reflected back from the list server will have a different <code class="docutils literal notranslate"><span class="pre">Cc</span></code> to the copy saved by
+the MUA at send-time.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Bcc</span></code></dt><dd><p>Because copies of the mail saved by the MUA at send-time will have <code class="docutils literal notranslate"><span class="pre">Bcc</span></code>, but copies
+reflected back from the list server won’t.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Reply-To</span></code></dt><dd><p>Since a mail could be <code class="docutils literal notranslate"><span class="pre">Cc</span></code>’d to two lists with different <code class="docutils literal notranslate"><span class="pre">Reply-To</span></code> munging
+options set.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.MINIMAL_HEADERS_COUNT">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.</span></span><span class="sig-name descname"><span class="pre">MINIMAL_HEADERS_COUNT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#mail_deduplicate.MINIMAL_HEADERS_COUNT" title="Link to this definition">¶</a></dt>
+<dd><p>Below this value, we consider not having enough headers to compute a solid hash.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.DEFAULT_SIZE_THRESHOLD">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_SIZE_THRESHOLD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">512</span></em><a class="headerlink" href="#mail_deduplicate.DEFAULT_SIZE_THRESHOLD" title="Link to this definition">¶</a></dt>
+<dd><p>Default size threshold in bytes.</p>
+<p>Since we’re ignoring the <code class="docutils literal notranslate"><span class="pre">Content-Length</span></code> header by default <a class="reference external" href="https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists">because of mailing-list
+effects</a>, we
+introduced a limit on the allowed difference between the sizes of the message payloads.</p>
+<p>If this is exceeded, a warning is issued and the messages are not considered duplicates,
+because this could point to message corruption somewhere, or a false positive.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Headers are not counted towards this threshold, because many <a class="reference external" href="https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists">headers can be added
+by mailing list software</a> such as
+<code class="docutils literal notranslate"><span class="pre">mailman</span></code>, or even by the process of sending the mail through various MTAs.</p>
+<p>One copy could have been stored by the sender’s MUA prior to sending, without any
+<code class="docutils literal notranslate"><span class="pre">Received:</span></code> headers, and another copy could be reflected back via a <code class="docutils literal notranslate"><span class="pre">Cc</span></code>-to-self
+mechanism or mailing list server.</p>
+<p>This threshold has to be large enough to allow for footers added by mailing list
+servers.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.DEFAULT_CONTENT_THRESHOLD">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_CONTENT_THRESHOLD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">768</span></em><a class="headerlink" href="#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD" title="Link to this definition">¶</a></dt>
+<dd><p>Default content threshold in bytes.</p>
+<p>As above, we similarly generates unified diffs of duplicates and ensure that the diff is
+not greater than a certain size to limit false-positives.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.TIME_SOURCES">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.</span></span><span class="sig-name descname"><span class="pre">TIME_SOURCES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'ctime',</span> <span class="pre">'date-header'})</span></em><a class="headerlink" href="#mail_deduplicate.TIME_SOURCES" title="Link to this definition">¶</a></dt>
+<dd><p>Methods used to extract a mail’s canonical timestamp:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">date-header</span></code>: sourced from the message’s <code class="docutils literal notranslate"><span class="pre">Date</span></code> header.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ctime</span></code>: sourced from the email’s file from the filesystem. Only available for
+<code class="docutils literal notranslate"><span class="pre">maildir</span></code> sources.</p></li>
+</ul>
+<p>Also see:
+<a class="reference external" href="https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mail.DedupMail.timestamp">https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mail.DedupMail.timestamp</a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="mail_deduplicate.TooFewHeaders">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mail_deduplicate.</span></span><span class="sig-name descname"><span class="pre">TooFewHeaders</span></span><a class="reference internal" href="_modules/mail_deduplicate.html#TooFewHeaders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.TooFewHeaders" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Not enough headers were found to produce a solid hash.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="mail_deduplicate.SizeDiffAboveThreshold">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mail_deduplicate.</span></span><span class="sig-name descname"><span class="pre">SizeDiffAboveThreshold</span></span><a class="reference internal" href="_modules/mail_deduplicate.html#SizeDiffAboveThreshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.SizeDiffAboveThreshold" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Difference in mail size is greater than <a href="#id1"><span class="problematic" id="id2">`</span></a>threshold.</p>
+<p>&lt;<a class="reference external" href="https://kdeldycke.github.io/mail">https://kdeldycke.github.io/mail</a>-
+deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_SIZE_THRESHOLD&gt;`_.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="mail_deduplicate.ContentDiffAboveThreshold">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mail_deduplicate.</span></span><span class="sig-name descname"><span class="pre">ContentDiffAboveThreshold</span></span><a class="reference internal" href="_modules/mail_deduplicate.html#ContentDiffAboveThreshold"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.ContentDiffAboveThreshold" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>Difference in mail content is greater than <a href="#id3"><span class="problematic" id="id4">`</span></a>threshold.</p>
+<p>&lt;<a class="reference external" href="https://kdeldycke.github.io/mail">https://kdeldycke.github.io/mail</a>-
+deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD&gt;`_.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mail_deduplicate.Config">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mail_deduplicate.</span></span><span class="sig-name descname"><span class="pre">Config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate.html#Config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.Config" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Holds global configuration.</p>
+<p>Validates configuration parameter types and values.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="mail_deduplicate.Config.default_conf">
+<span class="sig-name descname"><span class="pre">default_conf</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'action':</span> <span class="pre">None,</span> <span class="pre">'content_threshold':</span> <span class="pre">768,</span> <span class="pre">'dry_run':</span> <span class="pre">False,</span> <span class="pre">'export':</span> <span class="pre">None,</span> <span class="pre">'export_append':</span> <span class="pre">False,</span> <span class="pre">'export_format':</span> <span class="pre">'mbox',</span> <span class="pre">'force_unlock':</span> <span class="pre">False,</span> <span class="pre">'hash_body':</span> <span class="pre">None,</span> <span class="pre">'hash_headers':</span> <span class="pre">('Date',</span> <span class="pre">'From',</span> <span class="pre">'To',</span> <span class="pre">'Subject',</span> <span class="pre">'MIME-Version',</span> <span class="pre">'Content-Type',</span> <span class="pre">'Content-Disposition',</span> <span class="pre">'User-Agent',</span> <span class="pre">'X-Priority',</span> <span class="pre">'Message-ID'),</span> <span class="pre">'hash_only':</span> <span class="pre">False,</span> <span class="pre">'input_format':</span> <span class="pre">False,</span> <span class="pre">'regexp':</span> <span class="pre">None,</span> <span class="pre">'show_diff':</span> <span class="pre">False,</span> <span class="pre">'size_threshold':</span> <span class="pre">512,</span> <span class="pre">'strategy':</span> <span class="pre">None,</span> <span class="pre">'time_source':</span> <span class="pre">None}</span></em><a class="headerlink" href="#mail_deduplicate.Config.default_conf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-mail_deduplicate.action">
+<span id="mail-deduplicate-action-module"></span><h2>mail_deduplicate.action module<a class="headerlink" href="#module-mail_deduplicate.action" title="Link to this heading">¶</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.action.DELETE_DISCARDED">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">DELETE_DISCARDED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'delete-discarded'</span></em><a class="headerlink" href="#mail_deduplicate.action.DELETE_DISCARDED" title="Link to this definition">¶</a></dt>
+<dd><p>Define all available action IDs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.action.copy_mails">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">copy_mails</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dedup</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mails</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/action.html#copy_mails"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.action.copy_mails" title="Link to this definition">¶</a></dt>
+<dd><p>Copy provided <code class="docutils literal notranslate"><span class="pre">mails</span></code> to a brand new box or an existing one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.action.move_mails">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">move_mails</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dedup</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mails</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/action.html#move_mails"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.action.move_mails" title="Link to this definition">¶</a></dt>
+<dd><p>Move provided <code class="docutils literal notranslate"><span class="pre">mails</span></code> to a brand new box or an existing one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.action.delete_mails">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">delete_mails</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dedup</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mails</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/action.html#delete_mails"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.action.delete_mails" title="Link to this definition">¶</a></dt>
+<dd><p>Remove provided <code class="docutils literal notranslate"><span class="pre">mails</span></code> in-place, from their original boxes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.action.copy_selected">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">copy_selected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dedup</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/action.html#copy_selected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.action.copy_selected" title="Link to this definition">¶</a></dt>
+<dd><p>Copy all selected mails to a brand new box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.action.copy_discarded">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">copy_discarded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dedup</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/action.html#copy_discarded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.action.copy_discarded" title="Link to this definition">¶</a></dt>
+<dd><p>Copy all discarded mails to a brand new box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.action.move_selected">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">move_selected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dedup</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/action.html#move_selected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.action.move_selected" title="Link to this definition">¶</a></dt>
+<dd><p>Move all selected mails to a brand new box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.action.move_discarded">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">move_discarded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dedup</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/action.html#move_discarded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.action.move_discarded" title="Link to this definition">¶</a></dt>
+<dd><p>Move all discarded mails to a brand new box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.action.delete_selected">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">delete_selected</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dedup</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/action.html#delete_selected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.action.delete_selected" title="Link to this definition">¶</a></dt>
+<dd><p>Remove in-place all selected mails, from their original boxes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.action.delete_discarded">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">delete_discarded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dedup</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/action.html#delete_discarded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.action.delete_discarded" title="Link to this definition">¶</a></dt>
+<dd><p>Remove in-place all discarded mails, from their original boxes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.action.ACTIONS">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">ACTIONS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'copy-discarded':</span> <span class="pre">&lt;function</span> <span class="pre">copy_discarded&gt;,</span> <span class="pre">'copy-selected':</span> <span class="pre">&lt;function</span> <span class="pre">copy_selected&gt;,</span> <span class="pre">'delete-discarded':</span> <span class="pre">&lt;function</span> <span class="pre">delete_discarded&gt;,</span> <span class="pre">'delete-selected':</span> <span class="pre">&lt;function</span> <span class="pre">delete_selected&gt;,</span> <span class="pre">'move-discarded':</span> <span class="pre">&lt;function</span> <span class="pre">move_discarded&gt;,</span> <span class="pre">'move-selected':</span> <span class="pre">&lt;function</span> <span class="pre">move_selected&gt;}</span></em><a class="headerlink" href="#mail_deduplicate.action.ACTIONS" title="Link to this definition">¶</a></dt>
+<dd><p>Map action ID’s to their implementation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.action.perform_action">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.action.</span></span><span class="sig-name descname"><span class="pre">perform_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dedup</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/action.html#perform_action"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.action.perform_action" title="Link to this definition">¶</a></dt>
+<dd><p>Performs the action on selected mail candidates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mail_deduplicate.cli">
+<span id="mail-deduplicate-cli-module"></span><h2>mail_deduplicate.cli module<a class="headerlink" href="#module-mail_deduplicate.cli" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.cli.validate_regexp">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.cli.</span></span><span class="sig-name descname"><span class="pre">validate_regexp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/cli.html#validate_regexp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.cli.validate_regexp" title="Link to this definition">¶</a></dt>
+<dd><p>Validate and compile regular expression provided as parameters to the CLI.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Pattern" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pattern</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mail_deduplicate.cli.MdedupCommand">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mail_deduplicate.cli.</span></span><span class="sig-name descname"><span class="pre">MdedupCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_option_at_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">populate_auto_envvars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/cli.html#MdedupCommand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.cli.MdedupCommand" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ExtraCommand</span></code></p>
+<p>List of extra parameters:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>version</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span>) – allows a version string to be set directly on the command. Will
+be passed to the first instance of <code class="docutils literal notranslate"><span class="pre">ExtraVersionOption</span></code> parameter
+attached to the command.</p></li>
+<li><p><strong>extra_option_at_end</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – <a class="reference external" href="https://kdeldycke.github.io/click-extra/commands.html#option-order">reorders all parameters attached to the command</a>, by
+moving all instances of <code class="docutils literal notranslate"><span class="pre">ExtraOption</span></code> at the end of the parameter list.
+The original order of the options is preserved among themselves.</p></li>
+<li><p><strong>populate_auto_envvars</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – forces all parameters to have their auto-generated
+environment variables registered. This address the shortcoming of <code class="docutils literal notranslate"><span class="pre">click</span></code>
+which only evaluates them dynamiccaly. By forcing their registration, the
+auto-generated environment variables gets displayed in the help screen,
+fixing <a class="reference external" href="https://github.com/pallets/click/issues/2483">click#2483 issue</a>.</p></li>
+</ul>
+</dd>
+</dl>
+<p>By default, these <a class="reference external" href="https://click.palletsprojects.com/en/stable/api/#click.Context">Click context settings</a> are applied:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto_envvar_prefix</span> <span class="pre">=</span> <span class="pre">self.name</span></code> (<em>Click feature</em>)</p>
+<p>Auto-generate environment variables for all options, using the command ID as
+prefix. The prefix is normalized to be uppercased and all non-alphanumerics
+replaced by underscores.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">help_option_names</span> <span class="pre">=</span> <span class="pre">(&quot;--help&quot;,</span> <span class="pre">&quot;-h&quot;)</span></code> (<em>Click feature</em>)</p>
+<p><a class="reference external" href="https://click.palletsprojects.com/en/stable/documentation/#help-parameter-customization">Allow help screen to be invoked with either –help or -h options</a>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_default</span> <span class="pre">=</span> <span class="pre">True</span></code> (<em>Click feature</em>)</p>
+<p><a class="reference external" href="https://click.palletsprojects.com/en/stable/api/#click.Context.show_default">Show all default values</a>
+in help screen.</p>
+</li>
+</ul>
+<p>Additionally, these <a class="reference external" href="https://cloup.readthedocs.io/en/stable/pages/formatting.html#formatting-settings">Cloup context settings</a>
+are set:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">align_option_groups</span> <span class="pre">=</span> <span class="pre">False</span></code> (<em>Cloup feature</em>)</p>
+<p><a class="reference external" href="https://cloup.readthedocs.io/en/stable/pages/option-groups.html#aligned-vs-non-aligned-groups">Aligns option groups in help screen</a>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_constraints</span> <span class="pre">=</span> <span class="pre">True</span></code> (<em>Cloup feature</em>)</p>
+<p><a class="reference external" href="https://cloup.readthedocs.io/en/stable/pages/constraints.html#the-constraint-decorator">Show all constraints in help screen</a>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_subcommand_aliases</span> <span class="pre">=</span> <span class="pre">True</span></code> (<em>Cloup feature</em>)</p>
+<p><a class="reference external" href="https://cloup.readthedocs.io/en/stable/pages/aliases.html?highlight=show_subcommand_aliases#help-output-of-the-group">Show all subcommand aliases in help screen</a>.</p>
+</li>
+</ul>
+<p>Click Extra also adds its own <code class="docutils literal notranslate"><span class="pre">context_settings</span></code>:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_choices</span> <span class="pre">=</span> <span class="pre">None</span></code> (<em>Click Extra feature</em>)</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code>, will force that value on all options, so we
+can globally show or hide choices when prompting a user for input. Only makes
+sense for options whose <code class="docutils literal notranslate"><span class="pre">prompt</span></code> property is set.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>, which will leave all options untouched, and let them
+decide of their own <code class="docutils literal notranslate"><span class="pre">show_choices</span></code> setting.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">show_envvar</span> <span class="pre">=</span> <span class="pre">None</span></code> (<em>Click Extra feature</em>)</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">True</span></code> or <code class="docutils literal notranslate"><span class="pre">False</span></code>, will force that value on all options, so we
+can globally enable or disable the display of environment variables in help
+screen.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>, which will leave all options untouched, and let them
+decide of their own <code class="docutils literal notranslate"><span class="pre">show_envvar</span></code> setting. The rationale being that
+discoverability of environment variables is enabled by the <code class="docutils literal notranslate"><span class="pre">--show-params</span></code>
+option, which is active by default on extra commands. So there is no need to
+surcharge the help screen.</p>
+<p>This addresses the
+<a class="reference external" href="https://github.com/pallets/click/issues/2313">click#2313 issue</a>.</p>
+</li>
+</ul>
+<p>To override these defaults, you can pass your own settings with the
+<code class="docutils literal notranslate"><span class="pre">context_settings</span></code> parameter:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@extra_command</span><span class="p">(</span>
+    <span class="n">context_settings</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;show_default&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">...</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.cli.MdedupCommand.format_help">
+<span class="sig-name descname"><span class="pre">format_help</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ctx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formatter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/cli.html#MdedupCommand.format_help"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.cli.MdedupCommand.format_help" title="Link to this definition">¶</a></dt>
+<dd><p>Extend the help screen with the description of all available strategies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-mail_deduplicate.deduplicate">
+<span id="mail-deduplicate-deduplicate-module"></span><h2>mail_deduplicate.deduplicate module<a class="headerlink" href="#module-mail_deduplicate.deduplicate" title="Link to this heading">¶</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.STATS_DEF">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.deduplicate.</span></span><span class="sig-name descname"><span class="pre">STATS_DEF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'mail_copied':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">mails</span> <span class="pre">copied</span> <span class="pre">from</span> <span class="pre">their</span> <span class="pre">original</span> <span class="pre">mailbox</span> <span class="pre">to</span> <span class="pre">another.',</span> <span class="pre">'mail_deleted':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">mails</span> <span class="pre">deleted</span> <span class="pre">from</span> <span class="pre">their</span> <span class="pre">mailbox</span> <span class="pre">in-place.',</span> <span class="pre">'mail_discarded':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">mails</span> <span class="pre">discarded</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">final</span> <span class="pre">selection.',</span> <span class="pre">'mail_duplicates':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">duplicate</span> <span class="pre">mails</span> <span class="pre">(sum</span> <span class="pre">of</span> <span class="pre">mails</span> <span class="pre">in</span> <span class="pre">all</span> <span class="pre">duplicate</span> <span class="pre">sets</span> <span class="pre">with</span> <span class="pre">at</span> <span class="pre">least</span> <span class="pre">2</span> <span class="pre">mails).',</span> <span class="pre">'mail_found':</span> <span class="pre">'Total</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">mails</span> <span class="pre">encountered</span> <span class="pre">from</span> <span class="pre">all</span> <span class="pre">mail</span> <span class="pre">sources.',</span> <span class="pre">'mail_hashes':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">unique</span> <span class="pre">hashes.',</span> <span class="pre">'mail_moved':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">mails</span> <span class="pre">moved</span> <span class="pre">from</span> <span class="pre">their</span> <span class="pre">original</span> <span class="pre">mailbox</span> <span class="pre">to</span> <span class="pre">another.',</span> <span class="pre">'mail_rejected':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">mails</span> <span class="pre">rejected</span> <span class="pre">individually</span> <span class="pre">because</span> <span class="pre">they</span> <span class="pre">were</span> <span class="pre">unparsable</span> <span class="pre">or</span> <span class="pre">did</span> <span class="pre">not</span> <span class="pre">have</span> <span class="pre">enough</span> <span class="pre">metadata</span> <span class="pre">to</span> <span class="pre">compute</span> <span class="pre">hashes.',</span> <span class="pre">'mail_retained':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">valid</span> <span class="pre">mails</span> <span class="pre">parsed</span> <span class="pre">and</span> <span class="pre">retained</span> <span class="pre">for</span> <span class="pre">deduplication.',</span> <span class="pre">'mail_selected':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">mails</span> <span class="pre">kept</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">final</span> <span class="pre">selection</span> <span class="pre">on</span> <span class="pre">which</span> <span class="pre">the</span> <span class="pre">action</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">performed.',</span> <span class="pre">'mail_skipped':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">mails</span> <span class="pre">ignored</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">selection</span> <span class="pre">step</span> <span class="pre">because</span> <span class="pre">the</span> <span class="pre">whole</span> <span class="pre">set</span> <span class="pre">they</span> <span class="pre">belong</span> <span class="pre">to</span> <span class="pre">was</span> <span class="pre">skipped.',</span> <span class="pre">'mail_unique':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">unique</span> <span class="pre">mails</span> <span class="pre">(which</span> <span class="pre">where</span> <span class="pre">automatically</span> <span class="pre">added</span> <span class="pre">to</span> <span class="pre">selection).',</span> <span class="pre">'set_deduplicated':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">valid</span> <span class="pre">sets</span> <span class="pre">on</span> <span class="pre">which</span> <span class="pre">the</span> <span class="pre">selection</span> <span class="pre">strategy</span> <span class="pre">was</span> <span class="pre">successfully</span> <span class="pre">applied.',</span> <span class="pre">'set_single':</span> <span class="pre">'Total</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">sets</span> <span class="pre">containing</span> <span class="pre">only</span> <span class="pre">a</span> <span class="pre">single</span> <span class="pre">mail</span> <span class="pre">with</span> <span class="pre">no</span> <span class="pre">applicable</span> <span class="pre">strategy.</span> <span class="pre">They</span> <span class="pre">were</span> <span class="pre">automatically</span> <span class="pre">kept</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">final</span> <span class="pre">selection.',</span> <span class="pre">'set_skipped_content':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">sets</span> <span class="pre">skipped</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">selection</span> <span class="pre">process</span> <span class="pre">because</span> <span class="pre">they</span> <span class="pre">were</span> <span class="pre">too</span> <span class="pre">dissimilar</span> <span class="pre">in</span> <span class="pre">content.',</span> <span class="pre">'set_skipped_encoding':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">sets</span> <span class="pre">skipped</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">selection</span> <span class="pre">process</span> <span class="pre">because</span> <span class="pre">they</span> <span class="pre">had</span> <span class="pre">encoding</span> <span class="pre">issues.',</span> <span class="pre">'set_skipped_size':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">sets</span> <span class="pre">skipped</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">selection</span> <span class="pre">process</span> <span class="pre">because</span> <span class="pre">they</span> <span class="pre">were</span> <span class="pre">too</span> <span class="pre">dissimilar</span> <span class="pre">in</span> <span class="pre">size.',</span> <span class="pre">'set_skipped_strategy':</span> <span class="pre">'Number</span> <span class="pre">of</span> <span class="pre">sets</span> <span class="pre">skipped</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">selection</span> <span class="pre">process</span> <span class="pre">because</span> <span class="pre">the</span> <span class="pre">strategy</span> <span class="pre">could</span> <span class="pre">not</span> <span class="pre">be</span> <span class="pre">applied.',</span> <span class="pre">'set_total':</span> <span class="pre">'Total</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">duplicate</span> <span class="pre">sets.'}</span></em><a class="headerlink" href="#mail_deduplicate.deduplicate.STATS_DEF" title="Link to this definition">¶</a></dt>
+<dd><p>All tracked statistics and their definition.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.BODY_HASHERS">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.deduplicate.</span></span><span class="sig-name descname"><span class="pre">BODY_HASHERS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'normalized':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'raw':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;,</span> <span class="pre">'skip':</span> <span class="pre">&lt;function</span> <span class="pre">&lt;lambda&gt;&gt;}</span></em><a class="headerlink" href="#mail_deduplicate.deduplicate.BODY_HASHERS" title="Link to this definition">¶</a></dt>
+<dd><p>Method used to hash the body of mails.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.DuplicateSet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mail_deduplicate.deduplicate.</span></span><span class="sig-name descname"><span class="pre">DuplicateSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hash_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mail_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#DuplicateSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.DuplicateSet" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A set of mails sharing the same hash.</p>
+<p>Implements all the safety checks required before we can apply any selection
+strategy.</p>
+<p>Load-up the duplicate set of mail and freeze pool.</p>
+<p>Once loaded-up, the pool of parsed mails is considered frozen for the rest of
+the duplicate set’s life. This allows aggressive caching of lazy instance
+attributes depending on the pool content.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.DuplicateSet.size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#mail_deduplicate.deduplicate.DuplicateSet.size" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the number of mails in the duplicate set.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.DuplicateSet.newest_timestamp">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">newest_timestamp</span></span><a class="headerlink" href="#mail_deduplicate.deduplicate.DuplicateSet.newest_timestamp" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the newest timestamp among all mails in the set.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.DuplicateSet.oldest_timestamp">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">oldest_timestamp</span></span><a class="headerlink" href="#mail_deduplicate.deduplicate.DuplicateSet.oldest_timestamp" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the oldest timestamp among all mails in the set.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.DuplicateSet.biggest_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">biggest_size</span></span><a class="headerlink" href="#mail_deduplicate.deduplicate.DuplicateSet.biggest_size" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the biggest size among all mails in the set.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.DuplicateSet.smallest_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">smallest_size</span></span><a class="headerlink" href="#mail_deduplicate.deduplicate.DuplicateSet.smallest_size" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the smallest size among all mails in the set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.DuplicateSet.check_differences">
+<span class="sig-name descname"><span class="pre">check_differences</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#DuplicateSet.check_differences"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.DuplicateSet.check_differences" title="Link to this definition">¶</a></dt>
+<dd><p>Ensures all mail differs in the limits imposed by size and content
+thresholds.</p>
+<p>Compare all mails of the duplicate set with each other, both in size and
+content. Raise an error if we’re not within the limits imposed by the threshold
+settings.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.DuplicateSet.diff">
+<span class="sig-name descname"><span class="pre">diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mail_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mail_b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#DuplicateSet.diff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.DuplicateSet.diff" title="Link to this definition">¶</a></dt>
+<dd><p>Return difference in bytes between two mails’ normalized body.</p>
+<div class="admonition-todo admonition" id="id5">
+<p class="admonition-title">Todo</p>
+<p>Rewrite the diff algorithm to not rely on naive unified diff result</p>
+</div>
+<p>parsing.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.DuplicateSet.pretty_diff">
+<span class="sig-name descname"><span class="pre">pretty_diff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mail_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mail_b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#DuplicateSet.pretty_diff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.DuplicateSet.pretty_diff" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a verbose unified diff between two mails’ normalized body.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.DuplicateSet.categorize_candidates">
+<span class="sig-name descname"><span class="pre">categorize_candidates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#DuplicateSet.categorize_candidates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.DuplicateSet.categorize_candidates" title="Link to this definition">¶</a></dt>
+<dd><p>Process the list of duplicates for action.</p>
+<p>Run preliminary checks, then apply the strategy to the pool of mails.</p>
+<p>The process results in two subsets of mails: the selected and the discarded.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.Deduplicate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mail_deduplicate.deduplicate.</span></span><span class="sig-name descname"><span class="pre">Deduplicate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#Deduplicate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.Deduplicate" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Load-up messages, search for duplicates, apply selection strategy and perform the
+action.</p>
+<p>Similar messages sharing the same hash are grouped together in a <code class="docutils literal notranslate"><span class="pre">DuplicateSet</span></code>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.Deduplicate.add_source">
+<span class="sig-name descname"><span class="pre">add_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#Deduplicate.add_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.Deduplicate.add_source" title="Link to this definition">¶</a></dt>
+<dd><p>Registers a source of mails, validates and opens it.</p>
+<p>Duplicate sources of mails are not allowed, as when we perform the action, we
+use the path as a unique key to tie back a mail from its source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.Deduplicate.hash_all">
+<span class="sig-name descname"><span class="pre">hash_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#Deduplicate.hash_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.Deduplicate.hash_all" title="Link to this definition">¶</a></dt>
+<dd><p>Browse all mails from all registered sources, compute hashes and group mails
+by hash.</p>
+<p>Displays a progress bar as the operation might be slow.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.Deduplicate.build_sets">
+<span class="sig-name descname"><span class="pre">build_sets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#Deduplicate.build_sets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.Deduplicate.build_sets" title="Link to this definition">¶</a></dt>
+<dd><p>Build the selected and discarded sets from each duplicate set.</p>
+<p>We apply the selection strategy one duplicate set at a time to keep memory
+footprint low and make the log easier to read.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.Deduplicate.close_all">
+<span class="sig-name descname"><span class="pre">close_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#Deduplicate.close_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.Deduplicate.close_all" title="Link to this definition">¶</a></dt>
+<dd><p>Close all open boxes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.Deduplicate.report">
+<span class="sig-name descname"><span class="pre">report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#Deduplicate.report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.Deduplicate.report" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a text report of user-friendly statistics and metrics.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.deduplicate.Deduplicate.check_stats">
+<span class="sig-name descname"><span class="pre">check_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/deduplicate.html#Deduplicate.check_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.deduplicate.Deduplicate.check_stats" title="Link to this definition">¶</a></dt>
+<dd><p>Perform some high-level consistency checks on metrics.</p>
+<p>Helps users reports tricky edge-cases.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-mail_deduplicate.mail">
+<span id="mail-deduplicate-mail-module"></span><h2>mail_deduplicate.mail module<a class="headerlink" href="#module-mail_deduplicate.mail" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mail_deduplicate.mail.</span></span><span class="sig-name descname"><span class="pre">DedupMail</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail.html#DedupMail"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail.DedupMail" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Message with deduplication-specific properties and utilities.</p>
+<p>Extends <a class="reference external" href="https://github.com/python/cpython/blob/45ffab40e86777ecd49786a2c18c0c044ef0cb5b/Lib/mailbox.py#L1489-L1523">standard library’s mailbox.Message</a>,
+and shouldn’t be used directly, but composed with <code class="docutils literal notranslate"><span class="pre">mailbox.Message</span></code> sub-classes.</p>
+<p>Initialize a pre-parsed <code class="docutils literal notranslate"><span class="pre">Message</span></code> instance the same way the default factory
+in Python’s <code class="docutils literal notranslate"><span class="pre">mailbox</span></code> module does.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.add_box_metadata">
+<span class="sig-name descname"><span class="pre">add_box_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mail_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail.html#DedupMail.add_box_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.add_box_metadata" title="Link to this definition">¶</a></dt>
+<dd><p>Post-instantiation utility to attach to mail some metadata derived from its
+parent box.</p>
+<p>Called right after the <code class="docutils literal notranslate"><span class="pre">__init__()</span></code> constructor.</p>
+<p>This allows the mail to carry its own information on its origin box and index.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.uid">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">uid</span></span><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.uid" title="Link to this definition">¶</a></dt>
+<dd><p>Unique ID of the mail.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.timestamp">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">timestamp</span></span><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.timestamp" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the normalized canonical timestamp of the mail.</p>
+<p>Sourced from the message’s <code class="docutils literal notranslate"><span class="pre">Date</span></code> header by default. In the case of
+<code class="docutils literal notranslate"><span class="pre">maildir</span></code>, can be sourced from the email’s file from the filesystem.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">ctime</span></code> does not refer to creation time on POSIX systems, but
+rather <a class="reference external" href="https://userprimary.net/posts/2007/11/18/ctime-in-unix-means-last-change-time-not-create-time/">the last time the inode data changed</a>.</p>
+</div>
+<div class="admonition-todo admonition" id="id6">
+<p class="admonition-title">Todo</p>
+<p>Investigate what <a class="reference external" href="https://docs.python.org/3.11/library/mailbox.html#mailbox.MaildirMessage.get_date">mailbox.MaildirMessage.get_date()</a>
+does and if we can use it.</p>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">size</span></span><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.size" title="Link to this definition">¶</a></dt>
+<dd><p>Returns canonical mail size.</p>
+<p>Size is computed as the length of the message body, i.e. the payload of the mail
+stripped of all its headers, not from the mail file persisting on the file-
+system.</p>
+<div class="admonition-todo admonition" id="id7">
+<p class="admonition-title">Todo</p>
+<p>Allow customization of the way the size is computed, by getting the file
+size instead for example:
+<code class="docutils literal notranslate"><span class="pre">`python</span>
+<span class="pre">size</span> <span class="pre">=</span> <span class="pre">os.path.getsize(mail_file)</span>
+<span class="pre">`</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.body_lines">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">body_lines</span></span><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.body_lines" title="Link to this definition">¶</a></dt>
+<dd><p>Return a normalized list of lines from message’s body.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.subject">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">subject</span></span><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.subject" title="Link to this definition">¶</a></dt>
+<dd><p>Normalized subject.</p>
+<p>Only used for debugging and human-friendly logging.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.hash_key">
+<span class="sig-name descname"><span class="pre">hash_key</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail.html#DedupMail.hash_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.hash_key" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the canonical hash of a mail.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>This method hasn’t been made explicitly into a cached property in order to
+reduce the overall memory footprint.</p>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.hash_raw_body">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hash_raw_body</span></span><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.hash_raw_body" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the canonical body hash of a mail.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.hash_normalized_body">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hash_normalized_body</span></span><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.hash_normalized_body" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the normalized body hash of a mail.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.canonical_headers">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">canonical_headers</span></span><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.canonical_headers" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the full list of all canonical headers names and values in
+preparation for hashing.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.pretty_canonical_headers">
+<span class="sig-name descname"><span class="pre">pretty_canonical_headers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail.html#DedupMail.pretty_canonical_headers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.pretty_canonical_headers" title="Link to this definition">¶</a></dt>
+<dd><p>Renders a table of headers names and values used to produce the mail’s hash.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>This method hasn’t been made explicitly into a cached property in order to
+reduce the overall memory footprint.</p>
+</div>
+<p>Returns a string ready to be printed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.serialized_headers">
+<span class="sig-name descname"><span class="pre">serialized_headers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail.html#DedupMail.serialized_headers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.serialized_headers" title="Link to this definition">¶</a></dt>
+<dd><p>Serialize the canonical headers into a single string ready to be hashed.</p>
+<p>At this point we should have at an absolute minimum of headers.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>This method hasn’t been made explicitly into a cached property in order to
+reduce the overall memory footprint.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="mail_deduplicate.mail.DedupMail.normalize_header_value">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">normalize_header_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">header_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail.html#DedupMail.normalize_header_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail.DedupMail.normalize_header_value" title="Link to this definition">¶</a></dt>
+<dd><p>Normalize and clean-up header value into its canonical form.</p>
+<p>Always returns a unicode string.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-mail_deduplicate.mail_box">
+<span id="mail-deduplicate-mail-box-module"></span><h2>mail_deduplicate.mail_box module<a class="headerlink" href="#module-mail_deduplicate.mail_box" title="Link to this heading">¶</a></h2>
+<p>Patch and Python’s standard library mail box constructors.</p>
+<p>Python’s <a href="#id8"><span class="problematic" id="id9">`mailbox module&lt;https://docs.python.org/3.11/library/mailbox.html&gt;`_</span></a> needs
+some tweaks and sane defaults.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.mail_box.build_box_constructors">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.mail_box.</span></span><span class="sig-name descname"><span class="pre">build_box_constructors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail_box.html#build_box_constructors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail_box.build_box_constructors" title="Link to this definition">¶</a></dt>
+<dd><p>Build our own mail constructors for each subclass of <code class="docutils literal notranslate"><span class="pre">mailbox.Mailbox</span></code>.</p>
+<p>Gather all constructors defined by the standard Python library and augments them
+with our <code class="docutils literal notranslate"><span class="pre">DedupMail</span></code> class.</p>
+<p>Only augment direct subclasses of the <code class="docutils literal notranslate"><span class="pre">mailbox.Mailbox</span></code> interface. Ignore
+<code class="docutils literal notranslate"><span class="pre">mailbox.Mailbox</span></code> itself but the latter and all others starting with an
+underscore.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.mail_box.BOX_TYPES">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.mail_box.</span></span><span class="sig-name descname"><span class="pre">BOX_TYPES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'babyl':</span> <span class="pre">functools.partial(&lt;class</span> <span class="pre">'mailbox.Babyl'&gt;,</span> <span class="pre">factory=&lt;class</span> <span class="pre">'mail_deduplicate.mail_box.BabylDedupMail'&gt;,</span> <span class="pre">create=False),</span> <span class="pre">'maildir':</span> <span class="pre">functools.partial(&lt;class</span> <span class="pre">'mailbox.Maildir'&gt;,</span> <span class="pre">factory=&lt;class</span> <span class="pre">'mail_deduplicate.mail_box.MaildirDedupMail'&gt;,</span> <span class="pre">create=False),</span> <span class="pre">'mbox':</span> <span class="pre">functools.partial(&lt;class</span> <span class="pre">'mailbox.mbox'&gt;,</span> <span class="pre">factory=&lt;class</span> <span class="pre">'mail_deduplicate.mail_box.mboxDedupMail'&gt;,</span> <span class="pre">create=False),</span> <span class="pre">'mh':</span> <span class="pre">functools.partial(&lt;class</span> <span class="pre">'mailbox.MH'&gt;,</span> <span class="pre">factory=&lt;class</span> <span class="pre">'mail_deduplicate.mail_box.MHDedupMail'&gt;,</span> <span class="pre">create=False),</span> <span class="pre">'mmdf':</span> <span class="pre">functools.partial(&lt;class</span> <span class="pre">'mailbox.MMDF'&gt;,</span> <span class="pre">factory=&lt;class</span> <span class="pre">'mail_deduplicate.mail_box.MMDFDedupMail'&gt;,</span> <span class="pre">create=False)}</span></em><a class="headerlink" href="#mail_deduplicate.mail_box.BOX_TYPES" title="Link to this definition">¶</a></dt>
+<dd><p>Mapping between supported box type IDs and their constructors.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.mail_box.BOX_STRUCTURES">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.mail_box.</span></span><span class="sig-name descname"><span class="pre">BOX_STRUCTURES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'file':</span> <span class="pre">{'babyl',</span> <span class="pre">'mbox',</span> <span class="pre">'mmdf'},</span> <span class="pre">'folder':</span> <span class="pre">{'maildir',</span> <span class="pre">'mh'}}</span></em><a class="headerlink" href="#mail_deduplicate.mail_box.BOX_STRUCTURES" title="Link to this definition">¶</a></dt>
+<dd><p>Categorize each box type into its structure type.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.mail_box.MAILDIR_SUBDIRS">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.mail_box.</span></span><span class="sig-name descname"><span class="pre">MAILDIR_SUBDIRS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({'cur',</span> <span class="pre">'new',</span> <span class="pre">'tmp'})</span></em><a class="headerlink" href="#mail_deduplicate.mail_box.MAILDIR_SUBDIRS" title="Link to this definition">¶</a></dt>
+<dd><p>List of required sub-folders defining a properly structured maildir.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.mail_box.autodetect_box_type">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.mail_box.</span></span><span class="sig-name descname"><span class="pre">autodetect_box_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail_box.html#autodetect_box_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail_box.autodetect_box_type" title="Link to this definition">¶</a></dt>
+<dd><p>Auto-detect the format of the mailbox located at the provided path.</p>
+<p>Returns a box type as indexed in the <a class="reference external" href="https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.BOX_TYPES">BOX_TYPES</a>
+dictionary above.</p>
+<p>If the path is a file, then it is considered as an <code class="docutils literal notranslate"><span class="pre">mbox</span></code>. Else, if the
+provided path is a folder and feature the <a class="reference external" href="https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.MAILDIR_SUBDIRS">expecteed sub-directories</a>,
+it is parsed as a <code class="docutils literal notranslate"><span class="pre">maildir</span></code>.
+:rtype: <span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Future finer autodetection heuristics should be implemented here.</p>
+<dl class="simple">
+<dt>Some ideas:</dt><dd><ul class="simple">
+<li><p>single mail from a <code class="docutils literal notranslate"><span class="pre">maildir</span></code></p></li>
+<li><p>plain text mail content</p></li>
+<li><dl class="simple">
+<dt>other mailbox formats supported in Python’s standard library:</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">MH</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Babyl</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MMDF</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.mail_box.open_box">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.mail_box.</span></span><span class="sig-name descname"><span class="pre">open_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_unlock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail_box.html#open_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail_box.open_box" title="Link to this definition">¶</a></dt>
+<dd><p>Open a mail box.</p>
+<p>Returns a list of boxes, one per sub-folder. All are locked, ready for operations.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">box_type</span></code> is provided, forces the opening of the box in the specified format.
+Else, defaults to autodetection.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.mail_box.lock_box">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.mail_box.</span></span><span class="sig-name descname"><span class="pre">lock_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_unlock</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail_box.html#lock_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail_box.lock_box" title="Link to this definition">¶</a></dt>
+<dd><p>Lock an opened box and allows for forced unlocking.</p>
+<p>Returns the locked box.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.mail_box.open_subfolders">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.mail_box.</span></span><span class="sig-name descname"><span class="pre">open_subfolders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_unlock</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail_box.html#open_subfolders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail_box.open_subfolders" title="Link to this definition">¶</a></dt>
+<dd><p>Browse recursively the subfolder tree of a box.</p>
+<p>Returns a list of opened and locked boxes, each for one subfolder.</p>
+<p>Skips box types not supporting subfolders.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/mailbox.html#mailbox.Mailbox" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mailbox</span></code></a>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.mail_box.create_box">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.mail_box.</span></span><span class="sig-name descname"><span class="pre">create_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_append</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/mail_box.html#create_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.mail_box.create_box" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a brand new box from scratch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/mailbox.html#mailbox.Mailbox" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mailbox</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-mail_deduplicate.strategy">
+<span id="mail-deduplicate-strategy-module"></span><h2>mail_deduplicate.strategy module<a class="headerlink" href="#module-mail_deduplicate.strategy" title="Link to this heading">¶</a></h2>
+<p>Strategy definitions.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_older">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_older</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_older"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_older" title="Link to this definition">¶</a></dt>
+<dd><p>Select all older duplicates.</p>
+<p>Discards the newests, i.e. the subset sharing the most recent timestamp.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_oldest">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_oldest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_oldest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_oldest" title="Link to this definition">¶</a></dt>
+<dd><p>Select all the oldest duplicates.</p>
+<p>Discards the newers, i.e. all mail of the duplicate set but those sharing the oldest
+timestamp.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_newer">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_newer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_newer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_newer" title="Link to this definition">¶</a></dt>
+<dd><p>Select all newer duplicates.</p>
+<p>Discards the oldest, i.e. the subset sharing the most ancient timestamp.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_newest">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_newest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_newest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_newest" title="Link to this definition">¶</a></dt>
+<dd><p>Select all the newest duplicates.</p>
+<p>Discards the olders, i.e. all mail of the duplicate set but those sharing the newest
+timestamp.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_smaller">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_smaller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_smaller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_smaller" title="Link to this definition">¶</a></dt>
+<dd><p>Select all smaller duplicates.</p>
+<p>Discards the biggests, i.e. the subset sharing the biggest size.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_smallest">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_smallest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_smallest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_smallest" title="Link to this definition">¶</a></dt>
+<dd><p>Select all the smallest duplicates.</p>
+<p>Discards the biggers. i.e. all mail of the duplicate set but those sharing the
+smallest size.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_bigger">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_bigger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_bigger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_bigger" title="Link to this definition">¶</a></dt>
+<dd><p>Select all bigger duplicates.</p>
+<p>Discards the smallests, i.e. the subset sharing the smallest size.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_biggest">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_biggest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_biggest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_biggest" title="Link to this definition">¶</a></dt>
+<dd><p>Select all the biggest duplicates.</p>
+<p>Discards the smallers, i.e. all mail of the duplicate set but those sharing the
+biggest size.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_matching_path">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_matching_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_matching_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_matching_path" title="Link to this definition">¶</a></dt>
+<dd><p>Select all duplicates whose file path match the regular expression provided via
+the –regexp parameter.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_non_matching_path">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_non_matching_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_non_matching_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_non_matching_path" title="Link to this definition">¶</a></dt>
+<dd><p>Select all duplicates whose file path doesn’t match the regular expression
+provided via the –regexp parameter.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_one">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_one" title="Link to this definition">¶</a></dt>
+<dd><p>Randomly select one duplicate, and discards all others.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.select_all_but_one">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">select_all_but_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#select_all_but_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.select_all_but_one" title="Link to this definition">¶</a></dt>
+<dd><p>Randomly discard one duplicate, and select all others.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.SELECT_NEWEST">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">SELECT_NEWEST</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'select-newest'</span></em><a class="headerlink" href="#mail_deduplicate.strategy.SELECT_NEWEST" title="Link to this definition">¶</a></dt>
+<dd><p>Time-based strategies.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.SELECT_BIGGEST">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">SELECT_BIGGEST</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'select-biggest'</span></em><a class="headerlink" href="#mail_deduplicate.strategy.SELECT_BIGGEST" title="Link to this definition">¶</a></dt>
+<dd><p>Size-based strategies.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.SELECT_NON_MATCHING_PATH">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">SELECT_NON_MATCHING_PATH</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'select-non-matching-path'</span></em><a class="headerlink" href="#mail_deduplicate.strategy.SELECT_NON_MATCHING_PATH" title="Link to this definition">¶</a></dt>
+<dd><p>Location-based strategies.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.SELECT_ALL_BUT_ONE">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">SELECT_ALL_BUT_ONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'select-all-but-one'</span></em><a class="headerlink" href="#mail_deduplicate.strategy.SELECT_ALL_BUT_ONE" title="Link to this definition">¶</a></dt>
+<dd><p>Quantity-based strategies.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.STRATEGY_ALIASES">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">STRATEGY_ALIASES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">frozenset({('select-all-but-one',</span> <span class="pre">'discard-one'),</span> <span class="pre">('select-bigger',</span> <span class="pre">'discard-smallest'),</span> <span class="pre">('select-biggest',</span> <span class="pre">'discard-smaller'),</span> <span class="pre">('select-matching-path',</span> <span class="pre">'discard-non-matching-path'),</span> <span class="pre">('select-newer',</span> <span class="pre">'discard-oldest'),</span> <span class="pre">('select-newest',</span> <span class="pre">'discard-older'),</span> <span class="pre">('select-non-matching-path',</span> <span class="pre">'discard-matching-path'),</span> <span class="pre">('select-older',</span> <span class="pre">'discard-newest'),</span> <span class="pre">('select-oldest',</span> <span class="pre">'discard-newer'),</span> <span class="pre">('select-one',</span> <span class="pre">'discard-all-but-one'),</span> <span class="pre">('select-smaller',</span> <span class="pre">'discard-biggest'),</span> <span class="pre">('select-smallest',</span> <span class="pre">'discard-bigger')})</span></em><a class="headerlink" href="#mail_deduplicate.strategy.STRATEGY_ALIASES" title="Link to this definition">¶</a></dt>
+<dd><p>Groups strategy aliases and their definitions.</p>
+<p>Aliases are great usability features as it helps users to better reason about the
+selection operators depending on their mental models.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.get_method_id">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">get_method_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strategy_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#get_method_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.get_method_id" title="Link to this definition">¶</a></dt>
+<dd><p>Transform strategy ID to its method ID.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.build_method_mapping">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">build_method_mapping</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#build_method_mapping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.build_method_mapping" title="Link to this definition">¶</a></dt>
+<dd><p>Precompute the mapping of all strategy IDs to their preferred method name,
+including aliases as fallbacks.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mail_deduplicate.strategy.apply_strategy">
+<span class="sig-prename descclassname"><span class="pre">mail_deduplicate.strategy.</span></span><span class="sig-name descname"><span class="pre">apply_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strategy_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duplicates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mail_deduplicate/strategy.html#apply_strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mail_deduplicate.strategy.apply_strategy" title="Link to this definition">¶</a></dt>
+<dd><p>Perform the selection strategy on the provided duplicate set.</p>
+<p>Returns a set of selected mails objects.</p>
+</dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          <a class="prev-page" href="development.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Development</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; Kevin Deldycke and contributors
+            </div>
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2024-11-25</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">mail_deduplicate package</a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.HASH_HEADERS"><code class="docutils literal notranslate"><span class="pre">HASH_HEADERS</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.MINIMAL_HEADERS_COUNT"><code class="docutils literal notranslate"><span class="pre">MINIMAL_HEADERS_COUNT</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.DEFAULT_SIZE_THRESHOLD"><code class="docutils literal notranslate"><span class="pre">DEFAULT_SIZE_THRESHOLD</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD"><code class="docutils literal notranslate"><span class="pre">DEFAULT_CONTENT_THRESHOLD</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.TIME_SOURCES"><code class="docutils literal notranslate"><span class="pre">TIME_SOURCES</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.TooFewHeaders"><code class="docutils literal notranslate"><span class="pre">TooFewHeaders</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.SizeDiffAboveThreshold"><code class="docutils literal notranslate"><span class="pre">SizeDiffAboveThreshold</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.ContentDiffAboveThreshold"><code class="docutils literal notranslate"><span class="pre">ContentDiffAboveThreshold</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.Config"><code class="docutils literal notranslate"><span class="pre">Config</span></code></a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.Config.default_conf"><code class="docutils literal notranslate"><span class="pre">Config.default_conf</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-mail_deduplicate.action">mail_deduplicate.action module</a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.action.DELETE_DISCARDED"><code class="docutils literal notranslate"><span class="pre">DELETE_DISCARDED</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.copy_mails"><code class="docutils literal notranslate"><span class="pre">copy_mails()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.move_mails"><code class="docutils literal notranslate"><span class="pre">move_mails()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.delete_mails"><code class="docutils literal notranslate"><span class="pre">delete_mails()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.copy_selected"><code class="docutils literal notranslate"><span class="pre">copy_selected()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.copy_discarded"><code class="docutils literal notranslate"><span class="pre">copy_discarded()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.move_selected"><code class="docutils literal notranslate"><span class="pre">move_selected()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.move_discarded"><code class="docutils literal notranslate"><span class="pre">move_discarded()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.delete_selected"><code class="docutils literal notranslate"><span class="pre">delete_selected()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.delete_discarded"><code class="docutils literal notranslate"><span class="pre">delete_discarded()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.ACTIONS"><code class="docutils literal notranslate"><span class="pre">ACTIONS</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.action.perform_action"><code class="docutils literal notranslate"><span class="pre">perform_action()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-mail_deduplicate.cli">mail_deduplicate.cli module</a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.cli.validate_regexp"><code class="docutils literal notranslate"><span class="pre">validate_regexp()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.cli.MdedupCommand"><code class="docutils literal notranslate"><span class="pre">MdedupCommand</span></code></a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.cli.MdedupCommand.format_help"><code class="docutils literal notranslate"><span class="pre">MdedupCommand.format_help()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-mail_deduplicate.deduplicate">mail_deduplicate.deduplicate module</a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.STATS_DEF"><code class="docutils literal notranslate"><span class="pre">STATS_DEF</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.BODY_HASHERS"><code class="docutils literal notranslate"><span class="pre">BODY_HASHERS</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.DuplicateSet"><code class="docutils literal notranslate"><span class="pre">DuplicateSet</span></code></a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.DuplicateSet.size"><code class="docutils literal notranslate"><span class="pre">DuplicateSet.size</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.DuplicateSet.newest_timestamp"><code class="docutils literal notranslate"><span class="pre">DuplicateSet.newest_timestamp</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.DuplicateSet.oldest_timestamp"><code class="docutils literal notranslate"><span class="pre">DuplicateSet.oldest_timestamp</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.DuplicateSet.biggest_size"><code class="docutils literal notranslate"><span class="pre">DuplicateSet.biggest_size</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.DuplicateSet.smallest_size"><code class="docutils literal notranslate"><span class="pre">DuplicateSet.smallest_size</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.DuplicateSet.check_differences"><code class="docutils literal notranslate"><span class="pre">DuplicateSet.check_differences()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.DuplicateSet.diff"><code class="docutils literal notranslate"><span class="pre">DuplicateSet.diff()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.DuplicateSet.pretty_diff"><code class="docutils literal notranslate"><span class="pre">DuplicateSet.pretty_diff()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.DuplicateSet.categorize_candidates"><code class="docutils literal notranslate"><span class="pre">DuplicateSet.categorize_candidates()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.Deduplicate"><code class="docutils literal notranslate"><span class="pre">Deduplicate</span></code></a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.Deduplicate.add_source"><code class="docutils literal notranslate"><span class="pre">Deduplicate.add_source()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.Deduplicate.hash_all"><code class="docutils literal notranslate"><span class="pre">Deduplicate.hash_all()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.Deduplicate.build_sets"><code class="docutils literal notranslate"><span class="pre">Deduplicate.build_sets()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.Deduplicate.close_all"><code class="docutils literal notranslate"><span class="pre">Deduplicate.close_all()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.Deduplicate.report"><code class="docutils literal notranslate"><span class="pre">Deduplicate.report()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.deduplicate.Deduplicate.check_stats"><code class="docutils literal notranslate"><span class="pre">Deduplicate.check_stats()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-mail_deduplicate.mail">mail_deduplicate.mail module</a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail"><code class="docutils literal notranslate"><span class="pre">DedupMail</span></code></a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.add_box_metadata"><code class="docutils literal notranslate"><span class="pre">DedupMail.add_box_metadata()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.uid"><code class="docutils literal notranslate"><span class="pre">DedupMail.uid</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.timestamp"><code class="docutils literal notranslate"><span class="pre">DedupMail.timestamp</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.size"><code class="docutils literal notranslate"><span class="pre">DedupMail.size</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.body_lines"><code class="docutils literal notranslate"><span class="pre">DedupMail.body_lines</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.subject"><code class="docutils literal notranslate"><span class="pre">DedupMail.subject</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.hash_key"><code class="docutils literal notranslate"><span class="pre">DedupMail.hash_key()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.hash_raw_body"><code class="docutils literal notranslate"><span class="pre">DedupMail.hash_raw_body</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.hash_normalized_body"><code class="docutils literal notranslate"><span class="pre">DedupMail.hash_normalized_body</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.canonical_headers"><code class="docutils literal notranslate"><span class="pre">DedupMail.canonical_headers</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.pretty_canonical_headers"><code class="docutils literal notranslate"><span class="pre">DedupMail.pretty_canonical_headers()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.serialized_headers"><code class="docutils literal notranslate"><span class="pre">DedupMail.serialized_headers()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail.DedupMail.normalize_header_value"><code class="docutils literal notranslate"><span class="pre">DedupMail.normalize_header_value()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-mail_deduplicate.mail_box">mail_deduplicate.mail_box module</a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.mail_box.build_box_constructors"><code class="docutils literal notranslate"><span class="pre">build_box_constructors()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail_box.BOX_TYPES"><code class="docutils literal notranslate"><span class="pre">BOX_TYPES</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail_box.BOX_STRUCTURES"><code class="docutils literal notranslate"><span class="pre">BOX_STRUCTURES</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail_box.MAILDIR_SUBDIRS"><code class="docutils literal notranslate"><span class="pre">MAILDIR_SUBDIRS</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail_box.autodetect_box_type"><code class="docutils literal notranslate"><span class="pre">autodetect_box_type()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail_box.open_box"><code class="docutils literal notranslate"><span class="pre">open_box()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail_box.lock_box"><code class="docutils literal notranslate"><span class="pre">lock_box()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail_box.open_subfolders"><code class="docutils literal notranslate"><span class="pre">open_subfolders()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.mail_box.create_box"><code class="docutils literal notranslate"><span class="pre">create_box()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-mail_deduplicate.strategy">mail_deduplicate.strategy module</a><ul>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_older"><code class="docutils literal notranslate"><span class="pre">select_older()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_oldest"><code class="docutils literal notranslate"><span class="pre">select_oldest()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_newer"><code class="docutils literal notranslate"><span class="pre">select_newer()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_newest"><code class="docutils literal notranslate"><span class="pre">select_newest()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_smaller"><code class="docutils literal notranslate"><span class="pre">select_smaller()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_smallest"><code class="docutils literal notranslate"><span class="pre">select_smallest()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_bigger"><code class="docutils literal notranslate"><span class="pre">select_bigger()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_biggest"><code class="docutils literal notranslate"><span class="pre">select_biggest()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_matching_path"><code class="docutils literal notranslate"><span class="pre">select_matching_path()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_non_matching_path"><code class="docutils literal notranslate"><span class="pre">select_non_matching_path()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_one"><code class="docutils literal notranslate"><span class="pre">select_one()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.select_all_but_one"><code class="docutils literal notranslate"><span class="pre">select_all_but_one()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.SELECT_NEWEST"><code class="docutils literal notranslate"><span class="pre">SELECT_NEWEST</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.SELECT_BIGGEST"><code class="docutils literal notranslate"><span class="pre">SELECT_BIGGEST</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.SELECT_NON_MATCHING_PATH"><code class="docutils literal notranslate"><span class="pre">SELECT_NON_MATCHING_PATH</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.SELECT_ALL_BUT_ONE"><code class="docutils literal notranslate"><span class="pre">SELECT_ALL_BUT_ONE</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.STRATEGY_ALIASES"><code class="docutils literal notranslate"><span class="pre">STRATEGY_ALIASES</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.get_method_id"><code class="docutils literal notranslate"><span class="pre">get_method_id()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.build_method_mapping"><code class="docutils literal notranslate"><span class="pre">build_method_mapping()</span></code></a></li>
+<li><a class="reference internal" href="#mail_deduplicate.strategy.apply_strategy"><code class="docutils literal notranslate"><span class="pre">apply_strategy()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=b41381e1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    </body>
+</html>
