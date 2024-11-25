@@ -61,11 +61,7 @@ jobs:
           exclude: list[dict[str, str]] = []
 
           # List of unstable criterions.
-          unstable: list[dict[str, str]] = [
-                # XXX error: the configured Python interpreter version (3.14) is
-                # newer than PyO3's maximum supported version (3.13)
-                {"python-version": "3.14-dev"},
-          ]
+          unstable: list[dict[str, str]] = []
 
           # Build the job matrix.
           jobs: list[dict[str, str]] = []
