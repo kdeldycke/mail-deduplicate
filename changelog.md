@@ -1,9 +1,6 @@
 # ChangeLog
 
-## [7.6.1 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.0...main)
-
-> [!IMPORTANT]
-> This version is not released yet and is under active development.
+## [7.6.1 (2024-11-29)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.0...v7.6.1)
 
 - Fix conflicting `-h`/`--hash-header` and `-h`/`--help` options. Closes {issue}`762`.
 
