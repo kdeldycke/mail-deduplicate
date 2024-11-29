@@ -5,7 +5,7 @@
 > [!IMPORTANT]
 > This version is not released yet and is under active development.
 
-- Fix conflicting `-h`/`--hash-header` and  `-h`/`--help` options. Closes {issue}`762`.
+- Fix conflicting `-h`/`--hash-header` and `-h`/`--help` options. Closes {issue}`762`.
 
 ## [7.6.0 (2024-11-24)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.5.0...v7.6.0)
 
