@@ -1,5 +1,10 @@
 # ChangeLog
 
+## [7.6.3 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.2...main)
+
+> [!IMPORTANT]
+> This version is not released yet and is under active development.
+
 ## [7.6.2 (2024-12-01)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.1...v7.6.2)
 
 ## [7.6.1 (2024-11-29)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.0...v7.6.1)
