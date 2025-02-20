@@ -53,7 +53,7 @@ dependencies = [
 test = [
     "click-extra [pytest] ~= 4.11.7",
     "coverage [toml] ~= 7.6.7",
-    "extra-platforms [pytest] ~= 1.6.0",
+    "extra-platforms [pytest] ~= 2.1.0",
     "pytest ~= 8.3.3",
     # More pytest plugins at: https://docs.pytest.org/en/latest/reference/plugin_list.html
     "pytest-cov ~= 6.0.0",
