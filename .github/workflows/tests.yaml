@@ -134,6 +134,6 @@ jobs:
           uv --no-progress run --frozen -- pytest
 
       - name: Codecov upload
-        uses: codecov/codecov-action@v5.0.7
+        uses: codecov/codecov-action@v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
