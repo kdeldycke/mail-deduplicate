@@ -28,7 +28,8 @@ from functools import cached_property
 import arrow
 from tabulate import tabulate
 
-from mail_deduplicate import CTIME, MINIMAL_HEADERS_COUNT, TooFewHeaders
+from mail_deduplicate import CTIME, MINIMAL_HEADERS_COUNT, \
+     TooFewHeaders, QUOTE_DISCARD_HEADERS
 
 
 class DedupMail:
@@ -312,7 +313,7 @@ class DedupMail:
                 # show_progress("Trimmed Subject to %s" % subject)
             return subject
 
-        if header_id == "content-type":
+        elif header_id == "content-type":
             # Apparently list servers actually munge Content-Type
             # e.g. by stripping the quotes from charset="us-ascii".
             # Section 5.1 of RFC2045 says that either form is valid
@@ -327,7 +328,7 @@ class DedupMail:
             # still useful to be able to eliminate duplicates.
             return re.sub(";.*", "", value)
 
-        if header_id == "date":
+        elif header_id == "date":
             # Date timestamps can differ by seconds or hours for various
             # reasons, so let's only honour the date for now and normalize them
             # to UTC timezone.
@@ -340,7 +341,10 @@ class DedupMail:
             except (TypeError, ValueError):
                 return value
 
-        elif header_id in ["to", "message-id"]:
+        elif header_id in QUOTE_DISCARD_HEADERS:
+            value = value.replace('"', '')
+
+        if header_id in ["to", "message-id"]:
             # Sometimes email.parser strips the <> brackets from a To:
             # header which has a single address.  I have seen this happen
             # for only one mail in a duplicate pair.  I'm not sure why
