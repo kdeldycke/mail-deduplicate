@@ -142,7 +142,7 @@ class DedupMail:
         """Return a normalized list of lines from message's body."""
         body = []
         if self.preamble is not None:
-            body.extend(self.preamble.splitlines(keepends=True))
+            body.extend(self.preamble.splitlines())
 
         for part in self.walk():
             if part.is_multipart():
@@ -173,10 +173,10 @@ class DedupMail:
                 else:
                     part_body = part.get_payload(decode=False)
 
-            body.extend(part_body.splitlines(keepends=True))
+            body.extend(part_body.splitlines())
 
         if self.epilogue is not None:
-            body.extend(self.epilogue.splitlines(keepends=True))
+            body.extend(self.epilogue.splitlines())
         return body
 
     @cached_property
