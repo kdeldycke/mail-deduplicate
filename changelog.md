@@ -1,9 +1,6 @@
 # ChangeLog
 
-## [7.6.2 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.1...main)
-
-> [!IMPORTANT]
-> This version is not released yet and is under active development.
+## [7.6.2 (2025-04-20)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.1...v7.6.2)
 
 - Ignore line endings when comparing content. Closes {issue}`844`.
 - Render failed statistics assertions in plain English.
