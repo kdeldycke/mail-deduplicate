@@ -502,7 +502,7 @@ class Deduplicate:
     def assert_stats(self, first, operator, second):
         """Render failed stats assertions in plain English.
 
-        ..hint::
+        ..hint ::
             If inconsistent metrics are detected, the CLI will exit with a code
             numbered ``115``.
 
