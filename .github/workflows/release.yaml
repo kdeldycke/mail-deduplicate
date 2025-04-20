@@ -10,13 +10,6 @@ name: Build & release
 jobs:
 
   release:
-    uses: kdeldycke/workflows/.github/workflows/release.yaml@v4.8.4
+    uses: kdeldycke/workflows/.github/workflows/release.yaml@v4.15.5
     secrets:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-    with:
-      binaries-test-plan: |
-        # Test combination of version and verbosity.
-        --verbosity DEBUG --version
-
-        # Test help output.
-        --help

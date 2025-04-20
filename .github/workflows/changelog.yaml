@@ -6,11 +6,13 @@ name: Changelog & versions
       - main
     paths:
       - changelog.md
-      - pyproject.toml
-      - .github/workflows/changelog.yaml
-      - .github/workflows/release.yaml
+      - "**/pyproject.toml"
+      - "*requirements.txt"
+      - "requirements/*.txt"
+      # Trigger on any workflow change to make sure version gets hard-coded everywhere.
+      - .github/workflows/*.yaml
 
 jobs:
 
   changelog:
-    uses: kdeldycke/workflows/.github/workflows/changelog.yaml@v4.8.4
+    uses: kdeldycke/workflows/.github/workflows/changelog.yaml@v4.15.5
