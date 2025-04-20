@@ -4,30 +4,39 @@
 
 `````{tab-set}
 
+````{tab-item} uvx
+Easiest way is to [install `uv`](https://docs.astral.sh/uv/getting-started/installation/), then use it to run `mdedup` ad-hoc with the [`uvx` command](https://docs.astral.sh/uv/guides/tools/#running-tools):
+
+```{code-block} shell-session
+$ uvx --from mail-deduplicate mdedup
+```
+
+To install `mdedup` system-wide, use the [`uv tool`](https://docs.astral.sh/uv/guides/tools/#installing-tools) command:
+
+```{code-block} shell-session
+$ uv tool install mail-deduplicate
+```
+
+Then you can run `mdedup` directly:
+
+```{code-block} shell-session
+$ mdedup --version
+```
+````
+
 ````{tab-item} pipx
-Easiest way is to [install `pipx`](https://pipx.pypa.io/stable/installation/), then use it to install `mdedup`:
+[`pipx`](https://pipx.pypa.io/stable/installation/) is a great way to install Python applications globally:
 
 ```{code-block} shell-session
 $ pipx install mail-deduplicate
 ```
-
-```{note}
-`pipx` is to `pip` what `npx` is to `npm`: a clean way to install and run Python applications in isolated environments.
-```
 ````
 
 ````{tab-item} pip
-You can install the latest stable release and its dependencies with a simple `pip`
-call:
+You can install the latest stable release and its dependencies with a simple `pip` call:
 
 ```{code-block} shell-session
 $ python -m pip install mail-deduplicate
-```
-
-On some system, due to the Python 2.x to 3.x migration, you'll have to call `python3` directly:
-
-```{code-block} shell-session
-$ python3 -m pip install mail-deduplicate
 ```
 
 Other variations includes:
@@ -51,11 +60,11 @@ Binaries are compiled at each release, so you can skip the installation process 
 
 This is the preferred way of testing `mdedup` without polluting your machine. They also offer the possibility of running the CLI on older systems not supporting the minimal Python version required by `mdedup`.
 
-| Platform    | `x86_64`                                                                                                                           | `arm64`                                                                                                                            |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Linux**   | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-x64.bin)     |                                                                                                                                    |
-| **macOS**   | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)     | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-arm64.bin) |
-| **Windows** | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-x64.exe) |                                                                                                                                    |
+| Platform     | `x86_64`                                                                                                                          | `arm64`                                                                                                                           |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Linux**    | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-linux-x64.bin)     | [Download `mdedup-linux-arm64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-linux-arm64.bin) |
+| **macOS**    | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-macos-x64.bin)     | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-macos-arm64.bin) |
+| **Windows**  | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-windows-x64.exe) |                                                                                                                                   |
 
 All links above points to the latest released version of `mdedup`.
 
@@ -71,8 +80,9 @@ Look at the [list of latest binary builds](https://github.com/kdeldycke/mail-ded
 
 ````{note} ABI targets
 ```{code-block} shell-session
-$ file ./mdedup*
-./mdedup-linux-x64.bin:   ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=ffc3a60c86bcfcd817c7c76ae3c527acd7c810e0, for GNU/Linux 3.2.0, stripped
+$ file ./mpm*
+./mdedup-linux-arm64.bin: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=e35a1082c9c124edaa1c4b1bbb7e1aaf53baf870, for GNU/Linux 3.7.0, stripped
+./mdedup-linux-x64.bin:   ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=2874af3c68a8588ccdf9e59d5c1b78e2b5bdc5bb, for GNU/Linux 3.2.0, stripped
 ./mdedup-macos-arm64.bin: Mach-O 64-bit executable arm64
 ./mdedup-macos-x64.bin:   Mach-O 64-bit executable x86_64
 ./mdedup-windows-x64.exe: PE32+ executable (console) x86-64, for MS Windows
@@ -93,14 +103,6 @@ If not, you can directly execute the module from Python:
 
 ```shell-session
 $ python -m mail_deduplicate --version
-mdedup, version 7.0.0
-(...)
-```
-
-Or on some systems:
-
-```shell-session
-$ python3 -m mail_deduplicate --version
 mdedup, version 7.0.0
 (...)
 ```

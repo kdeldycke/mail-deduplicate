@@ -53,22 +53,23 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 
 ### Python
 
-Easiest way is to install `mdedup` from sources with [`pipx`](https://pipx.pypa.io):
+[`uv`](https://docs.astral.sh/uv/getting-started/installation/) is the fastest way to run `mdedup` from sources on any platform, thanks to its [`uvx` command](https://docs.astral.sh/uv/guides/tools/#running-tools):
 
 ```shell-session
-$ pipx install mail-deduplicate
+$ uvx --from mail-deduplicate mdedup
 ```
-
-Other
-[alternatives installation methods](https://kdeldycke.github.io/mail-deduplicate/install.html)
-are available in the documentation.
 
 ### Executables
 
 Standalone binaries of `mdedup`'s latest version are available for several platforms and architectures:
 
-| Platform    | `x86_64`                                                                                                                           | `arm64`                                                                                                                            |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Linux**   | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-x64.bin)     |                                                                                                                                    |
-| **macOS**   | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)     | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-arm64.bin) |
-| **Windows** | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-x64.exe) |                                                                                                                                    |
+| Platform     | `x86_64`                                                                                                                          | `arm64`                                                                                                                           |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Linux**    | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-linux-x64.bin)     | [Download `mdedup-linux-arm64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-linux-arm64.bin) |
+| **macOS**    | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-macos-x64.bin)     | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-macos-arm64.bin) |
+| **Windows**  | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-windows-x64.exe) |                                                                                                                                   |
+
+Other
+[alternatives installation methods](https://kdeldycke.github.io/mail-deduplicate/install.html)
+are available in the documentation.
+
