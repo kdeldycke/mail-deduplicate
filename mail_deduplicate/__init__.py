@@ -80,7 +80,7 @@ ADDRESS_HEADERS = frozenset([
     "x-envelope-from",
     "x-envelope-to",
     "disposition-notification-to",
-    "original-recipient"
+    "original-recipient",
 ])
 """Headers that contain email addresses.
 

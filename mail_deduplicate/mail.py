@@ -28,8 +28,12 @@ from functools import cached_property
 import arrow
 from tabulate import tabulate
 
-from mail_deduplicate import CTIME, MINIMAL_HEADERS_COUNT, \
-     TooFewHeaders, QUOTE_DISCARD_HEADERS
+from mail_deduplicate import (
+    CTIME,
+    MINIMAL_HEADERS_COUNT,
+    TooFewHeaders,
+    QUOTE_DISCARD_HEADERS,
+)
 
 
 class DedupMail:
