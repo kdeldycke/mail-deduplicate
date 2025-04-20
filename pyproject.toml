@@ -117,17 +117,13 @@ module = ["boltons.*"]
 addopts = [
     "--durations=10",
     "--cov=mail_deduplicate",
+    "--cov-branch",
+    "--cov-precision=2",
     "--cov-report=term",
     "--cov-report=xml",
 ]
 # Make sure tests that are expected to fail do not resurect and start working all of a sudden.
 xfail_strict = true
-
-# https://coverage.readthedocs.io/en/latest/config.html
-[tool.coverage.run]
-branch = true
-[tool.coverage.report]
-precision = 2
 
 [tool.bumpversion]
 current_version = "7.6.2"
