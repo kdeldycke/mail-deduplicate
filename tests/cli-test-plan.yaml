@@ -1,0 +1,15 @@
+# This test plan checks some high-level behavior of the mdedup CLI.
+
+# Check mdedup is reporting the correct version of itself.
+- cli_parameters: --version
+  exit_code: 0
+  stdout_contains: "\x1b[97mmdedup\x1b[0m, version \x1b[32m"
+  stdout_regex_fullmatch: "\x1b\\[97mmdedup\x1b\\[0m, version \x1b\\[32mNone\x1b\\[0m\\n"
+
+# Check mdedup is reporting its usage in help screen.
+- cli_parameters: --help
+  exit_code: 0
+  strip_ansi: true
+  stdout_contains:
+    - "Usage: mdedup [OPTIONS] COMMAND [ARGS]..."
+    - "-h, --help"

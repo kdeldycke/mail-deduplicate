@@ -63,11 +63,3 @@ jobs:
         uses: codecov/codecov-action@v5.4.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      # CLI tests.
-      - name: mdedup --help
-        run: |
-          uv --no-progress run --frozen -- mdedup --help
-      - name: mdedup --verbosity DEBUG --version
-        run: |
-          uv --no-progress run --frozen -- mdedup --verbosity DEBUG --version
