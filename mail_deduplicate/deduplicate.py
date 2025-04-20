@@ -506,7 +506,7 @@ class Deduplicate:
             numbered ``115``.
 
             This has been arbitrarily chosen in `PR #842
-            <https://github.com/kdeldycke/mail-deduplicate/pull/842#issuecomment-2815533315>`,
+            <https://github.com/kdeldycke/mail-deduplicate/pull/842#issuecomment-2815533315>`_,
             to make it unlikely to conflict with other exit codes. Users can rely on
             ``115`` meaning that the statistics checks failed.
         """
