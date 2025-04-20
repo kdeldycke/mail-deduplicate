@@ -517,17 +517,21 @@ class Deduplicate:
             or (operator == "<=" and self.stats[first] <= self.stats[second])
         ):
             return
-        if (operator == "in"):
+        if operator == "in":
             values = [self.stats.get(stat, 0) for stat in second]
             if self.stats[first] in values:
                 return
-            logging.warning("Metrics appear inconsistent.\n" \
+            logging.warning(
+                "Metrics appear inconsistent.\n"
                 + f"EXPECTED: {first} to be one of {second}\n"
-                + f"          {self.stats[first]} to be one of {values}\n")
+                + f"          {self.stats[first]} to be one of {values}\n"
+            )
             sys.exit(115)
-        logging.warning("Metrics appear inconsistent.\n" \
+        logging.warning(
+            "Metrics appear inconsistent.\n"
             + f"EXPECTED: {first} {operator} {second}\n"
-            + f"          {self.stats[first]} {operator} {self.stats[second]}\n")
+            + f"          {self.stats[first]} {operator} {self.stats[second]}\n"
+        )
         sys.exit(115)
 
     def check_stats(self):
@@ -539,15 +543,17 @@ class Deduplicate:
         self.assert_stats("mail_found", ">=", "mail_rejected")
         self.assert_stats("mail_found", ">=", "mail_retained")
 
-        self.stats["mail_rejected + mail_retained"] \
-            = self.stats["mail_rejected"] + self.stats["mail_retained"]
+        self.stats["mail_rejected + mail_retained"] = (
+            self.stats["mail_rejected"] + self.stats["mail_retained"]
+        )
         self.assert_stats("mail_found", "==", "mail_rejected + mail_retained")
 
         # Mail grouping by hash.
         self.assert_stats("mail_retained", ">=", "mail_unique")
         self.assert_stats("mail_retained", ">=", "mail_duplicates")
-        self.stats["mail_unique + mail_duplicates"] \
-            = self.stats["mail_unique"] + self.stats["mail_duplicates"]
+        self.stats["mail_unique + mail_duplicates"] = (
+            self.stats["mail_unique"] + self.stats["mail_duplicates"]
+        )
         self.assert_stats("mail_retained", "==", "mail_unique + mail_duplicates")
 
         # Mail selection stats.
@@ -555,9 +561,14 @@ class Deduplicate:
         self.assert_stats("mail_retained", ">=", "mail_discarded")
         self.assert_stats("mail_retained", ">=", "mail_selected")
 
-        self.stats["mail_skipped + mail_discarded + mail_selected"] \
-            = self.stats["mail_skipped"] + self.stats["mail_discarded"] + self.stats["mail_selected"]
-        self.assert_stats("mail_retained", "==", "mail_skipped + mail_discarded + mail_selected")
+        self.stats["mail_skipped + mail_discarded + mail_selected"] = (
+            self.stats["mail_skipped"]
+            + self.stats["mail_discarded"]
+            + self.stats["mail_selected"]
+        )
+        self.assert_stats(
+            "mail_retained", "==", "mail_skipped + mail_discarded + mail_selected"
+        )
 
         # Action stats.
         self.assert_stats("mail_selected", ">=", "mail_copied")
@@ -566,17 +577,25 @@ class Deduplicate:
             # mails for move-discarded action, because discarded mails are moved.
             self.assert_stats("mail_selected", ">=", "mail_moved")
         self.assert_stats("mail_selected", ">=", "mail_deleted")
-        self.assert_stats("mail_selected", "in", ["mail_copied", "mail_moved", "mail_deleted"])
+        self.assert_stats(
+            "mail_selected", "in", ["mail_copied", "mail_moved", "mail_deleted"]
+        )
         # Sets accounting.
         self.assert_stats("set_total", "==", "mail_hashes")
         self.assert_stats("set_single", "==", "mail_unique")
-        self.stats["set_single + set_skipped_encoding + set_skipped_size " \
-                 + "+ set_skipped_content + set_skipped_strategy + set_deduplicated"] \
-            = self.stats["set_single"] \
-            + self.stats["set_skipped_encoding"] \
-            + self.stats["set_skipped_size"] \
-            + self.stats["set_skipped_content"] \
-            + self.stats["set_skipped_strategy"] \
+        self.stats[
+            "set_single + set_skipped_encoding + set_skipped_size "
+            + "+ set_skipped_content + set_skipped_strategy + set_deduplicated"
+        ] = (
+            self.stats["set_single"]
+            + self.stats["set_skipped_encoding"]
+            + self.stats["set_skipped_size"]
+            + self.stats["set_skipped_content"]
+            + self.stats["set_skipped_strategy"]
             + self.stats["set_deduplicated"]
-        self.assert_stats("set_total", "==",
-            "set_single + set_skipped_encoding + set_skipped_size + set_skipped_content + set_skipped_strategy + set_deduplicated")
+        )
+        self.assert_stats(
+            "set_total",
+            "==",
+            "set_single + set_skipped_encoding + set_skipped_size + set_skipped_content + set_skipped_strategy + set_deduplicated",
+        )
