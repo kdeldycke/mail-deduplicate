@@ -48,11 +48,11 @@ wheels = [
 
 [[package]]
 name = "boltons"
-version = "24.1.0"
+version = "25.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/84/76/dfc34232b3e88634025563f52a430be0838182647c063f99569086922554/boltons-24.1.0.tar.gz", hash = "sha256:4a49b7d57ee055b83a458c8682a2a6f199d263a8aa517098bda9bab813554b87", size = 240916 }
+sdist = { url = "https://files.pythonhosted.org/packages/63/54/71a94d8e02da9a865587fb3fff100cb0fc7aa9f4d5ed9ed3a591216ddcc7/boltons-25.0.0.tar.gz", hash = "sha256:e110fbdc30b7b9868cb604e3f71d4722dd8f4dcb4a5ddd06028ba8f1ab0b5ace", size = 246294 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/96/e44606e60a0c005ac5f2a641960a93ca8f449ebdce7479f9bc4f10bead6d/boltons-24.1.0-py3-none-any.whl", hash = "sha256:a1776d47fdc387fb730fba1fe245f405ee184ee0be2fb447dd289773a84aed3b", size = 192196 },
+    { url = "https://files.pythonhosted.org/packages/45/7f/0e961cf3908bc4c1c3e027de2794f867c6c89fb4916fc7dba295a0e80a2d/boltons-25.0.0-py3-none-any.whl", hash = "sha256:dc9fb38bf28985715497d1b54d00b62ea866eca3938938ea9043e254a3a6ca62", size = 194210 },
 ]
 
 [[package]]
@@ -148,7 +148,7 @@ wheels = [
 
 [[package]]
 name = "click-extra"
-version = "4.11.7"
+version = "4.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boltons" },
@@ -163,9 +163,9 @@ dependencies = [
     { name = "wcmatch" },
     { name = "xmltodict" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/71/24/288936d3cedcb3a951a83fa735c990f166a6d58b26a0e292c66ed8710c23/click_extra-4.11.7.tar.gz", hash = "sha256:d70f2dc5287b414eb26cb3cdd165163941755728973fc8f00a7003e4dd18884b", size = 88113 }
+sdist = { url = "https://files.pythonhosted.org/packages/a8/21/f9dbd25024266effdfee7dc608b0b76ea757184a07de5e96b347c1ed2439/click_extra-4.15.0.tar.gz", hash = "sha256:20184fdb1791853cf5b68ab9f43c01cffd05f0d37c0295676bb4e0f20aee25fc", size = 92544 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2b/b6/dd197e455345af1d0b47ac9c054f09760ae3c66753c5dec7b9afe880d986/click_extra-4.11.7-py3-none-any.whl", hash = "sha256:82ae8999bb48d317d40a2e03def6ba437a73aba7a07b5eed76321ecaf7210d13", size = 71306 },
+    { url = "https://files.pythonhosted.org/packages/de/e0/e7961f807fd210a55b5267d8c6d0e2fd5400542ae7ea142adbe37938786a/click_extra-4.15.0-py3-none-any.whl", hash = "sha256:04ba277175cba8d89982560a58a564271b35a45ac01a0fe52b8d4c0d29110965", size = 75487 },
 ]
 
 [package.optional-dependencies]
@@ -295,15 +295,15 @@ wheels = [
 
 [[package]]
 name = "extra-platforms"
-version = "1.6.0"
+version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boltons" },
     { name = "distro" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e0/a7/7fb81009b351e4f3194806cad083515bc11d9df0c86d731c7913840598fa/extra_platforms-1.6.0.tar.gz", hash = "sha256:dbef8d68019362690bd87fcb98ea287e7d381d7b1758a500d66abea320485234", size = 40464 }
+sdist = { url = "https://files.pythonhosted.org/packages/51/7e/a95d33f53ce732457ae2235ce8d0e6b784526466f79ef72d0ebaf9fb9730/extra_platforms-2.1.0.tar.gz", hash = "sha256:6dda2f806a255c98702291220716becf08a00d3754c1422460f4ff9f724744a9", size = 47724 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/1c/205a8e36650ac5984b55493453dbb80283c55b2fe5c9f66f87d104a5951b/extra_platforms-1.6.0-py3-none-any.whl", hash = "sha256:fdd27b0babec649dda212f9a16ddd9edd12f8288996de729422c6fe60fd1c588", size = 27510 },
+    { url = "https://files.pythonhosted.org/packages/7d/e9/4c9256c496cbfe172a62418611a02e9ab57e0fbfab0c1339ce6daf2fe351/extra_platforms-2.1.0-py3-none-any.whl", hash = "sha256:7dcef4e8a0ef6e45b1cfe06b8bc3fac05edd4b3df66417414e040a3e3055cdc1", size = 32884 },
 ]
 
 [package.optional-dependencies]
@@ -407,12 +407,12 @@ typing = [
 [package.metadata]
 requires-dist = [
     { name = "arrow", specifier = "~=1.3.0" },
-    { name = "boltons", specifier = "~=24.1.0" },
-    { name = "click-extra", specifier = "~=4.11.7" },
-    { name = "click-extra", extras = ["pytest"], marker = "extra == 'test'", specifier = "~=4.11.7" },
-    { name = "click-extra", extras = ["sphinx"], marker = "extra == 'docs'", specifier = "~=4.11.7" },
+    { name = "boltons", specifier = "~=25.0.0" },
+    { name = "click-extra", specifier = "~=4.15.0" },
+    { name = "click-extra", extras = ["pytest"], marker = "extra == 'test'", specifier = "~=4.15.0" },
+    { name = "click-extra", extras = ["sphinx"], marker = "extra == 'docs'", specifier = "~=4.15.0" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'test'", specifier = "~=7.6.7" },
-    { name = "extra-platforms", extras = ["pytest"], marker = "extra == 'test'", specifier = "~=1.6.0" },
+    { name = "extra-platforms", extras = ["pytest"], marker = "extra == 'test'", specifier = "~=2.1.0" },
     { name = "furo", marker = "extra == 'docs'", specifier = "~=2024.8.6" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = "~=4.0.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = "~=8.3.3" },
