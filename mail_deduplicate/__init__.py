@@ -94,8 +94,8 @@ ADDRESS_HEADERS = frozenset([
 QUOTE_DISCARD_HEADERS = ADDRESS_HEADERS
 """Headers from which quotes should be discarded.
 
-E.g. "Bob" <bob@example.com> should hash to the same thing as
-       Bob <bob@example.com>
+E.g. ``"Bob" <bob@example.com>`` should hash to the same thing as
+``Bob <bob@example.com>``.
 """
 
 

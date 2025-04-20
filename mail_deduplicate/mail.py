@@ -342,7 +342,13 @@ class DedupMail:
                 return value
 
         elif header_id in QUOTE_DISCARD_HEADERS:
-            value = value.replace('"', '')
+            # Remove quotes in any headers that contain addresses to ensure a quoted
+            # name is hashed to the same value as an unquoted one.
+            # XXX This may not be the cleanest way to normalize email addresses. E.g.
+            # `"Robert \"Bob\"` becomes `Robert \Bob\`, but this shouldn't matter for
+            # hashing purposes as we're just trying to get a good heuristic.
+            # Refs: #847 and #846.
+            value = value.replace('"', "")
 
         if header_id in ("to", "message-id"):
             # Sometimes email.parser strips the <> brackets from a To:
