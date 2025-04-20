@@ -5,6 +5,9 @@
 > [!IMPORTANT]
 > This version is not released yet and is under active development.
 
+- Ignore line endings when comparing content. Closes {issue}`844`.
+- Render failed statistics assertions in plain English.
+- Exit with error code `115` when statistics are inconsistent.
 - Only run unittests against the oldest and newest major supported version of Python. Remove tests on `3.11` and `3.12`.
 - To speed up the tests, we only test the latest available OS for each platform. Remove tests on `ubuntu-22.04`, `macos-13` and `windows-2019`.
 - Upgrade tests from `windows-2022` to `windows-2025`.
