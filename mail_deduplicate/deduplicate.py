@@ -499,9 +499,22 @@ class Deduplicate:
         return output
 
     def assert_stats(self, first, operator, second):
-        if (operator == ">=" and self.stats[first] >= self.stats[second]) \
-        or (operator == "==" and self.stats[first] == self.stats[second]) \
-        or (operator == "<=" and self.stats[first] <= self.stats[second]):
+        """Render failed stats assertions in plain English.
+
+        ..hint::
+            If inconsistent metrics are detected, the CLI will exit with a code
+            numbered ``115``.
+
+            This has been arbitrarily chosen in `PR #842
+            <https://github.com/kdeldycke/mail-deduplicate/pull/842#issuecomment-2815533315>`,
+            to make it unlikely to conflict with other exit codes. Users can rely on
+            ``115`` meaning that the statistics checks failed.
+        """
+        if (
+            (operator == ">=" and self.stats[first] >= self.stats[second])
+            or (operator == "==" and self.stats[first] == self.stats[second])
+            or (operator == "<=" and self.stats[first] <= self.stats[second])
+        ):
             return
         if (operator == "in"):
             values = [self.stats.get(stat, 0) for stat in second]
