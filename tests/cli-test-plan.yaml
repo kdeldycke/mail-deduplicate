@@ -11,5 +11,7 @@
   exit_code: 0
   strip_ansi: true
   stdout_contains:
-    - "Usage: mdedup [OPTIONS] COMMAND [ARGS]..."
+    - "Usage: mdedup [OPTIONS] MAIL_SOURCE_1 MAIL_SOURCE_2"
+    - "-i, --input-format [babyl|maildir|mbox|mh|mmdf]"
     - "-h, --help"
+    - "[select-all-but-one|discard-one]"
