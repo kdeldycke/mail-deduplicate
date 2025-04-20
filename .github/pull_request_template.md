@@ -20,8 +20,7 @@ Explain the motivation for making this change. What existing problem does the pu
 
 #### New Features Submissions:
 
-1. [ ] Does your submission pass tests?
-1. [ ] Have you lint your code locally prior to submission?
+- [ ] Does your submission pass tests?
 
 #### Changes to Core Features:
 
