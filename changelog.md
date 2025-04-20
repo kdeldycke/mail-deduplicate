@@ -5,6 +5,10 @@
 > [!IMPORTANT]
 > This version is not released yet and is under active development.
 
+- Only run unittests against the oldest and newest major supported version of Python. Remove tests on `3.11` and `3.12`.
+- To speed up the tests, we only test the latest available OS for each platform. Remove tests on `ubuntu-22.04`, `macos-13` and `windows-2019`.
+- Upgrade tests from `windows-2022` to `windows-2025`.
+
 ## [7.6.1 (2024-11-29)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.0...v7.6.1)
 
 - Fix conflicting `-h`/`--hash-header` and `-h`/`--help` options. Closes {issue}`762`.
