@@ -13,5 +13,8 @@
   stdout_contains:
     - "Usage: mdedup [OPTIONS] MAIL_SOURCE_1 MAIL_SOURCE_2"
     - "-i, --input-format [babyl|maildir|mbox|mh|mmdf]"
-    - "-h, --help"
+    # -h short option is reserved for --hash-header, not --help
+    - "  -h, --hash-header Header-ID"
+    - "  --help"
+    # Strategies are documented
     - "[select-all-but-one|discard-one]"
