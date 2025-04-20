@@ -28,9 +28,9 @@ HASH_HEADERS: tuple[str, ...] = (
     "Date",
     "From",
     "To",
-    # 'Cc',
-    # 'Bcc',
-    # 'Reply-To',
+    # "CC",
+    # "BCC",
+    # "Reply-To",
     "Subject",
     "MIME-Version",
     "Content-Type",
@@ -43,19 +43,19 @@ HASH_HEADERS: tuple[str, ...] = (
 
 By default we choose to exclude:
 
-``Cc``
+``CC``
   Since ``mailman`` apparently `sometimes trims list members
   <https://mail.python.org/pipermail/mailman-developers/2002-September/013233.html>`_
-  from the ``Cc`` header to avoid sending duplicates. Which means that copies of mail
-  reflected back from the list server will have a different ``Cc`` to the copy saved by
+  from the ``CC`` header to avoid sending duplicates. Which means that copies of mail
+  reflected back from the list server will have a different ``CC`` to the copy saved by
   the MUA at send-time.
 
-``Bcc``
-  Because copies of the mail saved by the MUA at send-time will have ``Bcc``, but copies
+``BCC``
+  Because copies of the mail saved by the MUA at send-time will have ``BCC``, but copies
   reflected back from the list server won't.
 
 ``Reply-To``
-  Since a mail could be ``Cc``'d to two lists with different ``Reply-To`` munging
+  Since a mail could be ``CC``'d to two lists with different ``Reply-To`` munging
   options set.
 """
 
@@ -82,7 +82,13 @@ ADDRESS_HEADERS = frozenset([
     "disposition-notification-to",
     "original-recipient"
 ])
-"""Headers that contain email addresses."""
+"""Headers that contain email addresses.
+
+..danger::
+    These IDs should be kept lower-case, because they are compared to the one provided
+    to those provided to the ``-h``/``--hash-header`` option, that is carried by the
+    ``hash_headers`` property of the configuration.
+"""
 
 
 QUOTE_DISCARD_HEADERS = ADDRESS_HEADERS
@@ -114,7 +120,7 @@ because this could point to message corruption somewhere, or a false positive.
     ``mailman``, or even by the process of sending the mail through various MTAs.
 
     One copy could have been stored by the sender's MUA prior to sending, without any
-    ``Received:`` headers, and another copy could be reflected back via a ``Cc``-to-self
+    ``Received`` headers, and another copy could be reflected back via a ``CC``-to-self
     mechanism or mailing list server.
 
     This threshold has to be large enough to allow for footers added by mailing list

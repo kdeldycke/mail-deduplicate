@@ -344,7 +344,7 @@ class DedupMail:
         elif header_id in QUOTE_DISCARD_HEADERS:
             value = value.replace('"', '')
 
-        if header_id in ["to", "message-id"]:
+        if header_id in ("to", "message-id"):
             # Sometimes email.parser strips the <> brackets from a To:
             # header which has a single address.  I have seen this happen
             # for only one mail in a duplicate pair.  I'm not sure why
