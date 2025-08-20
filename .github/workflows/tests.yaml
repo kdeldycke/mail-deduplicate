@@ -60,7 +60,7 @@ jobs:
         run: |
           uv --no-progress run --frozen -- pytest
       - name: Codecov - coverage
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Codecov - test results
