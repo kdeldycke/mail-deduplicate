@@ -31,6 +31,6 @@ changelog
 history
 code-of-conduct
 license
-GitHub Repository <https://github.com/kdeldycke/mail-deduplicate>
+GitHub repository <https://github.com/kdeldycke/mail-deduplicate>
 Funding <https://github.com/sponsors/kdeldycke>
 ```
