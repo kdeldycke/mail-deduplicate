@@ -57,7 +57,7 @@ test = [
     "pytest ~= 8.3.3",
     # More pytest plugins at: https://docs.pytest.org/en/latest/reference/plugin_list.html
     "pytest-cov ~= 6.2.1",
-    "pytest-github-actions-annotate-failures ~= 0.2.0",
+    "pytest-github-actions-annotate-failures ~= 0.3.0",
     "pytest-randomly ~= 3.16.0",
 ]
 typing = ["types-tabulate ~= 0.9.0.2"]
