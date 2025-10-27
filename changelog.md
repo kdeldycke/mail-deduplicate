@@ -11,6 +11,7 @@
 - Move all typing-related imports behind a hard-coded `TYPE_CHECKING` guard to avoid runtime imports.
 - Run tests on stable Python 3.14 release.
 - Run tests on Python 3.15-dev, mark them as unstable.
+- Use `astral-sh/setup-uv` action to install `uv` instead of manually installing it with `pip`.
 - Move `ubuntu-24.04` to `ubuntu-24.04-arm`, `macos-15` tests to `macos-26` and `windows-2025` tests to `windows-11-arm`.
 
 ## [7.6.2 (2025-04-20)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.1...v7.6.2)
