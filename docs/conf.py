@@ -1,13 +1,7 @@
 from __future__ import annotations
 
-import sys
+import tomllib
 from pathlib import Path
-
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib  # type: ignore[import-not-found]
-
 
 project_path = Path(__file__).parent.parent.resolve()
 
@@ -76,7 +70,6 @@ autodoc_member_order = "bysource"
 autodoc_default_flags = ["members", "undoc-members", "show-inheritance"]
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-# https://www.sphinx-doc.org/en/master/usage/extensions/todo.html
 todo_include_todos = True
 
 # GitHub pre-implemented shortcuts.
