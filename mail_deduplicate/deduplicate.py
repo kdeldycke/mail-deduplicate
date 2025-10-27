@@ -239,8 +239,7 @@ class DuplicateSet:
         """Return difference in bytes between two mails' normalized body.
 
         .. todo::
-          Rewrite the diff algorithm to not rely on naive unified diff result
-          parsing.
+            Rewrite the diff algorithm to not rely on naive unified diff result parsing.
         """
         return len(
             "".join(
@@ -599,5 +598,6 @@ class Deduplicate:
         self.assert_stats(
             "set_total",
             "==",
-            "set_single + set_skipped_encoding + set_skipped_size + set_skipped_content + set_skipped_strategy + set_deduplicated",
+            "set_single + set_skipped_encoding + set_skipped_size + "
+            "set_skipped_content + set_skipped_strategy + set_deduplicated",
         )
