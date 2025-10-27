@@ -60,11 +60,11 @@ Binaries are compiled at each release, so you can skip the installation process 
 
 This is the preferred way of testing `mdedup` without polluting your machine. They also offer the possibility of running the CLI on older systems not supporting the minimal Python version required by `mdedup`.
 
-| Platform    | `x86_64`                                                                                                                    | `arm64`                                                                                                                     |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Linux**   | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-linux-x64.bin)     | [Download `mdedup-linux-arm64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-linux-arm64.bin) |
-| **macOS**   | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-macos-x64.bin)     | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-macos-arm64.bin) |
-| **Windows** | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-windows-x64.exe) |                                                                                                                             |
+| Platform    | `x86_64`                                                                                                                          | `arm64`                                                                                                                               |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| **Linux**   | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-x64.bin)     | [Download `mdedup-linux-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-arm64.bin)     |
+| **macOS**   | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)     | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-arm64.bin)     |
+| **Windows** | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-x64.exe) | [Download `mdedup-windows-arm64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-arm64.exe) |
 
 All links above points to the latest released version of `mdedup`.
 
@@ -80,12 +80,13 @@ Look at the [list of latest binary builds](https://github.com/kdeldycke/mail-ded
 
 ````{note} ABI targets
 ```{code-block} shell-session
-$ file ./mpm*
-./mdedup-linux-arm64.bin: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=e35a1082c9c124edaa1c4b1bbb7e1aaf53baf870, for GNU/Linux 3.7.0, stripped
-./mdedup-linux-x64.bin:   ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=2874af3c68a8588ccdf9e59d5c1b78e2b5bdc5bb, for GNU/Linux 3.2.0, stripped
-./mdedup-macos-arm64.bin: Mach-O 64-bit executable arm64
-./mdedup-macos-x64.bin:   Mach-O 64-bit executable x86_64
-./mdedup-windows-x64.exe: PE32+ executable (console) x86-64, for MS Windows
+$ file ./mdedup*
+./mdedup-linux-arm64.bin:   ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=520bfc6f2bb21f48ad568e46752888236552b26a, for GNU/Linux 3.7.0, stripped
+./mdedup-linux-x64.bin:     ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=56ba24bccfa917e6ce9009223e4e83924f616d46, for GNU/Linux 3.2.0, stripped
+./mdedup-macos-arm64.bin:   Mach-O 64-bit executable arm64
+./mdedup-macos-x64.bin:     Mach-O 64-bit executable x86_64
+./mdedup-windows-arm64.exe: PE32+ executable (console) Aarch64, for MS Windows
+./mdedup-windows-x64.exe:   PE32+ executable (console) x86-64, for MS Windows
 ```
 ````
 

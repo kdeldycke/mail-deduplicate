@@ -6,6 +6,7 @@
 
 [![Last release](https://img.shields.io/pypi/v/mail-deduplicate.svg)](https://pypi.python.org/pypi/mail-deduplicate)
 [![Python versions](https://img.shields.io/pypi/pyversions/mail-deduplicate.svg)](https://pypi.python.org/pypi/mail-deduplicate)
+[![Downloads](https://static.pepy.tech/badge/mail_deduplicate/month)](https://pepy.tech/projects/mail_deduplicate)
 [![Unittests status](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/tests.yaml?query=branch%3Amain)
 [![Documentation status](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/docs.yaml/badge.svg?branch=main)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/docs.yaml?query=branch%3Amain)
 [![Coverage status](https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/main/graph/badge.svg)](https://app.codecov.io/gh/kdeldycke/mail-deduplicate)
@@ -43,13 +44,9 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 >
 > You can influence implementation of this feature with pull requests, [purchasing business support 🤝](https://github.com/sponsors/kdeldycke) and [sponsorship 🫶](https://github.com/sponsors/kdeldycke).
 
-## Example
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/cli-coloured-run.png">
-</p>
-
 ## Installation
+
+All [installation methods](https://kdeldycke.github.io/mail-deduplicate/install.html) are available in the documentation. Below are the most popular ones:
 
 ### Python
 
@@ -61,14 +58,18 @@ $ uvx --from mail-deduplicate mdedup
 
 ### Executables
 
-Standalone binaries of `mdedup`'s latest version are available for several platforms and architectures:
+Standalone binaries of `mdedup`'s latest version are available as direct downloads for several platforms and architectures:
 
-| Platform    | `x86_64`                                                                                                                    | `arm64`                                                                                                                     |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Linux**   | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-linux-x64.bin)     | [Download `mdedup-linux-arm64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-linux-arm64.bin) |
-| **macOS**   | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-macos-x64.bin)     | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-macos-arm64.bin) |
-| **Windows** | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/workflows/releases/latest/download/mdedup-windows-x64.exe) |                                                                                                                             |
+| Platform          | `x86_64`                                                                                                                         | `arm64`                                                                                                                          |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Linux**[^linux] | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-x64.bin)     | [Download `mdedup-linux-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-arm64.bin) |
+| **macOS**         | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)     | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-arm64.bin) |
+| **Windows**       | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-x64.exe) | [Download `mdedup-windows-arm64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-arm64.exe) |
 
-Other
-[alternatives installation methods](https://kdeldycke.github.io/mail-deduplicate/install.html)
-are available in the documentation.
+## Quickstart
+
+### Example
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/cli-coloured-run.png">
+</p>
