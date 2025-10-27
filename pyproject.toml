@@ -69,7 +69,7 @@ test = [
     "coverage [toml] ~= 7.11.0",
     # extra-platforms 3.0.0 is the first version to drop Python 3.10, like us.
     "extra-platforms [pytest] >= 3.0.0",
-    "pytest ~= 8.3.3",
+    "pytest ~= 8.4.2",
     "pytest-cov ~= 7.0.0",
     "pytest-github-actions-annotate-failures ~= 0.3.0",
     "pytest-randomly ~= 4.0.0",
