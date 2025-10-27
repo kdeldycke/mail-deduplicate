@@ -87,7 +87,8 @@ def move_mails(dedup: Deduplicate, mails) -> None:
 
 def delete_mails(dedup: Deduplicate, mails) -> None:
     """Remove provided ``mails`` in-place, from their original boxes."""
-    for mail in mails:
+    for (box, mail_id) in mails:
+        mail = box.get(mail_id)
         logging.debug(f"Deleting {mail!r} in-place...")
         dedup.stats["mail_deleted"] += 1
         if dedup.conf.dry_run:
