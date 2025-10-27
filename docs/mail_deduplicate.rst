@@ -3,8 +3,8 @@ mail\_deduplicate package
 
 .. automodule:: mail_deduplicate
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------
@@ -14,45 +14,45 @@ mail\_deduplicate.action module
 
 .. automodule:: mail_deduplicate.action
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 mail\_deduplicate.cli module
 ----------------------------
 
 .. automodule:: mail_deduplicate.cli
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 mail\_deduplicate.deduplicate module
 ------------------------------------
 
 .. automodule:: mail_deduplicate.deduplicate
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 mail\_deduplicate.mail module
 -----------------------------
 
 .. automodule:: mail_deduplicate.mail
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 mail\_deduplicate.mail\_box module
 ----------------------------------
 
 .. automodule:: mail_deduplicate.mail_box
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 mail\_deduplicate.strategy module
 ---------------------------------
 
 .. automodule:: mail_deduplicate.strategy
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
