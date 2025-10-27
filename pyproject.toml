@@ -8,19 +8,18 @@ description = "📧 CLI to deduplicate mails from mail boxes"
 authors = [{ name = "Kevin Deldycke", email = "kevin@deldycke.com" }]
 readme = "readme.md"
 keywords = [
+    'Babyl',
     'CLI',
-    'mail',
+    'MH',
+    'MMDF',
+    'cleanup',
+    'dedupe',
+    'deduplication',
     'email',
+    'mail',
+    'mailbox',
     'maildir',
     'mbox',
-    'deduplication',
-    'dedupe',
-    'cleanup',
-    'mailbox',
-    'Babyl',
-    'MH',
-    'mbox',
-    'MMDF',
 ]
 classifiers = [
     # See: https://pypi.org/pypi?%3Aaction=list_classifiers
