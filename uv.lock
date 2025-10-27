@@ -416,7 +416,7 @@ wheels = [
 
 [[package]]
 name = "mail-deduplicate"
-version = "7.6.3"
+version = "8.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "arrow" },
