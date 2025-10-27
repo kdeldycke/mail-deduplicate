@@ -61,14 +61,18 @@ jobs:
         run: |
           uv --no-progress sync --frozen --extra test
 
-      - name: Check launchable modules
+      - name: Launch local CLI
+        run: |
+          uv run -- mdedup --version
+      - name: Launch local CLI via module
         run: |
           uv run -m mail_deduplicate --version
-          uv run python -m mail_deduplicate --version
-      - name: Check launchable CLI
+      - name: Launch local CLI via Python
         run: |
-          uvx -- mdedup --version
-          uv run -- mdedup --version
+          uv run python -m mail_deduplicate --version
+      - name: Launch published CLI
+        run: |
+          uvx --from mail-deduplicate -- mdedup --version
 
       - name: Unittests
         run: |
