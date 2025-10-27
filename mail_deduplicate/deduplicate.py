@@ -210,7 +210,9 @@ class DuplicateSet:
             return
 
         # Compute differences of mail against one another.
-        for mail_a, mail_b in combinations(self.pool, 2):
+        for (box_a, mail_a), (box_b, mail_b) in combinations(self.pool, 2):
+            mail_a = box_a.get(mail_a)
+            mail_b = box_b.get(mail_b)
             # Compare mails on size.
             if self.conf.size_threshold > -1:
                 size_difference = abs(mail_a.size - mail_b.size)
@@ -421,7 +423,7 @@ class Deduplicate:
                         self.stats["mail_rejected"] += 1
                     else:
                         # Use a set to deduplicate entries pointing to the same file.
-                        self.mails.setdefault(mail_hash, set()).add(mail)
+                        self.mails.setdefault(mail_hash, set()).add((box, mail_id))
                         self.stats["mail_retained"] += 1
 
                     progress.update(1)
@@ -457,23 +459,6 @@ class Deduplicate:
             self.stats += duplicates.stats
             self.selection.update(duplicates.selection)
             self.discard.update(duplicates.discard)
-
-            # Remove from mail objects all attributes we no longer need, now that we
-            # have built the sets of selected and discarded mails. This will save
-            # memory and speed-up the action.
-            # See: https://github.com/kdeldycke/mail-deduplicate/issues/362
-            delete_names = ["canonical_headers", "body_lines", "subject"]
-            for mail in duplicates.discard:
-                for name in delete_names:
-                    if name in mail.__dict__:
-                        del mail.__dict__[name]
-            for mail in duplicates.selection:
-                for name in delete_names:
-                    if name in mail.__dict__:
-                        del mail.__dict__[name]
-                if self.conf.action == "move-discarded":
-                    # Selection mails are not moved, delete payload.
-                    del mail.__dict__["_payload"]
 
     def close_all(self):
         """Close all open boxes."""
