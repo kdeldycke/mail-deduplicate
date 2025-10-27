@@ -17,15 +17,11 @@
 from __future__ import annotations
 
 import re
-from typing import Callable, Pattern
 
 from click_extra import (
     BadParameter,
     Choice,
-    Context,
     ExtraCommand,
-    HelpExtraFormatter,
-    Parameter,
     argument,
     echo,
     extra_command,
@@ -69,8 +65,16 @@ from mail_deduplicate.strategy import (
     STRATEGY_METHODS,
 )
 
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-def validate_regexp(ctx: Context, param: Parameter, value: str) -> str | Pattern[str]:
+    from click_extra import Context, HelpExtraFormatter, Parameter
+
+
+def validate_regexp(
+    ctx: Context, param: Parameter, value: str
+) -> str | re.Pattern[str]:
     """Validate and compile regular expression provided as parameters to the CLI."""
     if not value:
         return ""

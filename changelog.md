@@ -8,6 +8,7 @@
 - Add official support for Python 3.14.
 - Drop support for Python 3.10.
 - Remove maximum capped version of all dependencies (relax all `~=` specifiers to `>=`). This gives more freedom to downstream and upstream packagers. Document each minimal version choice.
+- Move all typing-related imports behind a hard-coded `TYPE_CHECKING` guard to avoid runtime imports.
 - Run tests on stable Python 3.14 release.
 - Run tests on Python 3.15-dev, mark them as unstable.
 - Move `ubuntu-24.04` to `ubuntu-24.04-arm`, `macos-15` tests to `macos-26` and `windows-2025` tests to `windows-11-arm`.

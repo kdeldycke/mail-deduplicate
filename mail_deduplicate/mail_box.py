@@ -22,13 +22,11 @@ some tweaks and sane defaults.
 from __future__ import annotations
 
 import inspect
+import logging
 import mailbox as py_mailbox
+from functools import partial
 from mailbox import Mailbox as py_Mailbox
 from mailbox import Message as py_Message
-
-from functools import partial
-from typing import TYPE_CHECKING, Literal
-import logging
 
 from boltons.dictutils import FrozenDict
 from boltons.iterutils import flatten
@@ -36,8 +34,10 @@ from click_extra.colorize import default_theme as theme
 
 from mail_deduplicate.mail import DedupMail
 
+TYPE_CHECKING = False
 if TYPE_CHECKING:
     from pathlib import Path
+    from typing import Literal
 
 
 def build_box_constructors():

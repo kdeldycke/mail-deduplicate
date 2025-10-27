@@ -13,8 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
 from __future__ import annotations
 
+import logging
 import sys
 import textwrap
 from collections import Counter, OrderedDict
@@ -23,8 +25,6 @@ from functools import cached_property
 from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
-from typing import TYPE_CHECKING
-import logging
 
 from boltons.dictutils import FrozenDict
 from click_extra import progressbar
@@ -39,8 +39,10 @@ from mail_deduplicate import (
 from mail_deduplicate.mail_box import open_box
 from mail_deduplicate.strategy import apply_strategy
 
+TYPE_CHECKING = False
 if TYPE_CHECKING:
     from mailbox import Mailbox, Message
+
 
 STATS_DEF = OrderedDict(
     [
