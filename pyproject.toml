@@ -56,16 +56,15 @@ dependencies = [
     "arrow >= 1.3.0",
     # boltons 25.0.0 is the first version to support Python 3.13.
     "boltons >= 25.0.0",
-    "click-extra >= 4.15.0",
-    # tabulate 0.9 is the first to add `*grid` and `*outline` formats.
-    "tabulate [widechars] >= 0.9",
+    # click-extra 6.0.1 is the first version to support Python 3.14.
+    "click-extra >= 6.0.1",
 ]
 
 [project.optional-dependencies]
 ## Non-runtime dependencies, for development and CI, are using the ~= specifier to reduce randomness.
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
 test = [
-    "click-extra [pytest] >= 4.15.0",
+    "click-extra [pytest] >= 6.0.1",
     "coverage [toml] ~= 7.11.0",
     # extra-platforms 3.0.0 is the first version to drop Python 3.10, like us.
     "extra-platforms [pytest] >= 3.0.0",
@@ -76,7 +75,7 @@ test = [
 ]
 typing = ["types-boltons ~= 25.0.0.20250822", "types-tabulate ~= 0.9.0.2"]
 docs = [
-    "click-extra [sphinx] >= 4.15.0",
+    "click-extra [sphinx] >= 6.0.1",
     "furo ~= 2025.9.25",
     "myst-parser ~= 4.0.0",
     "sphinx ~= 8.2.3",

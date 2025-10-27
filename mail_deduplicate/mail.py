@@ -27,7 +27,7 @@ import re
 from functools import cached_property
 
 import arrow
-from tabulate import tabulate
+from click_extra.table import TableFormat, render_table
 
 from mail_deduplicate import (
     CTIME,
@@ -249,7 +249,7 @@ class DedupMail:
         # Cast to a tuple to prevent any modification.
         return tuple(canonical_headers)
 
-    def pretty_canonical_headers(self):
+    def pretty_canonical_headers(self) -> str:
         """Renders a table of headers names and values used to produce the mail's hash.
 
         .. caution::
@@ -258,8 +258,11 @@ class DedupMail:
 
         Returns a string ready to be printed.
         """
-        table = [["Header ID", "Header value"], *list(self.canonical_headers)]
-        return "\n" + tabulate(table, tablefmt="fancy_grid", headers="firstrow")
+        return "\n" + render_table(
+            [*list(self.canonical_headers)],
+            headers=("Header ID", "Header value"),
+            table_format=TableFormat.FANCY_GRID,
+        )
 
     def serialized_headers(self):
         """Serialize the canonical headers into a single string ready to be hashed.

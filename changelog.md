@@ -5,6 +5,8 @@
 > [!IMPORTANT]
 > This version is not released yet and is under active development.
 
+- Add `--no-config`, `--table-format` options from Click Extra.
+- Remove direct dependency on `tabulate`, use `click-extra`'s table utilities instead.
 - Add official support for Python 3.14.
 - Drop support for Python 3.10.
 - Remove maximum capped version of all dependencies (relax all `~=` specifiers to `>=`). This gives more freedom to downstream and upstream packagers. Document each minimal version choice.

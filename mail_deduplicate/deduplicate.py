@@ -27,9 +27,8 @@ from operator import attrgetter
 from pathlib import Path
 
 from boltons.dictutils import FrozenDict
-from click_extra import progressbar
+from click_extra import TableFormat, progressbar, render_table
 from click_extra.colorize import default_theme as theme
-from tabulate import tabulate
 
 from mail_deduplicate import (
     ContentDiffAboveThreshold,
@@ -486,7 +485,7 @@ class Deduplicate:
         """Returns a text report of user-friendly statistics and metrics."""
         output = ""
         for prefix, title in (("mail_", "Mails"), ("set_", "Duplicate sets")):
-            table = [[title, "Metric", "Description"]]
+            table = []
             for stat_id, desc in STATS_DEF.items():
                 if stat_id.startswith(prefix):
                     table.append(
@@ -496,7 +495,11 @@ class Deduplicate:
                             "\n".join(textwrap.wrap(desc, 60)),
                         ],
                     )
-            output += tabulate(table, tablefmt="fancy_grid", headers="firstrow")
+            output += render_table(
+                table,
+                headers=(title, "Metric", "Description"),
+                table_format=TableFormat.FANCY_GRID,
+            )
             output += "\n"
         return output
 
