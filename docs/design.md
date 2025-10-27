@@ -1,4 +1,4 @@
-# Design
+# {octicon}`light-bulb` Design
 
 This CLI reads all mails from a variety of mailbox formats (`maildir`,
 `mbox`, `babyl`, `mh` and `mmdf`), then automatically detects, regroup and

@@ -1,4 +1,4 @@
-# Configuration
+# {octicon}`sliders` Configuration
 
 All `mdedup` options can be set with a configuration file.
 
