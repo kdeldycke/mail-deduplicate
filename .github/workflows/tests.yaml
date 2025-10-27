@@ -25,10 +25,9 @@ jobs:
         # Available OS: https://github.com/actions/runner-images#available-images
         # To speed up the tests, we only test the latest available OS for each platform.
         os:
-          - ubuntu-24.04  # x86
-          - macos-15      # arm64
-          - windows-2025  # x86
-        # Available Python: https://github.com/actions/python-versions/blob/main/versions-manifest.json
+          - ubuntu-24.04-arm # arm64
+          - macos-26         # arm64
+          - windows-11-arm   # arm64
         # For Python, we only test against the oldest and newest major supported version and skip intermediates. We
         # also test on the upcoming development version to anticipate issues.
         python-version:
