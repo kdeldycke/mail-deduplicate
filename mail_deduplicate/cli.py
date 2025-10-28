@@ -16,12 +16,14 @@
 
 from __future__ import annotations
 
+import logging
 import re
 
 from click_extra import (
     BadParameter,
     Choice,
     ExtraCommand,
+    ParameterSource,
     argument,
     echo,
     extra_command,
@@ -413,11 +415,35 @@ def mdedup(
 
     echo(theme.heading("\n● Step #2 - Compute hashes and group duplicates"))
     dedup.hash_all()
+
     if hash_only:
+        # List options attached to the sections specifics to later steps, that were
+        # provided by the user.
+        ignored_user_options = []
+        for group in ctx.command.option_groups:
+            step_number = re.search(r"step #(\d+)", group.title)
+            if not step_number:
+                raise RuntimeError("Option group not associated to a step number.")
+            # Only collect options from steps after #2.
+            if int(step_number.group(1)) > 2:
+                for opt in group.options:
+                    if ctx.get_parameter_source(opt.name) != ParameterSource.DEFAULT:
+                        ignored_user_options.append(
+                            "/".join(opt.opts + opt.secondary_opts)
+                        )
+        if ignored_user_options:
+            logging.warning(
+                "Options provided by user, but ignored in -H/--hash-only mode: "
+                + ", ".join(ignored_user_options)
+            )
+
+        # Print all computed hashes.
         for all_mails in dedup.mails.values():
             for mail in all_mails:
                 echo(mail.pretty_headers)
                 echo(f"Hash: {mail.hash_key()}")
+
+        # Exit right away.
         ctx.exit()
 
     echo(theme.heading("\n● Step #3 - Select mails in each group"))
