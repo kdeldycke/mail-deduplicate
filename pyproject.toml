@@ -66,8 +66,7 @@ dependencies = [
 test = [
     "click-extra [pytest] >= 6.0.1",
     "coverage [toml] ~= 7.11.0",
-    # extra-platforms 3.0.0 is the first version to drop Python 3.10, like us.
-    "extra-platforms [pytest] >= 3.0.0",
+    "extra-platforms [pytest] ~= 4.1.0",
     "pytest ~= 8.4.2",
     "pytest-cov ~= 7.0.0",
     "pytest-github-actions-annotate-failures ~= 0.3.0",

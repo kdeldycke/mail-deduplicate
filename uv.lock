@@ -460,7 +460,7 @@ requires-dist = [
     { name = "click-extra", extras = ["pytest"], marker = "extra == 'test'", specifier = ">=6.0.1" },
     { name = "click-extra", extras = ["sphinx"], marker = "extra == 'docs'", specifier = ">=6.0.1" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'test'", specifier = "~=7.11.0" },
-    { name = "extra-platforms", extras = ["pytest"], marker = "extra == 'test'", specifier = ">=3.0.0" },
+    { name = "extra-platforms", extras = ["pytest"], marker = "extra == 'test'", specifier = "~=4.1.0" },
     { name = "furo", marker = "extra == 'docs'", specifier = "~=2025.9.25" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = "~=4.0.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = "~=8.4.2" },
@@ -469,7 +469,7 @@ requires-dist = [
     { name = "pytest-randomly", marker = "extra == 'test'", specifier = "~=4.0.0" },
     { name = "sphinx", marker = "extra == 'docs'", specifier = "~=8.2.3" },
     { name = "sphinx-autodoc-typehints", marker = "extra == 'docs'", specifier = "~=3.5.1" },
-    { name = "sphinx-click", marker = "extra == 'docs'", specifier = "~=6.0.0" },
+    { name = "sphinx-click", marker = "extra == 'docs'", specifier = "~=6.1.0" },
     { name = "sphinx-copybutton", marker = "extra == 'docs'", specifier = "~=0.5.2" },
     { name = "sphinx-design", marker = "extra == 'docs'", specifier = "~=0.6.0" },
     { name = "sphinx-issues", marker = "extra == 'docs'", specifier = "~=5.0.0" },
@@ -869,16 +869,16 @@ wheels = [
 
 [[package]]
 name = "sphinx-click"
-version = "6.0.0"
+version = "6.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "docutils" },
     { name = "sphinx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/db/0a/5b1e8d0579dbb4ca8114e456ca4a68020bfe8e15c7001f3856be4929ab83/sphinx_click-6.0.0.tar.gz", hash = "sha256:f5d664321dc0c6622ff019f1e1c84e58ce0cecfddeb510e004cf60c2a3ab465b", size = 29574, upload-time = "2024-05-15T14:49:17.044Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/de/4b/c433ea57136eac0ccb8d76d33355783f1e6e77f1f13dc7d8f15dba2dc024/sphinx_click-6.1.0.tar.gz", hash = "sha256:c702e0751c1a0b6ad649e4f7faebd0dc09a3cc7ca3b50f959698383772f50eef", size = 26855, upload-time = "2025-09-11T11:05:45.53Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d0/d7/8621c4726ad3f788a1db4c0c409044b16edc563f5c9542807b3724037555/sphinx_click-6.0.0-py3-none-any.whl", hash = "sha256:1e0a3c83bcb7c55497751b19d07ebe56b5d7b85eb76dd399cf9061b497adc317", size = 9922, upload-time = "2024-05-15T14:49:15.768Z" },
+    { url = "https://files.pythonhosted.org/packages/88/95/a2fa680f02ee9cbe4532169d2e60b102fe415b6cfa25584ac2d112e4c43b/sphinx_click-6.1.0-py3-none-any.whl", hash = "sha256:7dbed856c3d0be75a394da444850d5fc7ecc5694534400aa5ed4f4849a8643f9", size = 8931, upload-time = "2025-09-11T11:05:43.897Z" },
 ]
 
 [[package]]
