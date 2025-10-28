@@ -17,9 +17,9 @@
 from __future__ import annotations
 
 import inspect
-import mailbox as py_mailbox
+import mailbox
 from functools import cache
-from mailbox import Message as py_Message
+from mailbox import Mailbox, Message
 
 import pytest
 
@@ -27,18 +27,18 @@ from mail_deduplicate.mail_box import BoxFormat, BoxStructure
 
 
 @cache
-def stdlib_box_types() -> list[type[py_mailbox.Mailbox]]:
+def stdlib_box_types() -> list[type[Mailbox]]:
     """Yields all mailbox types defined in the standard library.
 
     Only collect direct subclasses of the ``mailbox.Mailbox`` interface. Ignore
     ``mailbox.Mailbox`` itself and all others starting with an underscore.
     """
     klass_list = []
-    for _, klass in inspect.getmembers(py_mailbox, inspect.isclass):
+    for _, klass in inspect.getmembers(mailbox, inspect.isclass):
         if (
-            klass != py_mailbox.Mailbox
+            klass != Mailbox
             and not klass.__name__.startswith("_")
-            and issubclass(klass, py_mailbox.Mailbox)
+            and issubclass(klass, Mailbox)
         ):
             klass_list.append(klass)
     return klass_list
@@ -47,7 +47,7 @@ def stdlib_box_types() -> list[type[py_mailbox.Mailbox]]:
 def test_box_formats():
     """Ensures all box formats are correctly defined."""
     for box in BoxFormat:
-        assert issubclass(box.base_class, py_mailbox.Mailbox)
+        assert issubclass(box.base_class, Mailbox)
         assert box.base_class in stdlib_box_types()
 
         assert box.base_class.__name__.upper() == box.name
@@ -55,7 +55,7 @@ def test_box_formats():
 
         assert box.structure in BoxStructure
 
-        assert issubclass(box.message_class, py_Message)
+        assert issubclass(box.message_class, Message)
 
     # Check all standard library box types are covered.
     assert set(stdlib_box_types()) == {box.base_class for box in BoxFormat}
