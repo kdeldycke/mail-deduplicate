@@ -18,11 +18,14 @@ from __future__ import annotations
 
 import logging
 import re
+from dataclasses import dataclass
 
+from boltons.iterutils import unique
 from click_extra import (
     BadParameter,
     Choice,
     ExtraCommand,
+    IntRange,
     ParameterSource,
     argument,
     echo,
@@ -41,7 +44,6 @@ from . import (
     DEFAULT_SIZE_THRESHOLD,
     HASH_HEADERS,
     TIME_SOURCES,
-    Config,
 )
 from .action import (
     ACTIONS,
@@ -70,30 +72,69 @@ from .strategy import (
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from pathlib import Path
 
     from click_extra import Context, HelpExtraFormatter, Parameter
 
 
-def validate_regexp(
-    ctx: Context, param: Parameter, value: str
-) -> str | re.Pattern[str]:
-    """Validate and compile regular expression provided as parameters to the CLI."""
-    if not value:
-        return ""
+@dataclass
+class Config:
+    """Holds global configuration."""
 
-    try:
-        return re.compile(value)
-    except ValueError:
-        msg = "invalid regular expression."
-        raise BadParameter(msg)
+    # XXX Keep these defaults in sync with CLI option definitions.
+    input_format: str | None = None  # BOX_TYPES
+    force_unlock: bool = False
+    hash_headers: tuple[str, ...] = HASH_HEADERS
+    hash_body: str | None = None  # BODY_HASHERS
+    hash_only: bool = False
+    size_threshold: int = DEFAULT_SIZE_THRESHOLD
+    content_threshold: int = DEFAULT_CONTENT_THRESHOLD
+    show_diff: bool = False
+    strategy: str | None = None  # STRATEGY_METHODS
+    time_source: str = DATE_HEADER  # TIME_SOURCES
+    regexp: str | None = None
+    action: str = COPY_SELECTED  # ACTIONS
+    export: Path | None = None
+    export_format: str = "mbox"  # BOX_TYPES
+    export_append: bool = False
+    dry_run: bool = False
+
+
+def normalize_headers(
+    ctx: Context, param: Parameter, value: tuple[str, ...]
+) -> tuple[str, ...]:
+    """Validate headers provided as parameters to the CLI.
+
+    Headers are case-insensitive in Python implementation, so we normalize them to
+    lower-case.
+
+    We then deduplicate them, while preserving order.
+
+    Mail headers are expected to be composed of ASCII characters between 33 and 126
+    (both inclusive) according to RFC-5322.
+    """
+    normalized_headers = unique((h.lower() for h in value))
+    for hid in normalized_headers:
+        ascii_indexes = set(map(ord, hid))
+        if min(ascii_indexes) < 33 or max(ascii_indexes) > 126:
+            raise BadParameter(f"invalid header ID: {hid!r}.")
+    return tuple(normalized_headers)
+
+
+def compile_regexp(
+    ctx: Context, param: Parameter, value: str
+) -> re.Pattern[str] | None:
+    """Validate and compile regular expression provided as parameters to the CLI."""
+    if value:
+        try:
+            return re.compile(value)
+        except ValueError:
+            raise BadParameter(f"invalid regular expression: {value!r}.")
+    return None
 
 
 class MdedupCommand(ExtraCommand):
-    def format_help(
-        self,
-        ctx: Context,
-        formatter: HelpExtraFormatter,  # type: ignore[override]
-    ) -> None:
+    def format_help(self, ctx: Context, formatter: HelpExtraFormatter) -> None:
         """Extend the help screen with the description of all available strategies."""
         # Populate the formatter with the default help screen content.
         super().format_help(ctx, formatter)
@@ -155,6 +196,7 @@ class MdedupCommand(ExtraCommand):
         "--hash-header",
         multiple=True,
         type=str,
+        callback=normalize_headers,
         metavar="Header-ID",
         default=HASH_HEADERS,
         help="Headers to use to compute each mail's hash. Must be repeated multiple "
@@ -209,7 +251,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-r",
         "--regexp",
-        callback=validate_regexp,
+        callback=compile_regexp,
         metavar="REGEXP",
         help="Regular expression on a mail's file path. Applies to real, individual "
         "mail location for folder-based boxed "
@@ -222,7 +264,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-S",
         "--size-threshold",
-        type=int,
+        type=IntRange(min=-1),
         metavar="BYTES",
         default=DEFAULT_SIZE_THRESHOLD,
         help="Maximum difference allowed in size between mails sharing the same hash. "
@@ -234,7 +276,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-C",
         "--content-threshold",
-        type=int,
+        type=IntRange(min=-1),
         metavar="BYTES",
         default=DEFAULT_CONTENT_THRESHOLD,
         help="Maximum difference allowed in content between mails sharing the same "
@@ -345,6 +387,7 @@ def mdedup(
         ctx.exit()
 
     # Validate exclusive options requirement depending on strategy or action.
+    # TODO: use Cloup option constraints to express these dependencies?
     validation_requirements = {
         strategy: (
             (
@@ -376,14 +419,20 @@ def mdedup(
         for param_value, param_name, required_values in requirements:
             if conf_value in required_values:
                 if not param_value:
-                    msg = f"{conf_value} requires the {param_name} parameter."
-                    raise BadParameter(msg)
+                    raise BadParameter(
+                        f"{conf_value} requires the {param_name} parameter."
+                    )
             elif param_value:
-                msg = f"{param_name} parameter not allowed in {conf_value}."
-                raise BadParameter(msg)
+                raise BadParameter(
+                    f"{param_name} parameter not allowed in {conf_value}."
+                )
+
+    if export and export.exists() and not export_append:
+        raise FileExistsError(
+            f"Cannot export to existing file {export!r} unless --export-append is set."
+        )
 
     conf = Config(
-        dry_run=dry_run,
         input_format=input_format,
         force_unlock=force_unlock,
         hash_headers=hash_header,
@@ -399,6 +448,7 @@ def mdedup(
         export=export,
         export_format=export_format,
         export_append=export_append,
+        dry_run=dry_run,
     )
 
     dedup = Deduplicate(conf)

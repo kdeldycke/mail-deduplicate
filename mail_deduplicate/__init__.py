@@ -17,10 +17,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
-from boltons.iterutils import unique
-
 __version__ = "8.0.0"
 
 
@@ -162,69 +158,3 @@ class ContentDiffAboveThreshold(Exception):
     """Difference in mail content is greater than `threshold.
     <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD>`_.
     """
-
-
-class Config:
-    """Holds global configuration."""
-
-    # Keep these defaults in sync with CLI option definitions.
-    default_conf = {
-        "dry_run": False,
-        "input_format": False,
-        "force_unlock": False,
-        "hash_headers": HASH_HEADERS,
-        "hash_body": None,
-        "hash_only": False,
-        "size_threshold": DEFAULT_SIZE_THRESHOLD,
-        "content_threshold": DEFAULT_CONTENT_THRESHOLD,
-        "show_diff": False,
-        "strategy": None,
-        "time_source": None,
-        "regexp": None,
-        "action": None,
-        "export": None,
-        "export_format": "mbox",
-        "export_append": False,
-    }
-
-    def __init__(self, **kwargs) -> None:
-        """Validates configuration parameter types and values."""
-        # Load default values.
-        self.conf = self.default_conf.copy()
-
-        unrecognized_options = set(kwargs) - set(self.default_conf)
-        if unrecognized_options:
-            msg = f"Unrecognized {unrecognized_options} options."
-            raise ValueError(msg)
-
-        # Replace defaults values with our config.
-        self.conf.update(kwargs)
-
-        # Check thresholds.
-        assert self.size_threshold >= -1
-        assert self.content_threshold >= -1
-
-        # Headers are case-insensitive in Python implementation.
-        normalized_headers = (h.lower() for h in self.hash_headers)  # type: ignore[has-type]
-        # Remove duplicate entries.
-        normalized_headers = unique(normalized_headers)
-        # Mail headers are composed of ASCII characters between 33 and 126
-        # (both inclusive) according the RFC-5322.
-        for hid in normalized_headers:
-            ascii_indexes = set(map(ord, hid))
-            assert max(ascii_indexes) <= 126
-            assert min(ascii_indexes) >= 33
-        self.hash_headers = tuple(normalized_headers)
-
-        # Export mail box will always be created from scratch and is not
-        # expected to exists in the first place.
-        if self.export:  # type: ignore[has-type]
-            self.export = Path(self.export).resolve()  # type: ignore[has-type]
-            if self.export.exists() and self.export_append is not True:
-                raise FileExistsError(self.export)
-
-    def __getattr__(self, attr_id):
-        """Expose configuration entries as properties."""
-        if attr_id in self.conf:
-            return self.conf[attr_id]
-        return None

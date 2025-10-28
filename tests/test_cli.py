@@ -42,5 +42,9 @@ def test_early_export_file_check(invoke, make_box, tmp_path):
     file.touch()
     result = invoke(f"--export={file!s}", box_path)
     assert result.exit_code == 1
-    assert result.stderr == ""
-    assert str(result.exception) == str(file)
+    assert not result.stderr
+    assert isinstance(result.exception, FileExistsError)
+    assert (
+        str(result.exception)
+        == f"Cannot export to existing file {file!r} unless --export-append is set."
+    )
