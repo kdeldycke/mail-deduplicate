@@ -40,8 +40,8 @@ if TYPE_CHECKING:
 class BoxStructure(StrEnum):
     """Box structures can be file-based or folder-based."""
 
-    FILE = "file"
     FOLDER = "folder"
+    FILE = "file"
 
 
 class BoxFormat(Enum):
@@ -88,6 +88,13 @@ class BoxFormat(Enum):
             },
         )
         return partial(self.base_class, factory=factory_klass, create=False)
+
+
+FOLDER_FORMATS = tuple(box for box in BoxFormat if box.structure == BoxStructure.FOLDER)
+"""Box formats implementing a folder-based structure."""
+
+FILE_FORMATS = tuple(box for box in BoxFormat if box.structure == BoxStructure.FILE)
+"""Box formats implementing a file-based structure."""
 
 
 MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
@@ -194,7 +201,7 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     """
     folder_list = [lock_box(box, force_unlock)]
 
-    if hasattr(box, "list_folders"):
+    if isinstance(box, tuple(b.base_class for b in FOLDER_FORMATS)):
         for folder_id in box.list_folders():
             logging.info(f"Opening subfolder {folder_id} ...")
             folder_list += open_subfolders(box.get_folder(folder_id), force_unlock)

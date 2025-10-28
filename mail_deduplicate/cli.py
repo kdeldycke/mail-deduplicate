@@ -60,7 +60,7 @@ from .deduplicate import (
     BODY_HASHERS,
     Deduplicate,
 )
-from .mail_box import BoxFormat, BoxStructure
+from .mail_box import FILE_FORMATS, FOLDER_FORMATS, BoxFormat
 from .strategy import (
     DISCARD_MATCHING_PATH,
     DISCARD_NON_MATCHING_PATH,
@@ -253,11 +253,10 @@ class MdedupCommand(ExtraCommand):
         metavar="REGEXP",
         help="Regular expression on a mail's file path. Applies to individual mail "
         "location for folder-based boxes ("
-        + ", ".join((str(b) for b in BoxFormat if b.structure == BoxStructure.FOLDER))
-        + "). But for file-based boxes ("
-        + ", ".join((str(b) for b in BoxFormat if b.structure == BoxStructure.FILE))
-        + "), applies to the whole box's path, as all mails are packed into one single "
-        f"file. Required in {DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, "
+        f"{', '.join(map(str, FOLDER_FORMATS))}). But for file-based boxes ("
+        f"{', '.join(map(str, FILE_FORMATS))}), applies to the whole box's "
+        "path, as all mails are packed into one single file. Required in "
+        f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, "
         f"{SELECT_MATCHING_PATH} and {SELECT_NON_MATCHING_PATH} strategies.",
     ),
     option(
