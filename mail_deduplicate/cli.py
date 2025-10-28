@@ -39,11 +39,9 @@ from click_extra import (
 from click_extra.colorize import default_theme as theme
 
 from . import (
-    DATE_HEADER,
     DEFAULT_CONTENT_THRESHOLD,
     DEFAULT_SIZE_THRESHOLD,
     HASH_HEADERS,
-    TIME_SOURCES,
 )
 from .action import (
     ACTIONS,
@@ -60,6 +58,7 @@ from .deduplicate import (
     BODY_HASHERS,
     Deduplicate,
 )
+from .mail import TimeSource
 from .mail_box import FILE_FORMATS, FOLDER_FORMATS, BoxFormat
 from .strategy import (
     DISCARD_MATCHING_PATH,
@@ -89,7 +88,7 @@ class Config(TypedDict):
     content_threshold: int
     show_diff: bool
     strategy: str | None  # STRATEGY_METHODS
-    time_source: str  # TIME_SOURCES
+    time_source: TimeSource
     regexp: re.Pattern | None
     action: str  # ACTIONS
     export: Path | None
@@ -246,8 +245,8 @@ class MdedupCommand(ExtraCommand):
     option(
         "-t",
         "--time-source",
-        default=DATE_HEADER,
-        type=Choice(sorted(TIME_SOURCES), case_sensitive=False),
+        default=TimeSource.DATE_HEADER,
+        type=Choice(TimeSource, case_sensitive=False),
         help="Source of a mail's time reference used in time-sensitive strategies.",
     ),
     option(

@@ -130,19 +130,6 @@ As above, we similarly generates unified diffs of duplicates and ensure that the
 not greater than a certain size to limit false-positives.
 """
 
-DATE_HEADER = "date-header"
-CTIME = "ctime"
-TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
-"""Methods used to extract a mail's canonical timestamp:
-
-- ``date-header``: sourced from the message's ``Date`` header.
-- ``ctime``: sourced from the email's file from the filesystem. Only available for
-  ``maildir`` sources.
-
-Also see:
-https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mail.DedupMail.timestamp
-"""
-
 
 class TooFewHeaders(Exception):
     """Not enough headers were found to produce a solid hash."""

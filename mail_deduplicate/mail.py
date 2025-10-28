@@ -23,24 +23,34 @@ import inspect
 import logging
 import os
 import re
+from enum import Enum
 from functools import cached_property
 from mailbox import Message
 
 import arrow
 from click_extra.table import TableFormat, render_table
 
-from . import (
-    CTIME,
-    MINIMAL_HEADERS_COUNT,
-    QUOTE_DISCARD_HEADERS,
-    TooFewHeaders,
-)
+from . import MINIMAL_HEADERS_COUNT, QUOTE_DISCARD_HEADERS, TooFewHeaders
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from mailbox import Mailbox, _ProxyFile
 
     from .cli import Config
+
+
+class TimeSource(Enum):
+    """Enumeration of all supported mail timestamp sources."""
+
+    DATE_HEADER = "date-header"
+    """Timestamp sourced from the message's ``Date`` header."""
+
+    CTIME = "ctime"
+    """Timestamp is from the email's file on the filesystem.
+
+    .. attention::
+        Only available for ``maildir`` sources.
+    """
 
 
 class DedupMail:
@@ -124,7 +134,7 @@ class DedupMail:
             <https://docs.python.org/3.11/library/mailbox.html#mailbox.MaildirMessage.get_date>`_
             does and if we can use it.
         """
-        if self.conf["time_source"] == CTIME:
+        if self.conf["time_source"] == TimeSource.CTIME:
             return os.path.getctime(self.path)
 
         # Fetch from the date header.
