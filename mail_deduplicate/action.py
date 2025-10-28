@@ -40,50 +40,50 @@ DELETE_DISCARDED = "delete-discarded"
 
 def copy_mails(dedup: Deduplicate, mails) -> None:
     """Copy provided ``mails`` to a brand new box or an existing one."""
-    if not dedup.conf.dry_run:
+    if not dedup.conf["dry_run"]:
         box = create_box(
-            dedup.conf.export,
-            dedup.conf.export_format,
-            dedup.conf.export_append,
+            dedup.conf["export"],
+            dedup.conf["export_format"],
+            dedup.conf["export_append"],
         )
 
     for mail in mails:
-        logging.debug(f"Copying {mail!r} to {dedup.conf.export}...")
+        logging.debug(f"Copying {mail!r} to {dedup.conf['export']}...")
         dedup.stats["mail_copied"] += 1
-        if dedup.conf.dry_run:
+        if dedup.conf["dry_run"]:
             logging.warning("DRY RUN: Skip action.")
         else:
             box.add(mail)
             logging.info(f"{mail!r} copied.")
 
-    logging.debug(f"Close {dedup.conf.export}")
-    if not dedup.conf.dry_run:
+    logging.debug(f"Close {dedup.conf['export']}")
+    if not dedup.conf["dry_run"]:
         box.close()
 
 
 def move_mails(dedup: Deduplicate, mails) -> None:
     """Move provided ``mails`` to a brand new box or an existing one."""
-    if not dedup.conf.dry_run:
+    if not dedup.conf["dry_run"]:
         box = create_box(
-            dedup.conf.export,
-            dedup.conf.export_format,
-            dedup.conf.export_append,
+            dedup.conf["export"],
+            dedup.conf["export_format"],
+            dedup.conf["export_append"],
         )
 
     for mail in mails:
         logging.debug(
-            f"Move {mail!r} form {mail.source_path} to {dedup.conf.export}..."
+            f"Move {mail!r} form {mail.source_path} to {dedup.conf['export']}..."
         )
         dedup.stats["mail_moved"] += 1
-        if dedup.conf.dry_run:
+        if dedup.conf["dry_run"]:
             logging.warning("DRY RUN: Skip action.")
         else:
             box.add(mail)
             dedup.sources[mail.source_path].remove(mail.mail_id)
             logging.info(f"{mail!r} copied.")
 
-    logging.debug(f"Close {dedup.conf.export}")
-    if not dedup.conf.dry_run:
+    logging.debug(f"Close {dedup.conf['export']}")
+    if not dedup.conf["dry_run"]:
         box.close()
 
 
@@ -92,7 +92,7 @@ def delete_mails(dedup: Deduplicate, mails) -> None:
     for mail in mails:
         logging.debug(f"Deleting {mail!r} in-place...")
         dedup.stats["mail_deleted"] += 1
-        if dedup.conf.dry_run:
+        if dedup.conf["dry_run"]:
             logging.warning("DRY RUN: Skip action.")
         else:
             dedup.sources[mail.source_path].remove(mail.mail_id)
@@ -144,7 +144,7 @@ ACTIONS = FrozenDict(
 
 def perform_action(dedup: Deduplicate) -> None:
     """Performs the action on selected mail candidates."""
-    logging.info(f"Perform {theme.choice(dedup.conf.action)} action...")
+    logging.info(f"Perform {theme.choice(dedup.conf['action'])} action...")
 
     selection_count = len(dedup.selection)
     if selection_count == 0:
@@ -158,9 +158,8 @@ def perform_action(dedup: Deduplicate) -> None:
     assert len(dedup.selection) == dedup.stats["mail_selected"]
 
     # Hunt down for action implementation.
-    method = ACTIONS.get(dedup.conf.action)
+    method = ACTIONS.get(dedup.conf["action"])
     if not method:
-        msg = f"{dedup.conf.action} action not implemented yet."
-        raise NotImplementedError(msg)
+        raise NotImplementedError(f"{dedup.conf['action']} action not implemented yet.")
 
     method(dedup)

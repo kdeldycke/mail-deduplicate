@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass
+from typing import TypedDict
 
 from boltons.iterutils import unique
 from click_extra import (
@@ -77,27 +77,25 @@ if TYPE_CHECKING:
     from click_extra import Context, HelpExtraFormatter, Parameter
 
 
-@dataclass
-class Config:
+class Config(TypedDict):
     """Holds global configuration."""
 
-    # XXX Keep these defaults in sync with CLI option definitions.
-    force_unlock: bool = False
-    hash_headers: tuple[str, ...] = HASH_HEADERS
-    hash_body: str | None = None  # BODY_HASHERS
-    hash_only: bool = False
-    size_threshold: int = DEFAULT_SIZE_THRESHOLD
-    content_threshold: int = DEFAULT_CONTENT_THRESHOLD
-    show_diff: bool = False
-    strategy: str | None = None  # STRATEGY_METHODS
-    time_source: str = DATE_HEADER  # TIME_SOURCES
-    regexp: str | None = None
-    action: str = COPY_SELECTED  # ACTIONS
-    export: Path | None = None
-    export_format: str = "mbox"  # BOX_TYPES
-    export_append: bool = False
-    dry_run: bool = False
     input_format: BoxFormat | None
+    force_unlock: bool
+    hash_headers: tuple[str, ...]
+    hash_body: str  # BODY_HASHERS
+    hash_only: bool
+    size_threshold: int
+    content_threshold: int
+    show_diff: bool
+    strategy: str | None  # STRATEGY_METHODS
+    time_source: str  # TIME_SOURCES
+    regexp: re.Pattern | None
+    action: str  # ACTIONS
+    export: Path | None
+    export_format: BoxFormat
+    export_append: bool
+    dry_run: bool
 
 
 def normalize_headers(

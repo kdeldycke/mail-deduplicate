@@ -139,10 +139,12 @@ def select_matching_path(duplicates):
     the --regexp parameter."""
     logging.info(
         "Select all mails with file path matching the "
-        f"{duplicates.conf.regexp.pattern} regexp...",
+        f"{duplicates.conf['regexp'].pattern} regexp...",
     )
     return {
-        mail for mail in duplicates.pool if re.search(duplicates.conf.regexp, mail.path)
+        mail
+        for mail in duplicates.pool
+        if re.search(duplicates.conf["regexp"], mail.path)
     }
 
 
@@ -151,12 +153,12 @@ def select_non_matching_path(duplicates):
     provided via the --regexp parameter."""
     logging.info(
         "Select all mails with file path not matching the "
-        f"{duplicates.conf.regexp.pattern} regexp...",
+        f"{duplicates.conf['regexp'].pattern} regexp...",
     )
     return {
         mail
         for mail in duplicates.pool
-        if not re.search(duplicates.conf.regexp, mail.path)
+        if not re.search(duplicates.conf["regexp"], mail.path)
     }
 
 

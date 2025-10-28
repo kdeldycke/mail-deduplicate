@@ -36,6 +36,10 @@ from . import (
     TooFewHeaders,
 )
 
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from .cli import Config
+
 
 class DedupMail:
     """Message with deduplication-specific properties and utilities.
@@ -75,7 +79,7 @@ class DedupMail:
         self.path = None
 
         # Global config.
-        self.conf = None
+        self.conf: Config
 
     def add_box_metadata(self, box, mail_id):
         """Post-instantiation utility to attach to mail some metadata derived from its
@@ -118,7 +122,7 @@ class DedupMail:
             <https://docs.python.org/3.11/library/mailbox.html#mailbox.MaildirMessage.get_date>`_
             does and if we can use it.
         """
-        if self.conf.time_source == CTIME:
+        if self.conf["time_source"] == CTIME:
             return os.path.getctime(self.path)
 
         # Fetch from the date header.
@@ -231,7 +235,7 @@ class DedupMail:
         preparation for hashing."""
         canonical_headers = []
 
-        for header_id in self.conf.hash_headers:
+        for header_id in self.conf["hash_headers"]:
             # Skip absent header.
             if header_id not in self:
                 continue
