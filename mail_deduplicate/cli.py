@@ -51,13 +51,7 @@ from .action import (
     MOVE_SELECTED,
     perform_action,
 )
-from .deduplicate import (
-    BODY_HASHER_NORMALIZED,
-    BODY_HASHER_RAW,
-    BODY_HASHER_SKIP,
-    BODY_HASHERS,
-    Deduplicate,
-)
+from .deduplicate import BodyHasher, Deduplicate
 from .mail import TimeSource
 from .mail_box import FILE_FORMATS, FOLDER_FORMATS, BoxFormat
 from .strategy import (
@@ -82,7 +76,7 @@ class Config(TypedDict):
     input_format: BoxFormat | None
     force_unlock: bool
     hash_headers: tuple[str, ...]
-    hash_body: str  # BODY_HASHERS
+    hash_body: BodyHasher
     hash_only: bool
     size_threshold: int
     content_threshold: int
@@ -207,12 +201,12 @@ class MdedupCommand(ExtraCommand):
     option(
         "-b",
         "--hash-body",
-        default=BODY_HASHER_SKIP,
-        type=Choice(sorted(BODY_HASHERS), case_sensitive=False),
-        help=f"Method used to hash the body of mails. Defaults to {BODY_HASHER_SKIP}, "
+        default=BodyHasher.SKIP,
+        type=Choice(BodyHasher, case_sensitive=False),
+        help=f"Method used to hash the body of mails. Defaults to {BodyHasher.SKIP}, "
         "which doesn't hash the body at all: it is the fastest method and header-based "
-        f"hash should be sufficient to determine duplicate set. {BODY_HASHER_RAW} use "
-        f"the body as it is (slow). {BODY_HASHER_NORMALIZED} pre-process the body "
+        f"hash should be sufficient to determine duplicate set. {BodyHasher.RAW} use "
+        f"the body as it is (slow). {BodyHasher.NORMALIZED} pre-process the body "
         "before hashing, by removing all line breaks and spaces (slowest).",
     ),
     option(

@@ -21,20 +21,16 @@ import sys
 import textwrap
 from collections import Counter, OrderedDict
 from difflib import unified_diff
+from enum import Enum
 from functools import cached_property
 from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
 
-from boltons.dictutils import FrozenDict
 from click_extra import TableFormat, progressbar, render_table
 from click_extra.colorize import default_theme as theme
 
-from . import (
-    ContentDiffAboveThreshold,
-    SizeDiffAboveThreshold,
-    TooFewHeaders,
-)
+from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders
 from .mail_box import open_box
 from .strategy import apply_strategy
 
@@ -120,17 +116,24 @@ STATS_DEF = OrderedDict(
 """All tracked statistics and their definition."""
 
 
-BODY_HASHER_SKIP = "skip"
-BODY_HASHER_RAW = "raw"
-BODY_HASHER_NORMALIZED = "normalized"
-BODY_HASHERS = FrozenDict(
-    {
-        BODY_HASHER_SKIP: lambda _: "",
-        BODY_HASHER_RAW: lambda m: m.hash_raw_body,
-        BODY_HASHER_NORMALIZED: lambda m: m.hash_normalized_body,
-    },
-)
-"""Method used to hash the body of mails."""
+class BodyHasher(Enum):
+    """Enumeration of available body hashing methods."""
+
+    SKIP = "skip"
+    RAW = "raw"
+    NORMALIZED = "normalized"
+
+    def __str__(self) -> str:
+        return self.value
+
+    def hash_function(self):
+        """Returns the hashing function corresponding to the body hasher."""
+        if self == BodyHasher.SKIP:
+            return lambda _: ""
+        elif self == BodyHasher.RAW:
+            return lambda m: m.hash_raw_body
+        elif self == BodyHasher.NORMALIZED:
+            return lambda m: m.hash_normalized_body
 
 
 class DuplicateSet:
@@ -399,11 +402,7 @@ class Deduplicate:
             "compute hashes.",
         )
 
-        body_hasher = BODY_HASHERS.get(self.conf["hash_body"])
-        if not body_hasher:
-            raise NotImplementedError(
-                f"{self.conf['hash_body']} body hasher not implemented yet."
-            )
+        body_hasher = self.conf["hash_body"].hash_function()
 
         with progressbar(
             length=self.stats["mail_found"],
