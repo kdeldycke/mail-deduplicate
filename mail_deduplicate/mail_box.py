@@ -162,7 +162,7 @@ def open_box(
     return open_subfolders(box, force_unlock)
 
 
-def lock_box(box, force_unlock):
+def lock_box(box: py_mailbox.Mailbox, force_unlock: bool) -> py_mailbox.Mailbox:
     """Lock an opened box and allows for forced unlocking.
 
     Returns the locked box.
@@ -201,31 +201,27 @@ def open_subfolders(
     if hasattr(box, "list_folders"):
         for folder_id in box.list_folders():
             logging.info(f"Opening subfolder {folder_id} ...")
-            folder_list += open_subfolders(
-                box.get_folder(folder_id),  # type: ignore[attr-defined]
-                force_unlock,
-            )
+            folder_list += open_subfolders(box.get_folder(folder_id), force_unlock)
     return folder_list
 
 
 def create_box(
     path: Path,
-    box_type: str,
+    box_format: BoxFormat,
     export_append: bool = False,
 ) -> py_mailbox.Mailbox:
     """Creates a brand new box from scratch."""
     logging.info(
-        f"Creating new {theme.choice(box_type)} box at {theme.choice(str(path))} ...",
+        f"Creating new {theme.choice(box_format)} box at {theme.choice(str(path))} ...",
     )
 
     if path.exists() and export_append is not True:
         raise FileExistsError(path)
 
-    constructor = BOX_TYPES[box_type]
     # Allow the constructor to create a new mail box as we already double-checked
     # beforehand it does not exist.
-    box = constructor(path, create=True)
+    box = box_format.constructor(path, create=True)
 
     logging.debug("Locking box...")
     box.lock()
-    return box  # type: ignore[no-any-return]
+    return box
