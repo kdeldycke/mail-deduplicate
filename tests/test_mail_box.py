@@ -23,7 +23,12 @@ from mailbox import Mailbox, Message
 
 import pytest
 
-from mail_deduplicate.mail_box import BoxFormat, BoxStructure
+from mail_deduplicate.mail_box import (
+    FILE_FORMATS,
+    FOLDER_FORMATS,
+    BoxFormat,
+    BoxStructure,
+)
 
 
 @cache
@@ -59,6 +64,9 @@ def test_box_formats():
 
     # Check all standard library box types are covered.
     assert set(stdlib_box_types()) == {box.base_class for box in BoxFormat}
+
+    assert set(FOLDER_FORMATS).isdisjoint(FILE_FORMATS)
+    assert set(BoxFormat) == set(FOLDER_FORMATS) | set(FILE_FORMATS)
 
 
 @pytest.mark.parametrize("source", ["./dummy_maildir/", "./__init__.py"])

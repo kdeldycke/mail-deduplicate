@@ -90,10 +90,17 @@ class BoxFormat(Enum):
 
 
 FOLDER_FORMATS = tuple(box for box in BoxFormat if box.structure == BoxStructure.FOLDER)
-"""Box formats implementing a folder-based structure."""
+"""Box formats implementing a folder-based structure.
+
+Is a tuple to keep natural order defined by ``BoxFormat``.
+"""
+
 
 FILE_FORMATS = tuple(box for box in BoxFormat if box.structure == BoxStructure.FILE)
-"""Box formats implementing a file-based structure."""
+"""Box formats implementing a file-based structure.
+
+Is a tuple to keep natural order defined by ``BoxFormat``.
+"""
 
 
 MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
