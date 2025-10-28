@@ -80,7 +80,7 @@ ADDRESS_HEADERS = frozenset([
 ])
 """Headers that contain email addresses.
 
-..danger::
+.. danger::
     These IDs should be kept lower-case, because they are compared to the one provided
     to those provided to the ``-h``/``--hash-header`` option, that is carried by the
     ``hash_headers`` property of the configuration.
