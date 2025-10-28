@@ -132,7 +132,11 @@ def compile_regexp(
 
 
 class MdedupCommand(ExtraCommand):
-    def format_help(self, ctx: Context, formatter: HelpExtraFormatter) -> None:
+    def format_help(
+        self,
+        ctx: Context,
+        formatter: HelpExtraFormatter,  # type: ignore[override]
+    ) -> None:
         """Extend the help screen with the description of all available strategies."""
         # Populate the formatter with the default help screen content.
         super().format_help(ctx, formatter)
