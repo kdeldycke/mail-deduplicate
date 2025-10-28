@@ -71,6 +71,7 @@ class MailFactory:
 
         # Derive RFC-2822 date from arrow object if not set.
         if not self.fields.get("date_rfc2822"):
+            assert isinstance(self.fields["date"], arrow.arrow.Arrow)
             self.fields["date_rfc2822"] = maildate(self.fields["date"].float_timestamp)
 
     def render(self):

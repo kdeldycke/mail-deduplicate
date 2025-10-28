@@ -41,6 +41,8 @@ DELETE_DISCARDED = "delete-discarded"
 def copy_mails(dedup: Deduplicate, mails) -> None:
     """Copy provided ``mails`` to a brand new box or an existing one."""
     if not dedup.conf["dry_run"]:
+        # Assert to please the type checker.
+        assert dedup.conf["export"]
         box = create_box(
             dedup.conf["export"],
             dedup.conf["export_format"],
@@ -64,6 +66,8 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
 def move_mails(dedup: Deduplicate, mails) -> None:
     """Move provided ``mails`` to a brand new box or an existing one."""
     if not dedup.conf["dry_run"]:
+        # Assert to please the type checker.
+        assert dedup.conf["export"]
         box = create_box(
             dedup.conf["export"],
             dedup.conf["export_format"],

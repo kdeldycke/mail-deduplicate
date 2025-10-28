@@ -34,7 +34,6 @@ from .mail import DedupMail
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from pathlib import Path
-    from typing import Literal
 
 
 class BoxStructure(StrEnum):
@@ -146,14 +145,14 @@ def autodetect_box_type(path: Path) -> BoxFormat:
 
 def open_box(
     path: Path,
-    box_format: BoxFormat | Literal[False] = False,
+    box_format: BoxFormat | None = None,
     force_unlock: bool = False,
 ) -> list[Mailbox]:
     """Open a mail box.
 
     Returns a list of boxes, one per sub-folder. All are locked, ready for operations.
 
-    If ``box_type`` is provided, forces the opening of the box in the specified format.
+    If ``box_format`` is provided, forces the opening of the box in the specified format.
     Else, defaults to autodetection.
     """
     logging.info(f"\nOpening {theme.choice(str(path))} ...")
@@ -182,7 +181,7 @@ def lock_box(box: Mailbox, force_unlock: bool) -> Mailbox:
         if force_unlock:
             logging.warning("Forcing removal of lock...")
             # Forces internal metadata.
-            box._locked = True
+            box._locked = True  # type: ignore[attr-defined]
             box.unlock()
             box.lock()
         # Re-raise error.
@@ -202,6 +201,9 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     folder_list = [lock_box(box, force_unlock)]
 
     if isinstance(box, tuple(b.base_class for b in FOLDER_FORMATS)):
+        # Asserts to please the type checker.
+        assert hasattr(box, "list_folders")
+        assert hasattr(box, "get_folder")
         for folder_id in box.list_folders():
             logging.info(f"Opening subfolder {folder_id} ...")
             folder_list += open_subfolders(box.get_folder(folder_id), force_unlock)
@@ -215,7 +217,8 @@ def create_box(
 ) -> Mailbox:
     """Creates a brand new box from scratch."""
     logging.info(
-        f"Creating new {theme.choice(box_format)} box at {theme.choice(str(path))} ..."
+        f"Creating new {theme.choice(str(box_format))} box "
+        f"at {theme.choice(str(path))} ..."
     )
 
     if path.exists() and export_append is not True:
@@ -223,7 +226,7 @@ def create_box(
 
     # Allow the constructor to create a new mail box as we already double-checked
     # beforehand it does not exist.
-    box = box_format.constructor(path, create=True)
+    box: Mailbox = box_format.constructor(path, create=True)
 
     logging.debug("Locking box...")
     box.lock()
