@@ -60,7 +60,7 @@ from .deduplicate import (
     BODY_HASHERS,
     Deduplicate,
 )
-from .mail_box import BOX_STRUCTURES, BOX_TYPES
+from .mail_box import BoxFormat, BoxStructure
 from .strategy import (
     DISCARD_MATCHING_PATH,
     DISCARD_NON_MATCHING_PATH,
@@ -82,7 +82,6 @@ class Config:
     """Holds global configuration."""
 
     # XXX Keep these defaults in sync with CLI option definitions.
-    input_format: str | None = None  # BOX_TYPES
     force_unlock: bool = False
     hash_headers: tuple[str, ...] = HASH_HEADERS
     hash_body: str | None = None  # BODY_HASHERS
@@ -98,6 +97,7 @@ class Config:
     export_format: str = "mbox"  # BOX_TYPES
     export_append: bool = False
     dry_run: bool = False
+    input_format: BoxFormat | None
 
 
 def normalize_headers(
@@ -175,7 +175,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-i",
         "--input-format",
-        type=Choice(sorted(BOX_TYPES), case_sensitive=False),
+        type=Choice(BoxFormat, case_sensitive=False),
         help="Force all provided mail sources to be parsed in the specified format. "
         "If not set, auto-detect the format of sources independently. Auto-detection "
         "only supports maildir and mbox format. Use this option to open up other box "
@@ -253,12 +253,13 @@ class MdedupCommand(ExtraCommand):
         "--regexp",
         callback=compile_regexp,
         metavar="REGEXP",
-        help="Regular expression on a mail's file path. Applies to real, individual "
-        "mail location for folder-based boxed "
-        f"({', '.join(sorted(BOX_STRUCTURES['folder']))}). But for file-based boxes "
-        f"({', '.join(sorted(BOX_STRUCTURES['file']))}), applies to the whole box's "
-        "path, as all mails are packed into one single file. Required in "
-        f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, "
+        help="Regular expression on a mail's file path. Applies to individual mail "
+        "location for folder-based boxes ("
+        + ", ".join((str(b) for b in BoxFormat if b.structure == BoxStructure.FOLDER))
+        + "). But for file-based boxes ("
+        + ", ".join((str(b) for b in BoxFormat if b.structure == BoxStructure.FILE))
+        + "), applies to the whole box's path, as all mails are packed into one single "
+        f"file. Required in {DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, "
         f"{SELECT_MATCHING_PATH} and {SELECT_NON_MATCHING_PATH} strategies.",
     ),
     option(
@@ -317,8 +318,8 @@ class MdedupCommand(ExtraCommand):
     option(
         "-e",
         "--export-format",
-        default="mbox",
-        type=Choice(sorted(BOX_TYPES), case_sensitive=False),
+        default=BoxFormat.MBOX,
+        type=Choice(BoxFormat, case_sensitive=False),
         help="Format of the mail box to which deduplication mails will be exported to. "
         f"Only affects {COPY_SELECTED}, {COPY_DISCARDED}, "
         f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
