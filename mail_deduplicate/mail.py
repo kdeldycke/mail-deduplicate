@@ -21,10 +21,10 @@ import email
 import hashlib
 import inspect
 import logging
-import mailbox
 import os
 import re
 from functools import cached_property
+from mailbox import Message
 
 import arrow
 from click_extra.table import TableFormat, render_table
@@ -38,6 +38,8 @@ from . import (
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from mailbox import Mailbox, _ProxyFile
+
     from .cli import Config
 
 
@@ -49,39 +51,39 @@ class DedupMail:
     and shouldn't be used directly, but composed with ``mailbox.Message`` sub-classes.
     """
 
-    def __init__(self, message=None) -> None:
+    def __init__(self, message: _ProxyFile) -> None:
         """Initialize a pre-parsed ``Message`` instance the same way the default factory
         in Python's ``mailbox`` module does."""
         # Hunt down in our parent classes (but ourself) the first one inheriting the
         # mailbox.Message class. That way we can get to the original factory.
-        orig_message_klass = None
+        orig_message_klass: type[Message] | None = None
         mro = inspect.getmro(self.__class__)
         for i, klass in enumerate(mro[1:], 1):
-            if issubclass(klass, mailbox.Message):
+            if issubclass(klass, Message):
                 orig_message_klass = mro[i - 1]
                 break
-        assert orig_message_klass
+        assert orig_message_klass is not None
 
-        # Call original object initialization from the right message class we
-        # inherits from mailbox.Message.
-        super(orig_message_klass, self).__init__(message)  # type: ignore[arg-type]
+        # Call original object initialization from the right message class we inherits
+        # from mailbox.Message.
+        super(orig_message_klass, self).__init__(message)  # type: ignore[misc]
 
         # Normalized path to the mailbox this message originates from.
-        self.source_path = None
+        self.source_path: str | None = None
 
         # Mail ID used to uniquely refers to it in the context of its source.
-        self.mail_id = None
+        self.mail_id: str | None = None
 
         # Real filesystem location of the mail. Returns the individual mail's file
         # for folder-based box types (maildir & co.), but returns the whole box path
         # for file-based boxes (mbox & co.). Only used by regexp-based selection
         # strategies.
-        self.path = None
+        self.path: str
 
         # Global config.
         self.conf: Config
 
-    def add_box_metadata(self, box, mail_id):
+    def add_box_metadata(self, box: Mailbox, mail_id: str) -> None:
         """Post-instantiation utility to attach to mail some metadata derived from its
         parent box.
 
@@ -93,20 +95,20 @@ class DedupMail:
         self.mail_id = mail_id
 
         # Extract file name and close it right away to reclaim memory.
-        mail_file = box.get_file(mail_id)
-        self.path = mail_file._file.name
+        mail_file: _ProxyFile = box.get_file(mail_id)
+        self.path = mail_file._file.name  # type: ignore[attr-defined]
         mail_file.close()
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.source_path}:{self.mail_id}>"
 
     @cached_property
-    def uid(self):
+    def uid(self) -> tuple[str | None, str | None]:
         """Unique ID of the mail."""
         return self.source_path, self.mail_id
 
     @cached_property
-    def timestamp(self):
+    def timestamp(self) -> float | None:
         """Compute the normalized canonical timestamp of the mail.
 
         Sourced from the message's ``Date`` header by default. In the case of
@@ -130,8 +132,10 @@ class DedupMail:
         with contextlib.suppress(ValueError):
             return email.utils.mktime_tz(email.utils.parsedate_tz(value))
 
+        return None
+
     @cached_property
-    def size(self):
+    def size(self) -> int:
         """Returns canonical mail size.
 
         Size is computed as the length of the message body, i.e. the payload of the mail
@@ -148,7 +152,7 @@ class DedupMail:
         return len("".join(self.body_lines))
 
     @cached_property
-    def body_lines(self):
+    def body_lines(self) -> list[str]:
         """Return a normalized list of lines from message's body."""
         body = []
         if self.preamble is not None:
@@ -190,7 +194,7 @@ class DedupMail:
         return body
 
     @cached_property
-    def subject(self):
+    def subject(self) -> str:
         """Normalized subject.
 
         Only used for debugging and human-friendly logging.
@@ -199,20 +203,21 @@ class DedupMail:
         subject, _ = re.subn(r"\s+", " ", subject)
         return subject
 
-    def hash_key(self):
+    def hash_key(self) -> str:
         """Returns the canonical hash of a mail.
 
         .. caution::
             This method hasn't been made explicitly into a cached property in order to
             reduce the overall memory footprint.
         """
-        logging.debug(f"Serialized headers: {self.serialized_headers()!r}")
-        hash_value = hashlib.sha224(self.serialized_headers()).hexdigest()
+        serialized_headers = self.serialized_headers()
+        logging.debug(f"Serialized headers: {serialized_headers!r}")
+        hash_value = hashlib.sha224(serialized_headers).hexdigest()
         logging.debug(f"Hash: {hash_value}")
         return hash_value
 
     @cached_property
-    def hash_raw_body(self):
+    def hash_raw_body(self) -> str:
         """Returns the canonical body hash of a mail."""
         serialized_raw_body = "\n".join(self.body_lines).encode("utf-8")
         hash_value = hashlib.sha224(serialized_raw_body).hexdigest()
@@ -220,7 +225,7 @@ class DedupMail:
         return hash_value
 
     @cached_property
-    def hash_normalized_body(self):
+    def hash_normalized_body(self) -> str:
         """Returns the normalized body hash of a mail."""
         serialized_normalized_body = "".join(
             [re.sub(r"\s", "", line) for line in self.body_lines],
@@ -230,7 +235,7 @@ class DedupMail:
         return hash_value
 
     @cached_property
-    def canonical_headers(self):
+    def canonical_headers(self) -> tuple[tuple[str, str], ...]:
         """Returns the full list of all canonical headers names and values in
         preparation for hashing."""
         canonical_headers = []
@@ -268,7 +273,7 @@ class DedupMail:
             table_format=TableFormat.FANCY_GRID,
         )
 
-    def serialized_headers(self):
+    def serialized_headers(self) -> bytes:
         """Serialize the canonical headers into a single string ready to be hashed.
 
         At this point we should have at an absolute minimum of headers.
@@ -292,7 +297,9 @@ class DedupMail:
         ).encode("utf-8")
 
     @staticmethod
-    def normalize_header_value(header_id, value):
+    def normalize_header_value(
+        header_id: str, value: str | bytes | email.header.Header
+    ) -> str:
         """Normalize and clean-up header value into its canonical form.
 
         Always returns a unicode string.

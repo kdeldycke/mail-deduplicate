@@ -22,9 +22,10 @@ Based on `Python's standard library mailbox module
 from __future__ import annotations
 
 import logging
-import mailbox as py_mailbox
+import mailbox
 from enum import Enum, StrEnum
 from functools import partial
+from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
 
 from click_extra.colorize import default_theme as theme
 
@@ -58,20 +59,18 @@ class BoxFormat(Enum):
     """
 
     # Same order as in `mailbox` module documentation.
-    MAILDIR = (py_mailbox.Maildir, BoxStructure.FOLDER)
-    MBOX = (py_mailbox.mbox, BoxStructure.FILE)
-    MH = (py_mailbox.MH, BoxStructure.FOLDER)
-    BABYL = (py_mailbox.Babyl, BoxStructure.FILE)
-    MMDF = (py_mailbox.MMDF, BoxStructure.FILE)
+    MAILDIR = (Maildir, BoxStructure.FOLDER)
+    MBOX = (mbox, BoxStructure.FILE)
+    MH = (MH, BoxStructure.FOLDER)
+    BABYL = (Babyl, BoxStructure.FILE)
+    MMDF = (MMDF, BoxStructure.FILE)
 
-    def __init__(
-        self, base_class: type[py_mailbox.Mailbox], structure: BoxStructure
-    ) -> None:
+    def __init__(self, base_class: type[Mailbox], structure: BoxStructure) -> None:
         self.base_class = base_class
         self.structure = structure
 
         # We expect the message class to be named as <BaseClass>Name.
-        self.message_class = getattr(py_mailbox, f"{base_class.__name__}Message")
+        self.message_class = getattr(mailbox, f"{base_class.__name__}Message")
 
     def __str__(self):
         """The lowercase name of the format is used as a key in CLI options."""
@@ -134,7 +133,7 @@ def autodetect_box_type(path: Path) -> BoxFormat:
     if not box_format:
         raise ValueError("Unrecognized mail source type.")
 
-    logging.info(f"{theme.choice(box_format)} detected.")
+    logging.info(f"{theme.choice(str(box_format))} detected.")
     return box_format
 
 
@@ -142,7 +141,7 @@ def open_box(
     path: Path,
     box_format: BoxFormat | Literal[False] = False,
     force_unlock: bool = False,
-) -> list[py_mailbox.Mailbox]:
+) -> list[Mailbox]:
     """Open a mail box.
 
     Returns a list of boxes, one per sub-folder. All are locked, ready for operations.
@@ -162,7 +161,7 @@ def open_box(
     return open_subfolders(box, force_unlock)
 
 
-def lock_box(box: py_mailbox.Mailbox, force_unlock: bool) -> py_mailbox.Mailbox:
+def lock_box(box: Mailbox, force_unlock: bool) -> Mailbox:
     """Lock an opened box and allows for forced unlocking.
 
     Returns the locked box.
@@ -170,7 +169,7 @@ def lock_box(box: py_mailbox.Mailbox, force_unlock: bool) -> py_mailbox.Mailbox:
     try:
         logging.debug("Locking box...")
         box.lock()
-    except py_mailbox.ExternalClashError:
+    except ExternalClashError:
         logging.error("Box already locked!")
         # Remove the lock manually and re-lock.
         if force_unlock:
@@ -186,10 +185,7 @@ def lock_box(box: py_mailbox.Mailbox, force_unlock: bool) -> py_mailbox.Mailbox:
     return box
 
 
-def open_subfolders(
-    box: py_mailbox.Mailbox,
-    force_unlock: bool,
-) -> list[py_mailbox.Mailbox]:
+def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     """Browse recursively the subfolder tree of a box.
 
     Returns a list of opened and locked boxes, each for one subfolder.
@@ -209,10 +205,10 @@ def create_box(
     path: Path,
     box_format: BoxFormat,
     export_append: bool = False,
-) -> py_mailbox.Mailbox:
+) -> Mailbox:
     """Creates a brand new box from scratch."""
     logging.info(
-        f"Creating new {theme.choice(box_format)} box at {theme.choice(str(path))} ...",
+        f"Creating new {theme.choice(box_format)} box at {theme.choice(str(path))} ..."
     )
 
     if path.exists() and export_append is not True:
