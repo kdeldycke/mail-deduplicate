@@ -29,7 +29,7 @@ from functools import cached_property
 import arrow
 from click_extra.table import TableFormat, render_table
 
-from mail_deduplicate import (
+from . import (
     CTIME,
     MINIMAL_HEADERS_COUNT,
     QUOTE_DISCARD_HEADERS,

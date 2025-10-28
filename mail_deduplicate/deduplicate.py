@@ -30,13 +30,13 @@ from boltons.dictutils import FrozenDict
 from click_extra import TableFormat, progressbar, render_table
 from click_extra.colorize import default_theme as theme
 
-from mail_deduplicate import (
+from . import (
     ContentDiffAboveThreshold,
     SizeDiffAboveThreshold,
     TooFewHeaders,
 )
-from mail_deduplicate.mail_box import open_box
-from mail_deduplicate.strategy import apply_strategy
+from .mail_box import open_box
+from .strategy import apply_strategy
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
