@@ -375,8 +375,7 @@ class Deduplicate:
         # Make the path absolute and resolve any symlinks.
         path = Path(source_path).resolve(strict=True)
         if str(path) in self.sources:
-            msg = f"{path} already added."
-            raise ValueError(msg)
+            raise ValueError(f"{path} already added.")
 
         # Open and register the mail source. Subfolders will be registered as their
         # own box.
@@ -402,8 +401,9 @@ class Deduplicate:
 
         body_hasher = BODY_HASHERS.get(self.conf["hash_body"])
         if not body_hasher:
-            msg = f"{self.conf['hash_body']} body hasher not implemented yet."
-            raise NotImplementedError(msg)
+            raise NotImplementedError(
+                f"{self.conf['hash_body']} body hasher not implemented yet."
+            )
 
         with progressbar(
             length=self.stats["mail_found"],

@@ -247,8 +247,7 @@ def build_method_mapping():
             if method:
                 fallback_method = method
             if not fallback_method:
-                msg = f"Can't find {mid}() method."
-                raise NotImplementedError(msg)
+                raise NotImplementedError(f"Can't find {mid}() method.")
             methods[strategy_id] = fallback_method
     return methods
 
@@ -262,8 +261,7 @@ def apply_strategy(strategy_id, duplicates):
     Returns a set of selected mails objects.
     """
     if strategy_id not in STRATEGY_METHODS:
-        msg = f"Unknown {strategy_id} strategy."
-        raise ValueError(msg)
+        raise ValueError(f"Unknown {strategy_id} strategy.")
     method = STRATEGY_METHODS[strategy_id]
     logging.debug(f"Apply {method!r}...")
     return set(method(duplicates))
