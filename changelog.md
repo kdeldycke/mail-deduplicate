@@ -5,8 +5,8 @@
 > [!IMPORTANT]
 > This version is not released yet and is under active development.
 
-- Add `--no-config`, `--table-format` options from Click Extra.
 - Log options explicitly set by user but ignored because of `--hash-only` mode.
+- Add `--no-config`, `--table-format` options inherited from Click Extra.
 - Remove direct dependency on `tabulate`, use `click-extra`'s table utilities instead.
 - Add official support for Python 3.14.
 - Drop support for Python 3.10.
