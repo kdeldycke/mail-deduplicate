@@ -39,11 +39,7 @@ from click_extra import (
 )
 from click_extra.colorize import default_theme as theme
 
-from . import (
-    DEFAULT_CONTENT_THRESHOLD,
-    DEFAULT_SIZE_THRESHOLD,
-    HASH_HEADERS,
-)
+from . import DEFAULT_CONTENT_THRESHOLD, DEFAULT_SIZE_THRESHOLD, HASH_HEADERS
 from .action import Action
 from .deduplicate import BodyHasher, Deduplicate
 from .mail import TimeSource
