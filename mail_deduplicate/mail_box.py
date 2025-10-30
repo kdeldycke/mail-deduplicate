@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import logging
 import mailbox
-from enum import Enum, StrEnum
+from enum import Enum, auto
 from functools import partial
 from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
 
@@ -36,11 +36,12 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-class BoxStructure(StrEnum):
+class BoxStructure(Enum):
     """Box structures can be file-based or folder-based."""
 
-    FOLDER = "folder"
-    FILE = "file"
+    # We use auto() as we don't care about the actual values here.
+    FOLDER = auto()
+    FILE = auto()
 
 
 class BoxFormat(Enum):
