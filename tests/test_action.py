@@ -18,13 +18,18 @@ from __future__ import annotations
 
 from string import ascii_lowercase
 
-from mail_deduplicate.action import ACTIONS
+from mail_deduplicate.action import Action
 
 
 def test_action_definitions():
     """Test duplicate action definitions."""
-    for action_id, method in ACTIONS.items():
-        # All actions are lower cases strings, with dashes.
-        assert isinstance(action_id, str)
-        assert set(action_id).issubset(ascii_lowercase + "-")
-        assert callable(method)
+    for action in Action:
+        assert isinstance(action.value, str)
+        assert set(action.value).issubset(ascii_lowercase + "-")
+        assert str(action) == action.value
+        assert action.name.lower().replace("_", "-") == action.value
+
+        action_func = action.action_function()
+        assert action_func is not None
+        assert callable(action_func)
+        assert action_func.__name__ == action.name.lower()

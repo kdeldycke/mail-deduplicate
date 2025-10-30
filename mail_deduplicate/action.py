@@ -17,8 +17,8 @@
 from __future__ import annotations
 
 import logging
+from enum import Enum
 
-from boltons.dictutils import FrozenDict
 from boltons.iterutils import unique
 from click_extra.colorize import default_theme as theme
 
@@ -27,15 +27,6 @@ from .mail_box import create_box
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from .deduplicate import Deduplicate
-
-
-COPY_SELECTED = "copy-selected"
-COPY_DISCARDED = "copy-discarded"
-MOVE_SELECTED = "move-selected"
-MOVE_DISCARDED = "move-discarded"
-DELETE_SELECTED = "delete-selected"
-DELETE_DISCARDED = "delete-discarded"
-"""Define all available action IDs."""
 
 
 def copy_mails(dedup: Deduplicate, mails) -> None:
@@ -133,37 +124,37 @@ def delete_discarded(dedup: Deduplicate) -> None:
     delete_mails(dedup, dedup.discard)
 
 
-ACTIONS = FrozenDict(
-    {
-        COPY_SELECTED: copy_selected,
-        COPY_DISCARDED: copy_discarded,
-        MOVE_SELECTED: move_selected,
-        MOVE_DISCARDED: move_discarded,
-        DELETE_SELECTED: delete_selected,
-        DELETE_DISCARDED: delete_discarded,
-    },
-)
-"""Map action ID's to their implementation."""
+class Action(Enum):
+    """Define all available action IDs."""
 
+    COPY_SELECTED = "copy-selected"
+    COPY_DISCARDED = "copy-discarded"
+    MOVE_SELECTED = "move-selected"
+    MOVE_DISCARDED = "move-discarded"
+    DELETE_SELECTED = "delete-selected"
+    DELETE_DISCARDED = "delete-discarded"
 
-def perform_action(dedup: Deduplicate) -> None:
-    """Performs the action on selected mail candidates."""
-    logging.info(f"Perform {theme.choice(dedup.conf['action'])} action...")
+    def __str__(self) -> str:
+        return self.value
 
-    selection_count = len(dedup.selection)
-    if selection_count == 0:
-        logging.warning("No mail selected to perform action on.")
-        return
-    logging.info(f"{selection_count} mails selected for action.")
+    def action_function(self) -> callable:
+        """Return the action function associated with this action."""
+        func_name = self.name.lower()
+        return globals()[func_name]
 
-    # Check our indexing and selection methods are not flagging candidates
-    # several times.
-    assert len(unique(dedup.selection)) == len(dedup.selection)
-    assert len(dedup.selection) == dedup.stats["mail_selected"]
+    def perform_action(self, dedup: Deduplicate) -> None:
+        """Performs the action on selected mail candidates."""
+        logging.info(f"Perform {theme.choice(self)} action...")
 
-    # Hunt down for action implementation.
-    method = ACTIONS.get(dedup.conf["action"])
-    if not method:
-        raise NotImplementedError(f"{dedup.conf['action']} action not implemented yet.")
+        selection_count = len(dedup.selection)
+        if selection_count == 0:
+            logging.warning("No mail selected to perform action on.")
+            return
+        logging.info(f"{selection_count} mails selected for action.")
 
-    method(dedup)
+        # Check our indexing and selection methods are not flagging candidates
+        # several times.
+        assert len(unique(dedup.selection)) == len(dedup.selection)
+        assert len(dedup.selection) == dedup.stats["mail_selected"]
+
+        self.action_function()(dedup)

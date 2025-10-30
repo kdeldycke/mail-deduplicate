@@ -44,14 +44,7 @@ from . import (
     DEFAULT_SIZE_THRESHOLD,
     HASH_HEADERS,
 )
-from .action import (
-    ACTIONS,
-    COPY_DISCARDED,
-    COPY_SELECTED,
-    MOVE_DISCARDED,
-    MOVE_SELECTED,
-    perform_action,
-)
+from .action import Action
 from .deduplicate import BodyHasher, Deduplicate
 from .mail import TimeSource
 from .mail_box import FILE_FORMATS, FOLDER_FORMATS, BoxFormat
@@ -85,7 +78,7 @@ class Config(TypedDict):
     strategy: str | None  # STRATEGY_METHODS
     time_source: TimeSource
     regexp: re.Pattern | None
-    action: str  # ACTIONS
+    action: Action
     export: Path | None
     export_format: BoxFormat
     export_append: bool
@@ -295,11 +288,11 @@ class MdedupCommand(ExtraCommand):
     option(
         "-a",
         "--action",
-        default=COPY_SELECTED,
-        type=Choice(sorted(ACTIONS), case_sensitive=False),
-        help=f"Action performed on the selected mails. Defaults to {COPY_SELECTED} as "
-        "it is the safest: it only reads the mail sources and create a brand new mail "
-        "box with the selection results.",
+        default=Action.COPY_SELECTED,
+        type=EnumChoice(Action),
+        help=f"Action performed on the selected mails. Defaults to "
+        f"{Action.COPY_SELECTED} as it is the safest: it only reads the mail sources "
+        "and create a brand new mail box with the selection results.",
     ),
     option(
         "-E",
@@ -307,8 +300,9 @@ class MdedupCommand(ExtraCommand):
         metavar="MAIL_BOX_PATH",
         type=path(resolve_path=True),
         help="Location of the destination mail box to where to copy or move "
-        f"deduplicated mails. Required in {COPY_SELECTED}, {COPY_DISCARDED}, "
-        f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
+        f"deduplicated mails. Required in {Action.COPY_SELECTED}, "
+        f"{Action.COPY_DISCARDED}, {Action.MOVE_SELECTED} and {Action.MOVE_DISCARDED} "
+        "actions.",
     ),
     option(
         "-e",
@@ -316,8 +310,8 @@ class MdedupCommand(ExtraCommand):
         default=BoxFormat.MBOX,
         type=EnumChoice(BoxFormat),
         help="Format of the mail box to which deduplication mails will be exported to. "
-        f"Only affects {COPY_SELECTED}, {COPY_DISCARDED}, "
-        f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
+        f"Only affects {Action.COPY_SELECTED}, {Action.COPY_DISCARDED}, "
+        f"{Action.MOVE_SELECTED} and {Action.MOVE_DISCARDED} actions.",
     ),
     option(
         "--export-append",
@@ -325,8 +319,8 @@ class MdedupCommand(ExtraCommand):
         default=False,
         help="If destination mail box already exists, add mails into it "
         "instead of interrupting (default behavior). "
-        f"Affect {COPY_SELECTED}, {COPY_DISCARDED}, "
-        f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
+        f"Affect {Action.COPY_SELECTED}, {Action.COPY_DISCARDED}, "
+        f"{Action.MOVE_SELECTED} and {Action.MOVE_DISCARDED} actions.",
     ),
     option(
         "-n",
@@ -402,10 +396,10 @@ def mdedup(
                 export,
                 "-E/--export",
                 {
-                    COPY_SELECTED,
-                    COPY_DISCARDED,
-                    MOVE_SELECTED,
-                    MOVE_DISCARDED,
+                    Action.COPY_SELECTED,
+                    Action.COPY_DISCARDED,
+                    Action.MOVE_SELECTED,
+                    Action.MOVE_DISCARDED,
                 },
             ),
         ),
@@ -496,7 +490,7 @@ def mdedup(
     dedup.build_sets()
 
     echo(theme.heading("\n● Step #4 - Perform action on selected mails"))
-    perform_action(dedup)
+    action.perform_action(dedup)
     dedup.close_all()
 
     echo(theme.heading("\n● Step #5 - Report and statistics"))
