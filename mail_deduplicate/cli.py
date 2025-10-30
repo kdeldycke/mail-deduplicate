@@ -24,6 +24,7 @@ from boltons.iterutils import unique
 from click_extra import (
     BadParameter,
     Choice,
+    EnumChoice,
     ExtraCommand,
     IntRange,
     ParameterSource,
@@ -170,7 +171,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-i",
         "--input-format",
-        type=Choice(BoxFormat, case_sensitive=False),
+        type=EnumChoice(BoxFormat),
         help="Force all provided mail sources to be parsed in the specified format. "
         "If not set, auto-detect the format of sources independently. Auto-detection "
         "only supports maildir and mbox format. Use this option to open up other box "
@@ -202,7 +203,7 @@ class MdedupCommand(ExtraCommand):
         "-b",
         "--hash-body",
         default=BodyHasher.SKIP,
-        type=Choice(BodyHasher, case_sensitive=False),
+        type=EnumChoice(BodyHasher),
         help=f"Method used to hash the body of mails. Defaults to {BodyHasher.SKIP}, "
         "which doesn't hash the body at all: it is the fastest method and header-based "
         f"hash should be sufficient to determine duplicate set. {BodyHasher.RAW} use "
@@ -240,7 +241,7 @@ class MdedupCommand(ExtraCommand):
         "-t",
         "--time-source",
         default=TimeSource.DATE_HEADER,
-        type=Choice(TimeSource, case_sensitive=False),
+        type=EnumChoice(TimeSource),
         help="Source of a mail's time reference used in time-sensitive strategies.",
     ),
     option(
@@ -313,7 +314,7 @@ class MdedupCommand(ExtraCommand):
         "-e",
         "--export-format",
         default=BoxFormat.MBOX,
-        type=Choice(BoxFormat, case_sensitive=False),
+        type=EnumChoice(BoxFormat),
         help="Format of the mail box to which deduplication mails will be exported to. "
         f"Only affects {COPY_SELECTED}, {COPY_DISCARDED}, "
         f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",

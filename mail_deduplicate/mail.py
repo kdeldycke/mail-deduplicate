@@ -52,6 +52,9 @@ class TimeSource(Enum):
         Only available for ``maildir`` sources.
     """
 
+    def __str__(self) -> str:
+        return self.value
+
 
 class DedupMail:
     """Message with deduplication-specific properties and utilities.
