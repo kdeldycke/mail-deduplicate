@@ -69,7 +69,7 @@ click-extra = { git = "https://github.com/kdeldycke/click-extra" }
 test = [
     "click-extra [pytest] > 6.2.0",
     "coverage [toml] ~= 7.11.0",
-    "extra-platforms [pytest] ~= 4.1.0",
+    "extra-platforms [pytest] ~= 5.0.0",
     "pytest ~= 8.4.2",
     "pytest-cov ~= 7.0.0",
     "pytest-github-actions-annotate-failures ~= 0.3.0",
