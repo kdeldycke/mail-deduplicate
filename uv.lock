@@ -173,7 +173,7 @@ wheels = [
 [[package]]
 name = "click-extra"
 version = "6.2.0"
-source = { git = "https://github.com/kdeldycke/click-extra#b8101882e9491eb488819bb8340863743e561c58" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boltons" },
     { name = "click" },
@@ -183,6 +183,10 @@ dependencies = [
     { name = "requests" },
     { name = "tabulate", extra = ["widechars"] },
     { name = "wcmatch" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cf/80/64f201612d295e58a0885e5ab8b7c37c7cc307a3cf44714810615e0ae661/click_extra-6.2.0.tar.gz", hash = "sha256:6d2855b02a733b78a94516a2a63f12717302dd1aa9733ac858e2d45335a3d3b9", size = 126643, upload-time = "2025-11-04T06:30:04.023Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/b4/5393154b09e2c1e469bbce118c88b44cb20e9ce2412c90bc2d617014ee27/click_extra-6.2.0-py3-none-any.whl", hash = "sha256:63286da615d7a59b6d4acdb67058f1f377177d953a960aadf26b55427c3d422a", size = 91074, upload-time = "2025-11-04T06:30:02.735Z" },
 ]
 
 [package.optional-dependencies]
@@ -338,14 +342,14 @@ wheels = [
 
 [[package]]
 name = "extra-platforms"
-version = "4.1.0"
+version = "5.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "distro" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/64/a6/3d57168ea92f5c6f78786e8bf20fc5273e679d96c6c7723cf9f2374523c1/extra_platforms-4.1.0.tar.gz", hash = "sha256:2d99c2fb8fdadeb2e47747c40033465ca551fc57287a547d2de07c0875aefed8", size = 47038, upload-time = "2025-10-21T18:17:07.637Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/aa/57/329845520c7ac71e3e4e05281e2dcccf5ebb904d5c480ebd6c79d1153f5d/extra_platforms-5.0.0.tar.gz", hash = "sha256:1ac94f6747eaf14ff7e0ef0929d5d9c3dbe40a8cd42d93d6c6ae8105ec1b0dd6", size = 47428, upload-time = "2025-11-03T08:25:05.931Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f2/61/0f64fe9e26ce1f70838b6e812ec17772e1a673d5e824d766053df98d2cb5/extra_platforms-4.1.0-py3-none-any.whl", hash = "sha256:aaad2438a4ac92df52b8ea6d1b3cc64b018a4f4b9f9cd82c4be48976a501f323", size = 34220, upload-time = "2025-10-21T18:17:06.288Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/b4/6d9a19b77202f990555c8ab28168cbd2e76feee4b3d64e88bdc76ba5a020/extra_platforms-5.0.0-py3-none-any.whl", hash = "sha256:694b17a5698a065e29be1d322e5c3496b308749e5447804f4c7fcfb2f82cf490", size = 34401, upload-time = "2025-11-03T08:25:04.619Z" },
 ]
 
 [package.optional-dependencies]
@@ -450,11 +454,11 @@ typing = [
 requires-dist = [
     { name = "arrow", specifier = ">=1.3.0" },
     { name = "boltons", specifier = ">=25.0.0" },
-    { name = "click-extra", git = "https://github.com/kdeldycke/click-extra" },
-    { name = "click-extra", extras = ["pytest"], marker = "extra == 'test'", git = "https://github.com/kdeldycke/click-extra" },
-    { name = "click-extra", extras = ["sphinx"], marker = "extra == 'docs'", git = "https://github.com/kdeldycke/click-extra" },
+    { name = "click-extra", specifier = ">=6.2.0" },
+    { name = "click-extra", extras = ["pytest"], marker = "extra == 'test'", specifier = ">=6.2.0" },
+    { name = "click-extra", extras = ["sphinx"], marker = "extra == 'docs'", specifier = ">=6.2.0" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'test'", specifier = "~=7.11.0" },
-    { name = "extra-platforms", extras = ["pytest"], marker = "extra == 'test'", specifier = "~=4.1.0" },
+    { name = "extra-platforms", extras = ["pytest"], marker = "extra == 'test'", specifier = ">=5.0.0" },
     { name = "furo", marker = "extra == 'docs'", specifier = "~=2025.9.25" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = "~=4.0.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = "~=8.4.2" },
