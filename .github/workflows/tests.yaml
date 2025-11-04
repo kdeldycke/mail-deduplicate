@@ -61,7 +61,7 @@ jobs:
           uv --no-progress venv --python ${{ matrix.python-version }}
       - name: Install project
         run: |
-          uv --no-progress sync --frozen --extra test
+          uv --no-progress sync --frozen --all-extras
 
       - name: Launch local CLI
         run: |
