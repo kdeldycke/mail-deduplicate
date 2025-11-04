@@ -3,7 +3,7 @@
 name = "mail-deduplicate"
 version = "8.0.0"
 # Python versions and their status: https://devguide.python.org/versions/
-requires-python = ">= 3.11"
+requires-python = ">= 3.10"
 description = "📧 CLI to deduplicate mails from mail boxes"
 authors = [{ name = "Kevin Deldycke", email = "kevin@deldycke.com" }]
 readme = "readme.md"
@@ -32,6 +32,7 @@ classifiers = [
     'Operating System :: Microsoft :: Windows',
     'Operating System :: POSIX',
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -72,19 +73,22 @@ test = [
     "pytest-github-actions-annotate-failures ~= 0.3.0",
     "pytest-randomly ~= 4.0.0",
 ]
-typing = ["types-boltons ~= 25.0.0.20250822", "types-tabulate ~= 0.9.0.2"]
+typing = ["types-boltons ~= 25.0.0.20250822"]
 docs = [
     "click-extra [sphinx] >= 6.2.0",
     "furo ~= 2025.9.25",
     "myst-parser ~= 4.0.0",
-    "sphinx ~= 8.2.3",
-    "sphinx-autodoc-typehints ~= 3.5.1",
+    # Sphinx  8.0.0 is the first version to drop Python 3.9, like us.
+    "sphinx >= 8.0.0",
+    # sphinx-autodoc-typehints 2.4.0 is the first version that is aligned to our Python >= 3.10 requirement.
+    "sphinx-autodoc-typehints >= 2.4.0",
     "sphinx-click ~= 6.1.0",
     "sphinx-copybutton ~= 0.5.2",
     "sphinx-design ~= 0.6.0",
     "sphinx-issues ~= 5.0.0",
     "sphinxcontrib-mermaid ~= 1.0.0",
     "sphinxext-opengraph ~= 0.13.0",
+    "tomli >= 2.3.0 ; python_version < '3.11'",
 ]
 
 [project.urls]

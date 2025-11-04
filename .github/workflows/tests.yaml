@@ -31,7 +31,9 @@ jobs:
         # For Python, we only test against the oldest and newest major supported version and skip intermediates. We
         # also test on the upcoming development version to anticipate issues.
         python-version:
-          - "3.11"
+          - "3.10"
+          # Ignore intermediate versions to reduce CI load.
+          # - "3.11"
           # - "3.12"
           # - "3.13"
           - "3.14"

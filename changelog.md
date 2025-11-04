@@ -9,13 +9,12 @@
 - Add `--no-config`, `--table-format` options inherited from Click Extra.
 - Remove direct dependency on `tabulate`, use `click-extra`'s table utilities instead.
 - Add official support for Python 3.14.
-- Drop support for Python 3.10.
 - Remove maximum capped version of all dependencies (relax all `~=` specifiers to `>=`). This gives more freedom to downstream and upstream packagers. Document each minimal version choice.
 - Move all typing-related imports behind a hard-coded `TYPE_CHECKING` guard to avoid runtime imports.
 - Produce `mdedup-windows-arm64.exe` Windows binary for `arm64` architecture.
 - Run tests on stable Python 3.14 release.
 - Run tests on Python 3.15-dev, mark them as unstable.
-- Skip tests on intermediate Python versions (`3.12` and `3.13`) to reduce CI load.
+- Skip tests on intermediate Python versions (`3.11`, `3.12` and `3.13`) to reduce CI load.
 - Use `astral-sh/setup-uv` action to install `uv` instead of manually installing it with `pip`.
 - Move `ubuntu-24.04` to `ubuntu-24.04-arm`, `macos-15` tests to `macos-26` and `windows-2025` tests to `windows-11-arm`.
 
