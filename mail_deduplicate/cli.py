@@ -191,7 +191,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-b",
         "--hash-body",
-        default=BodyHasher.SKIP,
+        default=str(BodyHasher.SKIP),
         type=EnumChoice(BodyHasher),
         help=f"Method used to hash the body of mails. Defaults to {BodyHasher.SKIP}, "
         "which doesn't hash the body at all: it is the fastest method and header-based "
@@ -229,7 +229,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-t",
         "--time-source",
-        default=TimeSource.DATE_HEADER,
+        default=str(TimeSource.DATE_HEADER),
         type=EnumChoice(TimeSource),
         help="Source of a mail's time reference used in time-sensitive strategies.",
     ),
@@ -284,7 +284,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-a",
         "--action",
-        default=Action.COPY_SELECTED,
+        default=str(Action.COPY_SELECTED),
         type=EnumChoice(Action),
         help=f"Action performed on the selected mails. Defaults to "
         f"{Action.COPY_SELECTED} as it is the safest: it only reads the mail sources "
@@ -303,7 +303,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-e",
         "--export-format",
-        default=BoxFormat.MBOX,
+        default=str(BoxFormat.MBOX),
         type=EnumChoice(BoxFormat),
         help="Format of the mail box to which deduplication mails will be exported to. "
         f"Only affects {Action.COPY_SELECTED}, {Action.COPY_DISCARDED}, "
