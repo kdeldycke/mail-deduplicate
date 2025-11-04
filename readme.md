@@ -59,10 +59,10 @@ $ uvx --from mail-deduplicate mdedup
 
 Standalone binaries of `mdedup`'s latest version are available as direct downloads for several platforms and architectures:
 
-| Platform          | `x86_64`                                                                                                                         | `arm64`                                                                                                                          |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| **Linux**[^linux] | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-x64.bin)     | [Download `mdedup-linux-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-arm64.bin) |
-| **macOS**         | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)     | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-arm64.bin) |
+| Platform          | `x86_64`                                                                                                                           | `arm64`                                                                                                                                |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Linux**[^linux] | [Download `mdedup-linux-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-x64.bin)     | [Download `mdedup-linux-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-linux-arm64.bin)     |
+| **macOS**         | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)     | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-arm64.bin)     |
 | **Windows**       | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-x64.exe) | [Download `mdedup-windows-arm64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-arm64.exe) |
 
 ## Quickstart
