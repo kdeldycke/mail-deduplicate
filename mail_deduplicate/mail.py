@@ -316,8 +316,7 @@ class DedupMail:
 
         Always returns a unicode string.
         """
-        # Problematic when reading utf8 emails
-        # this will ensure value is always string
+        # Problematic when reading utf8 emails this will ensure value is always string.
         if isinstance(value, bytes):
             value = value.decode("utf-8", "replace")
         elif isinstance(value, email.header.Header):
@@ -326,10 +325,10 @@ class DedupMail:
         # Normalize white spaces.
         value = re.sub(r"\s+", " ", value).strip()
 
-        # Trim Subject prefixes automatically added by mailing list software,
-        # since the mail could have been cc'd to multiple lists, in which case
-        # it will receive a different prefix for each, but this shouldn't be
-        # treated as a real difference between duplicate mails.
+        # Trim Subject prefixes automatically added by mailing list software, since the
+        # mail could have been cc'd to multiple lists, in which case it will receive a
+        # different prefix for each, but this shouldn't be treated as a real difference
+        # between duplicate mails.
         if header_id == "subject":
             subject = value
             while True:
@@ -344,25 +343,22 @@ class DedupMail:
                 # show_progress("Trimmed Subject to %s" % subject)
             return subject
 
+        # Apparently list servers actually munge Content-Type e.g. by stripping the
+        # quotes from charset="us-ascii". Section 5.1 of RFC2045 says that either form
+        # is valid (and they are equivalent).
+        #
+        # Additionally, with multipart/mixed, boundary delimiters can vary by recipient.
+        # We need to allow for duplicates coming from multiple recipients, since for
+        # example you could be signed up to the same list twice with different
+        # addresses. Or maybe someone bounces you a load of mail some of which is from a
+        # mailing list you're both subscribed to - then it's still useful to be able to
+        # eliminate duplicates.
         elif header_id == "content-type":
-            # Apparently list servers actually munge Content-Type
-            # e.g. by stripping the quotes from charset="us-ascii".
-            # Section 5.1 of RFC2045 says that either form is valid
-            # (and they are equivalent).
-            #
-            # Additionally, with multipart/mixed, boundary delimiters can
-            # vary by recipient.  We need to allow for duplicates coming
-            # from multiple recipients, since for example you could be
-            # signed up to the same list twice with different addresses.
-            # Or maybe someone bounces you a load of mail some of which is
-            # from a mailing list you're both subscribed to - then it's
-            # still useful to be able to eliminate duplicates.
             return re.sub(";.*", "", value)
 
+        # Date timestamps can differ by seconds or hours for various reasons, so let's
+        # only honour the date for now and normalize them to UTC timezone.
         elif header_id == "date":
-            # Date timestamps can differ by seconds or hours for various
-            # reasons, so let's only honour the date for now and normalize them
-            # to UTC timezone.
             try:
                 parsed = email.utils.parsedate_tz(value)
                 if not parsed:
@@ -372,24 +368,22 @@ class DedupMail:
             except (TypeError, ValueError):
                 return value
 
+        # Remove quotes in any headers that contain addresses to ensure a quoted name is
+        # hashed to the same value as an unquoted one.
+        # XXX This may not be the cleanest way to normalize email addresses. E.g.
+        # `"Robert \"Bob\"` becomes `Robert \Bob\`, but this shouldn't matter for
+        # hashing purposes as we're just trying to get a good heuristic. Refs: #847 and
+        # #846.
         elif header_id in QUOTE_DISCARD_HEADERS:
-            # Remove quotes in any headers that contain addresses to ensure a quoted
-            # name is hashed to the same value as an unquoted one.
-            # XXX This may not be the cleanest way to normalize email addresses. E.g.
-            # `"Robert \"Bob\"` becomes `Robert \Bob\`, but this shouldn't matter for
-            # hashing purposes as we're just trying to get a good heuristic.
-            # Refs: #847 and #846.
             value = value.replace('"', "")
 
+        # Sometimes email.parser strips the <> brackets from a To: header which has a
+        # single address. I have seen this happen for only one mail in a duplicate pair.
+        # I'm not sure why (presumably the parser uses email.utils.unquote somewhere in
+        # its code path which was only triggered by that mail and not its sister mail),
+        # but to be safe, we should always strip the <> brackets to avoid this
+        # difference preventing duplicate detection.
         if header_id in ("to", "message-id"):
-            # Sometimes email.parser strips the <> brackets from a To:
-            # header which has a single address.  I have seen this happen
-            # for only one mail in a duplicate pair.  I'm not sure why
-            # (presumably the parser uses email.utils.unquote somewhere in
-            # its code path which was only triggered by that mail and not
-            # its sister mail), but to be safe, we should always strip the
-            # <> brackets to avoid this difference preventing duplicate
-            # detection.
             if re.match("^<[^<>,]+>$", value):
                 return email.utils.unquote(value)
 
