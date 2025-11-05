@@ -39,7 +39,7 @@ from click_extra import (
 )
 from click_extra.colorize import default_theme as theme
 
-from . import DEFAULT_CONTENT_THRESHOLD, DEFAULT_SIZE_THRESHOLD, HASH_HEADERS
+from . import HASH_HEADERS
 from .action import Action
 from .deduplicate import BodyHasher, Deduplicate
 from .mail import TimeSource
@@ -251,7 +251,7 @@ class MdedupCommand(ExtraCommand):
         "--size-threshold",
         type=IntRange(min=-1),
         metavar="BYTES",
-        default=DEFAULT_SIZE_THRESHOLD,
+        default=512,
         help="Maximum difference allowed in size between mails sharing the same hash. "
         "The whole subset of duplicates will be skipped if at least one pair of mail "
         "exceeds the threshold. Set to 0 to enforce strictness and apply selection "
@@ -263,7 +263,7 @@ class MdedupCommand(ExtraCommand):
         "--content-threshold",
         type=IntRange(min=-1),
         metavar="BYTES",
-        default=DEFAULT_CONTENT_THRESHOLD,
+        default=768,
         help="Maximum difference allowed in content between mails sharing the same "
         "hash. The whole subset of duplicates will be skipped if at least one pair of "
         "mail exceeds the threshold. Set to 0 to enforce strictness and apply "

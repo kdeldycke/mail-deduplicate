@@ -99,38 +99,6 @@ MINIMAL_HEADERS_COUNT = 4
 """Below this value, we consider not having enough headers to compute a solid hash."""
 
 
-DEFAULT_SIZE_THRESHOLD = 512
-"""Default size threshold in bytes.
-
-Since we're ignoring the ``Content-Length`` header by default `because of mailing-list
-effects <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_, we
-introduced a limit on the allowed difference between the sizes of the message payloads.
-
-If this is exceeded, a warning is issued and the messages are not considered duplicates,
-because this could point to message corruption somewhere, or a false positive.
-
-.. note::
-    Headers are not counted towards this threshold, because many `headers can be added
-    by mailing list software
-    <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_ such as
-    ``mailman``, or even by the process of sending the mail through various MTAs.
-
-    One copy could have been stored by the sender's MUA prior to sending, without any
-    ``Received`` headers, and another copy could be reflected back via a ``CC``-to-self
-    mechanism or mailing list server.
-
-    This threshold has to be large enough to allow for footers added by mailing list
-    servers.
-"""
-
-DEFAULT_CONTENT_THRESHOLD = 768
-"""Default content threshold in bytes.
-
-As above, we similarly generates unified diffs of duplicates and ensure that the diff is
-not greater than a certain size to limit false-positives.
-"""
-
-
 class TooFewHeaders(Exception):
     """Not enough headers were found to produce a solid hash."""
 
