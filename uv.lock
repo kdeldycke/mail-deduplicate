@@ -192,8 +192,8 @@ wheels = [
 
 [[package]]
 name = "click-extra"
-version = "6.2.0"
-source = { registry = "https://pypi.org/simple" }
+version = "7.0.0"
+source = { git = "https://github.com/kdeldycke/click-extra#b21f43195370bdecb7fc1aa4391f47bf96bc2284" }
 dependencies = [
     { name = "boltons" },
     { name = "click" },
@@ -204,10 +204,6 @@ dependencies = [
     { name = "tabulate", extra = ["widechars"] },
     { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "wcmatch" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/cf/80/64f201612d295e58a0885e5ab8b7c37c7cc307a3cf44714810615e0ae661/click_extra-6.2.0.tar.gz", hash = "sha256:6d2855b02a733b78a94516a2a63f12717302dd1aa9733ac858e2d45335a3d3b9", size = 126643, upload-time = "2025-11-04T06:30:04.023Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/b4/5393154b09e2c1e469bbce118c88b44cb20e9ce2412c90bc2d617014ee27/click_extra-6.2.0-py3-none-any.whl", hash = "sha256:63286da615d7a59b6d4acdb67058f1f377177d953a960aadf26b55427c3d422a", size = 91074, upload-time = "2025-11-04T06:30:02.735Z" },
 ]
 
 [package.optional-dependencies]
@@ -504,9 +500,9 @@ typing = [
 requires-dist = [
     { name = "arrow", specifier = ">=1.3.0" },
     { name = "boltons", specifier = ">=25.0.0" },
-    { name = "click-extra", specifier = ">=6.2.0" },
-    { name = "click-extra", extras = ["pytest"], marker = "extra == 'test'", specifier = ">=6.2.0" },
-    { name = "click-extra", extras = ["sphinx"], marker = "extra == 'docs'", specifier = ">=6.2.0" },
+    { name = "click-extra", git = "https://github.com/kdeldycke/click-extra" },
+    { name = "click-extra", extras = ["pytest"], marker = "extra == 'test'", git = "https://github.com/kdeldycke/click-extra" },
+    { name = "click-extra", extras = ["sphinx"], marker = "extra == 'docs'", git = "https://github.com/kdeldycke/click-extra" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'test'", specifier = "~=7.11.0" },
     { name = "extra-platforms", extras = ["pytest"], marker = "extra == 'test'", specifier = ">=5.0.0" },
     { name = "furo", marker = "extra == 'docs'", specifier = "~=2025.9.25" },

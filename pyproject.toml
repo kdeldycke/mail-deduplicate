@@ -57,15 +57,18 @@ dependencies = [
     "arrow >= 1.3.0",
     # boltons 25.0.0 is the first version to support Python 3.13.
     "boltons >= 25.0.0",
-    # click-extra 6.2.0 implements EnumChoice.
-    "click-extra >= 6.2.0",
+    # click-extra 7.0.0 fix default value rendering of EnumChoice.
+    "click-extra >= 7.0.0",
 ]
+
+[tool.uv.sources]
+click-extra = { git = "https://github.com/kdeldycke/click-extra" }
 
 [project.optional-dependencies]
 ## Non-runtime dependencies, for development and CI, are using the ~= specifier to reduce randomness.
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
 test = [
-    "click-extra [pytest] >= 6.2.0",
+    "click-extra [pytest] >= 7.0.0",
     "coverage [toml] ~= 7.11.0",
     "extra-platforms [pytest] >= 5.0.0",
     "pytest ~= 8.4.2",
@@ -75,7 +78,7 @@ test = [
 ]
 typing = ["types-boltons ~= 25.0.0.20250822"]
 docs = [
-    "click-extra [sphinx] >= 6.2.0",
+    "click-extra [sphinx] >= 7.0.0",
     "furo ~= 2025.9.25",
     "myst-parser ~= 4.0.0",
     # Sphinx  8.0.0 is the first version to drop Python 3.9, like us.
