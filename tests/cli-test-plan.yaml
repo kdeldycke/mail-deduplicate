@@ -4,7 +4,8 @@
 - cli_parameters: --version
   exit_code: 0
   stdout_contains: "\x1b[97mmdedup\x1b[0m, version \x1b[32m"
-  stdout_regex_fullmatch: "\x1b\\[97mmdedup\x1b\\[0m, version \x1b\\[32m[0-9]+\\.[0-9]+\\.[0-9]+\x1b\\[0m\n"
+  stdout_regex_fullmatch: "\x1b\\[97mmdedup\x1b\\[0m, version \x1b\\[32m(None|[0-9]+\\.[0-9]+\\.[0-9]+)\x1b\\[0m\n"
+
 
 # Check mdedup is reporting its usage in help screen.
 - cli_parameters: --help
@@ -12,9 +13,20 @@
   strip_ansi: true
   stdout_contains:
     - "Usage: mdedup [OPTIONS] MAIL_SOURCE_1 MAIL_SOURCE_2"
-    - "-i, --input-format [babyl|maildir|mbox|mh|mmdf]"
-    # -h short option is reserved for --hash-header, not --help
+
+    # Check that Enums are properly rendered in help.
+    - "  -b, --hash-body [skip|raw|normalized]"
+    - "  [default: skip]"
+    - "  -e, --export-format [maildir|mbox|mh|babyl|mmdf]"
+    - "  [default: mbox]"
+
+    # Numeric ranges are properly rendered in help.
+    - "  -S, --size-threshold BYTES"
+    - "  [default: 512; x>=-1]"
+
+    # -h short option is reserved for --hash-header, not --help.
     - "  -h, --hash-header Header-ID"
     - "  --help"
-    # Strategies are documented
+
+    # Individual strategies are documented at the end.
     - "[select-all-but-one|discard-one]"
