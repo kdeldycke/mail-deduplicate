@@ -56,49 +56,6 @@ By default we choose to exclude:
 """
 
 
-ADDRESS_HEADERS = frozenset((
-    "from",
-    "to",
-    "cc",
-    "bcc",
-    "reply-to",
-    "sender",
-    "return-path",
-    "resent-from",
-    "resent-to",
-    "resent-cc",
-    "resent-bcc",
-    "resent-reply-to",
-    "resent-sender",
-    "delivered-to",
-    "x-original-to",
-    "envelope-to",
-    "x-envelope-from",
-    "x-envelope-to",
-    "disposition-notification-to",
-    "original-recipient",
-))
-"""Headers that contain email addresses.
-
-.. attention::
-    These IDs should be kept lower-case, because they are compared to the one provided
-    to those provided to the ``-h``/``--hash-header`` option, that is carried by the
-    ``hash_headers`` property of the configuration.
-"""
-
-
-QUOTE_DISCARD_HEADERS = ADDRESS_HEADERS
-"""Headers from which quotes should be discarded.
-
-E.g. ``"Bob" <bob@example.com>`` should hash to the same thing as
-``Bob <bob@example.com>``.
-"""
-
-
-MINIMAL_HEADERS_COUNT = 4
-"""Below this value, we consider not having enough headers to compute a solid hash."""
-
-
 class TooFewHeaders(Exception):
     """Not enough headers were found to produce a solid hash."""
 

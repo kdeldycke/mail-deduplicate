@@ -30,7 +30,7 @@ from mailbox import Message
 import arrow
 from click_extra.table import TableFormat, render_table
 
-from . import MINIMAL_HEADERS_COUNT, QUOTE_DISCARD_HEADERS, TooFewHeaders
+from . import TooFewHeaders
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -54,6 +54,56 @@ class TimeSource(Enum):
 
     def __str__(self) -> str:
         return self.value
+
+
+ADDRESS_HEADERS = frozenset((
+    "from",
+    "to",
+    "cc",
+    "bcc",
+    "reply-to",
+    "sender",
+    "return-path",
+    "resent-from",
+    "resent-to",
+    "resent-cc",
+    "resent-bcc",
+    "resent-reply-to",
+    "resent-sender",
+    "delivered-to",
+    "x-original-to",
+    "envelope-to",
+    "x-envelope-from",
+    "x-envelope-to",
+    "disposition-notification-to",
+    "original-recipient",
+))
+"""Headers that contain email addresses.
+
+.. hint::
+    Headers from which quotes should be discarded.
+
+    E.g.:
+
+    .. code-block:: text
+
+        "Bob" <bob@example.com>
+
+    should hash to the same thing as:
+
+    .. code-block:: text
+
+        Bob <bob@example.com>
+
+.. attention::
+    These IDs should be kept lower-case, because they are compared to the one provided
+    to those provided to the ``-h``/``--hash-header`` option, that is carried by the
+    ``hash_headers`` property of the configuration.
+"""
+
+
+MINIMAL_HEADERS_COUNT = 4
+"""Below this value, we consider not having enough headers to compute a solid hash."""
 
 
 class DedupMail:
@@ -374,7 +424,7 @@ class DedupMail:
         # `"Robert \"Bob\"` becomes `Robert \Bob\`, but this shouldn't matter for
         # hashing purposes as we're just trying to get a good heuristic. Refs: #847 and
         # #846.
-        elif header_id in QUOTE_DISCARD_HEADERS:
+        elif header_id in ADDRESS_HEADERS:
             value = value.replace('"', "")
 
         # Sometimes email.parser strips the <> brackets from a To: header which has a
