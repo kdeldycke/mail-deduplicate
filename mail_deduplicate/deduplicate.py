@@ -299,6 +299,14 @@ class DuplicateSet:
         The process results in two subsets of mails: the selected and the discarded.
         """
         # Fine-grained checks on mail differences.
+
+        if self.size == 1:
+            self.stats["set_single"] += 1
+            self.stats["mail_unique"] += 1
+            self.stats["mail_duplicates"] = 0
+            self.selection = set(self.pool)
+            return
+
         try:
             self.check_differences()
         except UnicodeDecodeError as expt:
