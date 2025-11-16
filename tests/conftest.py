@@ -133,9 +133,10 @@ def make_box(tmp_path):
         box.lock()
         for fake_mail in mails:
             box.add(fake_mail.render())
+        dest_box_path = tmp_path.joinpath(uuid4().hex)
 
         box.close()
-        return box._path, box_type
+        return box._path, box_type, str(dest_box_path)
 
     return _make_box
 
