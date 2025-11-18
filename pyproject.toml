@@ -61,9 +61,6 @@ dependencies = [
     "click-extra >= 7.0.0",
 ]
 
-[tool.uv.sources]
-click-extra = { git = "https://github.com/kdeldycke/click-extra" }
-
 [project.optional-dependencies]
 ## Non-runtime dependencies, for development and CI, are using the ~= specifier to reduce randomness.
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
@@ -71,7 +68,7 @@ test = [
     "click-extra [pytest] >= 7.0.0",
     "coverage [toml] ~= 7.11.0",
     "extra-platforms [pytest] >= 5.0.0",
-    "pytest ~= 8.4.2",
+    "pytest ~= 9.0.1",
     "pytest-cov ~= 7.0.0",
     "pytest-github-actions-annotate-failures ~= 0.3.0",
     "pytest-randomly ~= 4.0.0",
@@ -126,7 +123,7 @@ warn_return_any = true
 warn_unreachable = true
 pretty = true
 
-[tool.pytest.ini_options]
+[tool.pytest]
 # https://docs.pytest.org/en/latest/customize.html#pyproject-toml
 addopts = [
     "--durations=10",
