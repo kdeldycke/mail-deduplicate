@@ -73,7 +73,7 @@ jobs:
       - name: Check launchable stable CLI
         run: |
           uvx    --from mail-deduplicate -- mdedup --version
-          uv run --from mail-deduplicate -- mdedup --version
+          uv run --with mail-deduplicate -- mdedup --version
       - name: Check launchable dev CLI
         run: |
           uvx    --from git+https://github.com/kdeldycke/mail-deduplicate -- click-extra --version
