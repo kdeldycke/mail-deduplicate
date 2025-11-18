@@ -4,12 +4,12 @@
   </a>
 </p>
 
-[![Last release](https://img.shields.io/pypi/v/mail-deduplicate.svg)](https://pypi.python.org/pypi/mail-deduplicate)
-[![Python versions](https://img.shields.io/pypi/pyversions/mail-deduplicate.svg)](https://pypi.python.org/pypi/mail-deduplicate)
-[![Downloads](https://static.pepy.tech/badge/mail_deduplicate/month)](https://pepy.tech/projects/mail_deduplicate)
+[![Last release](https://img.shields.io/pypi/v/mail-deduplicate.svg)](https://pypi.org/project/mail-deduplicate)
+[![Python versions](https://img.shields.io/pypi/pyversions/mail-deduplicate.svg)](https://pypi.org/project/mail-deduplicate)
+[![Downloads](https://static.pepy.tech/badge/mail-deduplicate/month)](https://pepy.tech/projects/mail-deduplicate)
 [![Unittests status](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/tests.yaml?query=branch%3Amain)
+[![Coverage status](https://codecov.io/gh/kdeldycke/mail-deduplicate/graph/badge.svg?token=81NWQAPjEQ)](https://codecov.io/gh/kdeldycke/mail-deduplicate)
 [![Documentation status](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/docs.yaml/badge.svg?branch=main)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/docs.yaml?query=branch%3Amain)
-[![Coverage status](https://codecov.io/gh/kdeldycke/mail-deduplicate/branch/main/graph/badge.svg)](https://app.codecov.io/gh/kdeldycke/mail-deduplicate)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7364256.svg)](https://doi.org/10.5281/zenodo.7364256)
 
 **What is Mail Deduplicate?**
