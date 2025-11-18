@@ -15,6 +15,7 @@
 - Run tests on stable Python 3.14 release.
 - Run tests on Python 3.15-dev, mark them as unstable.
 - Skip tests on intermediate Python versions (`3.11`, `3.12` and `3.13`) to reduce CI load.
+- Run tests on Python `3.14t` and `3.15t` free-threaded variants.
 - Use `astral-sh/setup-uv` action to install `uv` instead of manually installing it with `pip`.
 - Move `ubuntu-24.04` to `ubuntu-24.04-arm`, `macos-15` tests to `macos-26` and `windows-2025` tests to `windows-11-arm`.
 

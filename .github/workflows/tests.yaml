@@ -20,6 +20,7 @@ jobs:
 
   tests:
     strategy:
+      # We delegate the failure decision to each job, by the way of the "continue-on-error" flag.
       fail-fast: false
       matrix:
         # Available OS: https://github.com/actions/runner-images#available-images
@@ -28,8 +29,6 @@ jobs:
           - ubuntu-24.04-arm # arm64
           - macos-26         # arm64
           - windows-11-arm   # arm64
-        # For Python, we only test against the oldest and newest major supported version and skip intermediates. We
-        # also test on the upcoming development version to anticipate issues.
         python-version:
           - "3.10"
           # Ignore intermediate versions to reduce CI load.
@@ -37,13 +36,17 @@ jobs:
           # - "3.12"
           # - "3.13"
           - "3.14"
+          - "3.14t"
           - "3.15"
+          - "3.15t"
         include:
           # Default all jobs as stable, unless marked otherwise below.
           - state: stable
           # XXX Python 3.15 is still in development.
           - state: unstable
             python-version: "3.15"
+          - state: unstable
+            python-version: "3.15t"
     name: "${{ matrix.state == 'stable' && '✅' || '⁉️' }} ${{ matrix.os }} / py${{ matrix.python-version }}"
     runs-on: ${{ matrix.os }}
     # We keep going when a job flagged as not stable fails.
