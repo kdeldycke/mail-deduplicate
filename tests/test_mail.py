@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from mailbox import Maildir
 
-from extra_platforms.pytest import skip_windows
+from extra_platforms.pytest import skip_windows  # type: ignore[attr-defined]
 
 from .conftest import MailFactory, check_box
 

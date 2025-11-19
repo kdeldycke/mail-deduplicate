@@ -331,9 +331,12 @@ class DedupMail:
         Returns a string ready to be printed.
         """
         ctx = get_current_context()
-        return "\n" + ctx.find_root().render_table(
-            [*list(self.canonical_headers)],
-            headers=("Header ID", "Header value"),
+        return (  # type: ignore[no-any-return]
+            "\n"
+            + ctx.find_root().render_table(  # type: ignore[attr-defined]
+                [*list(self.canonical_headers)],
+                headers=("Header ID", "Header value"),
+            )
         )
 
     def serialized_headers(self) -> bytes:

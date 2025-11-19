@@ -29,7 +29,7 @@ def test_action_definitions():
         assert str(action) == action.value
         assert action.name.lower().replace("_", "-") == action.value
 
-        action_func = action.action_function()
+        action_func = action.action_function
         assert action_func is not None
         assert callable(action_func)
         assert action_func.__name__ == action.name.lower()

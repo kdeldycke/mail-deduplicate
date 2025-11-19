@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from mailbox import Mailbox, Message
 
     from .cli import Config
+    from .mail import DedupMail
 
 
 STATS_DEF = OrderedDict(
@@ -123,7 +124,7 @@ class BodyHasher(Enum):
     NORMALIZED = "normalized"
 
     def __str__(self) -> str:
-        return self.value
+        return self.value  # type: ignore[no-any-return]
 
     def hash_function(self):
         """Returns the hashing function corresponding to the body hasher."""
@@ -142,7 +143,7 @@ class DuplicateSet:
     strategy.
     """
 
-    def __init__(self, hash_key: str, mail_set: set[Message], conf: Config) -> None:
+    def __init__(self, hash_key: str, mail_set: set[DedupMail], conf: Config) -> None:
         """Load-up the duplicate set of mail and freeze pool.
 
         Once loaded-up, the pool of parsed mails is considered frozen for the rest of
@@ -161,7 +162,7 @@ class DuplicateSet:
         self.conf = conf
 
         # Pool referencing all duplicated mails and their attributes.
-        self.pool = frozenset(mail_set)
+        self.pool: frozenset[DedupMail] = frozenset(mail_set)
 
         # Set metrics.
         self.stats: Counter = Counter()

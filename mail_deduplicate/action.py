@@ -26,6 +26,8 @@ from .mail_box import create_box
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from typing import Callable
+
     from .deduplicate import Deduplicate
 
 
@@ -137,14 +139,15 @@ class Action(Enum):
     def __str__(self) -> str:
         return self.value
 
-    def action_function(self) -> callable:
+    @property
+    def action_function(self) -> Callable:
         """Return the action function associated with this action."""
         func_name = self.name.lower()
-        return globals()[func_name]
+        return globals()[func_name]  # type: ignore[no-any-return]
 
     def perform_action(self, dedup: Deduplicate) -> None:
         """Performs the action on selected mail candidates."""
-        logging.info(f"Perform {theme.choice(self)} action...")
+        logging.info(f"Perform {theme.choice(str(self))} action...")
 
         selection_count = len(dedup.selection)
         if selection_count == 0:
@@ -157,4 +160,4 @@ class Action(Enum):
         assert len(unique(dedup.selection)) == len(dedup.selection)
         assert len(dedup.selection) == dedup.stats["mail_selected"]
 
-        self.action_function()(dedup)
+        self.action_function(dedup)
