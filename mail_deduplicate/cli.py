@@ -23,7 +23,6 @@ from typing import TypedDict
 from boltons.iterutils import unique
 from click_extra import (
     BadParameter,
-    Choice,
     EnumChoice,
     ExtraCommand,
     IntRange,
@@ -44,13 +43,7 @@ from .action import Action
 from .deduplicate import BodyHasher, Deduplicate
 from .mail import TimeSource
 from .mail_box import FILE_FORMATS, FOLDER_FORMATS, BoxFormat
-from .strategy import (
-    DISCARD_MATCHING_PATH,
-    DISCARD_NON_MATCHING_PATH,
-    SELECT_MATCHING_PATH,
-    SELECT_NON_MATCHING_PATH,
-    STRATEGY_METHODS,
-)
+from .strategy import Strategy
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -71,7 +64,7 @@ class Config(TypedDict):
     size_threshold: int
     content_threshold: int
     show_diff: bool
-    strategy: str | None  # STRATEGY_METHODS
+    strategy: Strategy
     time_source: TimeSource
     regexp: re.Pattern | None
     action: Action
@@ -126,8 +119,11 @@ class MdedupCommand(ExtraCommand):
 
         # Produce the strategy reference table, with grouped aliases.
         method_to_ids: dict[Callable, list[str]] = {}
-        for strategy_id, method in sorted(STRATEGY_METHODS.items(), reverse=True):
-            method_to_ids.setdefault(method, []).append(strategy_id)
+        for strategy in Strategy:
+            method = strategy.strategy_function
+            if method not in method_to_ids:
+                method_to_ids[method] = []
+            method_to_ids[method].append(str(strategy))
 
         strategy_table: list[tuple[str, str]] = []
         for method, strategy_ids in method_to_ids.items():
@@ -220,7 +216,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-s",
         "--strategy",
-        type=Choice(sorted(STRATEGY_METHODS), case_sensitive=False),
+        type=EnumChoice(Strategy),
         help="Selection strategy to apply within a subset of duplicates. If not set, "
         "duplicates will be grouped and counted but all be skipped, selection will be "
         "empty, and no action will be performed. Description of each strategy is "
@@ -243,8 +239,9 @@ class MdedupCommand(ExtraCommand):
         f"{', '.join(map(str, FOLDER_FORMATS))}). But for file-based boxes ("
         f"{', '.join(map(str, FILE_FORMATS))}), applies to the whole box's "
         "path, as all mails are packed into one single file. Required in "
-        f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, "
-        f"{SELECT_MATCHING_PATH} and {SELECT_NON_MATCHING_PATH} strategies.",
+        f"{Strategy.DISCARD_MATCHING_PATH}, {Strategy.DISCARD_NON_MATCHING_PATH}, "
+        f"{Strategy.SELECT_MATCHING_PATH} and {Strategy.SELECT_NON_MATCHING_PATH} "
+        "strategies.",
     ),
     option(
         "-S",
@@ -380,10 +377,10 @@ def mdedup(
                 regexp,
                 "-r/--regexp",
                 {
-                    DISCARD_MATCHING_PATH,
-                    DISCARD_NON_MATCHING_PATH,
-                    SELECT_MATCHING_PATH,
-                    SELECT_NON_MATCHING_PATH,
+                    Strategy.DISCARD_MATCHING_PATH,
+                    Strategy.DISCARD_NON_MATCHING_PATH,
+                    Strategy.SELECT_MATCHING_PATH,
+                    Strategy.SELECT_NON_MATCHING_PATH,
                 },
             ),
         ),

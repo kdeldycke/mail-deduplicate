@@ -17,14 +17,21 @@
 
 from __future__ import annotations
 
+import enum
 import logging
 import random
 import re
 
-from boltons.dictutils import FrozenDict
+from click_extra.colorize import default_theme as theme
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from mailbox import Message
+
+    from .deduplicate import DuplicateSet
 
 
-def select_older(duplicates):
+def select_older(duplicates: DuplicateSet) -> set[Message]:
     """Select all older duplicates.
 
     Discards the newests, i.e. the subset sharing the most recent timestamp.
@@ -38,7 +45,7 @@ def select_older(duplicates):
     }
 
 
-def select_oldest(duplicates):
+def select_oldest(duplicates: DuplicateSet) -> set[Message]:
     """Select all the oldest duplicates.
 
     Discards the newers, i.e. all mail of the duplicate set but those sharing the oldest
@@ -55,7 +62,7 @@ def select_oldest(duplicates):
     }
 
 
-def select_newer(duplicates):
+def select_newer(duplicates: DuplicateSet) -> set[Message]:
     """Select all newer duplicates.
 
     Discards the oldest, i.e. the subset sharing the most ancient timestamp.
@@ -69,7 +76,7 @@ def select_newer(duplicates):
     }
 
 
-def select_newest(duplicates):
+def select_newest(duplicates: DuplicateSet) -> set[Message]:
     """Select all the newest duplicates.
 
     Discards the olders, i.e. all mail of the duplicate set but those sharing the newest
@@ -86,7 +93,7 @@ def select_newest(duplicates):
     }
 
 
-def select_smaller(duplicates):
+def select_smaller(duplicates: DuplicateSet) -> set[Message]:
     """Select all smaller duplicates.
 
     Discards the biggests, i.e. the subset sharing the biggest size.
@@ -97,7 +104,7 @@ def select_smaller(duplicates):
     return {mail for mail in duplicates.pool if mail.size < duplicates.biggest_size}
 
 
-def select_smallest(duplicates):
+def select_smallest(duplicates: DuplicateSet) -> set[Message]:
     """Select all the smallest duplicates.
 
     Discards the biggers. i.e. all mail of the duplicate set but those sharing the
@@ -110,7 +117,7 @@ def select_smallest(duplicates):
     return {mail for mail in duplicates.pool if mail.size == duplicates.smallest_size}
 
 
-def select_bigger(duplicates):
+def select_bigger(duplicates: DuplicateSet) -> set[Message]:
     """Select all bigger duplicates.
 
     Discards the smallests, i.e. the subset sharing the smallest size.
@@ -121,7 +128,7 @@ def select_bigger(duplicates):
     return {mail for mail in duplicates.pool if mail.size > duplicates.smallest_size}
 
 
-def select_biggest(duplicates):
+def select_biggest(duplicates: DuplicateSet) -> set[Message]:
     """Select all the biggest duplicates.
 
     Discards the smallers, i.e. all mail of the duplicate set but those sharing the
@@ -134,7 +141,7 @@ def select_biggest(duplicates):
     return {mail for mail in duplicates.pool if mail.size == duplicates.biggest_size}
 
 
-def select_matching_path(duplicates):
+def select_matching_path(duplicates: DuplicateSet) -> set[Message]:
     """Select all duplicates whose file path match the regular expression provided via
     the --regexp parameter."""
     logging.info(
@@ -148,7 +155,7 @@ def select_matching_path(duplicates):
     }
 
 
-def select_non_matching_path(duplicates):
+def select_non_matching_path(duplicates: DuplicateSet) -> set[Message]:
     """Select all duplicates whose file path doesn't match the regular expression
     provided via the --regexp parameter."""
     logging.info(
@@ -162,106 +169,83 @@ def select_non_matching_path(duplicates):
     }
 
 
-def select_one(duplicates):
+def select_one(duplicates: DuplicateSet) -> set[Message]:
     """Randomly select one duplicate, and discards all others."""
     return {random.choice(tuple(duplicates.pool))}
 
 
-def select_all_but_one(duplicates):
+def select_all_but_one(duplicates: DuplicateSet) -> set[Message]:
     """Randomly discard one duplicate, and select all others."""
     return set(random.sample(tuple(duplicates.pool), k=len(duplicates.pool) - 1))
 
 
-# Use symbols to define selection strategies.
+@enum.unique
+class Strategy(enum.Enum):
+    """Selection strategies to apply on a sets of duplicate mails.
 
-DISCARD_OLDER = "discard-older"
-DISCARD_OLDEST = "discard-oldest"
-DISCARD_NEWER = "discard-newer"
-DISCARD_NEWEST = "discard-newest"
-SELECT_OLDER = "select-older"
-SELECT_OLDEST = "select-oldest"
-SELECT_NEWER = "select-newer"
-SELECT_NEWEST = "select-newest"
-"""Time-based strategies."""
+    Each strategy in the ``Enum`` points to the function implementing the selection
+    logic, by the way of the ``strategy_function()`` method.
 
-DISCARD_SMALLER = "discard-smaller"
-DISCARD_SMALLEST = "discard-smallest"
-DISCARD_BIGGER = "discard-bigger"
-DISCARD_BIGGEST = "discard-biggest"
-SELECT_SMALLER = "select-smaller"
-SELECT_SMALLEST = "select-smallest"
-SELECT_BIGGER = "select-bigger"
-SELECT_BIGGEST = "select-biggest"
-"""Size-based strategies."""
+    Strategies whose member value is a string are simply aliases to other strategies,
+    pointing to the name of the function implementing the logic. The other members have
+    integer values, to indicate their function ID is to be derived from the member name.
+    This arrangement allow for each member to have its own existence without being
+    hidden by the aliasing mechanism of ``Enum``.
 
-DISCARD_MATCHING_PATH = "discard-matching-path"
-DISCARD_NON_MATCHING_PATH = "discard-non-matching-path"
-SELECT_MATCHING_PATH = "select-matching-path"
-SELECT_NON_MATCHING_PATH = "select-non-matching-path"
-"""Location-based strategies."""
-
-DISCARD_ONE = "discard-one"
-DISCARD_ALL_BUT_ONE = "discard-all-but-one"
-SELECT_ONE = "select-one"
-SELECT_ALL_BUT_ONE = "select-all-but-one"
-"""Quantity-based strategies."""
-
-
-STRATEGY_ALIASES = frozenset(
-    [
-        (SELECT_NEWEST, DISCARD_OLDER),
-        (SELECT_NEWER, DISCARD_OLDEST),
-        (SELECT_OLDEST, DISCARD_NEWER),
-        (SELECT_OLDER, DISCARD_NEWEST),
-        (SELECT_BIGGEST, DISCARD_SMALLER),
-        (SELECT_BIGGER, DISCARD_SMALLEST),
-        (SELECT_SMALLEST, DISCARD_BIGGER),
-        (SELECT_SMALLER, DISCARD_BIGGEST),
-        (SELECT_NON_MATCHING_PATH, DISCARD_MATCHING_PATH),
-        (SELECT_MATCHING_PATH, DISCARD_NON_MATCHING_PATH),
-        (SELECT_ALL_BUT_ONE, DISCARD_ONE),
-        (SELECT_ONE, DISCARD_ALL_BUT_ONE),
-    ],
-)
-"""Groups strategy aliases and their definitions.
-
-Aliases are great usability features as it helps users to better reason about the
-selection operators depending on their mental models.
-"""
-
-
-def get_method_id(strategy_id):
-    """Transform strategy ID to its method ID."""
-    return strategy_id.replace("-", "_")
-
-
-def build_method_mapping():
-    """Precompute the mapping of all strategy IDs to their preferred method name,
-    including aliases as fallbacks."""
-    methods = {}
-    for strategies in STRATEGY_ALIASES:
-        fallback_method = None
-        for strategy_id in strategies:
-            mid = get_method_id(strategy_id)
-            method = globals().get(mid)
-            if method:
-                fallback_method = method
-            if not fallback_method:
-                raise NotImplementedError(f"Can't find {mid}() method.")
-            methods[strategy_id] = fallback_method
-    return methods
-
-
-STRATEGY_METHODS = FrozenDict(build_method_mapping())
-
-
-def apply_strategy(strategy_id, duplicates):
-    """Perform the selection strategy on the provided duplicate set.
-
-    Returns a set of selected mails objects.
+    Aliases are great usability features to represent inverse operations. They helps
+    users to better reason about the selection operators depending on their mental
+    models.
     """
-    if strategy_id not in STRATEGY_METHODS:
-        raise ValueError(f"Unknown {strategy_id} strategy.")
-    method = STRATEGY_METHODS[strategy_id]
-    logging.debug(f"Apply {method!r}...")
-    return set(method(duplicates))
+
+    # Time-based strategies.
+    SELECT_OLDER = 1
+    SELECT_OLDEST = 2
+    SELECT_NEWER = 3
+    SELECT_NEWEST = 4
+    DISCARD_NEWEST = "select_older"
+    DISCARD_NEWER = "select_oldest"
+    DISCARD_OLDEST = "select_newer"
+    DISCARD_OLDER = "select_newest"
+
+    # Size-based strategies.
+    SELECT_SMALLER = 5
+    SELECT_SMALLEST = 6
+    SELECT_BIGGER = 7
+    SELECT_BIGGEST = 8
+    DISCARD_BIGGEST = "select_smaller"
+    DISCARD_BIGGER = "select_smallest"
+    DISCARD_SMALLEST = "select_bigger"
+    DISCARD_SMALLER = "select_biggest"
+
+    # Location-based strategies.
+    SELECT_MATCHING_PATH = 9
+    SELECT_NON_MATCHING_PATH = 10
+    DISCARD_NON_MATCHING_PATH = "select_matching_path"
+    DISCARD_MATCHING_PATH = "select_non_matching_path"
+
+    # Quantity-based strategies.
+    SELECT_ONE = 11
+    SELECT_ALL_BUT_ONE = 12
+    DISCARD_ALL_BUT_ONE = "select_one"
+    DISCARD_ONE = "select_all_but_one"
+
+    def __str__(self):
+        """Get the string to be used in CLI for the strategy."""
+        return self.name.lower().replace("_", "-")
+
+    @property
+    def strategy_function(self) -> callable:
+        """Return the function's ID is the value of the ``Enum`` member."""
+        if isinstance(self.value, str):
+            func_id = self.value
+        else:
+            func_id = self.name.lower()
+        return globals()[func_id]
+
+    def apply_strategy(self, duplicates: DuplicateSet) -> set[Message]:
+        """Perform the selection strategy on the provided duplicate set.
+
+        Returns a set of selected mails objects.
+        """
+        logging.info(f"Apply {theme.choice(self)} strategy...")
+        return set(self.strategy_function(duplicates))

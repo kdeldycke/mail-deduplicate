@@ -32,7 +32,6 @@ from click_extra.colorize import default_theme as theme
 
 from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders
 from .mail_box import open_box
-from .strategy import apply_strategy
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -310,7 +309,7 @@ class DuplicateSet:
             return
 
         # Fetch the subset of selected mails from the set by applying strategy.
-        selected = apply_strategy(self.conf["strategy"], self)
+        selected = self.conf["strategy"].apply_strategy(self)
         candidate_count = len(selected)
 
         # Duplicate sets matching as a whole are skipped altogether.
