@@ -27,7 +27,7 @@ from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
 
-from click_extra import TableFormat, progressbar, render_table
+from click_extra import get_current_context, progressbar
 from click_extra.colorize import default_theme as theme
 
 from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders
@@ -483,6 +483,9 @@ class Deduplicate:
 
     def report(self):
         """Returns a text report of user-friendly statistics and metrics."""
+        ctx = get_current_context()
+        render_table = ctx.find_root().render_table
+
         output = ""
         for prefix, title in (("mail_", "Mails"), ("set_", "Duplicate sets")):
             table = []
@@ -495,11 +498,7 @@ class Deduplicate:
                             "\n".join(textwrap.wrap(desc, 60)),
                         ],
                     )
-            output += render_table(
-                table,
-                headers=(title, "Metric", "Description"),
-                table_format=TableFormat.FANCY_GRID,
-            )
+            output += render_table(table, headers=(title, "Metric", "Description"))
             output += "\n"
         return output
 

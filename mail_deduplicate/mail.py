@@ -28,7 +28,7 @@ from functools import cached_property
 from mailbox import Message
 
 import arrow
-from click_extra.table import TableFormat, render_table
+from click_extra import get_current_context
 
 from . import TooFewHeaders
 
@@ -330,10 +330,10 @@ class DedupMail:
 
         Returns a string ready to be printed.
         """
-        return "\n" + render_table(
+        ctx = get_current_context()
+        return "\n" + ctx.find_root().render_table(
             [*list(self.canonical_headers)],
             headers=("Header ID", "Header value"),
-            table_format=TableFormat.FANCY_GRID,
         )
 
     def serialized_headers(self) -> bytes:

@@ -7,6 +7,7 @@
 
 - Log options explicitly set by user but ignored because of `--hash-only` mode.
 - Add `--no-config`, `--table-format` options inherited from Click Extra.
+- Table rendering in CLI output is now controlled by `--table-format` option.
 - Remove direct dependency on `tabulate`, use `click-extra`'s table utilities instead.
 - Add official support for Python 3.14.
 - Remove maximum capped version of all dependencies (relax all `~=` specifiers to `>=`). This gives more freedom to downstream and upstream packagers. Document each minimal version choice.
