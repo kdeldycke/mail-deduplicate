@@ -193,7 +193,7 @@ wheels = [
 [[package]]
 name = "click-extra"
 version = "7.1.0"
-source = { git = "https://github.com/kdeldycke/click-extra#efed0516bec5d65adbae2ba595005b3dea0456c6" }
+source = { git = "https://github.com/kdeldycke/click-extra#c909c40a71e8f28d18e059389ddad2e3d775fc54" }
 dependencies = [
     { name = "boltons" },
     { name = "click" },
@@ -517,7 +517,7 @@ requires-dist = [
     { name = "sphinx-copybutton", marker = "extra == 'docs'", specifier = "~=0.5.2" },
     { name = "sphinx-design", marker = "extra == 'docs'", specifier = "~=0.6.0" },
     { name = "sphinx-issues", marker = "extra == 'docs'", specifier = "~=5.0.0" },
-    { name = "sphinxcontrib-mermaid", marker = "extra == 'docs'", specifier = "~=1.0.0" },
+    { name = "sphinxcontrib-mermaid", marker = "extra == 'docs'", specifier = "~=1.1.0" },
     { name = "sphinxext-opengraph", marker = "extra == 'docs'", specifier = "~=0.13.0" },
     { name = "tomli", marker = "python_full_version < '3.11' and extra == 'docs'", specifier = ">=2.3.0" },
     { name = "types-boltons", marker = "extra == 'typing'", specifier = "~=25.0.0.20250822" },
@@ -1079,16 +1079,16 @@ wheels = [
 
 [[package]]
 name = "sphinxcontrib-mermaid"
-version = "1.0.0"
+version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyyaml" },
     { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/97/69/bf039237ad260073e8c02f820b3e00dc34f3a2de20aff7861e6b19d2f8c5/sphinxcontrib_mermaid-1.0.0.tar.gz", hash = "sha256:2e8ab67d3e1e2816663f9347d026a8dee4a858acdd4ad32dd1c808893db88146", size = 15153, upload-time = "2024-10-12T16:33:03.863Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fe/9c/3eefdb1bbb5ec8094ff4baeb9fd310e8320a43311aebe230cf4aaef3c942/sphinxcontrib_mermaid-1.1.0.tar.gz", hash = "sha256:e674e04503956de8263163e0c8f446d99f9d60455cb395f64e998f1137f04f8e", size = 18766, upload-time = "2025-11-19T19:51:09.902Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cd/c8/784b9ac6ea08aa594c1a4becbd0dbe77186785362e31fd633b8c6ae0197a/sphinxcontrib_mermaid-1.0.0-py3-none-any.whl", hash = "sha256:60b72710ea02087f212028feb09711225fbc2e343a10d34822fe787510e1caa3", size = 9597, upload-time = "2024-10-12T16:33:02.303Z" },
+    { url = "https://files.pythonhosted.org/packages/25/89/899495013b11b09e687310dc76bab626babdbee2dd0e6640df0942090ab4/sphinxcontrib_mermaid-1.1.0-py3-none-any.whl", hash = "sha256:1133b4c00f33aedb76e37bfbd1a4280a0104c0a836da642a113eabdf261bdd0c", size = 14898, upload-time = "2025-11-19T19:51:06.036Z" },
 ]
 
 [[package]]
