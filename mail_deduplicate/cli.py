@@ -16,19 +16,20 @@
 
 from __future__ import annotations
 
+import logging
 import re
-from typing import Callable, Pattern
+from typing import TypedDict
 
+from boltons.iterutils import unique
 from click_extra import (
     BadParameter,
-    Choice,
-    Context,
+    EnumChoice,
     ExtraCommand,
-    HelpExtraFormatter,
-    Parameter,
+    IntRange,
+    ParameterSource,
     argument,
+    command,
     echo,
-    extra_command,
     option,
     option_group,
     pass_context,
@@ -37,49 +38,73 @@ from click_extra import (
 )
 from click_extra.colorize import default_theme as theme
 
-from mail_deduplicate import (
-    DATE_HEADER,
-    DEFAULT_CONTENT_THRESHOLD,
-    DEFAULT_SIZE_THRESHOLD,
-    HASH_HEADERS,
-    TIME_SOURCES,
-    Config,
-)
-from mail_deduplicate.action import (
-    ACTIONS,
-    COPY_DISCARDED,
-    COPY_SELECTED,
-    MOVE_DISCARDED,
-    MOVE_SELECTED,
-    perform_action,
-)
-from mail_deduplicate.deduplicate import (
-    BODY_HASHER_NORMALIZED,
-    BODY_HASHER_RAW,
-    BODY_HASHER_SKIP,
-    BODY_HASHERS,
-    Deduplicate,
-)
-from mail_deduplicate.mail_box import BOX_STRUCTURES, BOX_TYPES
-from mail_deduplicate.strategy import (
-    DISCARD_MATCHING_PATH,
-    DISCARD_NON_MATCHING_PATH,
-    SELECT_MATCHING_PATH,
-    SELECT_NON_MATCHING_PATH,
-    STRATEGY_METHODS,
-)
+from . import HASH_HEADERS
+from .action import Action
+from .deduplicate import BodyHasher, Deduplicate
+from .mail import TimeSource
+from .mail_box import FILE_FORMATS, FOLDER_FORMATS, BoxFormat
+from .strategy import Strategy
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+
+    from click_extra import Context, HelpExtraFormatter, Parameter
 
 
-def validate_regexp(ctx: Context, param: Parameter, value: str) -> str | Pattern[str]:
+class Config(TypedDict):
+    """Holds global configuration."""
+
+    input_format: BoxFormat | None
+    force_unlock: bool
+    hash_headers: tuple[str, ...]
+    hash_body: BodyHasher
+    hash_only: bool
+    size_threshold: int
+    content_threshold: int
+    show_diff: bool
+    strategy: Strategy
+    time_source: TimeSource
+    regexp: re.Pattern | None
+    action: Action
+    export: Path | None
+    export_format: BoxFormat
+    export_append: bool
+    dry_run: bool
+
+
+def normalize_headers(
+    ctx: Context, param: Parameter, value: tuple[str, ...]
+) -> tuple[str, ...]:
+    """Validate headers provided as parameters to the CLI.
+
+    Headers are case-insensitive in Python implementation, so we normalize them to
+    lower-case.
+
+    We then deduplicate them, while preserving order.
+
+    Mail headers are expected to be composed of ASCII characters between 33 and 126
+    (both inclusive) according to RFC-5322.
+    """
+    normalized_headers = unique((h.lower() for h in value))
+    for hid in normalized_headers:
+        ascii_indexes = set(map(ord, hid))
+        if min(ascii_indexes) < 33 or max(ascii_indexes) > 126:
+            raise BadParameter(f"invalid header ID: {hid!r}.")
+    return tuple(normalized_headers)
+
+
+def compile_regexp(
+    ctx: Context, param: Parameter, value: str
+) -> re.Pattern[str] | None:
     """Validate and compile regular expression provided as parameters to the CLI."""
-    if not value:
-        return ""
-
-    try:
-        return re.compile(value)
-    except ValueError:
-        msg = "invalid regular expression."
-        raise BadParameter(msg)
+    if value:
+        try:
+            return re.compile(value)
+        except ValueError:
+            raise BadParameter(f"invalid regular expression: {value!r}.")
+    return None
 
 
 class MdedupCommand(ExtraCommand):
@@ -94,8 +119,11 @@ class MdedupCommand(ExtraCommand):
 
         # Produce the strategy reference table, with grouped aliases.
         method_to_ids: dict[Callable, list[str]] = {}
-        for strategy_id, method in sorted(STRATEGY_METHODS.items(), reverse=True):
-            method_to_ids.setdefault(method, []).append(strategy_id)
+        for strategy in Strategy:
+            method = strategy.strategy_function
+            if method not in method_to_ids:
+                method_to_ids[method] = []
+            method_to_ids[method].append(str(strategy))
 
         strategy_table: list[tuple[str, str]] = []
         for method, strategy_ids in method_to_ids.items():
@@ -109,7 +137,7 @@ class MdedupCommand(ExtraCommand):
             formatter.write_dl(sorted(strategy_table))
 
 
-@extra_command(
+@command(
     cls=MdedupCommand,
     short_help="Deduplicate mail boxes.",
     # Force linear layout for definition lists. See:
@@ -128,7 +156,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-i",
         "--input-format",
-        type=Choice(sorted(BOX_TYPES), case_sensitive=False),
+        type=EnumChoice(BoxFormat),
         help="Force all provided mail sources to be parsed in the specified format. "
         "If not set, auto-detect the format of sources independently. Auto-detection "
         "only supports maildir and mbox format. Use this option to open up other box "
@@ -149,6 +177,7 @@ class MdedupCommand(ExtraCommand):
         "--hash-header",
         multiple=True,
         type=str,
+        callback=normalize_headers,
         metavar="Header-ID",
         default=HASH_HEADERS,
         help="Headers to use to compute each mail's hash. Must be repeated multiple "
@@ -158,12 +187,12 @@ class MdedupCommand(ExtraCommand):
     option(
         "-b",
         "--hash-body",
-        default=BODY_HASHER_SKIP,
-        type=Choice(sorted(BODY_HASHERS), case_sensitive=False),
-        help=f"Method used to hash the body of mails. Defaults to {BODY_HASHER_SKIP}, "
+        default=BodyHasher.SKIP,
+        type=EnumChoice(BodyHasher),
+        help=f"Method used to hash the body of mails. Defaults to {BodyHasher.SKIP}, "
         "which doesn't hash the body at all: it is the fastest method and header-based "
-        f"hash should be sufficient to determine duplicate set. {BODY_HASHER_RAW} use "
-        f"the body as it is (slow). {BODY_HASHER_NORMALIZED} pre-process the body "
+        f"hash should be sufficient to determine duplicate set. {BodyHasher.RAW} use "
+        f"the body as it is (slow). {BodyHasher.NORMALIZED} pre-process the body "
         "before hashing, by removing all line breaks and spaces (slowest).",
     ),
     option(
@@ -187,7 +216,7 @@ class MdedupCommand(ExtraCommand):
     option(
         "-s",
         "--strategy",
-        type=Choice(sorted(STRATEGY_METHODS), case_sensitive=False),
+        type=EnumChoice(Strategy),
         help="Selection strategy to apply within a subset of duplicates. If not set, "
         "duplicates will be grouped and counted but all be skipped, selection will be "
         "empty, and no action will be performed. Description of each strategy is "
@@ -196,29 +225,30 @@ class MdedupCommand(ExtraCommand):
     option(
         "-t",
         "--time-source",
-        default=DATE_HEADER,
-        type=Choice(sorted(TIME_SOURCES), case_sensitive=False),
+        default=TimeSource.DATE_HEADER,
+        type=EnumChoice(TimeSource),
         help="Source of a mail's time reference used in time-sensitive strategies.",
     ),
     option(
         "-r",
         "--regexp",
-        callback=validate_regexp,
+        callback=compile_regexp,
         metavar="REGEXP",
-        help="Regular expression on a mail's file path. Applies to real, individual "
-        "mail location for folder-based boxed "
-        f"({', '.join(sorted(BOX_STRUCTURES['folder']))}). But for file-based boxes "
-        f"({', '.join(sorted(BOX_STRUCTURES['file']))}), applies to the whole box's "
+        help="Regular expression on a mail's file path. Applies to individual mail "
+        "location for folder-based boxes ("
+        f"{', '.join(map(str, FOLDER_FORMATS))}). But for file-based boxes ("
+        f"{', '.join(map(str, FILE_FORMATS))}), applies to the whole box's "
         "path, as all mails are packed into one single file. Required in "
-        f"{DISCARD_MATCHING_PATH}, {DISCARD_NON_MATCHING_PATH}, "
-        f"{SELECT_MATCHING_PATH} and {SELECT_NON_MATCHING_PATH} strategies.",
+        f"{Strategy.DISCARD_MATCHING_PATH}, {Strategy.DISCARD_NON_MATCHING_PATH}, "
+        f"{Strategy.SELECT_MATCHING_PATH} and {Strategy.SELECT_NON_MATCHING_PATH} "
+        "strategies.",
     ),
     option(
         "-S",
         "--size-threshold",
-        type=int,
+        type=IntRange(min=-1),
         metavar="BYTES",
-        default=DEFAULT_SIZE_THRESHOLD,
+        default=512,
         help="Maximum difference allowed in size between mails sharing the same hash. "
         "The whole subset of duplicates will be skipped if at least one pair of mail "
         "exceeds the threshold. Set to 0 to enforce strictness and apply selection "
@@ -228,9 +258,9 @@ class MdedupCommand(ExtraCommand):
     option(
         "-C",
         "--content-threshold",
-        type=int,
+        type=IntRange(min=-1),
         metavar="BYTES",
-        default=DEFAULT_CONTENT_THRESHOLD,
+        default=768,
         help="Maximum difference allowed in content between mails sharing the same "
         "hash. The whole subset of duplicates will be skipped if at least one pair of "
         "mail exceeds the threshold. Set to 0 to enforce strictness and apply "
@@ -251,11 +281,11 @@ class MdedupCommand(ExtraCommand):
     option(
         "-a",
         "--action",
-        default=COPY_SELECTED,
-        type=Choice(sorted(ACTIONS), case_sensitive=False),
-        help=f"Action performed on the selected mails. Defaults to {COPY_SELECTED} as "
-        "it is the safest: it only reads the mail sources and create a brand new mail "
-        "box with the selection results.",
+        default=Action.COPY_SELECTED,
+        type=EnumChoice(Action),
+        help=f"Action performed on the selected mails. Defaults to "
+        f"{Action.COPY_SELECTED} as it is the safest: it only reads the mail sources "
+        "and create a brand new mail box with the selection results.",
     ),
     option(
         "-E",
@@ -263,17 +293,18 @@ class MdedupCommand(ExtraCommand):
         metavar="MAIL_BOX_PATH",
         type=path(resolve_path=True),
         help="Location of the destination mail box to where to copy or move "
-        f"deduplicated mails. Required in {COPY_SELECTED}, {COPY_DISCARDED}, "
-        f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
+        f"deduplicated mails. Required in {Action.COPY_SELECTED}, "
+        f"{Action.COPY_DISCARDED}, {Action.MOVE_SELECTED} and {Action.MOVE_DISCARDED} "
+        "actions.",
     ),
     option(
         "-e",
         "--export-format",
-        default="mbox",
-        type=Choice(sorted(BOX_TYPES), case_sensitive=False),
+        default=BoxFormat.MBOX,
+        type=EnumChoice(BoxFormat),
         help="Format of the mail box to which deduplication mails will be exported to. "
-        f"Only affects {COPY_SELECTED}, {COPY_DISCARDED}, "
-        f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
+        f"Only affects {Action.COPY_SELECTED}, {Action.COPY_DISCARDED}, "
+        f"{Action.MOVE_SELECTED} and {Action.MOVE_DISCARDED} actions.",
     ),
     option(
         "--export-append",
@@ -281,8 +312,8 @@ class MdedupCommand(ExtraCommand):
         default=False,
         help="If destination mail box already exists, add mails into it "
         "instead of interrupting (default behavior). "
-        f"Affect {COPY_SELECTED}, {COPY_DISCARDED}, "
-        f"{MOVE_SELECTED} and {MOVE_DISCARDED} actions.",
+        f"Affect {Action.COPY_SELECTED}, {Action.COPY_DISCARDED}, "
+        f"{Action.MOVE_SELECTED} and {Action.MOVE_DISCARDED} actions.",
     ),
     option(
         "-n",
@@ -339,16 +370,17 @@ def mdedup(
         ctx.exit()
 
     # Validate exclusive options requirement depending on strategy or action.
+    # TODO: use Cloup option constraints to express these dependencies?
     validation_requirements = {
         strategy: (
             (
                 regexp,
                 "-r/--regexp",
                 {
-                    DISCARD_MATCHING_PATH,
-                    DISCARD_NON_MATCHING_PATH,
-                    SELECT_MATCHING_PATH,
-                    SELECT_NON_MATCHING_PATH,
+                    Strategy.DISCARD_MATCHING_PATH,
+                    Strategy.DISCARD_NON_MATCHING_PATH,
+                    Strategy.SELECT_MATCHING_PATH,
+                    Strategy.SELECT_NON_MATCHING_PATH,
                 },
             ),
         ),
@@ -357,10 +389,10 @@ def mdedup(
                 export,
                 "-E/--export",
                 {
-                    COPY_SELECTED,
-                    COPY_DISCARDED,
-                    MOVE_SELECTED,
-                    MOVE_DISCARDED,
+                    Action.COPY_SELECTED,
+                    Action.COPY_DISCARDED,
+                    Action.MOVE_SELECTED,
+                    Action.MOVE_DISCARDED,
                 },
             ),
         ),
@@ -370,14 +402,20 @@ def mdedup(
         for param_value, param_name, required_values in requirements:
             if conf_value in required_values:
                 if not param_value:
-                    msg = f"{conf_value} requires the {param_name} parameter."
-                    raise BadParameter(msg)
+                    raise BadParameter(
+                        f"{conf_value} requires the {param_name} parameter."
+                    )
             elif param_value:
-                msg = f"{param_name} parameter not allowed in {conf_value}."
-                raise BadParameter(msg)
+                raise BadParameter(
+                    f"{param_name} parameter not allowed in {conf_value}."
+                )
+
+    if export and export.exists() and not export_append:
+        raise FileExistsError(
+            f"Cannot export to existing file {export!r} unless --export-append is set."
+        )
 
     conf = Config(
-        dry_run=dry_run,
         input_format=input_format,
         force_unlock=force_unlock,
         hash_headers=hash_header,
@@ -393,6 +431,7 @@ def mdedup(
         export=export,
         export_format=export_format,
         export_append=export_append,
+        dry_run=dry_run,
     )
 
     dedup = Deduplicate(conf)
@@ -409,18 +448,42 @@ def mdedup(
 
     echo(theme.heading("\n● Step #2 - Compute hashes and group duplicates"))
     dedup.hash_all()
+
     if hash_only:
+        # List options attached to the sections specifics to later steps, that were
+        # provided by the user.
+        ignored_user_options = []
+        for group in ctx.command.option_groups:
+            step_number = re.search(r"step #(\d+)", group.title)
+            if not step_number:
+                raise RuntimeError("Option group not associated to a step number.")
+            # Only collect options from steps after #2.
+            if int(step_number.group(1)) > 2:
+                for opt in group.options:
+                    if ctx.get_parameter_source(opt.name) != ParameterSource.DEFAULT:
+                        ignored_user_options.append(
+                            "/".join(opt.opts + opt.secondary_opts)
+                        )
+        if ignored_user_options:
+            logging.warning(
+                "Options provided by user, but ignored in -H/--hash-only mode: "
+                + ", ".join(ignored_user_options)
+            )
+
+        # Print all computed hashes.
         for all_mails in dedup.mails.values():
             for mail in all_mails:
                 echo(mail.pretty_headers)
                 echo(f"Hash: {mail.hash_key()}")
+
+        # Exit right away.
         ctx.exit()
 
     echo(theme.heading("\n● Step #3 - Select mails in each group"))
     dedup.build_sets()
 
     echo(theme.heading("\n● Step #4 - Perform action on selected mails"))
-    perform_action(dedup)
+    action.perform_action(dedup)
     dedup.close_all()
 
     echo(theme.heading("\n● Step #5 - Report and statistics"))

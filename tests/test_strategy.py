@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
 from __future__ import annotations
 
 from mailbox import Maildir
@@ -21,40 +22,29 @@ from string import ascii_lowercase
 import arrow
 import pytest
 
-from mail_deduplicate.strategy import (
-    DISCARD_ALL_BUT_ONE,
-    DISCARD_BIGGER,
-    DISCARD_BIGGEST,
-    DISCARD_NEWER,
-    DISCARD_NEWEST,
-    DISCARD_OLDER,
-    DISCARD_OLDEST,
-    DISCARD_ONE,
-    DISCARD_SMALLER,
-    DISCARD_SMALLEST,
-    SELECT_ALL_BUT_ONE,
-    SELECT_BIGGER,
-    SELECT_BIGGEST,
-    SELECT_NEWER,
-    SELECT_NEWEST,
-    SELECT_OLDER,
-    SELECT_OLDEST,
-    SELECT_ONE,
-    SELECT_SMALLER,
-    SELECT_SMALLEST,
-    STRATEGY_METHODS,
-)
+from mail_deduplicate.strategy import Strategy
 
 from .conftest import MailFactory, check_box
 
 
 def test_strategy_definitions():
     """Test deduplication strategy definitions."""
-    for strategy_id, method in STRATEGY_METHODS.items():
-        # All strategies are lower cases strings, with dashes.
-        assert isinstance(strategy_id, str)
-        assert set(strategy_id).issubset(ascii_lowercase + "-")
-        assert callable(method)
+
+    # Check there is no hidden aliases defined in the Strategy enum.
+    assert len(Strategy) == len(Strategy.__members__)
+    assert len(Strategy) == len(Strategy._value2member_map_)
+
+    all_strategy_ids = {s.name.lower() for s in Strategy}
+
+    for strategy in Strategy:
+        assert isinstance(strategy.value, str | int)
+
+        assert strategy.name.lower().replace("_", "-") == str(strategy)
+
+        assert set(str(strategy)).issubset(ascii_lowercase + "-")
+        assert callable(strategy.strategy_function)
+        assert strategy.strategy_function.__name__ in all_strategy_ids
+        assert strategy.strategy_function.__doc__.strip()
 
 
 # Time-based collection of pre-defined fixtures.
@@ -83,7 +73,7 @@ random_mail_3 = MailFactory(message_id=MailFactory.random_string(30))
 
 
 # List of strategies and their required dummy parameters.
-strategy_options: dict[str, list[str]] = dict.fromkeys(STRATEGY_METHODS, [])
+strategy_options: dict[str, list[str]] = dict.fromkeys(map(str, Strategy), [])
 # Add dummy regexps.
 strategy_options.update(
     {
@@ -165,36 +155,36 @@ def test_maildir_dry_run(invoke, make_box, strategy_id, params):
     )
 
 
-# List of (strategy_id, mailbox_input, mailbox_results, case_id).
+# List of (case_id, strategies, mailbox_input, mailbox_results).
 test_cases = [
     # Whatever the time-based or size-based strategy, the duplicate set is not
     # actionable if the selection criterion doesn't produce any match.
     (
         "no_match",
         [
-            DISCARD_OLDER,
-            DISCARD_OLDEST,
-            DISCARD_NEWER,
-            DISCARD_NEWEST,
-            SELECT_OLDER,
-            SELECT_OLDEST,
-            SELECT_NEWER,
-            SELECT_NEWEST,
-            DISCARD_SMALLER,
-            DISCARD_SMALLEST,
-            DISCARD_BIGGER,
-            DISCARD_BIGGEST,
-            SELECT_SMALLER,
-            SELECT_SMALLEST,
-            SELECT_BIGGER,
-            SELECT_BIGGEST,
+            Strategy.DISCARD_OLDER,
+            Strategy.DISCARD_OLDEST,
+            Strategy.DISCARD_NEWER,
+            Strategy.DISCARD_NEWEST,
+            Strategy.SELECT_OLDER,
+            Strategy.SELECT_OLDEST,
+            Strategy.SELECT_NEWER,
+            Strategy.SELECT_NEWEST,
+            Strategy.DISCARD_SMALLER,
+            Strategy.DISCARD_SMALLEST,
+            Strategy.DISCARD_BIGGER,
+            Strategy.DISCARD_BIGGEST,
+            Strategy.SELECT_SMALLER,
+            Strategy.SELECT_SMALLEST,
+            Strategy.SELECT_BIGGER,
+            Strategy.SELECT_BIGGEST,
         ],
         [random_mail_1, random_mail_1],
         [random_mail_1, random_mail_1],
     ),
     (
         "older_selection",
-        [SELECT_OLDER, DISCARD_NEWEST],
+        [Strategy.SELECT_OLDER, Strategy.DISCARD_NEWEST],
         [
             oldest_mail,
             newest_mail,
@@ -210,7 +200,7 @@ test_cases = [
     ),
     (
         "oldest_selection",
-        [SELECT_OLDEST, DISCARD_NEWER],
+        [Strategy.SELECT_OLDEST, Strategy.DISCARD_NEWER],
         [
             oldest_mail,
             newest_mail,
@@ -233,7 +223,7 @@ test_cases = [
     ),
     (
         "newer_selection",
-        [SELECT_NEWER, DISCARD_OLDEST],
+        [Strategy.SELECT_NEWER, Strategy.DISCARD_OLDEST],
         [
             oldest_mail,
             newest_mail,
@@ -249,7 +239,7 @@ test_cases = [
     ),
     (
         "newest_selection",
-        [SELECT_NEWEST, DISCARD_OLDER],
+        [Strategy.SELECT_NEWEST, Strategy.DISCARD_OLDER],
         [
             oldest_mail,
             newest_mail,
@@ -272,7 +262,7 @@ test_cases = [
     ),
     (
         "smaller_selection",
-        [SELECT_SMALLER, DISCARD_BIGGEST],
+        [Strategy.SELECT_SMALLER, Strategy.DISCARD_BIGGEST],
         [
             smallest_mail,
             biggest_mail,
@@ -288,7 +278,7 @@ test_cases = [
     ),
     (
         "smallest_selection",
-        [SELECT_SMALLEST, DISCARD_BIGGER],
+        [Strategy.SELECT_SMALLEST, Strategy.DISCARD_BIGGER],
         [
             smallest_mail,
             biggest_mail,
@@ -311,7 +301,7 @@ test_cases = [
     ),
     (
         "bigger_selection",
-        [SELECT_BIGGER, DISCARD_SMALLEST],
+        [Strategy.SELECT_BIGGER, Strategy.DISCARD_SMALLEST],
         [
             smallest_mail,
             biggest_mail,
@@ -327,7 +317,7 @@ test_cases = [
     ),
     (
         "biggest_selection",
-        [SELECT_BIGGEST, DISCARD_SMALLER],
+        [Strategy.SELECT_BIGGEST, Strategy.DISCARD_SMALLER],
         [
             smallest_mail,
             biggest_mail,
@@ -350,7 +340,7 @@ test_cases = [
     ),
     (
         "one_selection",
-        [SELECT_ONE, DISCARD_ALL_BUT_ONE],
+        [Strategy.SELECT_ONE, Strategy.DISCARD_ALL_BUT_ONE],
         [
             random_mail_1,
             random_mail_2,
@@ -368,7 +358,7 @@ test_cases = [
     ),
     (
         "all_but_one_selection",
-        [SELECT_ALL_BUT_ONE, DISCARD_ONE],
+        [Strategy.SELECT_ALL_BUT_ONE, Strategy.DISCARD_ONE],
         [
             random_mail_1,
             random_mail_2,
@@ -387,29 +377,29 @@ test_cases = [
 
 
 @pytest.mark.parametrize(
-    ("strategy_id", "mailbox_input", "mailbox_results"),
+    ("strategy", "mailbox_input", "mailbox_results"),
     [
         pytest.param(
-            strategy_id,
+            strategy,
             mailbox_input,
             mailbox_results,
-            id=f"{case_id}|{strategy_id}",
+            id=f"{case_id}|{strategy}",
         )
-        for case_id, strategy_ids, mailbox_input, mailbox_results in test_cases
-        for strategy_id in strategy_ids
+        for case_id, strategies, mailbox_input, mailbox_results in test_cases
+        for strategy in strategies
     ],
 )
 def test_maildir_strategy(
     invoke,
     make_box,
-    strategy_id,
+    strategy,
     mailbox_input,
     mailbox_results,
 ):
     """Generic test to check the result of a selection strategy."""
     box_path, box_type = make_box(Maildir, mailbox_input)
 
-    result = invoke(f"--strategy={strategy_id}", "--action=delete-selected", box_path)
+    result = invoke(f"--strategy={strategy}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     check_box(box_path, box_type, content=mailbox_results)

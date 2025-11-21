@@ -24,6 +24,7 @@ hidden:
 ---
 development
 API <mail_deduplicate>
+tests
 genindex
 modindex
 todolist

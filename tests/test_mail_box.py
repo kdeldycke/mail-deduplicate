@@ -13,9 +13,60 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
 from __future__ import annotations
 
+import inspect
+import mailbox
+from functools import cache
+from mailbox import Mailbox, Message
+
 import pytest
+
+from mail_deduplicate.mail_box import (
+    FILE_FORMATS,
+    FOLDER_FORMATS,
+    BoxFormat,
+    BoxStructure,
+)
+
+
+@cache
+def stdlib_box_types() -> list[type[Mailbox]]:
+    """Yields all mailbox types defined in the standard library.
+
+    Only collect direct subclasses of the ``mailbox.Mailbox`` interface. Ignore
+    ``mailbox.Mailbox`` itself and all others starting with an underscore.
+    """
+    klass_list = []
+    for _, klass in inspect.getmembers(mailbox, inspect.isclass):
+        if (
+            klass != Mailbox
+            and not klass.__name__.startswith("_")
+            and issubclass(klass, Mailbox)
+        ):
+            klass_list.append(klass)
+    return klass_list
+
+
+def test_box_formats():
+    """Ensures all box formats are correctly defined."""
+    for box in BoxFormat:
+        assert issubclass(box.base_class, Mailbox)
+        assert box.base_class in stdlib_box_types()
+
+        assert box.base_class.__name__.upper() == box.name
+        assert str(box) == box.name.lower()
+
+        assert box.structure in BoxStructure
+
+        assert issubclass(box.message_class, Message)
+
+    # Check all standard library box types are covered.
+    assert set(stdlib_box_types()) == {box.base_class for box in BoxFormat}
+
+    assert set(FOLDER_FORMATS).isdisjoint(FILE_FORMATS)
+    assert set(BoxFormat) == set(FOLDER_FORMATS) | set(FILE_FORMATS)
 
 
 @pytest.mark.parametrize("source", ["./dummy_maildir/", "./__init__.py"])

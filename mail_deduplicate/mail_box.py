@@ -13,95 +13,102 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-"""Patch and Python's standard library mail box constructors.
+"""Utilities to read and write mail boxes in various formats.
 
-Python's `mailbox module<https://docs.python.org/3.11/library/mailbox.html>`_ needs
-some tweaks and sane defaults.
+Based on `Python's standard library mailbox module
+<https://docs.python.org/3.11/library/mailbox.html>`_.
 """
 
 from __future__ import annotations
 
-import inspect
-import mailbox as py_mailbox
-from mailbox import Mailbox as py_Mailbox
-from mailbox import Message as py_Message
-
-from functools import partial
-from typing import TYPE_CHECKING, Literal
 import logging
+import mailbox
+from enum import Enum, auto
+from functools import partial
+from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
 
-from boltons.dictutils import FrozenDict
-from boltons.iterutils import flatten
 from click_extra.colorize import default_theme as theme
 
-from mail_deduplicate.mail import DedupMail
+from .mail import DedupMail
 
+TYPE_CHECKING = False
 if TYPE_CHECKING:
     from pathlib import Path
 
 
-def build_box_constructors():
-    """Build our own mail constructors for each subclass of ``mailbox.Mailbox``.
+class BoxStructure(Enum):
+    """Box structures can be file-based or folder-based."""
 
-    Gather all constructors defined by the standard Python library and augments them
-    with our ``DedupMail`` class.
+    # We use auto() as we don't care about the actual values here.
+    FOLDER = auto()
+    FILE = auto()
 
-    Only augment direct subclasses of the ``mailbox.Mailbox`` interface. Ignore
-    ``mailbox.Mailbox`` itself but the latter and all others starting with an
-    underscore.
+
+class BoxFormat(Enum):
+    """IDs of all the supported box formats and their metadata.
+
+    Each entry is associated to their original base class, and the structure they
+    implement (file-based or folder-based).
+
+    From these, we can derive the proper constructor with our own custom ``DedupMail``
+    factory.
+
+    .. hint::
+        This could be extended in the future to add support for other mailbox formats
+        and sources, like Gmail accounts, IMAP servers, etc.
     """
-    for _, klass in inspect.getmembers(py_mailbox, inspect.isclass):
-        if (
-            klass != py_Mailbox
-            and not klass.__name__.startswith("_")
-            and issubclass(klass, py_Mailbox)
-        ):
-            # Fetch the default factory for each mailbox type based on naming
-            # conventions.
-            message_klass = getattr(py_mailbox, f"{klass.__name__}Message")
-            assert issubclass(message_klass, py_Message)
 
-            # Augment the default factory with DedupMail class.
-            factory_klass = type(
-                f"{klass.__name__}DedupMail",
-                (DedupMail, message_klass, object),
-                {
-                    "__doc__": f"Extend the default message factory for {klass} with "
-                    "our own ``DedupMail`` class to add deduplication utilities.",
-                },
-            )
+    # Same order as in `mailbox` module documentation.
+    MAILDIR = (Maildir, BoxStructure.FOLDER)
+    MBOX = (mbox, BoxStructure.FILE)
+    MH = (MH, BoxStructure.FOLDER)
+    BABYL = (Babyl, BoxStructure.FILE)
+    MMDF = (MMDF, BoxStructure.FILE)
 
-            # Set our own custom factory and safety options to default constructor.
-            constructor = partial(klass, factory=factory_klass, create=False)
+    def __init__(self, base_class: type[Mailbox], structure: BoxStructure) -> None:
+        self.base_class = base_class
+        self.structure = structure
 
-            # Generates our own box_type_id for use in CLI parameters.
-            box_type_id = klass.__name__.lower()
+        # We expect the message class to be named as <BaseClass>Name.
+        self.message_class = getattr(mailbox, f"{base_class.__name__}Message")
 
-            yield box_type_id, constructor
+    def __str__(self):
+        """The lowercase name of the format is used as a key in CLI options."""
+        return self.name.lower()
 
-
-BOX_TYPES = FrozenDict(build_box_constructors())
-"""Mapping between supported box type IDs and their constructors."""
-
-
-BOX_STRUCTURES = FrozenDict(
-    {
-        "file": {"mbox", "mmdf", "babyl"},
-        "folder": {"maildir", "mh"},
-    },
-)
-"""Categorize each box type into its structure type."""
+    @property
+    def constructor(self):
+        """Wrap a subclass of ``mailbox.Message`` with our own ``DedupMail`` class."""
+        factory_klass = type(
+            f"{self.base_class.__name__}DedupMail",
+            (DedupMail, self.message_class, object),
+            {
+                "__doc__": f"Extend the default message factory for {self.base_class} "
+                "with our own ``DedupMail`` class to add deduplication utilities.",
+            },
+        )
+        return partial(self.base_class, factory=factory_klass, create=False)
 
 
-# Check we did not forgot any box type.
-assert set(flatten(BOX_STRUCTURES.values())) == set(BOX_TYPES)
+FOLDER_FORMATS = tuple(box for box in BoxFormat if box.structure == BoxStructure.FOLDER)
+"""Box formats implementing a folder-based structure.
+
+Is a tuple to keep natural order defined by ``BoxFormat``.
+"""
+
+
+FILE_FORMATS = tuple(box for box in BoxFormat if box.structure == BoxStructure.FILE)
+"""Box formats implementing a file-based structure.
+
+Is a tuple to keep natural order defined by ``BoxFormat``.
+"""
 
 
 MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 """List of required sub-folders defining a properly structured maildir."""
 
 
-def autodetect_box_type(path: Path) -> str:
+def autodetect_box_type(path: Path) -> BoxFormat:
     """Auto-detect the format of the mailbox located at the provided path.
 
     Returns a box type as indexed in the `BOX_TYPES
@@ -113,65 +120,62 @@ def autodetect_box_type(path: Path) -> str:
     <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.MAILDIR_SUBDIRS>`_,
     it is parsed as a ``maildir``.
 
-    .. note::
-        Future finer autodetection heuristics should be implemented here.
+    .. todo::
+        Future finer autodetection heuristics should be implemented here. Some ideas:
 
-        Some ideas:
-            * single mail from a ``maildir``
-            * plain text mail content
-            * other mailbox formats supported in Python's standard library:
-                * ``MH``
-                * ``Babyl``
-                * ``MMDF``
+        - single mail from a ``maildir``
+        - plain text mail content
+        - other mailbox formats supported in Python's standard library:
+
+            - ``MH``
+            - ``Babyl``
+            - ``MMDF``
     """
-    box_type = None
+    box_format = None
 
     # Validates folder as a maildir.
     if path.is_dir():
         for subdir in MAILDIR_SUBDIRS:
             if not path.joinpath(subdir).is_dir():
-                msg = f"Missing sub-directory {subdir!r}"
-                raise ValueError(msg)
-        box_type = "maildir"
+                raise ValueError(f"Missing sub-directory {subdir!r}")
+        box_format = BoxFormat.MAILDIR
 
     # Validates folder as an mbox.
     elif path.is_file():
-        box_type = "mbox"
+        box_format = BoxFormat.MBOX
 
-    if not box_type:
-        msg = "Unrecognized mail source type."
-        raise ValueError(msg)
+    if not box_format:
+        raise ValueError("Unrecognized mail source type.")
 
-    logging.info(f"{theme.choice(box_type)} detected.")
-    return box_type
+    logging.info(f"{theme.choice(str(box_format))} detected.")
+    return box_format
 
 
 def open_box(
     path: Path,
-    box_type: str | Literal[False] = False,
+    box_format: BoxFormat | None = None,
     force_unlock: bool = False,
-):
+) -> list[Mailbox]:
     """Open a mail box.
 
     Returns a list of boxes, one per sub-folder. All are locked, ready for operations.
 
-    If ``box_type`` is provided, forces the opening of the box in the specified format.
+    If ``box_format`` is provided, forces the opening of the box in the specified format.
     Else, defaults to autodetection.
     """
     logging.info(f"\nOpening {theme.choice(str(path))} ...")
-    if not box_type:
-        box_type = autodetect_box_type(path)
+    if not box_format:
+        box_format = autodetect_box_type(path)
     else:
-        logging.warning(f"Forcing {box_type} format.")
+        logging.warning(f"Forcing {box_format} format.")
 
-    constructor = BOX_TYPES[box_type]
     # Do not allow the constructor to create a new mailbox if not found.
-    box = constructor(path, create=False)
+    box = box_format.constructor(path, create=False)
 
     return open_subfolders(box, force_unlock)
 
 
-def lock_box(box, force_unlock):
+def lock_box(box: Mailbox, force_unlock: bool) -> Mailbox:
     """Lock an opened box and allows for forced unlocking.
 
     Returns the locked box.
@@ -179,13 +183,13 @@ def lock_box(box, force_unlock):
     try:
         logging.debug("Locking box...")
         box.lock()
-    except py_mailbox.ExternalClashError:
+    except ExternalClashError:
         logging.error("Box already locked!")
         # Remove the lock manually and re-lock.
         if force_unlock:
             logging.warning("Forcing removal of lock...")
             # Forces internal metadata.
-            box._locked = True
+            box._locked = True  # type: ignore[attr-defined]
             box.unlock()
             box.lock()
         # Re-raise error.
@@ -195,10 +199,7 @@ def lock_box(box, force_unlock):
     return box
 
 
-def open_subfolders(
-    box: py_mailbox.Mailbox,
-    force_unlock: bool,
-) -> list[py_mailbox.Mailbox]:
+def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     """Browse recursively the subfolder tree of a box.
 
     Returns a list of opened and locked boxes, each for one subfolder.
@@ -207,34 +208,34 @@ def open_subfolders(
     """
     folder_list = [lock_box(box, force_unlock)]
 
-    if hasattr(box, "list_folders"):
+    if isinstance(box, tuple(b.base_class for b in FOLDER_FORMATS)):
+        # Asserts to please the type checker.
+        assert hasattr(box, "list_folders")
+        assert hasattr(box, "get_folder")
         for folder_id in box.list_folders():
             logging.info(f"Opening subfolder {folder_id} ...")
-            folder_list += open_subfolders(
-                box.get_folder(folder_id),  # type: ignore[attr-defined]
-                force_unlock,
-            )
+            folder_list += open_subfolders(box.get_folder(folder_id), force_unlock)
     return folder_list
 
 
 def create_box(
     path: Path,
-    box_type: str,
+    box_format: BoxFormat,
     export_append: bool = False,
-) -> py_mailbox.Mailbox:
+) -> Mailbox:
     """Creates a brand new box from scratch."""
     logging.info(
-        f"Creating new {theme.choice(box_type)} box at {theme.choice(str(path))} ...",
+        f"Creating new {theme.choice(str(box_format))} box "
+        f"at {theme.choice(str(path))} ..."
     )
 
     if path.exists() and export_append is not True:
         raise FileExistsError(path)
 
-    constructor = BOX_TYPES[box_type]
     # Allow the constructor to create a new mail box as we already double-checked
     # beforehand it does not exist.
-    box = constructor(path, create=True)
+    box: Mailbox = box_format.constructor(path, create=True)
 
     logging.debug("Locking box...")
     box.lock()
-    return box  # type: ignore[no-any-return]
+    return box

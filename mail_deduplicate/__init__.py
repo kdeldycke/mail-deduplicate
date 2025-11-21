@@ -17,11 +17,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
-from boltons.iterutils import unique
-
-__version__ = "7.6.3"
+__version__ = "8.0.1"
 
 
 HASH_HEADERS: tuple[str, ...] = (
@@ -60,94 +56,6 @@ By default we choose to exclude:
 """
 
 
-ADDRESS_HEADERS = frozenset([
-    "from",
-    "to",
-    "cc",
-    "bcc",
-    "reply-to",
-    "sender",
-    "return-path",
-    "resent-from",
-    "resent-to",
-    "resent-cc",
-    "resent-bcc",
-    "resent-reply-to",
-    "resent-sender",
-    "delivered-to",
-    "x-original-to",
-    "envelope-to",
-    "x-envelope-from",
-    "x-envelope-to",
-    "disposition-notification-to",
-    "original-recipient",
-])
-"""Headers that contain email addresses.
-
-..danger::
-    These IDs should be kept lower-case, because they are compared to the one provided
-    to those provided to the ``-h``/``--hash-header`` option, that is carried by the
-    ``hash_headers`` property of the configuration.
-"""
-
-
-QUOTE_DISCARD_HEADERS = ADDRESS_HEADERS
-"""Headers from which quotes should be discarded.
-
-E.g. ``"Bob" <bob@example.com>`` should hash to the same thing as
-``Bob <bob@example.com>``.
-"""
-
-
-MINIMAL_HEADERS_COUNT = 4
-"""Below this value, we consider not having enough headers to compute a solid hash."""
-
-
-DEFAULT_SIZE_THRESHOLD = 512
-"""Default size threshold in bytes.
-
-Since we're ignoring the ``Content-Length`` header by default `because of mailing-list
-effects <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_, we
-introduced a limit on the allowed difference between the sizes of the message payloads.
-
-If this is exceeded, a warning is issued and the messages are not considered duplicates,
-because this could point to message corruption somewhere, or a false positive.
-
-.. note::
-    Headers are not counted towards this threshold, because many `headers can be added
-    by mailing list software
-    <https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists>`_ such as
-    ``mailman``, or even by the process of sending the mail through various MTAs.
-
-    One copy could have been stored by the sender's MUA prior to sending, without any
-    ``Received`` headers, and another copy could be reflected back via a ``CC``-to-self
-    mechanism or mailing list server.
-
-    This threshold has to be large enough to allow for footers added by mailing list
-    servers.
-"""
-
-DEFAULT_CONTENT_THRESHOLD = 768
-"""Default content threshold in bytes.
-
-As above, we similarly generates unified diffs of duplicates and ensure that the diff is
-not greater than a certain size to limit false-positives.
-"""
-
-DATE_HEADER = "date-header"
-CTIME = "ctime"
-TIME_SOURCES = frozenset([DATE_HEADER, CTIME])
-"""Methods used to extract a mail's canonical timestamp:
-
-- ``date-header``: sourced from the message's ``Date`` header.
-- ``ctime``: sourced from the email's file from the filesystem. Only available for
-  ``maildir`` sources.
-
-Also see:
-https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mail.DedupMail.timestamp
-"""
-
-
 class TooFewHeaders(Exception):
     """Not enough headers were found to produce a solid hash."""
 
@@ -162,69 +70,3 @@ class ContentDiffAboveThreshold(Exception):
     """Difference in mail content is greater than `threshold.
     <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD>`_.
     """
-
-
-class Config:
-    """Holds global configuration."""
-
-    # Keep these defaults in sync with CLI option definitions.
-    default_conf = {
-        "dry_run": False,
-        "input_format": False,
-        "force_unlock": False,
-        "hash_headers": HASH_HEADERS,
-        "hash_body": None,
-        "hash_only": False,
-        "size_threshold": DEFAULT_SIZE_THRESHOLD,
-        "content_threshold": DEFAULT_CONTENT_THRESHOLD,
-        "show_diff": False,
-        "strategy": None,
-        "time_source": None,
-        "regexp": None,
-        "action": None,
-        "export": None,
-        "export_format": "mbox",
-        "export_append": False,
-    }
-
-    def __init__(self, **kwargs) -> None:
-        """Validates configuration parameter types and values."""
-        # Load default values.
-        self.conf = self.default_conf.copy()
-
-        unrecognized_options = set(kwargs) - set(self.default_conf)
-        if unrecognized_options:
-            msg = f"Unrecognized {unrecognized_options} options."
-            raise ValueError(msg)
-
-        # Replace defaults values with our config.
-        self.conf.update(kwargs)
-
-        # Check thresholds.
-        assert self.size_threshold >= -1
-        assert self.content_threshold >= -1
-
-        # Headers are case-insensitive in Python implementation.
-        normalized_headers = (h.lower() for h in self.hash_headers)  # type: ignore[has-type]
-        # Remove duplicate entries.
-        normalized_headers = unique(normalized_headers)
-        # Mail headers are composed of ASCII characters between 33 and 126
-        # (both inclusive) according the RFC-5322.
-        for hid in normalized_headers:
-            ascii_indexes = set(map(ord, hid))
-            assert max(ascii_indexes) <= 126
-            assert min(ascii_indexes) >= 33
-        self.hash_headers = tuple(normalized_headers)
-
-        # Export mail box will always be created from scratch and is not
-        # expected to exists in the first place.
-        if self.export:  # type: ignore[has-type]
-            self.export = Path(self.export).resolve()  # type: ignore[has-type]
-            if self.export.exists() and self.export_append is not True:
-                raise FileExistsError(self.export)
-
-    def __getattr__(self, attr_id):
-        """Expose configuration entries as properties."""
-        if attr_id in self.conf:
-            return self.conf[attr_id]
-        return None

@@ -1,26 +1,25 @@
 [project]
 # Docs: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 name = "mail-deduplicate"
-version = "7.6.3"
+version = "8.0.1"
 # Python versions and their status: https://devguide.python.org/versions/
 requires-python = ">= 3.10"
 description = "📧 CLI to deduplicate mails from mail boxes"
 authors = [{ name = "Kevin Deldycke", email = "kevin@deldycke.com" }]
 readme = "readme.md"
 keywords = [
+    'Babyl',
     'CLI',
-    'mail',
+    'MH',
+    'MMDF',
+    'cleanup',
+    'dedupe',
+    'deduplication',
     'email',
+    'mail',
+    'mailbox',
     'maildir',
     'mbox',
-    'deduplication',
-    'dedupe',
-    'cleanup',
-    'mailbox',
-    'Babyl',
-    'MH',
-    'mbox',
-    'MMDF',
 ]
 classifiers = [
     # See: https://pypi.org/pypi?%3Aaction=list_classifiers
@@ -37,43 +36,59 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     'Programming Language :: Python :: Implementation :: CPython',
     'Topic :: Communications :: Email',
     'Topic :: Utilities',
     'Typing :: Typed',
 ]
+# Semantic versioning works in theory. In practice, it is hard to guarantee.
+# That's why we rely on >= specifier instead of ~= to relax constraints. This gives more freedom to packagers to
+# release hotfixes for security vulnerabilities in the future.
+# See also discussion about upper limits at: https://iscinumpy.dev/post/bound-version-constraints/#tldr
+# All minimal version choice are documented. Reasons to bump a minimal version are:
+# - bug fixes,
+# - security fixes,
+# - new code path we depends on,
+# - aligns minimal Python requirements to ours,
+# - adds new explicit support Python version.
 dependencies = [
-    "arrow ~= 1.3.0",
-    "boltons ~= 25.0.0",
-    "click-extra ~= 4.15.0",
-    "tabulate [widechars] ~= 0.9",
+    # arrow 1.3.0 is the first version to add support for Python 3.12.
+    "arrow >= 1.3.0",
+    # boltons 25.0.0 is the first version to support Python 3.13.
+    "boltons >= 25.0.0",
+    # click-extra 7.1.0 adds render_table() utility in the context.
+    "click-extra >= 7.1.0",
 ]
 
 [project.optional-dependencies]
+## Non-runtime dependencies, for development and CI, are using the ~= specifier to reduce randomness.
+## Unless the package has been referenced in sections above, in which case we align the version specifier.
 test = [
-    "click-extra [pytest] ~= 4.15.0",
-    "coverage [toml] ~= 7.6.7",
-    "extra-platforms [pytest] ~= 2.1.0",
-    "pytest ~= 8.3.3",
-    # More pytest plugins at: https://docs.pytest.org/en/latest/reference/plugin_list.html
-    "pytest-cov ~= 6.2.1",
-    "pytest-github-actions-annotate-failures ~= 0.2.0",
-    "pytest-randomly ~= 3.16.0",
+    "click-extra [pytest] >= 7.1.0",
+    "coverage [toml] ~= 7.12.0",
+    "extra-platforms [pytest] >= 5.0.0",
+    "pytest ~= 9.0.1",
+    "pytest-cov ~= 7.0.0",
+    "pytest-github-actions-annotate-failures ~= 0.3.0",
+    "pytest-randomly ~= 4.0.0",
 ]
-typing = ["types-tabulate ~= 0.9.0.2"]
+typing = ["types-boltons ~= 25.0.0.20250822"]
 docs = [
-    "click-extra [sphinx] ~= 4.15.0",
-    "furo ~= 2024.8.6",
+    "click-extra [sphinx] >= 7.1.0",
+    "furo ~= 2025.9.25",
     "myst-parser ~= 4.0.0",
-    "sphinx ~= 8.1.3",
-    "sphinx-autodoc-typehints ~= 3.1.0",
-    "sphinx-click ~= 6.0.0",
+    # Sphinx  8.0.0 is the first version to drop Python 3.9, like us.
+    "sphinx >= 8.0.0",
+    # sphinx-autodoc-typehints 2.4.0 is the first version that is aligned to our Python >= 3.10 requirement.
+    "sphinx-autodoc-typehints >= 2.4.0",
+    "sphinx-click ~= 6.1.0",
     "sphinx-copybutton ~= 0.5.2",
     "sphinx-design ~= 0.6.0",
     "sphinx-issues ~= 5.0.0",
-    "sphinxcontrib-mermaid ~= 1.0.0",
-    "sphinxext-opengraph ~= 0.12.0",
-    "tomli ~= 2.0.1 ; python_version < '3.11'",
+    "sphinxcontrib-mermaid ~= 1.1.0",
+    "sphinxext-opengraph ~= 0.13.0",
+    "tomli >= 2.3.0 ; python_version < '3.11'",
 ]
 
 [project.urls]
@@ -91,8 +106,8 @@ mdedup = "mail_deduplicate.__main__:main"
 product-name = "Mail Deduplicate"
 file-description = "📧 CLI to deduplicate mails from mail boxes"
 copyright = "Kevin Deldycke <kevin@deldycke.com> and contributors. Distributed under GPL-2.0-or-later license."
-file-version = "7.6.3"
-product-version = "7.6.3"
+file-version = "8.0.1"
+product-version = "8.0.1"
 macos-app-icon = "docs/assets/icon.png"
 linux-icon = "docs/assets/icon.png"
 windows-icon-from-ico = "docs/assets/icon.png"
@@ -108,11 +123,7 @@ warn_return_any = true
 warn_unreachable = true
 pretty = true
 
-[[tool.mypy.overrides]]
-ignore_missing_imports = true
-module = ["boltons.*"]
-
-[tool.pytest.ini_options]
+[tool.pytest]
 # https://docs.pytest.org/en/latest/customize.html#pyproject-toml
 addopts = [
     "--durations=10",
@@ -126,7 +137,7 @@ addopts = [
 xfail_strict = true
 
 [tool.bumpversion]
-current_version = "7.6.3"
+current_version = "8.0.1"
 allow_dirty = true
 
 [[tool.bumpversion.files]]
@@ -162,16 +173,14 @@ replace = "date-released: {utcnow:%Y-%m-%d}"
 [tool.typos]
 default.extend-ignore-identifiers-re = [
     # error: `ist` should be `is`, `it`, `its`, `sit`, `list`
-    #   --> ./docs/development.md:121:10
-    #     |
-    # 121 | - [chalk.ist](https://chalk.ist)
-    #     |          ^^^
-    #     |
+    #     ╭▸ ./docs/development.md:107:10
+    #     │
+    # 107 │ - [chalk.ist](https://chalk.ist)
+    #     ╰╴         ━━━
     # error: `ist` should be `is`, `it`, `its`, `sit`, `list`
-    #   --> ./docs/development.md:121:29
-    #     |
-    # 121 | - [chalk.ist](https://chalk.ist)
-    #     |                             ^^^
-    #     |
+    #     ╭▸ ./docs/development.md:107:29
+    #     │
+    # 107 │ - [chalk.ist](https://chalk.ist)
+    #     ╰╴                            ━━━
     "ist",
 ]

@@ -13,34 +13,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
 from __future__ import annotations
 
+import logging
 import sys
 import textwrap
 from collections import Counter, OrderedDict
 from difflib import unified_diff
+from enum import Enum
 from functools import cached_property
 from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
-from typing import TYPE_CHECKING
-import logging
 
-from boltons.dictutils import FrozenDict
-from click_extra import progressbar
+from click_extra import get_current_context, progressbar
 from click_extra.colorize import default_theme as theme
-from tabulate import tabulate
 
-from mail_deduplicate import (
-    ContentDiffAboveThreshold,
-    SizeDiffAboveThreshold,
-    TooFewHeaders,
-)
-from mail_deduplicate.mail_box import open_box
-from mail_deduplicate.strategy import apply_strategy
+from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders
+from .mail_box import open_box
 
+TYPE_CHECKING = False
 if TYPE_CHECKING:
     from mailbox import Mailbox, Message
+
+    from .cli import Config
+    from .mail import DedupMail
+
 
 STATS_DEF = OrderedDict(
     [
@@ -117,17 +116,24 @@ STATS_DEF = OrderedDict(
 """All tracked statistics and their definition."""
 
 
-BODY_HASHER_SKIP = "skip"
-BODY_HASHER_RAW = "raw"
-BODY_HASHER_NORMALIZED = "normalized"
-BODY_HASHERS = FrozenDict(
-    {
-        BODY_HASHER_SKIP: lambda _: "",
-        BODY_HASHER_RAW: lambda m: m.hash_raw_body,
-        BODY_HASHER_NORMALIZED: lambda m: m.hash_normalized_body,
-    },
-)
-"""Method used to hash the body of mails."""
+class BodyHasher(Enum):
+    """Enumeration of available body hashing methods."""
+
+    SKIP = "skip"
+    RAW = "raw"
+    NORMALIZED = "normalized"
+
+    def __str__(self) -> str:
+        return self.value  # type: ignore[no-any-return]
+
+    def hash_function(self):
+        """Returns the hashing function corresponding to the body hasher."""
+        if self == BodyHasher.SKIP:
+            return lambda _: ""
+        elif self == BodyHasher.RAW:
+            return lambda m: m.hash_raw_body
+        elif self == BodyHasher.NORMALIZED:
+            return lambda m: m.hash_normalized_body
 
 
 class DuplicateSet:
@@ -137,7 +143,7 @@ class DuplicateSet:
     strategy.
     """
 
-    def __init__(self, hash_key: str, mail_set: set[Message], conf) -> None:
+    def __init__(self, hash_key: str, mail_set: set[DedupMail], conf: Config) -> None:
         """Load-up the duplicate set of mail and freeze pool.
 
         Once loaded-up, the pool of parsed mails is considered frozen for the rest of
@@ -156,7 +162,7 @@ class DuplicateSet:
         self.conf = conf
 
         # Pool referencing all duplicated mails and their attributes.
-        self.pool = frozenset(mail_set)
+        self.pool: frozenset[DedupMail] = frozenset(mail_set)
 
         # Set metrics.
         self.stats: Counter = Counter()
@@ -202,11 +208,11 @@ class DuplicateSet:
         settings.
         """
         logging.info("Check mail differences are below the thresholds.")
-        if self.conf.size_threshold < 0:
+        if self.conf["size_threshold"] < 0:
             logging.info("Skip checking for size differences.")
-        if self.conf.content_threshold < 0:
+        if self.conf["content_threshold"] < 0:
             logging.info("Skip checking for content differences.")
-        if self.conf.size_threshold < 0 and self.conf.content_threshold < 0:
+        if self.conf["size_threshold"] < 0 and self.conf["content_threshold"] < 0:
             return
 
         # Compute differences of mail against one another.
@@ -214,24 +220,24 @@ class DuplicateSet:
             mail_a = box_a.get(mail_a)
             mail_b = box_b.get(mail_b)
             # Compare mails on size.
-            if self.conf.size_threshold > -1:
+            if self.conf["size_threshold"] > -1:
                 size_difference = abs(mail_a.size - mail_b.size)
                 logging.debug(
                     f"{mail_a!r} and {mail_b!r} differs by {size_difference} bytes "
                     "in size.",
                 )
-                if size_difference > self.conf.size_threshold:
+                if size_difference > self.conf["size_threshold"]:
                     raise SizeDiffAboveThreshold
 
             # Compare mails on content.
-            if self.conf.content_threshold > -1:
+            if self.conf["content_threshold"] > -1:
                 content_difference = self.diff(mail_a, mail_b)
                 logging.debug(
                     f"{mail_a!r} and {mail_b!r} differs by {content_difference} bytes "
                     "in content.",
                 )
-                if content_difference > self.conf.content_threshold:
-                    if self.conf.show_diff:
+                if content_difference > self.conf["content_threshold"]:
+                    if self.conf["show_diff"]:
                         logging.info(self.pretty_diff(mail_a, mail_b))
                     raise ContentDiffAboveThreshold
 
@@ -239,8 +245,7 @@ class DuplicateSet:
         """Return difference in bytes between two mails' normalized body.
 
         .. todo::
-          Rewrite the diff algorithm to not rely on naive unified diff result
-          parsing.
+            Rewrite the diff algorithm to not rely on naive unified diff result parsing.
         """
         return len(
             "".join(
@@ -300,14 +305,14 @@ class DuplicateSet:
             self.stats["set_skipped_content"] += 1
             return
 
-        if not self.conf.strategy:
+        if not self.conf["strategy"]:
             logging.warning("Skip set: no strategy to apply.")
             self.stats["mail_skipped"] += self.size
             self.stats["set_skipped_strategy"] += 1
             return
 
         # Fetch the subset of selected mails from the set by applying strategy.
-        selected = apply_strategy(self.conf.strategy, self)
+        selected = self.conf["strategy"].apply_strategy(self)
         candidate_count = len(selected)
 
         # Duplicate sets matching as a whole are skipped altogether.
@@ -345,7 +350,7 @@ class Deduplicate:
     Similar messages sharing the same hash are grouped together in a ``DuplicateSet``.
     """
 
-    def __init__(self, conf) -> None:
+    def __init__(self, conf: Config) -> None:
         # Index of mail sources by their full, normalized path. So we can refer
         # to them in Mail instances. Also have the nice side effect of natural
         # deduplication of sources themselves.
@@ -375,12 +380,11 @@ class Deduplicate:
         # Make the path absolute and resolve any symlinks.
         path = Path(source_path).resolve(strict=True)
         if str(path) in self.sources:
-            msg = f"{path} already added."
-            raise ValueError(msg)
+            raise ValueError(f"{path} already added.")
 
         # Open and register the mail source. Subfolders will be registered as their
         # own box.
-        boxes = open_box(path, self.conf.input_format, self.conf.force_unlock)
+        boxes = open_box(path, self.conf["input_format"], self.conf["force_unlock"])
         for box in boxes:
             self.sources[box._path] = box
 
@@ -396,14 +400,11 @@ class Deduplicate:
         Displays a progress bar as the operation might be slow.
         """
         logging.info(
-            f"Use [{', '.join(map(theme.choice, self.conf.hash_headers))}] headers to "
+            f"Use [{', '.join(map(theme.choice, self.conf['hash_headers']))}] headers to "
             "compute hashes.",
         )
 
-        body_hasher = BODY_HASHERS.get(self.conf.hash_body)
-        if not body_hasher:
-            msg = f"{self.conf.hash_body} body hasher not implemented yet."
-            raise NotImplementedError(msg)
+        body_hasher = self.conf["hash_body"].hash_function()
 
         with progressbar(
             length=self.stats["mail_found"],
@@ -436,9 +437,9 @@ class Deduplicate:
         We apply the selection strategy one duplicate set at a time to keep memory
         footprint low and make the log easier to read.
         """
-        if self.conf.strategy:
+        if self.conf["strategy"]:
             logging.info(
-                f"{theme.choice(self.conf.strategy)} strategy will be applied on each "
+                f"{theme.choice(self.conf['strategy'])} strategy will be applied on each "
                 "duplicate set to select candidates.",
             )
         else:
@@ -468,9 +469,12 @@ class Deduplicate:
 
     def report(self):
         """Returns a text report of user-friendly statistics and metrics."""
+        ctx = get_current_context()
+        render_table = ctx.find_root().render_table
+
         output = ""
         for prefix, title in (("mail_", "Mails"), ("set_", "Duplicate sets")):
-            table = [[title, "Metric", "Description"]]
+            table = []
             for stat_id, desc in STATS_DEF.items():
                 if stat_id.startswith(prefix):
                     table.append(
@@ -480,7 +484,7 @@ class Deduplicate:
                             "\n".join(textwrap.wrap(desc, 60)),
                         ],
                     )
-            output += tabulate(table, tablefmt="fancy_grid", headers="firstrow")
+            output += render_table(table, headers=(title, "Metric", "Description"))
             output += "\n"
         return output
 
@@ -557,7 +561,7 @@ class Deduplicate:
 
         # Action stats.
         self.assert_stats("mail_selected", ">=", "mail_copied")
-        if self.conf.action != "move-discarded":
+        if self.conf["action"] != "move-discarded":
             # The number of moved mails may be larger than the number of selected
             # mails for move-discarded action, because discarded mails are moved.
             self.assert_stats("mail_selected", ">=", "mail_moved")
@@ -582,5 +586,6 @@ class Deduplicate:
         self.assert_stats(
             "set_total",
             "==",
-            "set_single + set_skipped_encoding + set_skipped_size + set_skipped_content + set_skipped_strategy + set_deduplicated",
+            "set_single + set_skipped_encoding + set_skipped_size + "
+            "set_skipped_content + set_skipped_strategy + set_deduplicated",
         )

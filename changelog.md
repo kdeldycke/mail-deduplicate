@@ -1,9 +1,26 @@
 # ChangeLog
 
-## [7.6.3 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.2...main)
+## [8.0.1 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.0.0...main)
 
 > [!IMPORTANT]
 > This version is not released yet and is under active development.
+
+## [8.0.0 (2025-11-21)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.2...v8.0.0)
+
+- Log options explicitly set by user but ignored because of `--hash-only` mode.
+- Add `--no-config`, `--table-format` options inherited from Click Extra.
+- Table rendering in CLI output is now controlled by `--table-format` option.
+- Remove direct dependency on `tabulate`, use `click-extra`'s table utilities instead.
+- Add official support for Python 3.14.
+- Remove maximum capped version of all dependencies (relax all `~=` specifiers to `>=`). This gives more freedom to downstream and upstream packagers. Document each minimal version choice.
+- Move all typing-related imports behind a hard-coded `TYPE_CHECKING` guard to avoid runtime imports.
+- Produce `mdedup-windows-arm64.exe` Windows binary for `arm64` architecture.
+- Run tests on stable Python 3.14 release.
+- Run tests on Python 3.15-dev, mark them as unstable.
+- Skip tests on intermediate Python versions (`3.11`, `3.12` and `3.13`) to reduce CI load.
+- Run tests on Python `3.14t` and `3.15t` free-threaded variants.
+- Use `astral-sh/setup-uv` action to install `uv` instead of manually installing it with `pip`.
+- Move `ubuntu-24.04` to `ubuntu-24.04-arm`, `macos-15` tests to `macos-26` and `windows-2025` tests to `windows-11-arm`.
 
 ## [7.6.2 (2025-04-20)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.1...v7.6.2)
 
