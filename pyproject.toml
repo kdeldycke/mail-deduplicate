@@ -61,9 +61,6 @@ dependencies = [
     "click-extra >= 7.1.0",
 ]
 
-[tool.uv.sources]
-click-extra = { git = "https://github.com/kdeldycke/click-extra" }
-
 [project.optional-dependencies]
 ## Non-runtime dependencies, for development and CI, are using the ~= specifier to reduce randomness.
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
