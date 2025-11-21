@@ -1,9 +1,6 @@
 # ChangeLog
 
-## [8.0.0 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.2...main)
-
-> [!IMPORTANT]
-> This version is not released yet and is under active development.
+## [8.0.0 (2025-11-21)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.2...v8.0.0)
 
 - Log options explicitly set by user but ignored because of `--hash-only` mode.
 - Add `--no-config`, `--table-format` options inherited from Click Extra.
