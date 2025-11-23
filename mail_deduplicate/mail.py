@@ -160,8 +160,8 @@ class DedupMailMixin(Message):
         return self.source_path, self.mail_id
 
     @cached_property
-    def parsed_date(self) -> arrow.Arrow | None:
-        """Parse the mail's date header into an ``Arrow`` object.
+    def parsed_date(self) -> float | None:
+        """Parse the mail's date header into float timestamp.
 
         Returns ``None`` if the mail has no valid date header.
         """
@@ -171,8 +171,7 @@ class DedupMailMixin(Message):
         if not parsed:
             raise TypeError(f"Mail has no valid Date header: {value!r}")
 
-        timestamp = email.utils.mktime_tz(parsed)
-        return arrow.get(timestamp)
+        return email.utils.mktime_tz(parsed)
 
     @cached_property
     def timestamp(self) -> float | None:
@@ -400,8 +399,7 @@ class DedupMailMixin(Message):
             # Date timestamps can differ by seconds or hours for various reasons, so let's
             # only honour the date for now and normalize them to UTC timezone.
             elif header_id == "date":
-                date_time = self.parsed_date
-                value = date_time.format("YYYY-MM-DD")
+                value = arrow.get(self.parsed_date).format("YYYY-MM-DD")
 
             # Remove quotes in any headers that contain addresses to ensure a quoted name is
             # hashed to the same value as an unquoted one.
