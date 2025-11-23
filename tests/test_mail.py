@@ -22,6 +22,9 @@ from extra_platforms.pytest import skip_windows  # type: ignore[attr-defined]
 
 from .conftest import MailFactory, check_box
 
+invalid_windows_dates = skip_windows(
+    reason="Invalid dates produce negative timestamps on Windows."
+)
 """ Some invalid dates are not supported on Windows as they produce negative
 timestamps. See:
 * https://github.com/arrow-py/arrow/issues/675
@@ -32,7 +35,7 @@ invalid_date_mail_1 = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 invalid_date_mail_2 = MailFactory(date_rfc2822="Thu, 13 Dec 102 15:30 WET")
 
 
-@skip_windows
+@invalid_windows_dates
 def test_invalid_date_parsing_noop(invoke, make_box):
     """Mails with strange non-standard dates gets parsed anyway and grouped into
     duplicate sets.
@@ -67,7 +70,7 @@ def test_invalid_date_parsing_noop(invoke, make_box):
     )
 
 
-@skip_windows
+@invalid_windows_dates
 def test_invalid_date_parsing_dedup(invoke, make_box):
     """Mails with strange non-standard dates gets parsed anyway and deduplicated if we
     reduce the source of hashed headers."""
