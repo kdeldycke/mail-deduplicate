@@ -166,20 +166,21 @@ class DuplicateSet:
         """
         self.hash_key: str = hash_key
 
-        # Mails selected after application of selection strategy.
         self.selection: set[Message] = set()
+        """Mails selected after application of selection strategy."""
 
-        # Mails discarded after application of selection strategy.
         self.discard: set[Message] = set()
+        """Mails discarded after application of selection strategy."""
 
-        # Global config.
         self.conf = conf
+        """Configuration shared from the main deduplication process."""
 
-        # Pool referencing all duplicated mails and their attributes.
         self.pool: frozenset[DedupMailMixin] = frozenset(mail_set)
+        """Pool referencing all duplicated mails and their attributes."""
 
-        # Set metrics.
         self.stats: Counter = Counter()
+        """Set metrics."""
+
         self.stats["mail_duplicates"] += self.size
 
         logging.debug(f"{self!r} created.")
@@ -363,25 +364,26 @@ class Deduplicate:
     """
 
     def __init__(self, conf: Config) -> None:
-        # Index of mail sources by their full, normalized path. So we can refer
-        # to them in Mail instances. Also have the nice side effect of natural
-        # deduplication of sources themselves.
         self.sources: dict[str, Mailbox] = {}
+        """Index of mail sources by their full, normalized path. So we can refer
+        to them in Mail instances. Also have the nice side effect of natural
+        deduplication of sources themselves.
+        """
 
-        # All mails grouped by hashes.
         self.mails: dict[str, set[Message]] = {}
+        """All mails grouped by hashes."""
 
-        # Mails selected after application of selection strategy.
         self.selection: set[Message] = set()
+        """Mails selected after application of selection strategy."""
 
-        # Mails discarded after application of selection strategy.
         self.discard: set[Message] = set()
+        """Mails discarded after application of selection strategy."""
 
-        # Global config.
         self.conf = conf
+        """Configuration shared across the deduplication process."""
 
-        # Deduplication statistics.
         self.stats: Counter = Counter(dict.fromkeys(STATS_DEF, 0))
+        """Deduplication statistics."""
 
     def add_source(self, source_path: Path | str) -> None:
         """Registers a source of mails, validates and opens it.
