@@ -18,39 +18,3 @@
 from __future__ import annotations
 
 __version__ = "8.0.1"
-
-
-HASH_HEADERS: tuple[str, ...] = (
-    "Date",
-    "From",
-    "To",
-    # "CC",
-    # "BCC",
-    # "Reply-To",
-    "Subject",
-    "MIME-Version",
-    "Content-Type",
-    "Content-Disposition",
-    "User-Agent",
-    "X-Priority",
-    "Message-ID",
-)
-"""Default ordered list of headers to use to compute the unique hash of a mail.
-
-By default we choose to exclude:
-
-``CC``
-  Since ``mailman`` apparently `sometimes trims list members
-  <https://mail.python.org/pipermail/mailman-developers/2002-September/013233.html>`_
-  from the ``CC`` header to avoid sending duplicates. Which means that copies of mail
-  reflected back from the list server will have a different ``CC`` to the copy saved by
-  the MUA at send-time.
-
-``BCC``
-  Because copies of the mail saved by the MUA at send-time will have ``BCC``, but copies
-  reflected back from the list server won't.
-
-``Reply-To``
-  Since a mail could be ``CC``'d to two lists with different ``Reply-To`` munging
-  options set.
-"""

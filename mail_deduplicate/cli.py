@@ -38,7 +38,6 @@ from click_extra import (
 )
 from click_extra.colorize import default_theme as theme
 
-from . import HASH_HEADERS
 from .action import Action
 from .deduplicate import BodyHasher, Deduplicate
 from .mail import TimeSource
@@ -51,6 +50,42 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from click_extra import Context, HelpExtraFormatter, Parameter
+
+
+DEFAULT_HASH_HEADERS: tuple[str, ...] = (
+    "Date",
+    "From",
+    "To",
+    # "CC",
+    # "BCC",
+    # "Reply-To",
+    "Subject",
+    "MIME-Version",
+    "Content-Type",
+    "Content-Disposition",
+    "User-Agent",
+    "X-Priority",
+    "Message-ID",
+)
+"""Default ordered list of headers to use to compute the unique hash of a mail.
+
+By default we choose to exclude:
+
+``CC``
+  Since ``mailman`` apparently `sometimes trims list members
+  <https://mail.python.org/pipermail/mailman-developers/2002-September/013233.html>`_
+  from the ``CC`` header to avoid sending duplicates. Which means that copies of mail
+  reflected back from the list server will have a different ``CC`` to the copy saved by
+  the MUA at send-time.
+
+``BCC``
+  Because copies of the mail saved by the MUA at send-time will have ``BCC``, but copies
+  reflected back from the list server won't.
+
+``Reply-To``
+  Since a mail could be ``CC``'d to two lists with different ``Reply-To`` munging
+  options set.
+"""
 
 
 class Config(TypedDict):
@@ -179,7 +214,7 @@ class MdedupCommand(ExtraCommand):
         type=str,
         callback=normalize_headers,
         metavar="Header-ID",
-        default=HASH_HEADERS,
+        default=DEFAULT_HASH_HEADERS,
         help="Headers to use to compute each mail's hash. Must be repeated multiple "
         "times to set an ordered list of headers. Header IDs are case-insensitive. "
         "Repeating entries are ignored.",
