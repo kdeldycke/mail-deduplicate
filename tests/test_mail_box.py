@@ -30,6 +30,8 @@ from mail_deduplicate.mail_box import (
     BoxStructure,
 )
 
+from .conftest import MailFactory, check_box
+
 
 @cache
 def stdlib_box_types() -> list[type[Mailbox]]:
@@ -49,7 +51,7 @@ def stdlib_box_types() -> list[type[Mailbox]]:
     return klass_list
 
 
-def test_box_formats():
+def test_box_format_definition():
     """Ensures all box formats are correctly defined."""
     for box in BoxFormat:
         assert issubclass(box.base_class, Mailbox)
@@ -67,6 +69,81 @@ def test_box_formats():
 
     assert set(FOLDER_FORMATS).isdisjoint(FILE_FORMATS)
     assert set(BoxFormat) == set(FOLDER_FORMATS) | set(FILE_FORMATS)
+
+
+
+
+@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+def test_create_box(make_box, box_type):
+    """Test creating a box with mails."""
+    mail1 = MailFactory(body="First mail\n")
+    mail2 = MailFactory(body="Second mail\n", message_id="<msg2@test.com>")
+
+    box_path, created_type = make_box(box_type, [mail1, mail2])
+
+    assert created_type == box_type
+    check_box(box_path, box_type, [mail1, mail2])
+
+
+@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+def test_create_empty_box(make_box, box_type):
+    """Test creating an empty box."""
+    box_path, created_type = make_box(box_type)
+
+    assert created_type == box_type
+    check_box(box_path, box_type, [])
+
+
+@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+def test_box_with_duplicate_mails(make_box, box_type):
+    """Test box containing duplicate mails."""
+    mail1 = MailFactory(body="Duplicate content\n", message_id="<dup@test.com>")
+    mail2 = MailFactory(body="Duplicate content\n", message_id="<dup@test.com>")
+    mail3 = MailFactory(body="Unique mail\n", message_id="<unique@test.com>")
+
+    box_path, created_type = make_box(box_type, [mail1, mail2, mail3])
+
+    assert created_type == box_type
+    check_box(box_path, box_type, [mail1, mail2, mail3])
+
+
+@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+def test_box_with_different_dates(make_box, box_type):
+    """Test box with mails having different dates."""
+    mail1 = MailFactory(date="2023-01-01", message_id="<jan@test.com>")
+    mail2 = MailFactory(date="2023-06-15", message_id="<jun@test.com>")
+    mail3 = MailFactory(date="2023-12-31", message_id="<dec@test.com>")
+
+    box_path, created_type = make_box(box_type, [mail1, mail2, mail3])
+
+    assert created_type == box_type
+    check_box(box_path, created_type, [mail1, mail2, mail3])
+
+
+@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+def test_box_with_single_mail(make_box, box_type):
+    """Test boxes with a single mail."""
+    mail = MailFactory(body="Single mail\n")
+
+    box_path, created_type = make_box(box_type, [mail])
+
+    assert created_type == box_type
+    check_box(box_path, box_type, [mail])
+
+
+@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+def test_box_types_from_fixture(make_box, box_type):
+    """Test that make_box fixture works with different box types."""
+    mails = [
+        MailFactory(body="Mail 1\n", message_id="<1@test.com>"),
+        MailFactory(body="Mail 2\n", message_id="<2@test.com>"),
+        MailFactory(body="Mail 3\n", message_id="<3@test.com>"),
+    ]
+
+    box_path, created_type = make_box(box_type, mails)
+
+    assert created_type == box_type
+    check_box(box_path, box_type, mails)
 
 
 @pytest.mark.parametrize("source", ["./dummy_maildir/", "./__init__.py"])
