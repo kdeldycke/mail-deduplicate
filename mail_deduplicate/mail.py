@@ -30,13 +30,15 @@ from mailbox import Message
 import arrow
 from click_extra import get_current_context
 
-from . import TooFewHeaders
-
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from mailbox import Mailbox, _ProxyFile
 
     from .cli import Config
+
+
+class TooFewHeaders(Exception):
+    """Not enough headers were found to produce a solid hash."""
 
 
 class TimeSource(Enum):

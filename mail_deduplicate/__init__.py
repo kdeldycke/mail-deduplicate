@@ -54,19 +54,3 @@ By default we choose to exclude:
   Since a mail could be ``CC``'d to two lists with different ``Reply-To`` munging
   options set.
 """
-
-
-class TooFewHeaders(Exception):
-    """Not enough headers were found to produce a solid hash."""
-
-
-class SizeDiffAboveThreshold(Exception):
-    """Difference in mail size is greater than `threshold.
-    <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_SIZE_THRESHOLD>`_.
-    """
-
-
-class ContentDiffAboveThreshold(Exception):
-    """Difference in mail content is greater than `threshold.
-    <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD>`_.
-    """

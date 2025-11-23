@@ -30,7 +30,7 @@ from pathlib import Path
 from click_extra import get_current_context, progressbar
 from click_extra.colorize import default_theme as theme
 
-from . import ContentDiffAboveThreshold, SizeDiffAboveThreshold, TooFewHeaders
+from .mail import TooFewHeaders
 from .mail_box import open_box
 
 TYPE_CHECKING = False
@@ -114,6 +114,18 @@ STATS_DEF = OrderedDict(
     ],
 )
 """All tracked statistics and their definition."""
+
+
+class SizeDiffAboveThreshold(Exception):
+    """Difference in mail size is greater than `threshold.
+    <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_SIZE_THRESHOLD>`_.
+    """
+
+
+class ContentDiffAboveThreshold(Exception):
+    """Difference in mail content is greater than `threshold.
+    <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD>`_.
+    """
 
 
 class BodyHasher(Enum):
