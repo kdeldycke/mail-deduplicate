@@ -16,7 +16,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import email
 import hashlib
 import logging
@@ -31,6 +30,7 @@ from click_extra import get_current_context
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from mailbox import Mailbox, _ProxyFile
 
     from .cli import Config
@@ -160,6 +160,21 @@ class DedupMailMixin(Message):
         return self.source_path, self.mail_id
 
     @cached_property
+    def parsed_date(self) -> arrow.Arrow | None:
+        """Parse the mail's date header into an ``Arrow`` object.
+
+        Returns ``None`` if the mail has no valid date header.
+        """
+        value = self.get("Date")
+        parsed = email.utils.parsedate_tz(value)
+
+        if not parsed:
+            raise TypeError(f"Mail has no valid Date header: {value!r}")
+
+        timestamp = email.utils.mktime_tz(parsed)
+        return arrow.get(timestamp)
+
+    @cached_property
     def timestamp(self) -> float | None:
         """Compute the normalized canonical timestamp of the mail.
 
@@ -179,12 +194,7 @@ class DedupMailMixin(Message):
         if self.conf["time_source"] == TimeSource.CTIME:
             return os.path.getctime(self.path)
 
-        # Fetch from the date header.
-        value = self.get("Date")
-        with contextlib.suppress(ValueError):
-            return email.utils.mktime_tz(email.utils.parsedate_tz(value))
-
-        return None
+        return self.parsed_date
 
     @cached_property
     def size(self) -> int:
@@ -290,25 +300,11 @@ class DedupMailMixin(Message):
     def canonical_headers(self) -> tuple[tuple[str, str], ...]:
         """Returns the full list of all canonical headers names and values in
         preparation for hashing."""
-        canonical_headers = []
-
-        for header_id in self.conf["hash_headers"]:
-            # Skip absent header.
-            if header_id not in self:
-                continue
-
-            # Fetch all occurrences of the header.
-            canonical_values = []
-            for header_value in self.get_all(header_id):
-                normalized_value = self.normalize_header_value(header_id, header_value)
-                if re.search(r"\S", normalized_value):
-                    canonical_values.append(normalized_value)
-            canonical_value = "\n".join(canonical_values)
-
-            canonical_headers.append((header_id, canonical_value))
-
-        # Cast to a tuple to prevent any modification.
-        return tuple(canonical_headers)
+        return tuple(
+            (header_id, "\n".join(self.normalized_header_values(header_id)))
+            for header_id in self.conf["hash_headers"]
+            if header_id in self
+        )
 
     def pretty_canonical_headers(self) -> str:
         """Renders a table of headers names and values used to produce the mail's hash.
@@ -338,95 +334,94 @@ class DedupMailMixin(Message):
             reduce the overall memory footprint.
         """
         headers_count = len(self.canonical_headers)
+        msg = self.pretty_canonical_headers()
         if headers_count < MINIMAL_HEADERS_COUNT:
-            logging.warning(self.pretty_canonical_headers())
+            logging.warning(msg)
             raise TooFewHeaders(
                 f"{headers_count} headers found out of {MINIMAL_HEADERS_COUNT}."
             )
         else:
-            logging.debug(self.pretty_canonical_headers())
+            logging.debug(msg)
 
         return "\n".join(
             [f"{h_id}: {h_value}" for h_id, h_value in self.canonical_headers],
         ).encode("utf-8")
 
-    @staticmethod
-    def normalize_header_value(
-        header_id: str, value: str | bytes | email.header.Header
-    ) -> str:
-        """Normalize and clean-up header value into its canonical form.
+    def normalized_header_values(self, header_id: str) -> Iterator[str]:
+        """Returns all normalized values of a header.
 
-        Always returns a unicode string.
+        Values are cleaned-up into their canonical form.
         """
-        # Problematic when reading utf8 emails this will ensure value is always string.
-        if isinstance(value, bytes):
-            value = value.decode("utf-8", "replace")
-        elif isinstance(value, email.header.Header):
-            value = str(value)
+        # Fetch all occurrences of the header.
+        for header_value in self.get_all(header_id):
+            if isinstance(header_value, email.header.Header):
+                value = str(header_value)
+            # Problematic when reading utf8 emails this will ensure value is always string.
+            elif isinstance(header_value, bytes):
+                value = header_value.decode("utf-8", "replace")
+            else:
+                value = header_value
+            assert isinstance(value, str)
 
-        # Normalize white spaces.
-        value = re.sub(r"\s+", " ", value).strip()
+            # Removes leading and trailing spaces, then deduplicate inner spaces.
+            value = re.sub(r"\s+", " ", value.strip())
 
-        # Trim Subject prefixes automatically added by mailing list software, since the
-        # mail could have been cc'd to multiple lists, in which case it will receive a
-        # different prefix for each, but this shouldn't be treated as a real difference
-        # between duplicate mails.
-        if header_id == "subject":
-            subject = value
-            while True:
-                matching = re.match(
-                    r"([Rr]e: )*(\[\w[\w_-]+\w\] )+(.+)",
-                    subject,
-                    re.DOTALL,
-                )
-                if not matching:
-                    break
-                subject = matching.group(3)
-                # show_progress("Trimmed Subject to %s" % subject)
-            return subject
+            # Trim Subject prefixes automatically added by mailing list software, since the
+            # mail could have been cc'd to multiple lists, in which case it will receive a
+            # different prefix for each, but this shouldn't be treated as a real difference
+            # between duplicate mails.
+            if header_id == "subject":
+                subject = value
+                while True:
+                    matching = re.match(
+                        r"([Rr]e: )*(\[\w[\w_-]+\w\] )+(.+)",
+                        subject,
+                        re.DOTALL,
+                    )
+                    if not matching:
+                        break
+                    subject = matching.group(3)
+                    # show_progress("Trimmed Subject to %s" % subject)
+                value = subject
 
-        # Apparently list servers actually munge Content-Type e.g. by stripping the
-        # quotes from charset="us-ascii". Section 5.1 of RFC2045 says that either form
-        # is valid (and they are equivalent).
-        #
-        # Additionally, with multipart/mixed, boundary delimiters can vary by recipient.
-        # We need to allow for duplicates coming from multiple recipients, since for
-        # example you could be signed up to the same list twice with different
-        # addresses. Or maybe someone bounces you a load of mail some of which is from a
-        # mailing list you're both subscribed to - then it's still useful to be able to
-        # eliminate duplicates.
-        elif header_id == "content-type":
-            return re.sub(";.*", "", value)
+            # Apparently list servers actually munge Content-Type e.g. by stripping the
+            # quotes from charset="us-ascii". Section 5.1 of RFC2045 says that either form
+            # is valid (and they are equivalent).
+            #
+            # Additionally, with multipart/mixed, boundary delimiters can vary by recipient.
+            # We need to allow for duplicates coming from multiple recipients, since for
+            # example you could be signed up to the same list twice with different
+            # addresses. Or maybe someone bounces you a load of mail some of which is from a
+            # mailing list you're both subscribed to - then it's still useful to be able to
+            # eliminate duplicates.
+            elif header_id == "content-type":
+                value = re.sub(";.*", "", value)
 
-        # Date timestamps can differ by seconds or hours for various reasons, so let's
-        # only honour the date for now and normalize them to UTC timezone.
-        elif header_id == "date":
-            try:
-                parsed = email.utils.parsedate_tz(value)
-                if not parsed:
-                    raise TypeError
-                utc_timestamp = email.utils.mktime_tz(parsed)
-                return arrow.get(utc_timestamp).format("YYYY-MM-DD")
-            except (TypeError, ValueError):
-                return value
+            # Date timestamps can differ by seconds or hours for various reasons, so let's
+            # only honour the date for now and normalize them to UTC timezone.
+            elif header_id == "date":
+                date_time = self.parsed_date
+                value = date_time.format("YYYY-MM-DD")
 
-        # Remove quotes in any headers that contain addresses to ensure a quoted name is
-        # hashed to the same value as an unquoted one.
-        # XXX This may not be the cleanest way to normalize email addresses. E.g.
-        # `"Robert \"Bob\"` becomes `Robert \Bob\`, but this shouldn't matter for
-        # hashing purposes as we're just trying to get a good heuristic. Refs: #847 and
-        # #846.
-        elif header_id in ADDRESS_HEADERS:
-            value = value.replace('"', "")
+            # Remove quotes in any headers that contain addresses to ensure a quoted name is
+            # hashed to the same value as an unquoted one.
+            # XXX This may not be the cleanest way to normalize email addresses. E.g.
+            # `"Robert \"Bob\"` becomes `Robert \Bob\`, but this shouldn't matter for
+            # hashing purposes as we're just trying to get a good heuristic. Refs: #847 and
+            # #846.
+            elif header_id in ADDRESS_HEADERS:
+                value = value.replace('"', "")
 
-        # Sometimes email.parser strips the <> brackets from a To: header which has a
-        # single address. I have seen this happen for only one mail in a duplicate pair.
-        # I'm not sure why (presumably the parser uses email.utils.unquote somewhere in
-        # its code path which was only triggered by that mail and not its sister mail),
-        # but to be safe, we should always strip the <> brackets to avoid this
-        # difference preventing duplicate detection.
-        if header_id in ("to", "message-id"):
-            if re.match("^<[^<>,]+>$", value):
-                return email.utils.unquote(value)
+            # Sometimes email.parser strips the <> brackets from a To: header which has a
+            # single address. I have seen this happen for only one mail in a duplicate pair.
+            # I'm not sure why (presumably the parser uses email.utils.unquote somewhere in
+            # its code path which was only triggered by that mail and not its sister mail),
+            # but to be safe, we should always strip the <> brackets to avoid this
+            # difference preventing duplicate detection.
+            if header_id in ("to", "message-id"):
+                if re.match("^<[^<>,]+>$", value):
+                    value = email.utils.unquote(value)
 
-        return value
+            # Only return non-empty values.
+            if re.search(r"\S", value):
+                yield value
