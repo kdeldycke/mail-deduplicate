@@ -399,7 +399,9 @@ class DedupMailMixin(Message):
             # Date timestamps can differ by seconds or hours for various reasons, so let's
             # only honour the date for now and normalize them to UTC timezone.
             elif header_id == "date":
-                value = arrow.get(self.parsed_date).format("YYYY-MM-DD")
+                timestamp = self.parsed_date
+                if timestamp is not None:
+                    value = arrow.get(timestamp).format("YYYY-MM-DD")
 
             # Remove quotes in any headers that contain addresses to ensure a quoted name is
             # hashed to the same value as an unquoted one.
