@@ -29,7 +29,7 @@ from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
 
 from click_extra.colorize import default_theme as theme
 
-from .mail import DedupMail
+from .mail import DedupMailMixin
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -44,11 +44,33 @@ class BoxStructure(Enum):
     FILE = auto()
 
 
+class MaildirDedupMail(DedupMailMixin, mailbox.MaildirMessage):
+    """Extend the default message factory for ``Maildir`` with deduplication capabilities."""
+
+
+class mboxDedupMail(DedupMailMixin, mailbox.mboxMessage):
+    """Extend the default message factory for ``mbox`` with deduplication capabilities."""
+
+
+class MHDedupMail(DedupMailMixin, mailbox.MHMessage):
+    """Extend the default message factory for ``MH`` with deduplication capabilities."""
+
+
+class BabylDedupMail(DedupMailMixin, mailbox.BabylMessage):
+    """Extend the default message factory for ``Babyl`` with deduplication capabilities."""
+
+
+class MMDFDedupMail(DedupMailMixin, mailbox.MMDFMessage):
+    """Extend the default message factory for ``MMDF`` with deduplication capabilities."""
+
+
 class BoxFormat(Enum):
     """IDs of all the supported box formats and their metadata.
 
-    Each entry is associated to their original base class, and the structure they
-    implement (file-based or folder-based).
+    Each entry is associated to:
+    - their original base class,
+    - the structure they implement (file-based or folder-based),
+    - the custom message factory class to use.
 
     From these, we can derive the proper constructor with our own custom ``DedupMail``
     factory.
@@ -59,18 +81,21 @@ class BoxFormat(Enum):
     """
 
     # Same order as in `mailbox` module documentation.
-    MAILDIR = (Maildir, BoxStructure.FOLDER)
-    MBOX = (mbox, BoxStructure.FILE)
-    MH = (MH, BoxStructure.FOLDER)
-    BABYL = (Babyl, BoxStructure.FILE)
-    MMDF = (MMDF, BoxStructure.FILE)
+    MAILDIR = (Maildir, BoxStructure.FOLDER, MaildirDedupMail)
+    MBOX = (mbox, BoxStructure.FILE, mboxDedupMail)
+    MH = (MH, BoxStructure.FOLDER, MHDedupMail)
+    BABYL = (Babyl, BoxStructure.FILE, BabylDedupMail)
+    MMDF = (MMDF, BoxStructure.FILE, MMDFDedupMail)
 
-    def __init__(self, base_class: type[Mailbox], structure: BoxStructure) -> None:
+    def __init__(
+        self,
+        base_class: type[Mailbox],
+        structure: BoxStructure,
+        message_class: type[DedupMailMixin],
+    ) -> None:
         self.base_class = base_class
         self.structure = structure
-
-        # We expect the message class to be named as <BaseClass>Name.
-        self.message_class = getattr(mailbox, f"{base_class.__name__}Message")
+        self.message_class = message_class
 
     def __str__(self):
         """The lowercase name of the format is used as a key in CLI options."""
@@ -78,16 +103,8 @@ class BoxFormat(Enum):
 
     @property
     def constructor(self):
-        """Wrap a subclass of ``mailbox.Message`` with our own ``DedupMail`` class."""
-        factory_klass = type(
-            f"{self.base_class.__name__}DedupMail",
-            (DedupMail, self.message_class, object),
-            {
-                "__doc__": f"Extend the default message factory for {self.base_class} "
-                "with our own ``DedupMail`` class to add deduplication utilities.",
-            },
-        )
-        return partial(self.base_class, factory=factory_klass, create=False)
+        """Return a constructor for this box format with our custom message factory."""
+        return partial(self.base_class, factory=self.message_class, create=False)
 
 
 FOLDER_FORMATS = tuple(box for box in BoxFormat if box.structure == BoxStructure.FOLDER)

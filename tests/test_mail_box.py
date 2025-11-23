@@ -23,6 +23,7 @@ from mailbox import Mailbox, Message
 
 import pytest
 
+from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import (
     FILE_FORMATS,
     FOLDER_FORMATS,
@@ -63,6 +64,10 @@ def test_box_format_definition():
         assert box.structure in BoxStructure
 
         assert issubclass(box.message_class, Message)
+        assert issubclass(box.message_class, DedupMailMixin)
+        assert box.message_class.__name__.startswith(box.base_class.__name__)
+
+        assert callable(box.constructor)
 
     # Check all standard library box types are covered.
     assert set(stdlib_box_types()) == {box.base_class for box in BoxFormat}
@@ -71,9 +76,35 @@ def test_box_format_definition():
     assert set(BoxFormat) == set(FOLDER_FORMATS) | set(FILE_FORMATS)
 
 
+@pytest.mark.parametrize(
+    ("box_format", "box_type"),
+    (
+        (BoxFormat.MAILDIR, mailbox.Maildir),
+        (BoxFormat.MBOX, mailbox.mbox),
+    ),
+)
+def test_box_instantiation(make_box, box_format, box_type):
+    mail = MailFactory(body="Single mail\n")
+
+    box_path, created_type = make_box(box_type, [mail])
+
+    assert created_type == box_type
+    check_box(box_path, box_type, [mail])
+
+    mail_box = box_format.constructor(box_path)
+    assert isinstance(mail_box, box_format.base_class)
+    assert isinstance(mail_box, box_type)
+    assert issubclass(mail_box._factory, box_format.message_class)
+
+    assert len(mail_box) == 1
+    message = next(mail_box.itervalues())
+    assert isinstance(message, box_format.message_class)
+    assert isinstance(message, DedupMailMixin)
+    assert hasattr(message, "source_path")
+    assert hasattr(message, "mail_id")
 
 
-@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
 def test_create_box(make_box, box_type):
     """Test creating a box with mails."""
     mail1 = MailFactory(body="First mail\n")
@@ -85,7 +116,7 @@ def test_create_box(make_box, box_type):
     check_box(box_path, box_type, [mail1, mail2])
 
 
-@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
 def test_create_empty_box(make_box, box_type):
     """Test creating an empty box."""
     box_path, created_type = make_box(box_type)
@@ -94,7 +125,7 @@ def test_create_empty_box(make_box, box_type):
     check_box(box_path, box_type, [])
 
 
-@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
 def test_box_with_duplicate_mails(make_box, box_type):
     """Test box containing duplicate mails."""
     mail1 = MailFactory(body="Duplicate content\n", message_id="<dup@test.com>")
@@ -107,7 +138,7 @@ def test_box_with_duplicate_mails(make_box, box_type):
     check_box(box_path, box_type, [mail1, mail2, mail3])
 
 
-@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
 def test_box_with_different_dates(make_box, box_type):
     """Test box with mails having different dates."""
     mail1 = MailFactory(date="2023-01-01", message_id="<jan@test.com>")
@@ -120,7 +151,7 @@ def test_box_with_different_dates(make_box, box_type):
     check_box(box_path, created_type, [mail1, mail2, mail3])
 
 
-@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
 def test_box_with_single_mail(make_box, box_type):
     """Test boxes with a single mail."""
     mail = MailFactory(body="Single mail\n")
@@ -131,7 +162,7 @@ def test_box_with_single_mail(make_box, box_type):
     check_box(box_path, box_type, [mail])
 
 
-@pytest.mark.parametrize("box_type", [mailbox.Maildir, mailbox.mbox])
+@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
 def test_box_types_from_fixture(make_box, box_type):
     """Test that make_box fixture works with different box types."""
     mails = [

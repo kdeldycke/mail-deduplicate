@@ -19,7 +19,6 @@ from __future__ import annotations
 import contextlib
 import email
 import hashlib
-import inspect
 import logging
 import os
 import re
@@ -108,45 +107,33 @@ MINIMAL_HEADERS_COUNT = 4
 """Below this value, we consider not having enough headers to compute a solid hash."""
 
 
-class DedupMail:
+class DedupMailMixin(Message):
     """Message with deduplication-specific properties and utilities.
 
     Extends `standard library's mailbox.Message
-    <https://github.com/python/cpython/blob/45ffab40e86777ecd49786a2c18c0c044ef0cb5b/Lib/mailbox.py#L1489-L1523>`_,
+    <https://github.com/python/cpython/blob/061965c/Lib/mailbox.py#L1564-L1598>`_,
     and shouldn't be used directly, but composed with ``mailbox.Message`` sub-classes.
     """
 
-    def __init__(self, message: _ProxyFile) -> None:
-        """Initialize a pre-parsed ``Message`` instance the same way the default factory
-        in Python's ``mailbox`` module does."""
-        # Hunt down in our parent classes (but ourself) the first one inheriting the
-        # mailbox.Message class. That way we can get to the original factory.
-        orig_message_klass: type[Message] | None = None
-        mro = inspect.getmro(self.__class__)
-        for i, klass in enumerate(mro[1:], 1):
-            if issubclass(klass, Message):
-                orig_message_klass = mro[i - 1]
-                break
-        assert orig_message_klass is not None
+    def __init__(self, message: _ProxyFile | None = None) -> None:
+        super().__init__(message)
 
-        # Call original object initialization from the right message class we inherits
-        # from mailbox.Message.
-        super(orig_message_klass, self).__init__(message)  # type: ignore[misc]
-
-        # Normalized path to the mailbox this message originates from.
         self.source_path: str | None = None
+        """Normalized path to the mailbox this message originates from."""
 
-        # Mail ID used to uniquely refers to it in the context of its source.
         self.mail_id: str | None = None
+        """Mail ID used to uniquely refers to it in the context of its source."""
 
-        # Real filesystem location of the mail. Returns the individual mail's file
-        # for folder-based box types (maildir & co.), but returns the whole box path
-        # for file-based boxes (mbox & co.). Only used by regexp-based selection
-        # strategies.
         self.path: str
+        """Real filesystem location of the mail.
 
-        # Global config.
+        Returns the individual mail's file for folder-based box types (``maildir`` &
+        co.), but returns the whole box path for file-based boxes (``mbox`` & co.). Only
+        used by regexp-based selection strategies.
+        """
+
         self.conf: Config
+        """Global configuration"""
 
     def add_box_metadata(self, box: Mailbox, mail_id: str) -> None:
         """Post-instantiation utility to attach to mail some metadata derived from its

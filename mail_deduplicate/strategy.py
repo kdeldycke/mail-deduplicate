@@ -29,10 +29,10 @@ if TYPE_CHECKING:
     from typing import Callable
 
     from .deduplicate import DuplicateSet
-    from .mail import DedupMail
+    from .mail import DedupMailMixin
 
 
-def select_older(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_older(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all older duplicates.
 
     Discards the newests, i.e. the subset sharing the most recent timestamp.
@@ -46,7 +46,7 @@ def select_older(duplicates: DuplicateSet) -> set[DedupMail]:
     }
 
 
-def select_oldest(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_oldest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all the oldest duplicates.
 
     Discards the newers, i.e. all mail of the duplicate set but those sharing the oldest
@@ -63,7 +63,7 @@ def select_oldest(duplicates: DuplicateSet) -> set[DedupMail]:
     }
 
 
-def select_newer(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_newer(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all newer duplicates.
 
     Discards the oldest, i.e. the subset sharing the most ancient timestamp.
@@ -77,7 +77,7 @@ def select_newer(duplicates: DuplicateSet) -> set[DedupMail]:
     }
 
 
-def select_newest(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_newest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all the newest duplicates.
 
     Discards the olders, i.e. all mail of the duplicate set but those sharing the newest
@@ -94,7 +94,7 @@ def select_newest(duplicates: DuplicateSet) -> set[DedupMail]:
     }
 
 
-def select_smaller(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_smaller(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all smaller duplicates.
 
     Discards the biggests, i.e. the subset sharing the biggest size.
@@ -105,7 +105,7 @@ def select_smaller(duplicates: DuplicateSet) -> set[DedupMail]:
     return {mail for mail in duplicates.pool if mail.size < duplicates.biggest_size}
 
 
-def select_smallest(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_smallest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all the smallest duplicates.
 
     Discards the biggers. i.e. all mail of the duplicate set but those sharing the
@@ -118,7 +118,7 @@ def select_smallest(duplicates: DuplicateSet) -> set[DedupMail]:
     return {mail for mail in duplicates.pool if mail.size == duplicates.smallest_size}
 
 
-def select_bigger(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_bigger(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all bigger duplicates.
 
     Discards the smallests, i.e. the subset sharing the smallest size.
@@ -129,7 +129,7 @@ def select_bigger(duplicates: DuplicateSet) -> set[DedupMail]:
     return {mail for mail in duplicates.pool if mail.size > duplicates.smallest_size}
 
 
-def select_biggest(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_biggest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all the biggest duplicates.
 
     Discards the smallers, i.e. all mail of the duplicate set but those sharing the
@@ -142,7 +142,7 @@ def select_biggest(duplicates: DuplicateSet) -> set[DedupMail]:
     return {mail for mail in duplicates.pool if mail.size == duplicates.biggest_size}
 
 
-def select_matching_path(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all duplicates whose file path match the regular expression provided via
     the --regexp parameter."""
     assert duplicates.conf["regexp"] is not None
@@ -157,7 +157,7 @@ def select_matching_path(duplicates: DuplicateSet) -> set[DedupMail]:
     }
 
 
-def select_non_matching_path(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_non_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all duplicates whose file path doesn't match the regular expression
     provided via the --regexp parameter."""
     assert duplicates.conf["regexp"] is not None
@@ -172,12 +172,12 @@ def select_non_matching_path(duplicates: DuplicateSet) -> set[DedupMail]:
     }
 
 
-def select_one(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_one(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Randomly select one duplicate, and discards all others."""
     return {random.choice(tuple(duplicates.pool))}
 
 
-def select_all_but_one(duplicates: DuplicateSet) -> set[DedupMail]:
+def select_all_but_one(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Randomly discard one duplicate, and select all others."""
     return set(random.sample(tuple(duplicates.pool), k=len(duplicates.pool) - 1))
 
@@ -245,7 +245,7 @@ class Strategy(enum.Enum):
             func_id = self.name.lower()
         return globals()[func_id]  # type: ignore[no-any-return]
 
-    def apply_strategy(self, duplicates: DuplicateSet) -> set[DedupMail]:
+    def apply_strategy(self, duplicates: DuplicateSet) -> set[DedupMailMixin]:
         """Perform the selection strategy on the provided duplicate set.
 
         Returns a set of selected mails objects.
