@@ -5,6 +5,9 @@
 > [!IMPORTANT]
 > This version is not released yet and is under active development.
 
+- Add installation instructions for `brew` on macOS and Arch Linux.
+- Use mixin classes to share common code between mailbox types and avoid dynamic inheritance.
+
 ## [8.0.0 (2025-11-21)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.2...v8.0.0)
 
 - Log options explicitly set by user but ignored because of `--hash-only` mode.
