@@ -192,7 +192,7 @@ wheels = [
 
 [[package]]
 name = "click-extra"
-version = "7.1.0"
+version = "7.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boltons" },
@@ -205,9 +205,9 @@ dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "wcmatch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/58/ba/bc8d94417e8d8fa77376ab285d4a7273b3517bfbd2fb319ae0c17f097c03/click_extra-7.1.0.tar.gz", hash = "sha256:8ff1c921caed8c560f407b6fe6a5b0e002911e67434c8b4d5bc658123cd9a0c2", size = 133531, upload-time = "2025-11-21T13:17:10.275Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/25/7a7960dbc39def433dd598208d024509eaea24f86cff6cf94fc5694a4eec/click_extra-7.2.0.tar.gz", hash = "sha256:4adcb50c8979eae90b404ae1a35881251135ff9960976a4363446750f94f8dbb", size = 138650, upload-time = "2025-11-26T09:45:41.272Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/69/36/8dc867e6a096647406a146780c5c08978c8b0077e4113991ab058c437e9c/click_extra-7.1.0-py3-none-any.whl", hash = "sha256:4b9e857e0ebccf8c7fdd45a436ac990be331082c5cfac57611f2a671e1ab0021", size = 96707, upload-time = "2025-11-21T13:17:08.798Z" },
+    { url = "https://files.pythonhosted.org/packages/17/82/450b6b81c1177de0640efafc3d779c42b2e91e11a165d43fab1a35908ddf/click_extra-7.2.0-py3-none-any.whl", hash = "sha256:e1a4f25c577d899db68de81ad05f6a2bd12e25fb316b9572c6091243344a4d2c", size = 98479, upload-time = "2025-11-26T09:45:42.354Z" },
 ]
 
 [package.optional-dependencies]
@@ -377,14 +377,14 @@ wheels = [
 
 [[package]]
 name = "exceptiongroup"
-version = "1.3.0"
+version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749, upload-time = "2025-05-10T17:42:51.123Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/f4/c6e662dade71f56cd2f3735141b265c3c79293c109549c1e6933b0651ffc/exceptiongroup-1.3.0-py3-none-any.whl", hash = "sha256:4d111e6e0c13d0644cad6ddaa7ed0261a0b36971f6d23e7ec9b4b9097da78a10", size = 16674, upload-time = "2025-05-10T17:42:49.33Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/0e/97c33bf5009bdbac74fd2beace167cab3f978feb69cc36f1ef79360d6c4e/exceptiongroup-1.3.1-py3-none-any.whl", hash = "sha256:a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598", size = 16740, upload-time = "2025-11-21T23:01:53.443Z" },
 ]
 
 [[package]]
@@ -521,7 +521,7 @@ requires-dist = [
     { name = "sphinx-copybutton", marker = "extra == 'docs'", specifier = "~=0.5.2" },
     { name = "sphinx-design", marker = "extra == 'docs'", specifier = "~=0.6.0" },
     { name = "sphinx-issues", marker = "extra == 'docs'", specifier = "~=5.0.0" },
-    { name = "sphinxcontrib-mermaid", marker = "extra == 'docs'", specifier = "~=1.1.0" },
+    { name = "sphinxcontrib-mermaid", marker = "extra == 'docs'", specifier = "~=1.2.3" },
     { name = "sphinxext-opengraph", marker = "extra == 'docs'", specifier = "~=0.13.0" },
     { name = "tomli", marker = "python_full_version < '3.11' and extra == 'docs'", specifier = ">=2.3.0" },
     { name = "types-boltons", marker = "extra == 'typing'", specifier = "~=25.0.0.20250822" },
@@ -1083,16 +1083,16 @@ wheels = [
 
 [[package]]
 name = "sphinxcontrib-mermaid"
-version = "1.1.0"
+version = "1.2.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyyaml" },
     { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/9c/3eefdb1bbb5ec8094ff4baeb9fd310e8320a43311aebe230cf4aaef3c942/sphinxcontrib_mermaid-1.1.0.tar.gz", hash = "sha256:e674e04503956de8263163e0c8f446d99f9d60455cb395f64e998f1137f04f8e", size = 18766, upload-time = "2025-11-19T19:51:09.902Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/49/c6ddfe709a4ab76ac6e5a00e696f73626b2c189dc1e1965a361ec102e6cc/sphinxcontrib_mermaid-1.2.3.tar.gz", hash = "sha256:358699d0ec924ef679b41873d9edd97d0773446daf9760c75e18dc0adfd91371", size = 18885, upload-time = "2025-11-26T04:18:32.43Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/25/89/899495013b11b09e687310dc76bab626babdbee2dd0e6640df0942090ab4/sphinxcontrib_mermaid-1.1.0-py3-none-any.whl", hash = "sha256:1133b4c00f33aedb76e37bfbd1a4280a0104c0a836da642a113eabdf261bdd0c", size = 14898, upload-time = "2025-11-19T19:51:06.036Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/39/8b54299ffa00e597d3b0b4d042241a0a0b22cb429ad007ccfb9c1745b4d1/sphinxcontrib_mermaid-1.2.3-py3-none-any.whl", hash = "sha256:5be782b27026bef97bfb15ccb2f7868b674a1afc0982b54cb149702cfc25aa02", size = 13413, upload-time = "2025-11-26T04:18:31.269Z" },
 ]
 
 [[package]]
