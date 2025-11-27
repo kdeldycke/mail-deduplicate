@@ -4,15 +4,13 @@ All `mdedup` options can be set with a configuration file.
 
 ## Location
 
-Location depends on OS (see
-[`click-extra` doc](https://kdeldycke.github.io/click-extra/config.html#pattern-matching)):
+Location depends on OS (see [`click-extra` doc](https://kdeldycke.github.io/click-extra/config.html#default-folder)):
 
-- macOS:
-  `~/Library/Application Support/mdedup/*.{toml,yaml,yml,json,ini,xml}`
-- Unix:
-  `~/.config/mdedup/*.{toml,yaml,yml,json,ini,xml}`
-- Windows (roaming):
-  `C:\Users\<user>\AppData\Roaming\mdedup\*.{toml,yaml,yml,json,ini,xml}`
+| Platform          | Folder                                    |
+| :---------------- | :---------------------------------------- |
+| macOS (default)   | `~/Library/Application Support/mdedup/`   |
+| Unix (default)    | `~/.config/mdedup/`                       |
+| Windows (default) | `C:\Users\<user>\AppData\Roaming\mdedup\` |
 
 ## TOML sample
 

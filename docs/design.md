@@ -16,7 +16,7 @@ The list of headers to consider can be set with the `-h`/`--hash-header` option.
 
 ## Mailing lists
 
-The default parameters of the CLI, especially the [list of default headers](https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.HASH_HEADERS) have been crafted to limit the effects of mailing-lists on both the mail headers and body.
+The default parameters of the CLI, especially the [list of default headers](https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.cli.DEFAULT_HASH_HEADERS) have been crafted to limit the effects of mailing-lists on both the mail headers and body.
 
 Mailing lists effects includes:
 

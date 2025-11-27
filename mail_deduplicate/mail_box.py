@@ -144,9 +144,9 @@ def autodetect_box_type(path: Path) -> BoxFormat:
         - plain text mail content
         - other mailbox formats supported in Python's standard library:
 
-            - ``MH``
-            - ``Babyl``
-            - ``MMDF``
+          - ``MH``
+          - ``Babyl``
+          - ``MMDF``
     """
     box_format = None
 
