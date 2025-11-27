@@ -1,5 +1,10 @@
 # ChangeLog
 
+## [8.1.1 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.0...main)
+
+> [!IMPORTANT]
+> This version is not released yet and is under active development.
+
 ## [8.1.0 (2025-11-27)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.0.0...v8.1.0)
 
 - Add new `-m`/`--minimal-headers` option to set the minimal number of headers required to compute a hash. Closes {issue}`943`.
