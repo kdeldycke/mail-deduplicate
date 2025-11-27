@@ -8,9 +8,9 @@ Location depends on OS (see [`click-extra` doc](https://kdeldycke.github.io/clic
 
 | Platform          | Folder                                    |
 | :---------------- | :---------------------------------------- |
-| macOS (default)   | `~/Library/Application Support/mdedup/`   |
-| Unix (default)    | `~/.config/mdedup/`                       |
-| Windows (default) | `C:\Users\<user>\AppData\Roaming\mdedup\` |
+| macOS    | `~/Library/Application Support/mdedup/`   |
+| Unix     | `~/.config/mdedup/`                       |
+| Windows  | `C:\Users\<user>\AppData\Roaming\mdedup\` |
 
 ## TOML sample
 
