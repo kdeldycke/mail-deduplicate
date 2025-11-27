@@ -68,6 +68,7 @@ class BoxFormat(Enum):
     """IDs of all the supported box formats and their metadata.
 
     Each entry is associated to:
+
     - their original base class,
     - the structure they implement (file-based or folder-based),
     - the custom message factory class to use.

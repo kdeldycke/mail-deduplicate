@@ -82,9 +82,7 @@ ADDRESS_HEADERS = frozenset((
 """Headers that contain email addresses.
 
 .. hint::
-    Headers from which quotes should be discarded.
-
-    E.g.:
+    Headers from which quotes should be discarded. E.g.:
 
     .. code-block:: text
 

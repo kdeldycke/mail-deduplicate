@@ -117,14 +117,14 @@ STATS_DEF = OrderedDict(
 
 
 class SizeDiffAboveThreshold(Exception):
-    """Difference in mail size is greater than `threshold.
-    <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_SIZE_THRESHOLD>`_.
+    """Difference in mail size is greater than `threshold
+    <https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-S>`_.
     """
 
 
 class ContentDiffAboveThreshold(Exception):
-    """Difference in mail content is greater than `threshold.
-    <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.DEFAULT_CONTENT_THRESHOLD>`_.
+    """Difference in mail content is greater than `threshold
+    <https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-C>`_.
     """
 
 
@@ -522,7 +522,7 @@ class Deduplicate:
     def assert_stats(self, first, operator, second):
         """Render failed stats assertions in plain English.
 
-        ..hint ::
+        .. hint::
             If inconsistent metrics are detected, the CLI will exit with a code
             numbered ``115``.
 
