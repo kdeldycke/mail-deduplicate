@@ -504,9 +504,9 @@ typing = [
 requires-dist = [
     { name = "arrow", specifier = ">=1.3.0" },
     { name = "boltons", specifier = ">=25.0.0" },
-    { name = "click-extra", specifier = ">=7.1.0" },
-    { name = "click-extra", extras = ["pytest"], marker = "extra == 'test'", specifier = ">=7.1.0" },
-    { name = "click-extra", extras = ["sphinx"], marker = "extra == 'docs'", specifier = ">=7.1.0" },
+    { name = "click-extra", specifier = ">=7.2.0" },
+    { name = "click-extra", extras = ["pytest"], marker = "extra == 'test'", specifier = ">=7.2.0" },
+    { name = "click-extra", extras = ["sphinx"], marker = "extra == 'docs'", specifier = ">=7.2.0" },
     { name = "coverage", extras = ["toml"], marker = "extra == 'test'", specifier = "~=7.12.0" },
     { name = "extra-platforms", extras = ["pytest"], marker = "extra == 'test'", specifier = ">=5.0.0" },
     { name = "furo", marker = "extra == 'docs'", specifier = "~=2025.9.25" },
