@@ -33,13 +33,6 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 - [Standalone executables](#executables) for Linux, macOS and Windows.
 - Shell auto-completion for Bash, Zsh and Fish.
 
-> [!WARNING]
-> Performance and memory usage: `mdedup` implementation is quite naive and everything resides in memory.
->
-> If this is good enough for a volume of a couple of gigabytes, the more emails `mdedup` try to parse, the closer you'll reach the memory limits of your machine. In which case [`mdedup` will exit abruptly](https://github.com/kdeldycke/mail-deduplicate/issues/362#issuecomment-1266743045), zapped by the [OOM killer](https://en.wikipedia.org/wiki/Out_of_memory) of your OS. Of course your mileage may vary depending on your hardware.
->
-> You can influence implementation of this feature with pull requests, [purchasing business support 🤝](https://github.com/sponsors/kdeldycke) and [sponsorship 🫶](https://github.com/sponsors/kdeldycke).
-
 ## Installation
 
 All [installation methods](https://kdeldycke.github.io/mail-deduplicate/install.html) are available in the documentation. Below are the most popular ones:
@@ -71,6 +64,13 @@ Standalone binaries of `mdedup`'s latest version are available as direct downloa
 | **Windows** | [Download `mdedup-windows-arm64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-arm64.exe) | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-x64.exe) |
 
 ## Quickstart
+
+> [!WARNING]
+> Performance and memory usage: `mdedup` implementation is quite naive and everything resides in memory.
+>
+> If this is good enough for a volume of a couple of gigabytes, the more emails `mdedup` try to parse, the closer you'll reach the memory limits of your machine. In which case [`mdedup` will exit abruptly](https://github.com/kdeldycke/mail-deduplicate/issues/362#issuecomment-1266743045), zapped by the [OOM killer](https://en.wikipedia.org/wiki/Out_of_memory) of your OS. Of course your mileage may vary depending on your hardware.
+>
+> You can influence implementation of this feature with pull requests, [purchasing business support 🤝](https://github.com/sponsors/kdeldycke) and [sponsorship 🫶](https://github.com/sponsors/kdeldycke).
 
 ### Example
 
