@@ -44,12 +44,20 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 
 All [installation methods](https://kdeldycke.github.io/mail-deduplicate/install.html) are available in the documentation. Below are the most popular ones:
 
-### Python
+### Try it now
 
-[`uv`](https://docs.astral.sh/uv/getting-started/installation/) is the fastest way to run `mdedup` from sources on any platform, thanks to its [`uvx` command](https://docs.astral.sh/uv/guides/tools/#running-tools):
+[`uv`](https://docs.astral.sh/uv/getting-started/installation/) is the fastest way to run `mdedup` on any platform, thanks to its [`uvx` command](https://docs.astral.sh/uv/guides/tools/#running-tools):
 
 ```shell-session
-$ uvx --from mail-deduplicate mdedup
+$ uvx --from mail-deduplicate -- mdedup
+```
+
+### macOS
+
+`mdedup` is part of the official [Homebrew](https://brew.sh) default tap, so you can install it with:
+
+```shell-session
+$ brew install mail-deduplicate
 ```
 
 ### Executables
