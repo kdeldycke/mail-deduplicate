@@ -101,10 +101,6 @@ ADDRESS_HEADERS = frozenset((
 """
 
 
-MINIMAL_HEADERS_COUNT = 4
-"""Below this value, we consider not having enough headers to compute a solid hash."""
-
-
 class DedupMailMixin(Message):
     """Message with deduplication-specific properties and utilities.
 
@@ -324,18 +320,19 @@ class DedupMailMixin(Message):
     def serialized_headers(self) -> bytes:
         """Serialize the canonical headers into a single string ready to be hashed.
 
-        At this point we should have at an absolute minimum of headers.
+        At this point we should have an absolute minimum of headers.
 
         .. caution::
-            This method hasn't been made explicitly into a cached property in order to
+            This method hasn't been explicitly made into a cached property in order to
             reduce the overall memory footprint.
         """
         headers_count = len(self.canonical_headers)
+        minimal_headers = self.conf["minimal_headers"]
         msg = self.pretty_canonical_headers()
-        if headers_count < MINIMAL_HEADERS_COUNT:
+        if headers_count < minimal_headers:
             logging.warning(msg)
             raise TooFewHeaders(
-                f"{headers_count} headers found out of {MINIMAL_HEADERS_COUNT}."
+                f"{headers_count} headers found out of {minimal_headers}."
             )
         else:
             logging.debug(msg)

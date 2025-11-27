@@ -5,6 +5,9 @@
 > [!IMPORTANT]
 > This version is not released yet and is under active development.
 
+- Add new `-m`/`--minimal-headers` option to set the minimal number of headers required to compute a hash. Closes {issue}`943`.
+- Validate number of `--hash-header` options against `--minimal-headers` value.
+- Require at least one header to be provided to the `--hash-header` option.
 - Add installation instructions for `brew` on macOS and Arch Linux.
 - Use mixin classes to share common code between mailbox types and avoid dynamic inheritance.
 

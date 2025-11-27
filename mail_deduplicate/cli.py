@@ -94,6 +94,7 @@ class Config(TypedDict):
     input_format: BoxFormat | None
     force_unlock: bool
     hash_headers: tuple[str, ...]
+    minimal_headers: int
     hash_body: BodyHasher
     hash_only: bool
     size_threshold: int
@@ -127,6 +128,8 @@ def normalize_headers(
         ascii_indexes = set(map(ord, hid))
         if min(ascii_indexes) < 33 or max(ascii_indexes) > 126:
             raise BadParameter(f"invalid header ID: {hid!r}.")
+    if len(normalized_headers) == 0:
+        raise BadParameter("At least one header ID must be provided.")
     return tuple(normalized_headers)
 
 
@@ -218,6 +221,16 @@ class MdedupCommand(ExtraCommand):
         help="Headers to use to compute each mail's hash. Must be repeated multiple "
         "times to set an ordered list of headers. Header IDs are case-insensitive. "
         "Repeating entries are ignored.",
+    ),
+    option(
+        "-m",
+        "--minimal-headers",
+        type=IntRange(min=1),
+        default=4,
+        help="Minimum number of headers required in a mail to compute its hash. Below "
+        "this value, we consider not having enough headers to compute a solid hash. "
+        "Increase this value to be more strict and avoid hashing mails with too few "
+        "headers (e.g., corrupted mails).",
     ),
     option(
         "-b",
@@ -372,6 +385,7 @@ def mdedup(
     input_format,
     force_unlock,
     hash_header,
+    minimal_headers,
     hash_body,
     hash_only,
     size_threshold,
@@ -403,6 +417,13 @@ def mdedup(
         # Same as click_extra.colorize.HelpOption.print_help.
         echo(ctx.get_help(), color=ctx.color)
         ctx.exit()
+
+    # Check hash_header and minimal_headers consistency.
+    if len(hash_header) < minimal_headers:
+        raise BadParameter(
+            f"Provided number of headers to hash ({len(hash_header)}) is less than "
+            f"the minimal required number of headers ({minimal_headers})."
+        )
 
     # Validate exclusive options requirement depending on strategy or action.
     # TODO: use Cloup option constraints to express these dependencies?
@@ -454,6 +475,7 @@ def mdedup(
         input_format=input_format,
         force_unlock=force_unlock,
         hash_headers=hash_header,
+        minimal_headers=minimal_headers,
         hash_body=hash_body,
         hash_only=hash_only,
         size_threshold=size_threshold,

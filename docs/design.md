@@ -26,11 +26,19 @@ Mailing lists effects includes:
 - adding plenty of other random headers which a copy saved locally at sending-time would not have, such as `X-Mailman-Version`, `Precedence`, `X-BeenThere`, `List-*`, `Sender`, `Errors-To`, and so on;
 - adding a prefix to the `Subject` header.
 
-## Thresholds
+## Safeguards against false positives
 
-For added protection against accidentally removing mails due to false positives, duplicates are verified by comparing body sizes and also diff-ing the contents. If the sizes or contents differ by more than a threshold, they are not counted as duplicates.
+For added protection against accidentally removing mails due to false positives, we introduced several safeguards which can be configured via CLI options.
+
+### Minimal headers
+
+To avoid hashing mails with too few headers (e.g., corrupted mails), we introduced a minimal number of headers required to compute a hash.
+
+By default, this minimal number of headers is set to **4**.
 
 ### Size threshold
+
+Sets of duplicates are verified by comparing body sizes, and if they differ by more than a threshold, they are not counted as duplicates and the whole set is skipped with a warning.
 
 Since we're ignoring the `Content-Length` header by default [because of mailing-list effects](https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists), we introduced a limit on the allowed difference between the sizes of the message payloads.
 
@@ -44,6 +52,10 @@ One copy could have been stored by the sender's MUA prior to sending, without an
 This threshold has to be large enough to allow for footers added by mailing list servers.
 ```
 
+The default size threshold is **512 bytes**.
+
 ### Content threshold
 
 Similarly to the size threshold, we generate unified diffs of duplicates and ensure that the diff is not greater than a certain size to limit false-positives.
+
+The default content threshold is **768 bytes**.
