@@ -1,5 +1,9 @@
 # {octicon}`download` Installation
 
+```{sidebar}
+[![Packaging status](https://repology.org/badge/vertical-allrepos/mail-deduplicate.svg)](https://repology.org/project/mail-deduplicate/versions)
+```
+
 Mail Deduplicate is [distributed on PyPi](https://pypi.org/project/mail-deduplicate/).
 
 So you can install the latest stable release with your favorite package manager [like `pip`](https://pip.pypa.io):
