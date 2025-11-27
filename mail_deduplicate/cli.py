@@ -226,6 +226,7 @@ class MdedupCommand(ExtraCommand):
         "-m",
         "--minimal-headers",
         type=IntRange(min=1),
+        metavar="INTEGER",
         default=4,
         help="Minimum number of headers required in a mail to compute its hash. Below "
         "this value, we consider not having enough headers to compute a solid hash. "
