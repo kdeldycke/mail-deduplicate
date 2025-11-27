@@ -1,17 +1,45 @@
 # {octicon}`download` Installation
 
-## From packages
+Mail Deduplicate is [distributed on PyPi](https://pypi.org/project/mail-deduplicate/).
+
+So you can install the latest stable release with your favorite package manager [like `pip`](https://pip.pypa.io):
+
+```{code-block} shell-session
+$ pip install mail-deduplicate
+```
+
+## Try it now
+
+You can try Mail Deduplicate right now in your terminal, without installing any dependency or virtual env [thanks to `uvx`](https://docs.astral.sh/uv/guides/tools/):
+
+`````{tab-set}
+````{tab-item} Latest version
+```shell-session
+$ uvx --from mail-deduplicate -- mdedup
+```
+````
+
+````{tab-item} Specific version
+```shell-session
+$ uvx --from mail-deduplicate@8.0.0 -- mdedup
+```
+````
+
+````{tab-item} Development version
+```shell-session
+$ uvx --from git+https://github.com/kdeldycke/mail-deduplicate -- mdedup
+```
+````
+`````
+
+This will download `mail-deduplicate` (the package), and run `mdedup`, the CLI included in the package.
+
+## Installation methods
 
 `````{tab-set}
 
 ````{tab-item} uvx
-Easiest way is to [install `uv`](https://docs.astral.sh/uv/getting-started/installation/), then use it to run `mdedup` ad-hoc with the [`uvx` command](https://docs.astral.sh/uv/guides/tools/#running-tools):
-
-```{code-block} shell-session
-$ uvx --from mail-deduplicate mdedup
-```
-
-To install `mdedup` system-wide, use the [`uv tool`](https://docs.astral.sh/uv/guides/tools/#installing-tools) command:
+Easiest way is to [install `uv`](https://docs.astral.sh/uv/getting-started/installation/), then install `mail-deduplicate` system-wide, with the [`uv tool`](https://docs.astral.sh/uv/guides/tools/#installing-tools) command:
 
 ```{code-block} shell-session
 $ uv tool install mail-deduplicate
@@ -52,6 +80,34 @@ $ pip3 install mail-deduplicate
 If you have difficulties to use `pip`, see
 [`pip`'s own installation instructions](https://pip.pypa.io/en/stable/installation/).
 ````
+
+````{tab-item} brew
+Mail Deduplicate is [available as an Homebrew formula](https://formulae.brew.sh/formula/mail-deduplicate), so you just need to:
+
+```{code-block} shell-session
+$ brew install mail-deduplicate
+```
+````
+
+````{tab-item} Arch Linux
+An `mdedup` package is [available on AUR](https://aur.archlinux.org/packages/mail-deduplicate) and can be installed with any AUR helper:
+
+```{code-block} shell-session
+$ pacaur -S mail-deduplicate
+```
+
+```{code-block} shell-session
+$ pacman -S mail-deduplicate
+```
+
+```{code-block} shell-session
+$ paru -S mail-deduplicate
+```
+
+```{code-block} shell-session
+$ yay -S mail-deduplicate
+```
+````
 `````
 
 ## Binaries
@@ -90,7 +146,7 @@ $ file ./mdedup*
 ```
 ````
 
-## Run `mdedup`
+## Python module usage
 
 Mail Deduplicate should now be available system-wide:
 
@@ -110,8 +166,7 @@ mdedup, version 7.0.0
 
 ## Shell completion
 
-Completion for popular shell
-[rely on Click feature](https://click.palletsprojects.com/en/stable/shell-completion/).
+Completion for popular shell [rely on Click feature](https://click.palletsprojects.com/en/stable/shell-completion/).
 
 `````{tab-set}
 
