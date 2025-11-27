@@ -355,7 +355,8 @@ class DedupMailMixin(Message):
         for header_value in self.get_all(header_id):
             if isinstance(header_value, email.header.Header):
                 value = str(header_value)
-            # Problematic when reading utf8 emails this will ensure value is always string.
+            # Problematic when reading utf8 emails this will ensure value is always
+            # string.
             elif isinstance(header_value, bytes):
                 value = header_value.decode("utf-8", "replace")
             else:
