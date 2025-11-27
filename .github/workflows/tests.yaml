@@ -66,18 +66,21 @@ jobs:
         run: |
           uv --no-progress sync --frozen --all-extras
 
-      - name: Check launchable modules
+      - name: Run local CLI
+        run: |
+          uv run -- mdedup --version
+      - name: Run CLI from module
         run: |
           uv run        -m mail_deduplicate --version
           uv run python -m mail_deduplicate --version
-      - name: Check launchable stable CLI
+      - name: Run stable CLI
         run: |
           uvx    --from mail-deduplicate -- mdedup --version
           uv run --with mail-deduplicate -- mdedup --version
-      - name: Check launchable dev CLI
+      - name: Run dev CLI
         run: |
-          uvx    --from git+https://github.com/kdeldycke/mail-deduplicate -- click-extra --version
-          uv run --with git+https://github.com/kdeldycke/mail-deduplicate -- click-extra --version
+          uvx    --from git+https://github.com/kdeldycke/mail-deduplicate -- mdedup --version
+          uv run --with git+https://github.com/kdeldycke/mail-deduplicate -- mdedup --version
 
       - name: Unittests
         run: |
