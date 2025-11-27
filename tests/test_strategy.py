@@ -56,8 +56,10 @@ oldest_mail = MailFactory(date=now.shift(minutes=-3))
 
 
 # Size-based collection of pre-defined fixtures.
-smallest_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
-smaller_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
+smallest_mail = MailFactory(
+    body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
+smaller_mail = MailFactory(
+    body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
 bigger_mail = MailFactory(
     body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++",
 )
@@ -88,7 +90,7 @@ strategy_options.update(
 @pytest.mark.parametrize(("strategy_id", "params"), strategy_options.items())
 def test_maildir_dry_run(invoke, make_box, strategy_id, params):
     """Check no mail is removed in dry-run mode."""
-    box_path, box_type = make_box(
+    box_path, box_type, _ = make_box(
         Maildir,
         [
             newest_mail,
@@ -420,7 +422,7 @@ def test_maildir_strategy(
     mailbox_results,
 ):
     """Generic test to check the result of a selection strategy."""
-    box_path, box_type = make_box(Maildir, mailbox_input)
+    box_path, box_type, _ = make_box(Maildir, mailbox_input)
 
     result = invoke(f"--strategy={strategy}", "--action=delete-selected", box_path)
 
