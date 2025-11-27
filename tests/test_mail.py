@@ -42,7 +42,7 @@ def test_invalid_date_parsing_noop(invoke, make_box):
 
     No deduplication happen: mails groups shares the same metadata.
     """
-    box_path, box_type = make_box(
+    box_path, box_type, _ = make_box(
         Maildir,
         [
             invalid_date_mail_1,
@@ -53,7 +53,8 @@ def test_invalid_date_parsing_noop(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=select-newest", "--action=delete-selected", box_path)
+    result = invoke("--strategy=select-newest",
+                    "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
 
@@ -74,7 +75,7 @@ def test_invalid_date_parsing_noop(invoke, make_box):
 def test_invalid_date_parsing_dedup(invoke, make_box):
     """Mails with strange non-standard dates gets parsed anyway and deduplicated if we
     reduce the source of hashed headers."""
-    box_path, box_type = make_box(
+    box_path, box_type, _ = make_box(
         Maildir,
         [
             invalid_date_mail_1,

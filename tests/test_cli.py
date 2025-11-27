@@ -30,7 +30,7 @@ def test_early_export_file_check(invoke, make_box, tmp_path):
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/119
     """
-    box_path, _ = make_box(Maildir)
+    box_path, _, _ = make_box(Maildir)
 
     result = invoke("--export=non_existing.file", box_path)
     assert result.exit_code == 0
