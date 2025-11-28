@@ -1,5 +1,10 @@
 # ChangeLog
 
+## [8.1.2 (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.1...main)
+
+> [!IMPORTANT]
+> This version is not released yet and is under active development.
+
 ## [8.1.1 (2025-11-28)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.0...v8.1.1)
 
 ## [8.1.0 (2025-11-27)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.0.0...v8.1.0)
