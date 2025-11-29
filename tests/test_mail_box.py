@@ -86,7 +86,7 @@ def test_box_format_definition():
 def test_box_instantiation(make_box, box_format, box_type):
     mail = MailFactory(body="Single mail\n")
 
-    box_path, created_type = make_box(box_type, [mail])
+    box_path, created_type, _ = make_box(box_type, [mail])
 
     assert created_type == box_type
     check_box(box_path, box_type, [mail])
@@ -110,7 +110,7 @@ def test_create_box(make_box, box_type):
     mail1 = MailFactory(body="First mail\n")
     mail2 = MailFactory(body="Second mail\n", message_id="<msg2@test.com>")
 
-    box_path, created_type = make_box(box_type, [mail1, mail2])
+    box_path, created_type, _ = make_box(box_type, [mail1, mail2])
 
     assert created_type == box_type
     check_box(box_path, box_type, [mail1, mail2])
@@ -119,7 +119,7 @@ def test_create_box(make_box, box_type):
 @pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
 def test_create_empty_box(make_box, box_type):
     """Test creating an empty box."""
-    box_path, created_type = make_box(box_type)
+    box_path, created_type, _ = make_box(box_type)
 
     assert created_type == box_type
     check_box(box_path, box_type, [])
@@ -132,7 +132,7 @@ def test_box_with_duplicate_mails(make_box, box_type):
     mail2 = MailFactory(body="Duplicate content\n", message_id="<dup@test.com>")
     mail3 = MailFactory(body="Unique mail\n", message_id="<unique@test.com>")
 
-    box_path, created_type = make_box(box_type, [mail1, mail2, mail3])
+    box_path, created_type, _ = make_box(box_type, [mail1, mail2, mail3])
 
     assert created_type == box_type
     check_box(box_path, box_type, [mail1, mail2, mail3])
@@ -145,7 +145,7 @@ def test_box_with_different_dates(make_box, box_type):
     mail2 = MailFactory(date="2023-06-15", message_id="<jun@test.com>")
     mail3 = MailFactory(date="2023-12-31", message_id="<dec@test.com>")
 
-    box_path, created_type = make_box(box_type, [mail1, mail2, mail3])
+    box_path, created_type, _ = make_box(box_type, [mail1, mail2, mail3])
 
     assert created_type == box_type
     check_box(box_path, created_type, [mail1, mail2, mail3])
@@ -156,7 +156,7 @@ def test_box_with_single_mail(make_box, box_type):
     """Test boxes with a single mail."""
     mail = MailFactory(body="Single mail\n")
 
-    box_path, created_type = make_box(box_type, [mail])
+    box_path, created_type, _ = make_box(box_type, [mail])
 
     assert created_type == box_type
     check_box(box_path, box_type, [mail])
@@ -171,7 +171,7 @@ def test_box_types_from_fixture(make_box, box_type):
         MailFactory(body="Mail 3\n", message_id="<3@test.com>"),
     ]
 
-    box_path, created_type = make_box(box_type, mails)
+    box_path, created_type, _ = make_box(box_type, mails)
 
     assert created_type == box_type
     check_box(box_path, box_type, mails)

@@ -378,7 +378,7 @@ select_test_cases = [
     # actionable if the selection criterion doesn't produce any match.
     (
         "one_selection",
-        [SELECT_ONE, DISCARD_ALL_BUT_ONE],
+        [Strategy.SELECT_ONE, Strategy.DISCARD_ALL_BUT_ONE],
         [
             random_mail_1,
             random_mail_2,
