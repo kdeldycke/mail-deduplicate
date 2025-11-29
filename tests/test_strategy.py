@@ -56,10 +56,8 @@ oldest_mail = MailFactory(date=now.shift(minutes=-3))
 
 
 # Size-based collection of pre-defined fixtures.
-smallest_mail = MailFactory(
-    body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
-smaller_mail = MailFactory(
-    body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
+smallest_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş.")
+smaller_mail = MailFactory(body="Hello I am a duplicate mail. With annoying ćĥäŖş. ++")
 bigger_mail = MailFactory(
     body="Hello I am a duplicate mail. With annoying ćĥäŖş. +++++",
 )

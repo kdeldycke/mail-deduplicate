@@ -53,8 +53,7 @@ def test_invalid_date_parsing_noop(invoke, make_box):
         ],
     )
 
-    result = invoke("--strategy=select-newest",
-                    "--action=delete-selected", box_path)
+    result = invoke("--strategy=select-newest", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
 
