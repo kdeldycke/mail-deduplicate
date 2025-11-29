@@ -299,6 +299,14 @@ class DuplicateSet:
         The process results in two subsets of mails: the selected and the discarded.
         """
         # Fine-grained checks on mail differences.
+
+        if self.size == 1:
+            self.stats["set_single"] += 1
+            self.stats["mail_unique"] += 1
+            self.stats["mail_duplicates"] = 0
+            self.selection = set(self.pool)
+            return
+
         try:
             self.check_differences()
         except UnicodeDecodeError as expt:
@@ -581,24 +589,30 @@ class Deduplicate:
         self.assert_stats("mail_retained", ">=", "mail_discarded")
         self.assert_stats("mail_retained", ">=", "mail_selected")
 
-        self.stats["mail_skipped + mail_discarded + mail_selected"] = (
-            self.stats["mail_skipped"]
+        self.stats["mail_unique + mail_skipped + mail_discarded + mail_selected"] = (
+            self.stats["mail_unique"]
+            + self.stats["mail_skipped"]
             + self.stats["mail_discarded"]
             + self.stats["mail_selected"]
         )
         self.assert_stats(
-            "mail_retained", "==", "mail_skipped + mail_discarded + mail_selected"
+            "mail_retained", "==", "mail_unique + mail_skipped + mail_discarded + mail_selected"
         )
 
         # Action stats.
-        self.assert_stats("mail_selected", ">=", "mail_copied")
+        self.stats["mail_unique + mail_selected"] = (
+            self.stats["mail_unique"]
+            + self.stats["mail_selected"]
+        )
+        self.assert_stats("mail_unique + mail_selected", ">=", "mail_copied")
         if self.conf["action"] != "move-discarded":
             # The number of moved mails may be larger than the number of selected
             # mails for move-discarded action, because discarded mails are moved.
             self.assert_stats("mail_selected", ">=", "mail_moved")
-        self.assert_stats("mail_selected", ">=", "mail_deleted")
+        self.assert_stats("mail_unique + mail_selected", ">=", "mail_deleted")
         self.assert_stats(
-            "mail_selected", "in", ["mail_copied", "mail_moved", "mail_deleted"]
+            "mail_unique + mail_selected", "in", [
+                "mail_copied", "mail_moved", "mail_deleted"]
         )
         # Sets accounting.
         self.assert_stats("set_total", "==", "mail_hashes")

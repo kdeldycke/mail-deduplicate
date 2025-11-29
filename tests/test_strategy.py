@@ -88,7 +88,7 @@ strategy_options.update(
 @pytest.mark.parametrize(("strategy_id", "params"), strategy_options.items())
 def test_maildir_dry_run(invoke, make_box, strategy_id, params):
     """Check no mail is removed in dry-run mode."""
-    box_path, box_type = make_box(
+    box_path, box_type, _ = make_box(
         Maildir,
         [
             newest_mail,
@@ -353,7 +353,6 @@ test_cases = [
             random_mail_1,
             random_mail_2,
             random_mail_2,
-            random_mail_3,
         ],
     ),
     (
@@ -370,9 +369,31 @@ test_cases = [
         [
             random_mail_1,
             random_mail_2,
+        ],
+    ),
+]
+
+select_test_cases = [
+    # Whatever the time-based or size-based strategy, the duplicate set is not
+    # actionable if the selection criterion doesn't produce any match.
+    (
+        "one_selection",
+        [Strategy.SELECT_ONE, Strategy.DISCARD_ALL_BUT_ONE],
+        [
+            random_mail_1,
+            random_mail_2,
+            random_mail_2,
+            random_mail_1,
+            random_mail_3,
+            random_mail_2,
+        ],
+        [
+            random_mail_1,
+            random_mail_2,
             random_mail_3,
         ],
     ),
+
 ]
 
 
@@ -397,9 +418,39 @@ def test_maildir_strategy(
     mailbox_results,
 ):
     """Generic test to check the result of a selection strategy."""
-    box_path, box_type = make_box(Maildir, mailbox_input)
+    box_path, box_type, _ = make_box(Maildir, mailbox_input)
 
     result = invoke(f"--strategy={strategy}", "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     check_box(box_path, box_type, content=mailbox_results)
+
+
+@pytest.mark.parametrize(
+    ("strategy_id", "mailbox_input", "mailbox_results"),
+    [
+        pytest.param(
+            strategy_id,
+            mailbox_input,
+            mailbox_results,
+            id=f"{case_id}|{strategy_id}",
+        )
+        for case_id, strategy_ids, mailbox_input, mailbox_results in select_test_cases
+        for strategy_id in strategy_ids
+    ],
+)
+def test_maildir_strategy_selected(
+    invoke,
+    make_box,
+    strategy_id,
+    mailbox_input,
+    mailbox_results,
+):
+    """Generic test to check the result of a selection strategy."""
+    box_path, box_type, dest_box_path = make_box(Maildir, mailbox_input)
+
+    result = invoke(f"--strategy={strategy_id}", "--action=copy-selected",
+                    box_path, f"--export={dest_box_path}", "--export-format=maildir")
+
+    assert result.exit_code == 0
+    check_box(dest_box_path, box_type, content=mailbox_results)
