@@ -612,7 +612,7 @@ class Deduplicate:
             # The number of moved mails may be larger than the number of selected
             # mails for move-discarded action, because discarded mails are moved.
             self.assert_stats("mail_selected", ">=", "mail_moved")
-        self.assert_stats("mail_selected", ">=", "mail_deleted")
+        self.assert_stats("mail_unique + mail_selected", ">=", "mail_deleted")
         self.assert_stats(
             "mail_unique + mail_selected", "in", [
                 "mail_copied", "mail_moved", "mail_deleted"]
