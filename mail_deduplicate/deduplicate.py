@@ -406,8 +406,7 @@ class Deduplicate:
 
         # Open and register the mail source. Subfolders will be registered as their
         # own box.
-        boxes = open_box(
-            path, self.conf["input_format"], self.conf["force_unlock"])
+        boxes = open_box(path, self.conf["input_format"], self.conf["force_unlock"])
         for box in boxes:
             self.sources[box._path] = box
 
@@ -474,8 +473,7 @@ class Deduplicate:
             # Alter log level depending on set length.
             mail_count = len(mail_set)
             log_level = logging.debug if mail_count == 1 else logging.info
-            log_level(theme.subheading(
-                f"◼ {mail_count} mails sharing hash {hash_key}"))
+            log_level(theme.subheading(f"◼ {mail_count} mails sharing hash {hash_key}"))
 
             # Apply the selection strategy to discriminate mails within the set.
             duplicates = DuplicateSet(hash_key, mail_set, self.conf)
@@ -520,7 +518,7 @@ class Deduplicate:
                 if stat_id.startswith(prefix):
                     table.append(
                         [
-                            stat_id[len(prefix):].replace("_", " - ").title(),
+                            stat_id[len(prefix) :].replace("_", " - ").title(),
                             self.stats[stat_id],
                             "\n".join(textwrap.wrap(desc, 60)),
                         ],
@@ -584,8 +582,7 @@ class Deduplicate:
         self.stats["mail_unique + mail_duplicates"] = (
             self.stats["mail_unique"] + self.stats["mail_duplicates"]
         )
-        self.assert_stats("mail_retained", "==",
-                          "mail_unique + mail_duplicates")
+        self.assert_stats("mail_retained", "==", "mail_unique + mail_duplicates")
 
         # Mail selection stats.
         self.assert_stats("mail_retained", ">=", "mail_skipped")
