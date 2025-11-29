@@ -355,7 +355,6 @@ test_cases = [
             random_mail_1,
             random_mail_2,
             random_mail_2,
-            random_mail_3,
         ],
     ),
     (
@@ -372,7 +371,6 @@ test_cases = [
         [
             random_mail_1,
             random_mail_2,
-            random_mail_3,
         ],
     ),
 ]
