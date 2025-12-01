@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import logging
+from contextlib import contextmanager
 from enum import Enum
 
 from boltons.iterutils import unique
@@ -27,62 +28,58 @@ from .mail_box import create_box
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Iterator
     from typing import Callable
 
     from .deduplicate import Deduplicate
 
 
-def copy_mails(dedup: Deduplicate, mails) -> None:
-    """Copy provided ``mails`` to a brand new box or an existing one."""
-    if not dedup.conf["dry_run"]:
-        # Assert to please the type checker.
+@contextmanager
+def _export_box(dedup: Deduplicate) -> Iterator:
+    """Context manager for export box operations."""
+    if dedup.conf["dry_run"]:
+        yield None
+    else:
         assert dedup.conf["export"]
         box = create_box(
             dedup.conf["export"],
             dedup.conf["export_format"],
             dedup.conf["export_append"],
         )
+        try:
+            yield box
+        finally:
+            logging.debug(f"Close {dedup.conf['export']}")
+            box.close()
 
-    for mail in mails:
-        logging.debug(f"Copying {mail!r} to {dedup.conf['export']}...")
-        dedup.stats[Stat.MAIL_COPIED] += 1
-        if dedup.conf["dry_run"]:
-            logging.warning("DRY RUN: Skip action.")
-        else:
-            box.add(mail)
-            logging.info(f"{mail!r} copied.")
 
-    logging.debug(f"Close {dedup.conf['export']}")
-    if not dedup.conf["dry_run"]:
-        box.close()
+def copy_mails(dedup: Deduplicate, mails) -> None:
+    """Copy provided ``mails`` to a brand new box or an existing one."""
+    with _export_box(dedup) as box:
+        for mail in mails:
+            logging.debug(f"Copying {mail!r} to {dedup.conf['export']}...")
+            dedup.stats[Stat.MAIL_COPIED] += 1
+            if dedup.conf["dry_run"]:
+                logging.warning("DRY RUN: Skip action.")
+            else:
+                box.add(mail)
+                logging.info(f"{mail!r} copied.")
 
 
 def move_mails(dedup: Deduplicate, mails) -> None:
     """Move provided ``mails`` to a brand new box or an existing one."""
-    if not dedup.conf["dry_run"]:
-        # Assert to please the type checker.
-        assert dedup.conf["export"]
-        box = create_box(
-            dedup.conf["export"],
-            dedup.conf["export_format"],
-            dedup.conf["export_append"],
-        )
-
-    for mail in mails:
-        logging.debug(
-            f"Move {mail!r} form {mail.source_path} to {dedup.conf['export']}..."
-        )
-        dedup.stats[Stat.MAIL_MOVED] += 1
-        if dedup.conf["dry_run"]:
-            logging.warning("DRY RUN: Skip action.")
-        else:
-            box.add(mail)
-            dedup.sources[mail.source_path].remove(mail.mail_id)
-            logging.info(f"{mail!r} copied.")
-
-    logging.debug(f"Close {dedup.conf['export']}")
-    if not dedup.conf["dry_run"]:
-        box.close()
+    with _export_box(dedup) as box:
+        for mail in mails:
+            logging.debug(
+                f"Move {mail!r} from {mail.source_path} to {dedup.conf['export']}..."
+            )
+            dedup.stats[Stat.MAIL_MOVED] += 1
+            if dedup.conf["dry_run"]:
+                logging.warning("DRY RUN: Skip action.")
+            else:
+                box.add(mail)
+                dedup.sources[mail.source_path].remove(mail.mail_id)
+                logging.info(f"{mail!r} moved.")
 
 
 def delete_mails(dedup: Deduplicate, mails) -> None:
