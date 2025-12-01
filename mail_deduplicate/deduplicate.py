@@ -19,13 +19,14 @@ from __future__ import annotations
 import logging
 import sys
 import textwrap
-from collections import Counter, OrderedDict
+from collections import Counter
 from difflib import unified_diff
 from enum import Enum
 from functools import cached_property
 from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
+from typing import NamedTuple
 
 from click_extra import get_current_context, progressbar
 from click_extra.colorize import default_theme as theme
@@ -41,79 +42,118 @@ if TYPE_CHECKING:
     from .mail import DedupMailMixin
 
 
-STATS_DEF = OrderedDict(
-    [
-        ("mail_found", "Total number of mails encountered from all mail sources."),
-        (
-            "mail_rejected",
-            "Number of mails rejected individually because they were unparsable or "
-            "did not have enough metadata to compute hashes.",
-        ),
-        (
-            "mail_retained",
-            "Number of valid mails parsed and retained for deduplication.",
-        ),
-        ("mail_hashes", "Number of unique hashes."),
-        (
-            "mail_unique",
-            "Number of unique mails (which where automatically added to selection).",
-        ),
-        (
-            "mail_duplicates",
-            "Number of duplicate mails (sum of mails in all duplicate sets with at "
-            "least 2 mails).",
-        ),
-        (
-            "mail_skipped",
-            "Number of mails ignored in the selection step because the whole set "
-            "they belong to was skipped.",
-        ),
-        ("mail_discarded", "Number of mails discarded from the final selection."),
-        (
-            "mail_selected",
-            "Number of mails kept in the final selection on which the "
-            "action will be performed.",
-        ),
-        (
-            "mail_copied",
-            "Number of mails copied from their original mailbox to another.",
-        ),
-        ("mail_moved", "Number of mails moved from their original mailbox to another."),
-        ("mail_deleted", "Number of mails deleted from their mailbox in-place."),
-        ("set_total", "Total number of duplicate sets."),
-        (
-            "set_single",
-            "Total number of sets containing only a single mail with no applicable "
-            "strategy. They were automatically kept in the final selection.",
-        ),
-        (
-            "set_skipped_encoding",
-            "Number of sets skipped from the selection process because they had "
-            "encoding issues.",
-        ),
-        (
-            "set_skipped_size",
-            "Number of sets skipped from the selection process because they were "
-            "too dissimilar in size.",
-        ),
-        (
-            "set_skipped_content",
-            "Number of sets skipped from the selection process because they were "
-            "too dissimilar in content.",
-        ),
-        (
-            "set_skipped_strategy",
-            "Number of sets skipped from the selection process because the strategy "
-            "could not be applied.",
-        ),
-        (
-            "set_deduplicated",
-            "Number of valid sets on which the selection strategy was successfully "
-            "applied.",
-        ),
-    ],
-)
-"""All tracked statistics and their definition."""
+class StatDef(NamedTuple):
+    """Definition of a statistic with its description and category."""
+
+    description: str
+    category: str  # "mail" or "set"
+
+
+class Stat(Enum):
+    """All tracked statistics and their definition."""
+
+    MAIL_FOUND = StatDef(
+        "Total number of mails encountered from all mail sources.", "mail"
+    )
+    MAIL_REJECTED = StatDef(
+        "Number of mails rejected individually because they were unparsable or "
+        "did not have enough metadata to compute hashes.",
+        "mail",
+    )
+    MAIL_RETAINED = StatDef(
+        "Number of valid mails parsed and retained for deduplication.", "mail"
+    )
+    MAIL_HASHES = StatDef("Number of unique hashes.", "mail")
+    MAIL_UNIQUE = StatDef(
+        "Number of unique mails (which were automatically added to selection).", "mail"
+    )
+    MAIL_DUPLICATES = StatDef(
+        "Number of duplicate mails (sum of mails in all duplicate sets with at "
+        "least 2 mails).",
+        "mail",
+    )
+    MAIL_SKIPPED = StatDef(
+        "Number of mails ignored in the selection step because the whole set "
+        "they belong to was skipped.",
+        "mail",
+    )
+    MAIL_DISCARDED = StatDef(
+        "Number of mails discarded from the final selection.", "mail"
+    )
+    MAIL_SELECTED = StatDef(
+        "Number of mails kept in the final selection on which the "
+        "action will be performed.",
+        "mail",
+    )
+    MAIL_COPIED = StatDef(
+        "Number of mails copied from their original mailbox to another.", "mail"
+    )
+    MAIL_MOVED = StatDef(
+        "Number of mails moved from their original mailbox to another.", "mail"
+    )
+    MAIL_DELETED = StatDef(
+        "Number of mails deleted from their mailbox in-place.", "mail"
+    )
+    SET_TOTAL = StatDef("Total number of duplicate sets.", "set")
+    SET_SINGLE = StatDef(
+        "Total number of sets containing only a single mail with no applicable "
+        "strategy. They were automatically kept in the final selection.",
+        "set",
+    )
+    SET_SKIPPED_ENCODING = StatDef(
+        "Number of sets skipped from the selection process because they had "
+        "encoding issues.",
+        "set",
+    )
+    SET_SKIPPED_SIZE = StatDef(
+        "Number of sets skipped from the selection process because they were "
+        "too dissimilar in size.",
+        "set",
+    )
+    SET_SKIPPED_CONTENT = StatDef(
+        "Number of sets skipped from the selection process because they were "
+        "too dissimilar in content.",
+        "set",
+    )
+    SET_SKIPPED_STRATEGY = StatDef(
+        "Number of sets skipped from the selection process because the strategy "
+        "could not be applied.",
+        "set",
+    )
+    SET_DEDUPLICATED = StatDef(
+        "Number of valid sets on which the selection strategy was successfully "
+        "applied.",
+        "set",
+    )
+
+    @property
+    def description(self) -> str:
+        """Returns the description of the statistic."""
+        return self.value.description
+
+    @property
+    def category(self) -> str:
+        """Returns the category of the statistic ('mail' or 'set')."""
+        return self.value.category
+
+
+class Stats:
+    """Type-safe statistics counter using Stat enum keys."""
+
+    def __init__(self) -> None:
+        self._counter: Counter[Stat] = Counter({stat: 0 for stat in Stat})
+
+    def __getitem__(self, key: Stat) -> int:
+        return self._counter[key]
+
+    def __setitem__(self, key: Stat, value: int) -> None:
+        self._counter[key] = value
+
+    def __iadd__(self, other: Stats) -> Stats:
+        """Support += operator for merging stats."""
+        for stat in Stat:
+            self._counter[stat] += other._counter[stat]
+        return self
 
 
 class SizeDiffAboveThreshold(Exception):
@@ -178,10 +218,10 @@ class DuplicateSet:
         self.pool: frozenset[DedupMailMixin] = frozenset(mail_set)
         """Pool referencing all duplicated mails and their attributes."""
 
-        self.stats: Counter = Counter()
+        self.stats: Stats = Stats()
         """Set metrics."""
 
-        self.stats["mail_duplicates"] += self.size
+        self.stats[Stat.MAIL_DUPLICATES] += self.size
 
         logging.debug(f"{self!r} created.")
 
@@ -301,9 +341,9 @@ class DuplicateSet:
         # Fine-grained checks on mail differences.
 
         if self.size == 1:
-            self.stats["set_single"] += 1
-            self.stats["mail_unique"] += 1
-            self.stats["mail_duplicates"] = 0
+            self.stats[Stat.SET_SINGLE] += 1
+            self.stats[Stat.MAIL_UNIQUE] += 1
+            self.stats[Stat.MAIL_DUPLICATES] = 0
             self.selection = set(self.pool)
             return
 
@@ -312,24 +352,24 @@ class DuplicateSet:
         except UnicodeDecodeError as expt:
             logging.warning("Skip set: unparsable mails due to bad encoding.")
             logging.debug(f"{expt}")
-            self.stats["mail_skipped"] += self.size
-            self.stats["set_skipped_encoding"] += 1
+            self.stats[Stat.MAIL_SKIPPED] += self.size
+            self.stats[Stat.SET_SKIPPED_ENCODING] += 1
             return
         except SizeDiffAboveThreshold:
             logging.warning("Skip set: mails are too dissimilar in size.")
-            self.stats["mail_skipped"] += self.size
-            self.stats["set_skipped_size"] += 1
+            self.stats[Stat.MAIL_SKIPPED] += self.size
+            self.stats[Stat.SET_SKIPPED_SIZE] += 1
             return
         except ContentDiffAboveThreshold:
             logging.warning("Skip set: mails are too dissimilar in content.")
-            self.stats["mail_skipped"] += self.size
-            self.stats["set_skipped_content"] += 1
+            self.stats[Stat.MAIL_SKIPPED] += self.size
+            self.stats[Stat.SET_SKIPPED_CONTENT] += 1
             return
 
         if not self.conf["strategy"]:
             logging.warning("Skip set: no strategy to apply.")
-            self.stats["mail_skipped"] += self.size
-            self.stats["set_skipped_strategy"] += 1
+            self.stats[Stat.MAIL_SKIPPED] += self.size
+            self.stats[Stat.SET_SKIPPED_STRATEGY] += 1
             return
 
         # Fetch the subset of selected mails from the set by applying strategy.
@@ -342,8 +382,8 @@ class DuplicateSet:
                 f"Skip set: all {candidate_count} mails within were selected. "
                 "The strategy criterion was not able to discard some.",
             )
-            self.stats["mail_skipped"] += self.size
-            self.stats["set_skipped_strategy"] += 1
+            self.stats[Stat.MAIL_SKIPPED] += self.size
+            self.stats[Stat.SET_SKIPPED_STRATEGY] += 1
             return
 
         # Duplicate sets matching none are skipped altogether.
@@ -352,14 +392,14 @@ class DuplicateSet:
                 "Skip set: No mail within were selected. "
                 "The strategy criterion was not able to select some.",
             )
-            self.stats["mail_skipped"] += self.size
-            self.stats["set_skipped_strategy"] += 1
+            self.stats[Stat.MAIL_SKIPPED] += self.size
+            self.stats[Stat.SET_SKIPPED_STRATEGY] += 1
             return
 
         logging.info(f"{candidate_count} mail candidates selected for action.")
-        self.stats["mail_selected"] += candidate_count
-        self.stats["mail_discarded"] += self.size - candidate_count
-        self.stats["set_deduplicated"] += 1
+        self.stats[Stat.MAIL_SELECTED] += candidate_count
+        self.stats[Stat.MAIL_DISCARDED] += self.size - candidate_count
+        self.stats[Stat.SET_DEDUPLICATED] += 1
         self.selection = selected
         self.discard = self.pool.difference(selected)
 
@@ -390,7 +430,7 @@ class Deduplicate:
         self.conf = conf
         """Configuration shared across the deduplication process."""
 
-        self.stats: Counter = Counter(dict.fromkeys(STATS_DEF, 0))
+        self.stats: Stats = Stats()
         """Deduplication statistics."""
 
     def add_source(self, source_path: Path | str) -> None:
@@ -413,7 +453,7 @@ class Deduplicate:
             # Track global mail count.
             mail_found = len(box)
             logging.info(f"{mail_found} mails found.")
-            self.stats["mail_found"] += mail_found
+            self.stats[Stat.MAIL_FOUND] += mail_found
 
     def hash_all(self):
         """Browse all mails from all registered sources, compute hashes and group mails
@@ -429,7 +469,7 @@ class Deduplicate:
         body_hasher = self.conf["hash_body"].hash_function()
 
         with progressbar(
-            length=self.stats["mail_found"],
+            length=self.stats[Stat.MAIL_FOUND],
             label="Hashed mails",
             show_pos=True,
         ) as progress:
@@ -443,15 +483,15 @@ class Deduplicate:
                         mail_hash = mail.hash_key() + body_hasher(mail)
                     except TooFewHeaders as expt:
                         logging.warning(f"Rejecting {mail!r}: {expt.args[0]}")
-                        self.stats["mail_rejected"] += 1
+                        self.stats[Stat.MAIL_REJECTED] += 1
                     else:
                         # Use a set to deduplicate entries pointing to the same file.
                         self.mails.setdefault(mail_hash, set()).add(mail)
-                        self.stats["mail_retained"] += 1
+                        self.stats[Stat.MAIL_RETAINED] += 1
 
                     progress.update(1)
 
-        self.stats["mail_hashes"] += len(self.mails)
+        self.stats[Stat.MAIL_HASHES] += len(self.mails)
 
     def build_sets(self):
         """Build the selected and discarded sets from each duplicate set.
@@ -467,7 +507,7 @@ class Deduplicate:
         else:
             logging.warning("No strategy configured, skip selection.")
 
-        self.stats["set_total"] = len(self.mails)
+        self.stats[Stat.SET_TOTAL] = len(self.mails)
 
         for hash_key, mail_set in self.mails.items():
             # Alter log level depending on set length.
@@ -512,53 +552,61 @@ class Deduplicate:
         render_table = ctx.find_root().render_table
 
         output = ""
-        for prefix, title in (("mail_", "Mails"), ("set_", "Duplicate sets")):
+        for category, title in (("mail", "Mails"), ("set", "Duplicate sets")):
             table = []
-            for stat_id, desc in STATS_DEF.items():
-                if stat_id.startswith(prefix):
+            for stat in Stat:
+                if stat.category == category:
+                    # Format the stat name: remove category prefix and format nicely
+                    name = stat.name.lower()
+                    prefix = f"{category}_"
+                    if name.startswith(prefix):
+                        name = name[len(prefix) :]
+                    name = name.replace("_", " - ").title()
                     table.append(
                         [
-                            stat_id[len(prefix) :].replace("_", " - ").title(),
-                            self.stats[stat_id],
-                            "\n".join(textwrap.wrap(desc, 60)),
+                            name,
+                            self.stats[stat],
+                            "\n".join(textwrap.wrap(stat.description, 60)),
                         ],
                     )
             output += render_table(table, headers=(title, "Metric", "Description"))
             output += "\n"
         return output
 
-    def assert_stats(self, first, operator, second):
-        """Render failed stats assertions in plain English.
+    def assert_stats(
+        self,
+        first: Stat | tuple[Stat, ...],
+        operator: str,
+        second: Stat | tuple[Stat, ...],
+    ) -> None:
+        """Render failed stats assertions in plain English."""
 
-        .. hint::
-            If inconsistent metrics are detected, the CLI will exit with a code
-            numbered ``115``.
+        def get_value_and_name(operand: Stat | tuple[Stat, ...]) -> tuple[int, str]:
+            if isinstance(operand, tuple):
+                return (
+                    sum(self.stats[s] for s in operand),
+                    " + ".join(s.name.lower() for s in operand),
+                )
+            return self.stats[operand], operand.name.lower()
 
-            This has been arbitrarily chosen in `PR #842
-            <https://github.com/kdeldycke/mail-deduplicate/pull/842#issuecomment-2815533315>`_,
-            to make it unlikely to conflict with other exit codes. Users can rely on
-            ``115`` meaning that the statistics checks failed.
-        """
-        if (
-            (operator == ">=" and self.stats[first] >= self.stats[second])
-            or (operator == "==" and self.stats[first] == self.stats[second])
-            or (operator == "<=" and self.stats[first] <= self.stats[second])
-        ):
+        first_value, first_name = get_value_and_name(first)
+        second_value, second_name = get_value_and_name(second)
+
+        ops = {
+            ">=": lambda a, b: a >= b,
+            "==": lambda a, b: a == b,
+            "<=": lambda a, b: a <= b,
+            "in": lambda a, b: a
+            in ([self.stats[s] for s in second] if isinstance(second, tuple) else [b]),
+        }
+
+        if ops.get(operator, lambda a, b: False)(first_value, second_value):
             return
-        if operator == "in":
-            values = [self.stats.get(stat, 0) for stat in second]
-            if self.stats[first] in values:
-                return
-            logging.warning(
-                "Metrics appear inconsistent.\n"
-                + f"EXPECTED: {first} to be one of {second}\n"
-                + f"          {self.stats[first]} to be one of {values}\n"
-            )
-            sys.exit(115)
+
         logging.warning(
             "Metrics appear inconsistent.\n"
-            + f"EXPECTED: {first} {operator} {second}\n"
-            + f"          {self.stats[first]} {operator} {self.stats[second]}\n"
+            + f"EXPECTED: {first_name} {operator} {second_name}\n"
+            + f"          {first_value} {operator} {second_value}\n"
         )
         sys.exit(115)
 
@@ -568,71 +616,64 @@ class Deduplicate:
         Helps users reports tricky edge-cases.
         """
         # Box opening stats.
-        self.assert_stats("mail_found", ">=", "mail_rejected")
-        self.assert_stats("mail_found", ">=", "mail_retained")
-
-        self.stats["mail_rejected + mail_retained"] = (
-            self.stats["mail_rejected"] + self.stats["mail_retained"]
+        self.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_REJECTED)
+        self.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_RETAINED)
+        self.assert_stats(
+            Stat.MAIL_FOUND, "==", (Stat.MAIL_REJECTED, Stat.MAIL_RETAINED)
         )
-        self.assert_stats("mail_found", "==", "mail_rejected + mail_retained")
 
         # Mail grouping by hash.
-        self.assert_stats("mail_retained", ">=", "mail_unique")
-        self.assert_stats("mail_retained", ">=", "mail_duplicates")
-        self.stats["mail_unique + mail_duplicates"] = (
-            self.stats["mail_unique"] + self.stats["mail_duplicates"]
+        self.assert_stats(Stat.MAIL_RETAINED, ">=", Stat.MAIL_UNIQUE)
+        self.assert_stats(Stat.MAIL_RETAINED, ">=", Stat.MAIL_DUPLICATES)
+        self.assert_stats(
+            Stat.MAIL_RETAINED, "==", (Stat.MAIL_UNIQUE, Stat.MAIL_DUPLICATES)
         )
-        self.assert_stats("mail_retained", "==", "mail_unique + mail_duplicates")
 
         # Mail selection stats.
-        self.assert_stats("mail_retained", ">=", "mail_skipped")
-        self.assert_stats("mail_retained", ">=", "mail_discarded")
-        self.assert_stats("mail_retained", ">=", "mail_selected")
+        self.assert_stats(Stat.MAIL_RETAINED, ">=", Stat.MAIL_SKIPPED)
+        self.assert_stats(Stat.MAIL_RETAINED, ">=", Stat.MAIL_DISCARDED)
+        self.assert_stats(Stat.MAIL_RETAINED, ">=", Stat.MAIL_SELECTED)
 
-        self.stats["mail_unique + mail_skipped + mail_discarded + mail_selected"] = (
-            self.stats["mail_unique"]
-            + self.stats["mail_skipped"]
-            + self.stats["mail_discarded"]
-            + self.stats["mail_selected"]
-        )
         self.assert_stats(
-            "mail_retained",
+            Stat.MAIL_RETAINED,
             "==",
-            "mail_unique + mail_skipped + mail_discarded + mail_selected",
+            (
+                Stat.MAIL_UNIQUE,
+                Stat.MAIL_SKIPPED,
+                Stat.MAIL_DISCARDED,
+                Stat.MAIL_SELECTED,
+            ),
         )
 
         # Action stats.
-        self.stats["mail_unique + mail_selected"] = (
-            self.stats["mail_unique"] + self.stats["mail_selected"]
+        self.assert_stats(
+            (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED), ">=", Stat.MAIL_COPIED
         )
-        self.assert_stats("mail_unique + mail_selected", ">=", "mail_copied")
         if self.conf["action"] != "move-discarded":
             # The number of moved mails may be larger than the number of selected
             # mails for move-discarded action, because discarded mails are moved.
-            self.assert_stats("mail_selected", ">=", "mail_moved")
-        self.assert_stats("mail_unique + mail_selected", ">=", "mail_deleted")
+            self.assert_stats(Stat.MAIL_SELECTED, ">=", Stat.MAIL_MOVED)
         self.assert_stats(
-            "mail_unique + mail_selected",
+            (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED), ">=", Stat.MAIL_DELETED
+        )
+        self.assert_stats(
+            (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED),
             "in",
-            ["mail_copied", "mail_moved", "mail_deleted"],
+            (Stat.MAIL_COPIED, Stat.MAIL_MOVED, Stat.MAIL_DELETED),
         )
+
         # Sets accounting.
-        self.assert_stats("set_total", "==", "mail_hashes")
-        self.assert_stats("set_single", "==", "mail_unique")
-        self.stats[
-            "set_single + set_skipped_encoding + set_skipped_size "
-            + "+ set_skipped_content + set_skipped_strategy + set_deduplicated"
-        ] = (
-            self.stats["set_single"]
-            + self.stats["set_skipped_encoding"]
-            + self.stats["set_skipped_size"]
-            + self.stats["set_skipped_content"]
-            + self.stats["set_skipped_strategy"]
-            + self.stats["set_deduplicated"]
-        )
+        self.assert_stats(Stat.SET_TOTAL, "==", Stat.MAIL_HASHES)
+        self.assert_stats(Stat.SET_SINGLE, "==", Stat.MAIL_UNIQUE)
         self.assert_stats(
-            "set_total",
+            Stat.SET_TOTAL,
             "==",
-            "set_single + set_skipped_encoding + set_skipped_size + "
-            "set_skipped_content + set_skipped_strategy + set_deduplicated",
+            (
+                Stat.SET_SINGLE,
+                Stat.SET_SKIPPED_ENCODING,
+                Stat.SET_SKIPPED_SIZE,
+                Stat.SET_SKIPPED_CONTENT,
+                Stat.SET_SKIPPED_STRATEGY,
+                Stat.SET_DEDUPLICATED,
+            ),
         )

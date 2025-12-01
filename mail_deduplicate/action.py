@@ -22,6 +22,7 @@ from enum import Enum
 from boltons.iterutils import unique
 from click_extra.colorize import default_theme as theme
 
+from .deduplicate import Stat
 from .mail_box import create_box
 
 TYPE_CHECKING = False
@@ -44,7 +45,7 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
 
     for mail in mails:
         logging.debug(f"Copying {mail!r} to {dedup.conf['export']}...")
-        dedup.stats["mail_copied"] += 1
+        dedup.stats[Stat.MAIL_COPIED] += 1
         if dedup.conf["dry_run"]:
             logging.warning("DRY RUN: Skip action.")
         else:
@@ -71,7 +72,7 @@ def move_mails(dedup: Deduplicate, mails) -> None:
         logging.debug(
             f"Move {mail!r} form {mail.source_path} to {dedup.conf['export']}..."
         )
-        dedup.stats["mail_moved"] += 1
+        dedup.stats[Stat.MAIL_MOVED] += 1
         if dedup.conf["dry_run"]:
             logging.warning("DRY RUN: Skip action.")
         else:
@@ -88,7 +89,7 @@ def delete_mails(dedup: Deduplicate, mails) -> None:
     """Remove provided ``mails`` in-place, from their original boxes."""
     for mail in mails:
         logging.debug(f"Deleting {mail!r} in-place...")
-        dedup.stats["mail_deleted"] += 1
+        dedup.stats[Stat.MAIL_DELETED] += 1
         if dedup.conf["dry_run"]:
             logging.warning("DRY RUN: Skip action.")
         else:
@@ -160,7 +161,7 @@ class Action(Enum):
         assert len(unique(dedup.selection)) == len(dedup.selection)
         assert (
             len(dedup.selection)
-            == dedup.stats["mail_selected"] + dedup.stats["mail_unique"]
+            == dedup.stats[Stat.MAIL_SELECTED] + dedup.stats[Stat.MAIL_UNIQUE]
         )
 
         self.action_function(dedup)
