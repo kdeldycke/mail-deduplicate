@@ -249,16 +249,6 @@ class DedupMailMixin(Message):
             body.extend(self.epilogue.splitlines())
         return body
 
-    @cached_property
-    def subject(self) -> str:
-        """Normalized subject.
-
-        Only used for debugging and human-friendly logging.
-        """
-        subject = self.get("Subject", "")
-        subject, _ = re.subn(r"\s+", " ", subject)
-        return subject
-
     def hash_key(self) -> str:
         """Returns the canonical hash of a mail.
 
