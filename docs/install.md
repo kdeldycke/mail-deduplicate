@@ -34,6 +34,12 @@ $ uvx --from mail-deduplicate@8.0.0 -- mdedup
 $ uvx --from git+https://github.com/kdeldycke/mail-deduplicate -- mdedup
 ```
 ````
+
+````{tab-item} Local version
+```shell-session
+$ uvx --from file:///Users/me/code/mail-deduplicate -- mdedup
+```
+````
 `````
 
 This will download `mail-deduplicate` (the package), and run `mdedup`, the CLI included in the package.
