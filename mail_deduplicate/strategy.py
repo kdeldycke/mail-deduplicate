@@ -21,41 +21,54 @@ import enum
 import logging
 import random
 import re
+from functools import wraps
 
 from click_extra.colorize import default_theme as theme
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from typing import Callable
+    from typing import Callable, TypeAlias
 
     from .deduplicate import DuplicateSet
     from .mail import DedupMailMixin
 
+    SelectionFunc: TypeAlias = Callable[[DuplicateSet], set[DedupMailMixin]]
 
+
+def log_selection(message_template: str):
+    """Decorator to log selection criteria."""
+
+    def decorator(func: SelectionFunc) -> SelectionFunc:
+        @wraps(func)
+        def wrapper(duplicates: DuplicateSet) -> set[DedupMailMixin]:
+            logging.info(message_template.format(d=duplicates))
+            return func(duplicates)
+
+        return wrapper
+
+    return decorator
+
+
+@log_selection(
+    "Select all mails strictly older than the {d.newest_timestamp} timestamp..."
+)
 def select_older(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all older duplicates.
 
     Discards the newests, i.e. the subset sharing the most recent timestamp.
     """
-    logging.info(
-        f"Select all mails strictly older than the {duplicates.newest_timestamp} "
-        "timestamp...",
-    )
     return {
         mail for mail in duplicates.pool if mail.timestamp < duplicates.newest_timestamp
     }
 
 
+@log_selection("Select all mails sharing the oldest {d.oldest_timestamp} timestamp...")
 def select_oldest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all the oldest duplicates.
 
     Discards the newers, i.e. all mail of the duplicate set but those sharing the oldest
     timestamp.
     """
-    logging.info(
-        f"Select all mails sharing the oldest {duplicates.oldest_timestamp} "
-        "timestamp...",
-    )
     return {
         mail
         for mail in duplicates.pool
@@ -63,30 +76,26 @@ def select_oldest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     }
 
 
+@log_selection(
+    "Select all mails strictly newer than the {d.oldest_timestamp} timestamp..."
+)
 def select_newer(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all newer duplicates.
 
     Discards the oldest, i.e. the subset sharing the most ancient timestamp.
     """
-    logging.info(
-        f"Select all mails strictly newer than the {duplicates.oldest_timestamp} "
-        "timestamp...",
-    )
     return {
         mail for mail in duplicates.pool if mail.timestamp > duplicates.oldest_timestamp
     }
 
 
+@log_selection("Select all mails sharing the newest {d.newest_timestamp} timestamp...")
 def select_newest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all the newest duplicates.
 
     Discards the olders, i.e. all mail of the duplicate set but those sharing the newest
     timestamp.
     """
-    logging.info(
-        f"Select all mails sharing the newest {duplicates.newest_timestamp} "
-        "timestamp...",
-    )
     return {
         mail
         for mail in duplicates.pool
@@ -94,62 +103,53 @@ def select_newest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     }
 
 
+@log_selection("Select all mails strictly smaller than {d.biggest_size} bytes...")
 def select_smaller(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all smaller duplicates.
 
     Discards the biggests, i.e. the subset sharing the biggest size.
     """
-    logging.info(
-        f"Select all mails strictly smaller than {duplicates.biggest_size} bytes...",
-    )
     return {mail for mail in duplicates.pool if mail.size < duplicates.biggest_size}
 
 
+@log_selection(
+    "Select all mails sharing the smallest size of {d.smallest_size} bytes..."
+)
 def select_smallest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all the smallest duplicates.
 
     Discards the biggers. i.e. all mail of the duplicate set but those sharing the
     smallest size.
     """
-    logging.info(
-        f"Select all mails sharing the smallest size of {duplicates.smallest_size} "
-        "bytes...",
-    )
     return {mail for mail in duplicates.pool if mail.size == duplicates.smallest_size}
 
 
+@log_selection("Select all mails strictly bigger than {d.smallest_size} bytes...")
 def select_bigger(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all bigger duplicates.
 
     Discards the smallests, i.e. the subset sharing the smallest size.
     """
-    logging.info(
-        f"Select all mails strictly bigger than {duplicates.smallest_size} bytes...",
-    )
     return {mail for mail in duplicates.pool if mail.size > duplicates.smallest_size}
 
 
+@log_selection("Select all mails sharing the biggest size of {d.biggest_size} bytes...")
 def select_biggest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all the biggest duplicates.
 
     Discards the smallers, i.e. all mail of the duplicate set but those sharing the
     biggest size.
     """
-    logging.info(
-        f"Select all mails sharing the biggest size of {duplicates.biggest_size} "
-        "bytes...",
-    )
     return {mail for mail in duplicates.pool if mail.size == duplicates.biggest_size}
 
 
+@log_selection(
+    "Select all mails with file path matching the {d.conf[regexp].pattern} regexp..."
+)
 def select_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all duplicates whose file path match the regular expression provided via
     the --regexp parameter."""
     assert duplicates.conf["regexp"] is not None
-    logging.info(
-        "Select all mails with file path matching the "
-        f"{duplicates.conf['regexp'].pattern} regexp...",
-    )
     return {
         mail
         for mail in duplicates.pool
@@ -157,14 +157,13 @@ def select_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     }
 
 
+@log_selection(
+    "Select all mails with file path not matching the {d.conf[regexp].pattern} regexp..."
+)
 def select_non_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all duplicates whose file path doesn't match the regular expression
     provided via the --regexp parameter."""
     assert duplicates.conf["regexp"] is not None
-    logging.info(
-        "Select all mails with file path not matching the "
-        f"{duplicates.conf['regexp'].pattern} regexp...",
-    )
     return {
         mail
         for mail in duplicates.pool
@@ -172,11 +171,13 @@ def select_non_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     }
 
 
+@log_selection("Randomly select one duplicate...")
 def select_one(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Randomly select one duplicate, and discards all others."""
     return {random.choice(tuple(duplicates.pool))}
 
 
+@log_selection("Randomly select all but one duplicate...")
 def select_all_but_one(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Randomly discard one duplicate, and select all others."""
     return set(random.sample(tuple(duplicates.pool), k=len(duplicates.pool) - 1))
