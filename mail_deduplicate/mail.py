@@ -163,7 +163,8 @@ class DedupMailMixin(Message):
         parsed = email.utils.parsedate_tz(value)
 
         if not parsed:
-            raise TypeError(f"Mail has no valid Date header: {value!r}")
+            logging.debug(f"Mail {self} has no valid Date header: {value!r}")
+            return None
 
         return email.utils.mktime_tz(parsed)
 
@@ -303,7 +304,7 @@ class DedupMailMixin(Message):
         """Renders a table of headers names and values used to produce the mail's hash.
 
         .. caution::
-            This method hasn't been made explicitly into a cached property in order to
+            This method hasn't been explicitly made into a cached property in order to
             reduce the overall memory footprint.
 
         Returns a string ready to be printed.
@@ -346,78 +347,124 @@ class DedupMailMixin(Message):
 
         Values are cleaned-up into their canonical form.
         """
-        # Fetch all occurrences of the header.
-        for header_value in self.get_all(header_id):
+        all_values = self.get_all(header_id)
+        if all_values is None:
+            return
+
+        for header_value in all_values:
+            # Normalize to string
             if isinstance(header_value, email.header.Header):
                 value = str(header_value)
-            # Problematic when reading utf8 emails this will ensure value is always
-            # string.
             elif isinstance(header_value, bytes):
                 value = header_value.decode("utf-8", "replace")
             else:
                 value = header_value
-            assert isinstance(value, str)
 
-            # Removes leading and trailing spaces, then deduplicate inner spaces.
-            value = re.sub(r"\s+", " ", value.strip())
+            # Normalize whitespace
+            value = " ".join(value.split())
 
-            # Trim Subject prefixes automatically added by mailing list software, since the
-            # mail could have been cc'd to multiple lists, in which case it will receive a
-            # different prefix for each, but this shouldn't be treated as a real difference
-            # between duplicate mails.
-            if header_id == "subject":
-                subject = value
-                while True:
-                    matching = re.match(
-                        r"([Rr]e: )*(\[\w[\w_-]+\w\] )+(.+)",
-                        subject,
-                        re.DOTALL,
-                    )
-                    if not matching:
-                        break
-                    subject = matching.group(3)
-                    # show_progress("Trimmed Subject to %s" % subject)
-                value = subject
-
-            # Apparently list servers actually munge Content-Type e.g. by stripping the
-            # quotes from charset="us-ascii". Section 5.1 of RFC2045 says that either form
-            # is valid (and they are equivalent).
-            #
-            # Additionally, with multipart/mixed, boundary delimiters can vary by recipient.
-            # We need to allow for duplicates coming from multiple recipients, since for
-            # example you could be signed up to the same list twice with different
-            # addresses. Or maybe someone bounces you a load of mail some of which is from a
-            # mailing list you're both subscribed to - then it's still useful to be able to
-            # eliminate duplicates.
-            elif header_id == "content-type":
-                value = re.sub(";.*", "", value)
-
-            # Date timestamps can differ by seconds or hours for various reasons, so let's
-            # only honour the date for now and normalize them to UTC timezone.
-            elif header_id == "date":
-                timestamp = self.parsed_date
-                if timestamp is not None:
-                    value = arrow.get(timestamp).format("YYYY-MM-DD")
-
-            # Remove quotes in any headers that contain addresses to ensure a quoted name is
-            # hashed to the same value as an unquoted one.
-            # XXX This may not be the cleanest way to normalize email addresses. E.g.
-            # `"Robert \"Bob\"` becomes `Robert \Bob\`, but this shouldn't matter for
-            # hashing purposes as we're just trying to get a good heuristic. Refs: #847 and
-            # #846.
+            # Header-specific normalization: dispatch to normalize_<header_id> methods
+            normalizer = getattr(self, f"normalize_{header_id.replace('-', '_')}", None)
+            if normalizer:
+                value = normalizer(value)
             elif header_id in ADDRESS_HEADERS:
-                value = value.replace('"', "")
+                value = self.normalize_address_header(value)
 
-            # Sometimes email.parser strips the <> brackets from a To: header which has a
-            # single address. I have seen this happen for only one mail in a duplicate pair.
-            # I'm not sure why (presumably the parser uses email.utils.unquote somewhere in
-            # its code path which was only triggered by that mail and not its sister mail),
-            # but to be safe, we should always strip the <> brackets to avoid this
-            # difference preventing duplicate detection.
-            if header_id in ("to", "message-id"):
-                if re.match("^<[^<>,]+>$", value):
-                    value = email.utils.unquote(value)
-
-            # Only return non-empty values.
-            if re.search(r"\S", value):
+            # Only return non-empty values
+            if value.strip():
                 yield value
+
+    def normalize_subject(self, subject: str) -> str:
+        """Strip ``Re:``/``Fwd:`` and ``[list-name]`` prefixes from ``Subject``.
+
+        This cleans up prefixes automatically added by mailing list software, since the
+        mail could have been ``CC``'d to multiple lists, in which case it will receive a
+        different prefix for each.
+        """
+        patterns = [
+            (r"(?i)(re|fwd?): +(.+)", 2),  # Re:/Fwd: prefix
+            (r"\[\w[\w_-]*\w?\] +(.+)", 1),  # [list-name] prefix
+        ]
+        changed = True
+        while changed:
+            changed = False
+            for pattern, group in patterns:
+                if match := re.match(pattern, subject, re.DOTALL):
+                    subject = match.group(group)
+                    changed = True
+                    break
+        return subject
+
+    def normalize_content_type(self, value: str) -> str:
+        """Normalize ``Content-Type`` by stripping parameters.
+
+        Removes everything after the semicolon, keeping only the MIME type.
+        E.g., ``text/plain; charset=utf-8`` becomes ``text/plain``.
+
+        Apparently list servers actually munge ``Content-Type`` e.g. by stripping the
+        quotes from ``charset="us-ascii"``. Section 5.1 of RFC2045 says that either form
+        is valid (and they are equivalent).
+
+        Additionally, with multipart/mixed, boundary delimiters can vary by recipient.
+        We need to allow for duplicates coming from multiple recipients, since for
+        example you could be signed up to the same list twice with different
+        addresses. Or maybe someone bounces you a load of mail some of which is from a
+        mailing list you're both subscribed to - then it's still useful to be able to
+        eliminate duplicates.
+        """
+        return re.sub(";.*", "", value)
+
+    def normalize_date(self, value: str) -> str:
+        """Normalize ``Date`` to ``YYYY-MM-DD`` format.
+
+        Date timestamps can differ by seconds or hours for various reasons, so let's
+        only honour the date for now and normalize them to UTC timezone.
+        """
+        if self.parsed_date is not None:
+            return arrow.get(self.parsed_date).format("YYYY-MM-DD")
+        return value
+
+    def normalize_address_header(self, value: str) -> str:
+        """Normalize address headers by removing quotes and collapsing whitespace.
+
+        E.g., ``"Bob" <bob@example.com>`` becomes ``Bob <bob@example.com>``.
+
+        Remove quotes in any headers that contain addresses to ensure a quoted name is
+        hashed to the same value as an unquoted one.
+
+        .. danger::
+            This may not be the cleanest way to normalize email addresses. E.g.
+            ``"Robert \"Bob\"`` becomes ``Robert \Bob\``, but this shouldn't matter for
+            hashing purposes as we're just trying to get a good heuristic. Refs: #847 and #846.
+        """
+        value = re.sub(r'["]', "", value)
+        return " ".join(value.split())
+
+    def normalize_to(self, value: str) -> str:
+        """Normalize To header."""
+        value = self.normalize_address_header(value)
+        return self.strip_angle_brackets(value)
+
+    def normalize_message_id(self, value: str) -> str:
+        """Normalize Message-ID header by stripping angle brackets.
+
+        E.g., ``<unique-id@example.com>`` becomes ``unique-id@example.com``.
+        """
+        return self.strip_angle_brackets(value)
+
+    def strip_angle_brackets(self, value: str) -> str:
+        """Strip angle brackets from a value if it's a single bracketed item.
+
+        Only strips if the value matches ``<something>`` with no commas.
+
+        .. note::
+            Sometimes ``email.parser`` strips the ``<>`` brackets from a ``To:`` header which has a
+            single address. I have seen this happen for only one mail in a duplicate pair.
+            I'm not sure why (presumably the parser uses ``email.utils.unquote`` somewhere in
+            its code path which was only triggered by that mail and not its sister mail),
+            but to be safe, we should always strip the ``<>`` brackets to avoid this
+            difference preventing duplicate detection.
+        """
+        if re.match(r"^<[^<>,]+>$", value):
+            return email.utils.unquote(value)
+        return value
