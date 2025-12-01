@@ -219,40 +219,36 @@ class DedupMailMixin(Message):
         for part in self.walk():
             if part.is_multipart():
                 continue
-
-            ctype = part.get_content_type()
-            cte = part.get_params(header="Content-Transfer-Encoding")
-            if (ctype is not None and not ctype.startswith("text")) or (
-                cte is not None and cte[0][0].lower() == "8bit"
-            ):
-                part_body_str = cast(str, part.get_payload(decode=False))
-            else:
-                charset = part.get_content_charset()
-                if charset is None or len(charset) == 0:
-                    charsets = ["ascii", "utf-8"]
-                else:
-                    charsets = [charset]
-
-                part_body_bytes = part.get_payload(decode=True)
-                if isinstance(part_body_bytes, bytes):
-                    for enc in charsets:
-                        try:
-                            part_body_str = part_body_bytes.decode(enc)
-                            break
-                        except UnicodeDecodeError:
-                            continue
-                        except LookupError:
-                            continue
-                    else:
-                        part_body_str = cast(str, part.get_payload(decode=False))
-                else:
-                    part_body_str = cast(str, part.get_payload(decode=False))
-
-            body.extend(part_body_str.splitlines())
+            body.extend(self.decode_part(part).splitlines())
 
         if self.epilogue is not None:
             body.extend(self.epilogue.splitlines())
         return body
+
+    def decode_part(self, part: Message) -> str:
+        """Decode a single message part to string."""
+        ctype = part.get_content_type()
+        cte = part.get_params(header="Content-Transfer-Encoding")
+
+        # Binary or 8bit content: return as-is
+        if (ctype and not ctype.startswith("text")) or (
+            cte and cte[0][0].lower() == "8bit"
+        ):
+            return cast(str, part.get_payload(decode=False))
+
+        # Try to decode with charset(s)
+        charset = part.get_content_charset()
+        charsets = [charset] if charset else ["ascii", "utf-8"]
+
+        part_body_bytes = part.get_payload(decode=True)
+        if isinstance(part_body_bytes, bytes):
+            for enc in charsets:
+                try:
+                    return part_body_bytes.decode(enc)
+                except (UnicodeDecodeError, LookupError):
+                    continue
+
+        return cast(str, part.get_payload(decode=False))
 
     def hash_key(self) -> str:
         """Returns the canonical hash of a mail.
@@ -375,19 +371,7 @@ class DedupMailMixin(Message):
         mail could have been ``CC``'d to multiple lists, in which case it will receive a
         different prefix for each.
         """
-        patterns = [
-            (r"(?i)(re|fwd?): +(.+)", 2),  # Re:/Fwd: prefix
-            (r"\[\w[\w_-]*\w?\] +(.+)", 1),  # [list-name] prefix
-        ]
-        changed = True
-        while changed:
-            changed = False
-            for pattern, group in patterns:
-                if match := re.match(pattern, subject, re.DOTALL):
-                    subject = match.group(group)
-                    changed = True
-                    break
-        return subject
+        return re.sub(r"(?i)^(?:(?:re|fwd?): +|\[\w[\w_-]*\w?\] +)+", "", subject)
 
     def normalize_content_type(self, value: str) -> str:
         """Normalize ``Content-Type`` by stripping parameters.
@@ -432,11 +416,7 @@ class DedupMailMixin(Message):
             hashing purposes as we're just trying to get a good heuristic. Refs: #847 and #846.
         """
         value = re.sub(r'["]', "", value)
-        return " ".join(value.split())
-
-    def normalize_to(self, value: str) -> str:
-        """Normalize To header."""
-        value = self.normalize_address_header(value)
+        value = " ".join(value.split())
         return self.strip_angle_brackets(value)
 
     def normalize_message_id(self, value: str) -> str:
