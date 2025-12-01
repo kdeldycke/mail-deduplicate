@@ -54,7 +54,7 @@ This set was crafted to limit the effects of mailing-lists on both the mail head
 - adding plenty of other random headers which a copy saved locally at sending-time would not have, such as `X-Mailman-Version`, `Precedence`, `X-BeenThere`, `List-*`, `Sender`, `Errors-To`, and so on;
 - adding a prefix to the `Subject` header.
 
-### Safeguard: minimal headers
+### ❎ Safeguard: minimal headers
 
 To avoid hashing mails with too few headers (e.g., corrupted mails), we introduced a minimal number of headers required to compute a hash.
 
@@ -64,7 +64,7 @@ By default, this minimal number of headers is set to **4**. It can be changed vi
 
 Once all mails have been hashed, mails with the same hash are grouped together as duplicates. Then a selection strategy is applied to each group of duplicates to select which mails will be acted upon.
 
-### Safeguard: size threshold
+### ❎ Safeguard: size threshold
 
 Sets of duplicates are verified by comparing body sizes, and if they differ by more than a threshold, they are not counted as duplicates and the whole set is skipped with a warning.
 
@@ -83,7 +83,7 @@ This threshold has to be large enough to allow for footers added by mailing list
 The default size threshold is **512 bytes**, and can be changed via the `--size-threshold` option.
 
 
-### Safeguard: content threshold
+### ❎ Safeguard: content threshold
 
 Similarly to the size threshold, we generate unified diffs of duplicates and ensure that the diff is not greater than a certain size to limit false-positives.
 
