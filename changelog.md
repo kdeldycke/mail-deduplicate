@@ -8,6 +8,7 @@
 ## [8.1.1 (2025-12-01)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.0...v8.1.1)
 
 - Do not ignore duplicate sets with unique mails. Closes {issue}`843` and {issue}`599`.
+- Fix parsing of `Date` headers. Closes {issue}`954`.
 
 ## [8.1.0 (2025-11-27)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.0.0...v8.1.0)
 
