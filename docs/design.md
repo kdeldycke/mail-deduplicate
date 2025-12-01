@@ -3,6 +3,7 @@
 This CLI reads mails, then automatically detects, regroup and act on duplicates.
 
 Process:
+
 - Step #1: load mails from their sources.
 - Step #2: compute the canonical hash of each mail based on their headers (and optionally their body), and regroup mails sharing the same hash.
 - Step #3: apply a selection strategy on each subset of duplicate mails.
@@ -81,7 +82,6 @@ This threshold has to be large enough to allow for footers added by mailing list
 ```
 
 The default size threshold is **512 bytes**, and can be changed via the `--size-threshold` option.
-
 
 ### ❎ Safeguard: content threshold
 
