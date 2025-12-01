@@ -31,6 +31,18 @@ from click_extra.colorize import default_theme as theme
 
 from .mail import DedupMailMixin
 
+
+def _make_dedup_mail(name: str, base: type) -> type:
+    """Create a DedupMail class for a mailbox message type."""
+    return type(name, (DedupMailMixin, base), {})
+
+
+MaildirDedupMail = _make_dedup_mail("MaildirDedupMail", mailbox.MaildirMessage)
+mboxDedupMail = _make_dedup_mail("mboxDedupMail", mailbox.mboxMessage)
+MHDedupMail = _make_dedup_mail("MHDedupMail", mailbox.MHMessage)
+BabylDedupMail = _make_dedup_mail("BabylDedupMail", mailbox.BabylMessage)
+MMDFDedupMail = _make_dedup_mail("MMDFDedupMail", mailbox.MMDFMessage)
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from pathlib import Path
@@ -42,26 +54,6 @@ class BoxStructure(Enum):
     # We use auto() as we don't care about the actual values here.
     FOLDER = auto()
     FILE = auto()
-
-
-class MaildirDedupMail(DedupMailMixin, mailbox.MaildirMessage):
-    """Extend the default message factory for ``Maildir`` with deduplication capabilities."""
-
-
-class mboxDedupMail(DedupMailMixin, mailbox.mboxMessage):
-    """Extend the default message factory for ``mbox`` with deduplication capabilities."""
-
-
-class MHDedupMail(DedupMailMixin, mailbox.MHMessage):
-    """Extend the default message factory for ``MH`` with deduplication capabilities."""
-
-
-class BabylDedupMail(DedupMailMixin, mailbox.BabylMessage):
-    """Extend the default message factory for ``Babyl`` with deduplication capabilities."""
-
-
-class MMDFDedupMail(DedupMailMixin, mailbox.MMDFMessage):
-    """Extend the default message factory for ``MMDF`` with deduplication capabilities."""
 
 
 class BoxFormat(Enum):
@@ -105,7 +97,7 @@ class BoxFormat(Enum):
     @property
     def constructor(self):
         """Return a constructor for this box format with our custom message factory."""
-        return partial(self.base_class, factory=self.message_class, create=False)
+        return partial(self.base_class, factory=self.message_class)
 
 
 FOLDER_FORMATS = tuple(box for box in BoxFormat if box.structure == BoxStructure.FOLDER)
@@ -202,19 +194,19 @@ def lock_box(box: Mailbox, force_unlock: bool) -> Mailbox:
         logging.debug("Locking box...")
         box.lock()
     except ExternalClashError:
-        logging.error("Box already locked!")
-        # Remove the lock manually and re-lock.
-        if force_unlock:
-            logging.warning("Forcing removal of lock...")
-            # Forces internal metadata.
-            box._locked = True  # type: ignore[attr-defined]
-            box.unlock()
-            box.lock()
-        # Re-raise error.
-        else:
+        if not force_unlock:
+            logging.error("Box already locked!")
             raise
+        logging.warning("Box already locked! Forcing removal of lock...")
+        box._locked = True  # type: ignore[attr-defined]
+        box.unlock()
+        box.lock()
     logging.debug("Box opened.")
     return box
+
+
+FOLDER_FORMAT_CLASSES = frozenset(b.base_class for b in FOLDER_FORMATS)
+"""Base classes of folder-based box formats."""
 
 
 def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
@@ -226,7 +218,7 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     """
     folder_list = [lock_box(box, force_unlock)]
 
-    if isinstance(box, tuple(b.base_class for b in FOLDER_FORMATS)):
+    if isinstance(box, tuple(FOLDER_FORMAT_CLASSES)):
         # Asserts to please the type checker.
         assert hasattr(box, "list_folders")
         assert hasattr(box, "get_folder")
