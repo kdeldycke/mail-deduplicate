@@ -14,11 +14,26 @@ That is why `mdedup` propose to identify uniqueness of mails based on an ordered
 
 The list of headers to consider can be set with the `-h`/`--hash-header` option.
 
+```{tip}
+You can still use `Message-ID` as the sole reference header by passing `--hash-header Message-ID --minimal-headers 1` to the CLI.
+```
+
 ## Mailing lists
 
-The default parameters of the CLI, especially the [list of default headers](https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.cli.DEFAULT_HASH_HEADERS) have been crafted to limit the effects of mailing-lists on both the mail headers and body.
+The [default headers](https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.cli.DEFAULT_HASH_HEADERS) used for hashing are currently set to:
 
-Mailing lists effects includes:
+- `Date`
+- `From`
+- `To`
+- `Subject`
+- `MIME-Version`
+- `Content-Type`
+- `Content-Disposition`
+- `User-Agent`
+- `X-Priority`
+- `Message-ID`
+
+This set was crafted to limit the effects of mailing-lists on both the mail headers and body, including:
 
 - having an extra footer in the mail's body, thus changing the `Content-Length` header;
 - mails with a new path described by the `Received` headers which would not be contained in any copy of the mail saved locally at the time it was sent to the list;
@@ -34,7 +49,7 @@ For added protection against accidentally removing mails due to false positives,
 
 To avoid hashing mails with too few headers (e.g., corrupted mails), we introduced a minimal number of headers required to compute a hash.
 
-By default, this minimal number of headers is set to **4**.
+By default, this minimal number of headers is set to **4**. It can be changed via the `--minimal-headers` option.
 
 ### Size threshold
 
@@ -52,10 +67,10 @@ One copy could have been stored by the sender's MUA prior to sending, without an
 This threshold has to be large enough to allow for footers added by mailing list servers.
 ```
 
-The default size threshold is **512 bytes**.
+The default size threshold is **512 bytes**, and can be changed via the `--size-threshold` option.
 
 ### Content threshold
 
 Similarly to the size threshold, we generate unified diffs of duplicates and ensure that the diff is not greater than a certain size to limit false-positives.
 
-The default content threshold is **768 bytes**.
+The default content threshold is **768 bytes**, and can be changed via the `--content-threshold` option.
