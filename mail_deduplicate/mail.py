@@ -16,7 +16,8 @@
 
 from __future__ import annotations
 
-import email
+import email.header
+import email.utils
 import hashlib
 import logging
 import os
@@ -24,6 +25,7 @@ import re
 from enum import Enum
 from functools import cached_property
 from mailbox import Message
+from typing import cast
 
 import arrow
 from click_extra import get_current_context
@@ -166,7 +168,7 @@ class DedupMailMixin(Message):
             logging.debug(f"Mail {self} has no valid Date header: {value!r}")
             return None
 
-        return email.utils.mktime_tz(parsed)
+        return float(email.utils.mktime_tz(parsed))
 
     @cached_property
     def timestamp(self) -> float | None:
@@ -210,7 +212,7 @@ class DedupMailMixin(Message):
     @cached_property
     def body_lines(self) -> list[str]:
         """Return a normalized list of lines from message's body."""
-        body = []
+        body: list[str] = []
         if self.preamble is not None:
             body.extend(self.preamble.splitlines())
 
@@ -223,7 +225,7 @@ class DedupMailMixin(Message):
             if (ctype is not None and not ctype.startswith("text")) or (
                 cte is not None and cte[0][0].lower() == "8bit"
             ):
-                part_body = part.get_payload(decode=False)
+                part_body_str = cast(str, part.get_payload(decode=False))
             else:
                 charset = part.get_content_charset()
                 if charset is None or len(charset) == 0:
@@ -231,19 +233,22 @@ class DedupMailMixin(Message):
                 else:
                     charsets = [charset]
 
-                part_body = part.get_payload(decode=True)
-                for enc in charsets:
-                    try:
-                        part_body = part_body.decode(enc)
-                        break
-                    except UnicodeDecodeError:
-                        continue
-                    except LookupError:
-                        continue
+                part_body_bytes = part.get_payload(decode=True)
+                if isinstance(part_body_bytes, bytes):
+                    for enc in charsets:
+                        try:
+                            part_body_str = part_body_bytes.decode(enc)
+                            break
+                        except UnicodeDecodeError:
+                            continue
+                        except LookupError:
+                            continue
+                    else:
+                        part_body_str = cast(str, part.get_payload(decode=False))
                 else:
-                    part_body = part.get_payload(decode=False)
+                    part_body_str = cast(str, part.get_payload(decode=False))
 
-            body.extend(part_body.splitlines())
+            body.extend(part_body_str.splitlines())
 
         if self.epilogue is not None:
             body.extend(self.epilogue.splitlines())
@@ -342,11 +347,10 @@ class DedupMailMixin(Message):
             return
 
         for header_value in all_values:
-            # Normalize to string
-            if isinstance(header_value, email.header.Header):
-                value = str(header_value)
-            elif isinstance(header_value, bytes):
-                value = header_value.decode("utf-8", "replace")
+            if isinstance(header_value, email.header.Header):  # type: ignore[unreachable]
+                value = str(header_value)  # type: ignore[unreachable]
+            elif isinstance(header_value, bytes):  # type: ignore[unreachable]
+                value = header_value.decode("utf-8", "replace")  # type: ignore[unreachable]
             else:
                 value = header_value
 
@@ -424,7 +428,7 @@ class DedupMailMixin(Message):
 
         .. danger::
             This may not be the cleanest way to normalize email addresses. E.g.
-            ``"Robert \"Bob\"`` becomes ``Robert \Bob\``, but this shouldn't matter for
+            ``"Robert \\"Bob\\"```` becomes ``Robert \\Bob\\``, but this shouldn't matter for
             hashing purposes as we're just trying to get a good heuristic. Refs: #847 and #846.
         """
         value = re.sub(r'["]', "", value)
@@ -456,5 +460,5 @@ class DedupMailMixin(Message):
             difference preventing duplicate detection.
         """
         if re.match(r"^<[^<>,]+>$", value):
-            return email.utils.unquote(value)
+            return str(email.utils.unquote(value))
         return value

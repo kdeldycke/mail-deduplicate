@@ -16,9 +16,10 @@
 
 from __future__ import annotations
 
+import email
 import email.header
-from io import BytesIO
 from mailbox import Maildir
+from typing import Any, cast
 
 import pytest
 from extra_platforms.pytest import skip_windows  # type: ignore[attr-defined]
@@ -38,12 +39,16 @@ def create_mail_with_headers(
             Values can be strings, bytes, or email.header.Header objects.
     """
     # Create minimal valid email structure
-    raw_mail = "Subject: placeholder\n\nTest body"
-    mail = DedupMailMixin(BytesIO(raw_mail.encode("utf-8")))
+    raw_mail = b"Subject: placeholder\n\nTest body"
+    msg = email.message_from_bytes(raw_mail)
+
+    # Create a DedupMailMixin by copying the parsed message
+    mail = cast(DedupMailMixin, msg)
+    mail.__class__ = DedupMailMixin
 
     # Replace headers with provided ones
     if headers:
-        mail._headers = list(headers)
+        cast(Any, mail)._headers = list(headers)
 
     return mail
 
