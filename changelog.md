@@ -5,6 +5,8 @@
 > [!IMPORTANT]
 > This version is not released yet and is under active development.
 
+- Do not ignore duplicate sets with unique mails. Closes {issue}`843` and {issue}`599`.
+
 ## [8.1.0 (2025-11-27)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.0.0...v8.1.0)
 
 - Add new `-m`/`--minimal-headers` option to set the minimal number of headers required to compute a hash. Closes {issue}`943`.
