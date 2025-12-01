@@ -34,6 +34,11 @@ from click_extra.colorize import default_theme as theme
 from .mail import TooFewHeaders
 from .mail_box import open_box
 
+if sys.version_info >= (3, 11):
+    from enum import StrEnum
+else:
+    from backports.strenum import StrEnum  # type: ignore[import-not-found]
+
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from mailbox import Mailbox, Message
@@ -168,24 +173,20 @@ class ContentDiffAboveThreshold(Exception):
     """
 
 
-class BodyHasher(Enum):
+class BodyHasher(StrEnum):
     """Enumeration of available body hashing methods."""
 
     SKIP = "skip"
     RAW = "raw"
     NORMALIZED = "normalized"
 
-    def __str__(self) -> str:
-        return self.value  # type: ignore[no-any-return]
-
     def hash_function(self):
         """Returns the hashing function corresponding to the body hasher."""
-        if self == BodyHasher.SKIP:
-            return lambda _: ""
-        elif self == BodyHasher.RAW:
-            return lambda m: m.hash_raw_body
-        elif self == BodyHasher.NORMALIZED:
-            return lambda m: m.hash_normalized_body
+        return {
+            BodyHasher.SKIP: lambda _: "",
+            BodyHasher.RAW: lambda m: m.hash_raw_body,
+            BodyHasher.NORMALIZED: lambda m: m.hash_normalized_body,
+        }[self]
 
 
 class DuplicateSet:
@@ -262,34 +263,34 @@ class DuplicateSet:
         content. Raise an error if we're not within the limits imposed by the threshold
         settings.
         """
+        size_threshold = self.conf["size_threshold"]
+        content_threshold = self.conf["content_threshold"]
+
         logging.info("Check mail differences are below the thresholds.")
-        if self.conf["size_threshold"] < 0:
+        if size_threshold < 0:
             logging.info("Skip checking for size differences.")
-        if self.conf["content_threshold"] < 0:
+        if content_threshold < 0:
             logging.info("Skip checking for content differences.")
-        if self.conf["size_threshold"] < 0 and self.conf["content_threshold"] < 0:
+        if size_threshold < 0 and content_threshold < 0:
             return
 
-        # Compute differences of mail against one another.
         for mail_a, mail_b in combinations(self.pool, 2):
-            # Compare mails on size.
-            if self.conf["size_threshold"] > -1:
+            if size_threshold >= 0:
                 size_difference = abs(mail_a.size - mail_b.size)
                 logging.debug(
                     f"{mail_a!r} and {mail_b!r} differs by {size_difference} bytes "
                     "in size.",
                 )
-                if size_difference > self.conf["size_threshold"]:
+                if size_difference > size_threshold:
                     raise SizeDiffAboveThreshold
 
-            # Compare mails on content.
-            if self.conf["content_threshold"] > -1:
+            if content_threshold >= 0:
                 content_difference = self.diff(mail_a, mail_b)
                 logging.debug(
                     f"{mail_a!r} and {mail_b!r} differs by {content_difference} bytes "
                     "in content.",
                 )
-                if content_difference > self.conf["content_threshold"]:
+                if content_difference > content_threshold:
                     if self.conf["show_diff"]:
                         logging.info(self.pretty_diff(mail_a, mail_b))
                     raise ContentDiffAboveThreshold
@@ -331,6 +332,12 @@ class DuplicateSet:
             ),
         )
 
+    def _skip_set(self, reason: str, stat: Stat) -> None:
+        """Mark the entire set as skipped."""
+        logging.warning(f"Skip set: {reason}")
+        self.stats[Stat.MAIL_SKIPPED] += self.size
+        self.stats[stat] += 1
+
     def categorize_candidates(self):
         """Process the list of duplicates for action.
 
@@ -350,27 +357,21 @@ class DuplicateSet:
         try:
             self.check_differences()
         except UnicodeDecodeError as expt:
-            logging.warning("Skip set: unparsable mails due to bad encoding.")
             logging.debug(f"{expt}")
-            self.stats[Stat.MAIL_SKIPPED] += self.size
-            self.stats[Stat.SET_SKIPPED_ENCODING] += 1
-            return
+            return self._skip_set(
+                "unparsable mails due to bad encoding.", Stat.SET_SKIPPED_ENCODING
+            )
         except SizeDiffAboveThreshold:
-            logging.warning("Skip set: mails are too dissimilar in size.")
-            self.stats[Stat.MAIL_SKIPPED] += self.size
-            self.stats[Stat.SET_SKIPPED_SIZE] += 1
-            return
+            return self._skip_set(
+                "mails are too dissimilar in size.", Stat.SET_SKIPPED_SIZE
+            )
         except ContentDiffAboveThreshold:
-            logging.warning("Skip set: mails are too dissimilar in content.")
-            self.stats[Stat.MAIL_SKIPPED] += self.size
-            self.stats[Stat.SET_SKIPPED_CONTENT] += 1
-            return
+            return self._skip_set(
+                "mails are too dissimilar in content.", Stat.SET_SKIPPED_CONTENT
+            )
 
         if not self.conf["strategy"]:
-            logging.warning("Skip set: no strategy to apply.")
-            self.stats[Stat.MAIL_SKIPPED] += self.size
-            self.stats[Stat.SET_SKIPPED_STRATEGY] += 1
-            return
+            return self._skip_set("no strategy to apply.", Stat.SET_SKIPPED_STRATEGY)
 
         # Fetch the subset of selected mails from the set by applying strategy.
         selected = self.conf["strategy"].apply_strategy(self)
@@ -378,23 +379,19 @@ class DuplicateSet:
 
         # Duplicate sets matching as a whole are skipped altogether.
         if candidate_count == self.size:
-            logging.warning(
-                f"Skip set: all {candidate_count} mails within were selected. "
+            return self._skip_set(
+                f"all {candidate_count} mails within were selected. "
                 "The strategy criterion was not able to discard some.",
+                Stat.SET_SKIPPED_STRATEGY,
             )
-            self.stats[Stat.MAIL_SKIPPED] += self.size
-            self.stats[Stat.SET_SKIPPED_STRATEGY] += 1
-            return
 
         # Duplicate sets matching none are skipped altogether.
         if candidate_count == 0:
-            logging.warning(
-                "Skip set: No mail within were selected. "
+            return self._skip_set(
+                "No mail within were selected. "
                 "The strategy criterion was not able to select some.",
+                Stat.SET_SKIPPED_STRATEGY,
             )
-            self.stats[Stat.MAIL_SKIPPED] += self.size
-            self.stats[Stat.SET_SKIPPED_STRATEGY] += 1
-            return
 
         logging.info(f"{candidate_count} mail candidates selected for action.")
         self.stats[Stat.MAIL_SELECTED] += candidate_count
@@ -410,6 +407,9 @@ class Deduplicate:
 
     Similar messages sharing the same hash are grouped together in a ``DuplicateSet``.
     """
+
+    CLEANUP_ATTRS: tuple[str, ...] = ("canonical_headers", "body_lines", "subject")
+    """Attributes to remove from mails after categorization to free memory."""
 
     def __init__(self, conf: Config) -> None:
         self.sources: dict[str, Mailbox] = {}
@@ -493,6 +493,12 @@ class Deduplicate:
 
         self.stats[Stat.MAIL_HASHES] += len(self.mails)
 
+    @staticmethod
+    def _cleanup_mail_attrs(mail: Message, attrs: list[str]) -> None:
+        """Remove cached attributes from mail to free memory."""
+        for name in attrs:
+            mail.__dict__.pop(name, None)
+
     def build_sets(self):
         """Build the selected and discarded sets from each duplicate set.
 
@@ -523,22 +529,13 @@ class Deduplicate:
             self.selection.update(duplicates.selection)
             self.discard.update(duplicates.discard)
 
-            # Remove from mail objects all attributes we no longer need, now that we
-            # have built the sets of selected and discarded mails. This will save
-            # memory and speed-up the action.
+            # Remove from mail objects all attributes we no longer need.
             # See: https://github.com/kdeldycke/mail-deduplicate/issues/362
-            delete_names = ["canonical_headers", "body_lines", "subject"]
-            for mail in duplicates.discard:
-                for name in delete_names:
-                    if name in mail.__dict__:
-                        del mail.__dict__[name]
-            for mail in duplicates.selection:
-                for name in delete_names:
-                    if name in mail.__dict__:
-                        del mail.__dict__[name]
-                if self.conf["action"] == "move-discarded":
-                    # Selection mails are not moved, delete payload.
-                    del mail.__dict__["_payload"]
+            for mail in duplicates.discard | duplicates.selection:
+                self._cleanup_mail_attrs(mail, self.CLEANUP_ATTRS)
+            if self.conf["action"] == "move-discarded":
+                for mail in duplicates.selection:
+                    mail.__dict__.pop("_payload", None)
 
     def close_all(self):
         """Close all open boxes."""
@@ -553,22 +550,17 @@ class Deduplicate:
 
         output = ""
         for category, title in (("mail", "Mails"), ("set", "Duplicate sets")):
-            table = []
-            for stat in Stat:
-                if stat.category == category:
-                    # Format the stat name: remove category prefix and format nicely
-                    name = stat.name.lower()
-                    prefix = f"{category}_"
-                    if name.startswith(prefix):
-                        name = name[len(prefix) :]
-                    name = name.replace("_", " - ").title()
-                    table.append(
-                        [
-                            name,
-                            self.stats[stat],
-                            "\n".join(textwrap.wrap(stat.description, 60)),
-                        ],
-                    )
+            table = [
+                [
+                    stat.name.removeprefix(f"{category.upper()}_")
+                    .replace("_", " - ")
+                    .title(),
+                    self.stats[stat],
+                    "\n".join(textwrap.wrap(stat.description, 60)),
+                ]
+                for stat in Stat
+                if stat.category == category
+            ]
             output += render_table(table, headers=(title, "Metric", "Description"))
             output += "\n"
         return output
@@ -592,15 +584,24 @@ class Deduplicate:
         first_value, first_name = get_value_and_name(first)
         second_value, second_name = get_value_and_name(second)
 
-        ops = {
-            ">=": lambda a, b: a >= b,
-            "==": lambda a, b: a == b,
-            "<=": lambda a, b: a <= b,
-            "in": lambda a, b: a
-            in ([self.stats[s] for s in second] if isinstance(second, tuple) else [b]),
-        }
+        match operator:
+            case ">=":
+                passed = first_value >= second_value
+            case "==":
+                passed = first_value == second_value
+            case "<=":
+                passed = first_value <= second_value
+            case "in":
+                valid_values = (
+                    [self.stats[s] for s in second]
+                    if isinstance(second, tuple)
+                    else [second_value]
+                )
+                passed = first_value in valid_values
+            case _:
+                passed = False
 
-        if ops.get(operator, lambda a, b: False)(first_value, second_value):
+        if passed:
             return
 
         logging.warning(
