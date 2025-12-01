@@ -393,7 +393,6 @@ select_test_cases = [
             random_mail_3,
         ],
     ),
-
 ]
 
 
@@ -449,8 +448,13 @@ def test_maildir_strategy_selected(
     """Generic test to check the result of a selection strategy."""
     box_path, box_type, dest_box_path = make_box(Maildir, mailbox_input)
 
-    result = invoke(f"--strategy={strategy_id}", "--action=copy-selected",
-                    box_path, f"--export={dest_box_path}", "--export-format=maildir")
+    result = invoke(
+        f"--strategy={strategy_id}",
+        "--action=copy-selected",
+        box_path,
+        f"--export={dest_box_path}",
+        "--export-format=maildir",
+    )
 
     assert result.exit_code == 0
     check_box(dest_box_path, box_type, content=mailbox_results)

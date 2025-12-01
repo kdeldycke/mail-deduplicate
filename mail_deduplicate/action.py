@@ -158,7 +158,9 @@ class Action(Enum):
         # Check our indexing and selection methods are not flagging candidates
         # several times.
         assert len(unique(dedup.selection)) == len(dedup.selection)
-        assert len(
-            dedup.selection) == dedup.stats["mail_selected"] + dedup.stats["mail_unique"]
+        assert (
+            len(dedup.selection)
+            == dedup.stats["mail_selected"] + dedup.stats["mail_unique"]
+        )
 
         self.action_function(dedup)
