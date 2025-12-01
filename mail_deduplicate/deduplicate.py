@@ -332,7 +332,7 @@ class DuplicateSet:
             ),
         )
 
-    def _skip_set(self, reason: str, stat: Stat) -> None:
+    def skip_set(self, reason: str, stat: Stat) -> None:
         """Mark the entire set as skipped."""
         logging.warning(f"Skip set: {reason}")
         self.stats[Stat.MAIL_SKIPPED] += self.size
@@ -358,20 +358,20 @@ class DuplicateSet:
             self.check_differences()
         except UnicodeDecodeError as expt:
             logging.debug(f"{expt}")
-            return self._skip_set(
+            return self.skip_set(
                 "unparsable mails due to bad encoding.", Stat.SET_SKIPPED_ENCODING
             )
         except SizeDiffAboveThreshold:
-            return self._skip_set(
+            return self.skip_set(
                 "mails are too dissimilar in size.", Stat.SET_SKIPPED_SIZE
             )
         except ContentDiffAboveThreshold:
-            return self._skip_set(
+            return self.skip_set(
                 "mails are too dissimilar in content.", Stat.SET_SKIPPED_CONTENT
             )
 
         if not self.conf["strategy"]:
-            return self._skip_set("no strategy to apply.", Stat.SET_SKIPPED_STRATEGY)
+            return self.skip_set("no strategy to apply.", Stat.SET_SKIPPED_STRATEGY)
 
         # Fetch the subset of selected mails from the set by applying strategy.
         selected = self.conf["strategy"].apply_strategy(self)
@@ -379,7 +379,7 @@ class DuplicateSet:
 
         # Duplicate sets matching as a whole are skipped altogether.
         if candidate_count == self.size:
-            return self._skip_set(
+            return self.skip_set(
                 f"all {candidate_count} mails within were selected. "
                 "The strategy criterion was not able to discard some.",
                 Stat.SET_SKIPPED_STRATEGY,
@@ -387,7 +387,7 @@ class DuplicateSet:
 
         # Duplicate sets matching none are skipped altogether.
         if candidate_count == 0:
-            return self._skip_set(
+            return self.skip_set(
                 "No mail within were selected. "
                 "The strategy criterion was not able to select some.",
                 Stat.SET_SKIPPED_STRATEGY,
@@ -494,7 +494,7 @@ class Deduplicate:
         self.stats[Stat.MAIL_HASHES] += len(self.mails)
 
     @staticmethod
-    def _cleanup_mail_attrs(mail: Message, attrs: list[str]) -> None:
+    def cleanup_mail_attrs(mail: Message, attrs: list[str]) -> None:
         """Remove cached attributes from mail to free memory."""
         for name in attrs:
             mail.__dict__.pop(name, None)
@@ -532,7 +532,7 @@ class Deduplicate:
             # Remove from mail objects all attributes we no longer need.
             # See: https://github.com/kdeldycke/mail-deduplicate/issues/362
             for mail in duplicates.discard | duplicates.selection:
-                self._cleanup_mail_attrs(mail, self.CLEANUP_ATTRS)
+                self.cleanup_mail_attrs(mail, self.CLEANUP_ATTRS)
             if self.conf["action"] == "move-discarded":
                 for mail in duplicates.selection:
                     mail.__dict__.pop("_payload", None)

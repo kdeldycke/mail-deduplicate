@@ -32,16 +32,16 @@ from click_extra.colorize import default_theme as theme
 from .mail import DedupMailMixin
 
 
-def _make_dedup_mail(name: str, base: type) -> type:
+def make_dedup_mail(name: str, base: type) -> type:
     """Create a DedupMail class for a mailbox message type."""
     return type(name, (DedupMailMixin, base), {})
 
 
-MaildirDedupMail = _make_dedup_mail("MaildirDedupMail", mailbox.MaildirMessage)
-mboxDedupMail = _make_dedup_mail("mboxDedupMail", mailbox.mboxMessage)
-MHDedupMail = _make_dedup_mail("MHDedupMail", mailbox.MHMessage)
-BabylDedupMail = _make_dedup_mail("BabylDedupMail", mailbox.BabylMessage)
-MMDFDedupMail = _make_dedup_mail("MMDFDedupMail", mailbox.MMDFMessage)
+MaildirDedupMail = make_dedup_mail("MaildirDedupMail", mailbox.MaildirMessage)
+mboxDedupMail = make_dedup_mail("mboxDedupMail", mailbox.mboxMessage)
+MHDedupMail = make_dedup_mail("MHDedupMail", mailbox.MHMessage)
+BabylDedupMail = make_dedup_mail("BabylDedupMail", mailbox.BabylMessage)
+MMDFDedupMail = make_dedup_mail("MMDFDedupMail", mailbox.MMDFMessage)
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:

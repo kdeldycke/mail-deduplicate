@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
 
 @contextmanager
-def _export_box(dedup: Deduplicate) -> Iterator:
+def export_box(dedup: Deduplicate) -> Iterator:
     """Context manager for export box operations."""
     if dedup.conf["dry_run"]:
         yield None
@@ -55,7 +55,7 @@ def _export_box(dedup: Deduplicate) -> Iterator:
 
 def copy_mails(dedup: Deduplicate, mails) -> None:
     """Copy provided ``mails`` to a brand new box or an existing one."""
-    with _export_box(dedup) as box:
+    with export_box(dedup) as box:
         for mail in mails:
             logging.debug(f"Copying {mail!r} to {dedup.conf['export']}...")
             dedup.stats[Stat.MAIL_COPIED] += 1
@@ -68,7 +68,7 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
 
 def move_mails(dedup: Deduplicate, mails) -> None:
     """Move provided ``mails`` to a brand new box or an existing one."""
-    with _export_box(dedup) as box:
+    with export_box(dedup) as box:
         for mail in mails:
             logging.debug(
                 f"Move {mail!r} from {mail.source_path} to {dedup.conf['export']}..."
