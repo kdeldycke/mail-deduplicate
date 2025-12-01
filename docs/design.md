@@ -54,7 +54,7 @@ This set was crafted to limit the effects of mailing-lists on both the mail head
 - adding plenty of other random headers which a copy saved locally at sending-time would not have, such as `X-Mailman-Version`, `Precedence`, `X-BeenThere`, `List-*`, `Sender`, `Errors-To`, and so on;
 - adding a prefix to the `Subject` header.
 
-## Safeguard: minimal headers
+### Safeguard: minimal headers
 
 To avoid hashing mails with too few headers (e.g., corrupted mails), we introduced a minimal number of headers required to compute a hash.
 
