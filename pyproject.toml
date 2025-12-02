@@ -1,7 +1,7 @@
 [project]
 # Docs: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 name = "mail-deduplicate"
-version = "8.1.3"
+version = "8.1.4"
 # Python versions and their status: https://devguide.python.org/versions/
 requires-python = ">= 3.10"
 description = "📧 CLI to deduplicate mails from mail boxes"
@@ -109,8 +109,8 @@ mdedup = "mail_deduplicate.__main__:main"
 product-name = "Mail Deduplicate"
 file-description = "📧 CLI to deduplicate mails from mail boxes"
 copyright = "Kevin Deldycke <kevin@deldycke.com> and contributors. Distributed under GPL-2.0-or-later license."
-file-version = "8.1.3"
-product-version = "8.1.3"
+file-version = "8.1.4"
+product-version = "8.1.4"
 macos-app-icon = "docs/assets/icon.png"
 linux-icon = "docs/assets/icon.png"
 windows-icon-from-ico = "docs/assets/icon.png"
@@ -140,7 +140,7 @@ addopts = [
 xfail_strict = true
 
 [tool.bumpversion]
-current_version = "8.1.3"
+current_version = "8.1.4"
 allow_dirty = true
 
 [[tool.bumpversion.files]]
