@@ -1,46 +1,40 @@
 flowchart TD
     classDef missing stroke-dasharray: 5
-    arrow["arrow\n1.3.0"]
+    arrow["arrow\n1.4.0"]
     boltons["boltons\n25.0.0"]
-    bracex["bracex\n2.5.post1"]
-    certifi["certifi\n2025.1.31"]
-    charset-normalizer["charset-normalizer\n3.4.1"]
-    click-extra["click-extra\n4.15.0"]
-    click_0["click\n8.1.8"]
-    cloup["cloup\n3.0.7"]
+    bracex["bracex\n2.6"]
+    certifi["certifi\n2025.11.12"]
+    charset-normalizer["charset-normalizer\n3.4.4"]
+    click-extra["click-extra\n7.3.0"]
+    click_0["click\n8.3.1"]
+    cloup["cloup\n3.0.8"]
+    deepmerge["deepmerge\n2.0"]
     distro["distro\n1.9.0"]
-    extra-platforms["extra-platforms\n2.1.0"]
-    idna["idna\n3.10"]
-    mail-deduplicate["mail-deduplicate\n7.6.2"]
-    mergedeep["mergedeep\n1.3.4"]
+    extra-platforms["extra-platforms\n5.0.1"]
+    idna["idna\n3.11"]
+    mail-deduplicate["mail-deduplicate\n8.1.3"]
     python-dateutil["python-dateutil\n2.9.0.post0"]
-    pyyaml["PyYAML\n6.0.2"]
-    requests["requests\n2.32.3"]
+    requests["requests\n2.32.5"]
     six["six\n1.17.0"]
     tabulate["tabulate\n0.9.0"]
-    types-python-dateutil["types-python-dateutil\n2.9.0.20241206"]
-    urllib3["urllib3\n2.4.0"]
-    wcmatch["wcmatch\n10.0"]
-    xmltodict["xmltodict\n0.14.2"]
+    tzdata["tzdata\n2025.2"]
+    urllib3["urllib3\n2.5.0"]
+    wcmatch["wcmatch\n10.1"]
     arrow -- ">=2.7.0" --> python-dateutil
-    arrow -- ">=2.8.10" --> types-python-dateutil
-    click-extra -- ">=2.0.0" --> extra-platforms
-    click-extra -- "~=0.14.2" --> xmltodict
-    click-extra -- "~=0.9" --> tabulate
-    click-extra -- "~=1.3.4" --> mergedeep
-    click-extra -- "~=10.0" --> wcmatch
-    click-extra -- "~=2.32.3" --> requests
-    click-extra -- "~=25.0.0" --> boltons
-    click-extra -- "~=3.0.5" --> cloup
-    click-extra -- "~=6.0.0" --> pyyaml
-    click-extra -- "~=8.1.8" --> click_0
+    arrow -- "any" --> tzdata
+    click-extra -- ">=0.9" --> tabulate
+    click-extra -- ">=10.0" --> wcmatch
+    click-extra -- ">=2.0" --> deepmerge
+    click-extra -- ">=2.32.5" --> requests
+    click-extra -- ">=25.0.0" --> boltons
+    click-extra -- ">=3.0.7" --> cloup
+    click-extra -- ">=5.0.0" --> extra-platforms
+    click-extra -- ">=8.3.1" --> click_0
     cloup -- ">=8.0,<9.0" --> click_0
-    extra-platforms -- "~=1.9.0" --> distro
-    extra-platforms -- "~=25.0.0" --> boltons
-    mail-deduplicate -- "~=0.9" --> tabulate
-    mail-deduplicate -- "~=1.3.0" --> arrow
-    mail-deduplicate -- "~=25.0.0" --> boltons
-    mail-deduplicate -- "~=4.15.0" --> click-extra
+    extra-platforms -- ">=1.9.0" --> distro
+    mail-deduplicate -- ">=1.3.0" --> arrow
+    mail-deduplicate -- ">=25.0.0" --> boltons
+    mail-deduplicate -- ">=7.3.0" --> click-extra
     python-dateutil -- ">=1.5" --> six
     requests -- ">=1.21.1,<3" --> urllib3
     requests -- ">=2,<4" --> charset-normalizer
