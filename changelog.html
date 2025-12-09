@@ -1,0 +1,885 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content=" Changelog" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="changelog.html" />
+<meta property="og:site_name" content="Mail Deduplicate" />
+<meta property="og:description" content="Changelog: 8.1.3 (unreleased): 8.1.2 (2025-12-02): Refactor some code to improve readability.. 8.1.1 (2025-12-01): Do not ignore duplicate sets with unique mails. Closes#843 and#599., Fix parsing o..." />
+<meta name="description" content="Changelog: 8.1.3 (unreleased): 8.1.2 (2025-12-02): Refactor some code to improve readability.. 8.1.1 (2025-12-01): Do not ignore duplicate sets with unique mails. Closes#843 and#599., Fix parsing o..." />
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="History" href="history.html"><link rel="prev" title="Todo-list" href="todolist.html">
+        <link rel="prefetch" href="_static/mail-deduplicate-logo-square.png" as="image">
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
+        <title>Changelog - Mail Deduplicate</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80449d92" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Mail Deduplicate works fine, but is <em>maintained by only one person</em> 😶‍🌫️.<br/>You can help if you <strong><a class='reference external' href='https://github.com/sponsors/kdeldycke'>purchase business support 🤝</a></strong> or <strong><a class='reference external' href='https://github.com/sponsors/kdeldycke'>sponsor the project 🫶</a></strong>. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">Mail Deduplicate</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/mail-deduplicate-logo-square.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="install.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-download" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z"></path><path d="M7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.969a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z"></path></svg> Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="design.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-light-bulb" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg> Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli-parameters.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-command-palette" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="m6.354 8.04-4.773 4.773a.75.75 0 1 0 1.061 1.06L7.945 8.57a.75.75 0 0 0 0-1.06L2.642 2.206a.75.75 0 0 0-1.06 1.061L6.353 8.04ZM8.75 11.5a.75.75 0 0 0 0 1.5h5.5a.75.75 0 0 0 0-1.5h-5.5Z"></path></svg> CLI parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-sliders" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M15 2.75a.75.75 0 0 1-.75.75h-4a.75.75 0 0 1 0-1.5h4a.75.75 0 0 1 .75.75Zm-8.5.75v1.25a.75.75 0 0 0 1.5 0v-4a.75.75 0 0 0-1.5 0V2H1.75a.75.75 0 0 0 0 1.5H6.5Zm1.25 5.25a.75.75 0 0 0 0-1.5h-6a.75.75 0 0 0 0 1.5h6ZM15 8a.75.75 0 0 1-.75.75H11.5V10a.75.75 0 1 1-1.5 0V6a.75.75 0 0 1 1.5 0v1.25h2.75A.75.75 0 0 1 15 8Zm-9 5.25v-2a.75.75 0 0 0-1.5 0v1.25H1.75a.75.75 0 0 0 0 1.5H4.5v1.25a.75.75 0 0 0 1.5 0v-2Zm9 0a.75.75 0 0 1-.75.75h-6a.75.75 0 0 1 0-1.5h6a.75.75 0 0 1 .75.75Z"></path></svg> Configuration</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="development.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-tools" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M5.433 2.304A4.492 4.492 0 0 0 3.5 6c0 1.598.832 3.002 2.09 3.802.518.328.929.923.902 1.64v.008l-.164 3.337a.75.75 0 1 1-1.498-.073l.163-3.33c.002-.085-.05-.216-.207-.316A5.996 5.996 0 0 1 2 6a5.993 5.993 0 0 1 2.567-4.92 1.482 1.482 0 0 1 1.673-.04c.462.296.76.827.76 1.423v2.82c0 .082.041.16.11.206l.75.51a.25.25 0 0 0 .28 0l.75-.51A.249.249 0 0 0 9 5.282V2.463c0-.596.298-1.127.76-1.423a1.482 1.482 0 0 1 1.673.04A5.993 5.993 0 0 1 14 6a5.996 5.996 0 0 1-2.786 5.068c-.157.1-.209.23-.207.315l.163 3.33a.752.752 0 0 1-1.094.714.75.75 0 0 1-.404-.64l-.164-3.345c-.027-.717.384-1.312.902-1.64A4.495 4.495 0 0 0 12.5 6a4.492 4.492 0 0 0-1.933-3.696c-.024.017-.067.067-.067.16v2.818a1.75 1.75 0 0 1-.767 1.448l-.75.51a1.75 1.75 0 0 1-1.966 0l-.75-.51A1.75 1.75 0 0 1 5.5 5.282V2.463c0-.092-.043-.142-.067-.159Z"></path></svg> Development</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mail_deduplicate.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">tests package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Module Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="todolist.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-checklist" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M2.5 1.75v11.5c0 .138.112.25.25.25h3.17a.75.75 0 0 1 0 1.5H2.75A1.75 1.75 0 0 1 1 13.25V1.75C1 .784 1.784 0 2.75 0h8.5C12.216 0 13 .784 13 1.75v7.736a.75.75 0 0 1-1.5 0V1.75a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25Zm13.274 9.537v-.001l-4.557 4.45a.75.75 0 0 1-1.055-.008l-1.943-1.95a.75.75 0 0 1 1.062-1.058l1.419 1.425 4.026-3.932a.75.75 0 1 1 1.048 1.074ZM4.75 4h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM4 7.75A.75.75 0 0 1 4.75 7h2a.75.75 0 0 1 0 1.5h-2A.75.75 0 0 1 4 7.75Z"></path></svg> Todo-list</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#"><svg aria-hidden="true" class="sd-octicon sd-octicon-diff" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M8.75 1.75V5H12a.75.75 0 0 1 0 1.5H8.75v3.25a.75.75 0 0 1-1.5 0V6.5H4A.75.75 0 0 1 4 5h3.25V1.75a.75.75 0 0 1 1.5 0ZM4 13h8a.75.75 0 0 1 0 1.5H4A.75.75 0 0 1 4 13Z"></path></svg> Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-log" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M5 8.25a.75.75 0 0 1 .75-.75h4a.75.75 0 0 1 0 1.5h-4A.75.75 0 0 1 5 8.25ZM4 10.5A.75.75 0 0 0 4 12h4a.75.75 0 0 0 0-1.5H4Z"></path><path d="M13-.005c1.654 0 3 1.328 3 3 0 .982-.338 1.933-.783 2.818-.443.879-1.028 1.758-1.582 2.588l-.011.017c-.568.853-1.104 1.659-1.501 2.446-.398.789-.623 1.494-.623 2.136a1.5 1.5 0 1 0 2.333-1.248.75.75 0 0 1 .834-1.246A3 3 0 0 1 13 16H3a3 3 0 0 1-3-3c0-1.582.891-3.135 1.777-4.506.209-.322.418-.637.623-.946.473-.709.923-1.386 1.287-2.048H2.51c-.576 0-1.381-.133-1.907-.783A2.68 2.68 0 0 1 0 2.995a3 3 0 0 1 3-3Zm0 1.5a1.5 1.5 0 0 0-1.5 1.5c0 .476.223.834.667 1.132A.75.75 0 0 1 11.75 5.5H5.368c-.467 1.003-1.141 2.015-1.773 2.963-.192.289-.381.571-.558.845C2.13 10.711 1.5 11.916 1.5 13A1.5 1.5 0 0 0 3 14.5h7.401A2.989 2.989 0 0 1 10 13c0-.979.338-1.928.784-2.812.441-.874 1.023-1.748 1.575-2.576l.017-.026c.568-.853 1.103-1.658 1.501-2.448.398-.79.623-1.497.623-2.143 0-.838-.669-1.5-1.5-1.5Zm-10 0a1.5 1.5 0 0 0-1.5 1.5c0 .321.1.569.27.778.097.12.325.227.74.227h7.674A2.737 2.737 0 0 1 10 2.995c0-.546.146-1.059.401-1.5Z"></path></svg> History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code-of-conduct.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-code-of-conduct" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M8.048 2.241c.964-.709 2.079-1.238 3.325-1.241a4.616 4.616 0 0 1 3.282 1.355c.41.408.757.86.996 1.428.238.568.348 1.206.347 1.968 0 2.193-1.505 4.254-3.081 5.862-1.496 1.526-3.213 2.796-4.249 3.563l-.22.163a.749.749 0 0 1-.895 0l-.221-.163c-1.036-.767-2.753-2.037-4.249-3.563C1.51 10.008.007 7.952.002 5.762a4.614 4.614 0 0 1 1.353-3.407C3.123.585 6.223.537 8.048 2.24Zm-1.153.983c-1.25-1.033-3.321-.967-4.48.191a3.115 3.115 0 0 0-.913 2.335c0 1.556 1.109 3.24 2.652 4.813C5.463 11.898 6.96 13.032 8 13.805c.353-.262.758-.565 1.191-.905l-1.326-1.223a.75.75 0 0 1 1.018-1.102l1.48 1.366c.328-.281.659-.577.984-.887L9.99 9.802a.75.75 0 1 1 1.019-1.103l1.384 1.28c.295-.329.566-.661.81-.995L12.92 8.7l-1.167-1.168c-.674-.671-1.78-.664-2.474.03-.268.269-.538.537-.802.797-.893.882-2.319.843-3.185-.032-.346-.35-.693-.697-1.043-1.047a.75.75 0 0 1-.04-1.016c.162-.191.336-.401.52-.623.62-.748 1.356-1.637 2.166-2.417Zm7.112 4.442c.313-.65.491-1.293.491-1.916v-.001c0-.614-.088-1.045-.23-1.385-.143-.339-.357-.633-.673-.949a3.111 3.111 0 0 0-2.218-.915c-1.092.003-2.165.627-3.226 1.602-.823.755-1.554 1.637-2.228 2.45l-.127.154.562.566a.755.755 0 0 0 1.066.02l.794-.79c1.258-1.258 3.312-1.31 4.594-.032.396.394.792.791 1.173 1.173Z"></path></svg> Code of conduct</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html"><svg aria-hidden="true" class="sd-octicon sd-octicon-law" height="1.0em" version="1.1" viewbox="0 0 16 16" width="1.0em"><path d="M8.75.75V2h.985c.304 0 .603.08.867.231l1.29.736c.038.022.08.033.124.033h2.234a.75.75 0 0 1 0 1.5h-.427l2.111 4.692a.75.75 0 0 1-.154.838l-.53-.53.529.531-.001.002-.002.002-.006.006-.006.005-.01.01-.045.04c-.21.176-.441.327-.686.45C14.556 10.78 13.88 11 13 11a4.498 4.498 0 0 1-2.023-.454 3.544 3.544 0 0 1-.686-.45l-.045-.04-.016-.015-.006-.006-.004-.004v-.001a.75.75 0 0 1-.154-.838L12.178 4.5h-.162c-.305 0-.604-.079-.868-.231l-1.29-.736a.245.245 0 0 0-.124-.033H8.75V13h2.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1 0-1.5h2.5V3.5h-.984a.245.245 0 0 0-.124.033l-1.289.737c-.265.15-.564.23-.869.23h-.162l2.112 4.692a.75.75 0 0 1-.154.838l-.53-.53.529.531-.001.002-.002.002-.006.006-.016.015-.045.04c-.21.176-.441.327-.686.45C4.556 10.78 3.88 11 3 11a4.498 4.498 0 0 1-2.023-.454 3.544 3.544 0 0 1-.686-.45l-.045-.04-.016-.015-.006-.006-.004-.004v-.001a.75.75 0 0 1-.154-.838L2.178 4.5H1.75a.75.75 0 0 1 0-1.5h2.234a.249.249 0 0 0 .125-.033l1.288-.737c.265-.15.564-.23.869-.23h.984V.75a.75.75 0 0 1 1.5 0Zm2.945 8.477c.285.135.718.273 1.305.273s1.02-.138 1.305-.273L13 6.327Zm-10 0c.285.135.718.273 1.305.273s1.02-.138 1.305-.273L3 6.327Z"></path></svg> License</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate">GitHub repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/sponsors/kdeldycke">Funding</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/kdeldycke/mail-deduplicate/blob/main/docs/changelog.md?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/kdeldycke/mail-deduplicate/edit/main/docs/changelog.md" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="changelog">
+<h1><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-diff" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.75 1.75V5H12a.75.75 0 0 1 0 1.5H8.75v3.25a.75.75 0 0 1-1.5 0V6.5H4A.75.75 0 0 1 4 5h3.25V1.75a.75.75 0 0 1 1.5 0ZM4 13h8a.75.75 0 0 1 0 1.5H4A.75.75 0 0 1 4 13Z"></path></svg> Changelog<a class="headerlink" href="#changelog" title="Link to this heading">¶</a></h1>
+<section id="unreleased">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.2...main">8.1.3 (unreleased)</a><a class="headerlink" href="#unreleased" title="Link to this heading">¶</a></h2>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This version is not released yet and is under active development.</p>
+</div>
+</section>
+<section id="id1">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.1...v8.1.2">8.1.2 (2025-12-02)</a><a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Refactor some code to improve readability.</p></li>
+</ul>
+</section>
+<section id="id2">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.0...v8.1.1">8.1.1 (2025-12-01)</a><a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Do not ignore duplicate sets with unique mails. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/843">#843</a> and <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/599">#599</a>.</p></li>
+<li><p>Fix parsing of <code class="docutils literal notranslate"><span class="pre">Date</span></code> headers. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/954">#954</a>.</p></li>
+</ul>
+</section>
+<section id="id3">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v8.0.0...v8.1.0">8.1.0 (2025-11-27)</a><a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">-m</span></code>/<code class="docutils literal notranslate"><span class="pre">--minimal-headers</span></code> option to set the minimal number of headers required to compute a hash. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/943">#943</a>.</p></li>
+<li><p>Validate number of <code class="docutils literal notranslate"><span class="pre">--hash-header</span></code> options against <code class="docutils literal notranslate"><span class="pre">--minimal-headers</span></code> value.</p></li>
+<li><p>Require at least one header to be provided to the <code class="docutils literal notranslate"><span class="pre">--hash-header</span></code> option.</p></li>
+<li><p>Add installation instructions for <code class="docutils literal notranslate"><span class="pre">brew</span></code> on macOS and Arch Linux.</p></li>
+<li><p>Use mixin classes to share common code between mailbox types and avoid dynamic inheritance.</p></li>
+</ul>
+</section>
+<section id="id4">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.2...v8.0.0">8.0.0 (2025-11-21)</a><a class="headerlink" href="#id4" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Log options explicitly set by user but ignored because of <code class="docutils literal notranslate"><span class="pre">--hash-only</span></code> mode.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">--no-config</span></code>, <code class="docutils literal notranslate"><span class="pre">--table-format</span></code> options inherited from Click Extra.</p></li>
+<li><p>Table rendering in CLI output is now controlled by <code class="docutils literal notranslate"><span class="pre">--table-format</span></code> option.</p></li>
+<li><p>Remove direct dependency on <code class="docutils literal notranslate"><span class="pre">tabulate</span></code>, use <code class="docutils literal notranslate"><span class="pre">click-extra</span></code>’s table utilities instead.</p></li>
+<li><p>Add official support for Python 3.14.</p></li>
+<li><p>Remove maximum capped version of all dependencies (relax all <code class="docutils literal notranslate"><span class="pre">~=</span></code> specifiers to <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code>). This gives more freedom to downstream and upstream packagers. Document each minimal version choice.</p></li>
+<li><p>Move all typing-related imports behind a hard-coded <code class="docutils literal notranslate"><span class="pre">TYPE_CHECKING</span></code> guard to avoid runtime imports.</p></li>
+<li><p>Produce <code class="docutils literal notranslate"><span class="pre">mdedup-windows-arm64.exe</span></code> Windows binary for <code class="docutils literal notranslate"><span class="pre">arm64</span></code> architecture.</p></li>
+<li><p>Run tests on stable Python 3.14 release.</p></li>
+<li><p>Run tests on Python 3.15-dev, mark them as unstable.</p></li>
+<li><p>Skip tests on intermediate Python versions (<code class="docutils literal notranslate"><span class="pre">3.11</span></code>, <code class="docutils literal notranslate"><span class="pre">3.12</span></code> and <code class="docutils literal notranslate"><span class="pre">3.13</span></code>) to reduce CI load.</p></li>
+<li><p>Run tests on Python <code class="docutils literal notranslate"><span class="pre">3.14t</span></code> and <code class="docutils literal notranslate"><span class="pre">3.15t</span></code> free-threaded variants.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">astral-sh/setup-uv</span></code> action to install <code class="docutils literal notranslate"><span class="pre">uv</span></code> instead of manually installing it with <code class="docutils literal notranslate"><span class="pre">pip</span></code>.</p></li>
+<li><p>Move <code class="docutils literal notranslate"><span class="pre">ubuntu-24.04</span></code> to <code class="docutils literal notranslate"><span class="pre">ubuntu-24.04-arm</span></code>, <code class="docutils literal notranslate"><span class="pre">macos-15</span></code> tests to <code class="docutils literal notranslate"><span class="pre">macos-26</span></code> and <code class="docutils literal notranslate"><span class="pre">windows-2025</span></code> tests to <code class="docutils literal notranslate"><span class="pre">windows-11-arm</span></code>.</p></li>
+</ul>
+</section>
+<section id="id5">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.1...v7.6.2">7.6.2 (2025-04-20)</a><a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Ignore line endings when comparing content. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/844">#844</a>.</p></li>
+<li><p>Render failed statistics assertions in plain English.</p></li>
+<li><p>Exit with error code <code class="docutils literal notranslate"><span class="pre">115</span></code> when statistics are inconsistent.</p></li>
+<li><p>Add a new <code class="docutils literal notranslate"><span class="pre">--verbose</span></code> option to increase the verbosity level.</p></li>
+<li><p>Reassign the short <code class="docutils literal notranslate"><span class="pre">-v</span></code> option from <code class="docutils literal notranslate"><span class="pre">--verbosity</span></code> to <code class="docutils literal notranslate"><span class="pre">--verbose</span></code>.</p></li>
+<li><p>Only run unittests against the oldest and newest major supported version of Python. Remove tests on <code class="docutils literal notranslate"><span class="pre">3.11</span></code> and <code class="docutils literal notranslate"><span class="pre">3.12</span></code>.</p></li>
+<li><p>To speed up the tests, we only test the latest available OS for each platform. Remove tests on <code class="docutils literal notranslate"><span class="pre">ubuntu-22.04</span></code>, <code class="docutils literal notranslate"><span class="pre">macos-13</span></code> and <code class="docutils literal notranslate"><span class="pre">windows-2019</span></code>.</p></li>
+<li><p>Upgrade tests from <code class="docutils literal notranslate"><span class="pre">windows-2022</span></code> to <code class="docutils literal notranslate"><span class="pre">windows-2025</span></code>.</p></li>
+</ul>
+</section>
+<section id="id6">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.0...v7.6.1">7.6.1 (2024-11-29)</a><a class="headerlink" href="#id6" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Fix conflicting <code class="docutils literal notranslate"><span class="pre">-h</span></code>/<code class="docutils literal notranslate"><span class="pre">--hash-header</span></code> and <code class="docutils literal notranslate"><span class="pre">-h</span></code>/<code class="docutils literal notranslate"><span class="pre">--help</span></code> options. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/762">#762</a>.</p></li>
+</ul>
+</section>
+<section id="id7">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.5.0...v7.6.0">7.6.0 (2024-11-24)</a><a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Add official support for Python 3.13.</p></li>
+<li><p>Drop support for Python 3.9. Refs <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/787">#787</a>.</p></li>
+<li><p>Add dependency on <code class="docutils literal notranslate"><span class="pre">extra-platforms</span></code>. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/784">#784</a>.</p></li>
+<li><p>Run tests on stable Python 3.13 release.</p></li>
+<li><p>Run tests on Python 3.14-dev, mark them as unstable.</p></li>
+<li><p>Move <code class="docutils literal notranslate"><span class="pre">macos-14</span></code> tests to <code class="docutils literal notranslate"><span class="pre">macos-15</span></code>.</p></li>
+<li><p>Add tests on <code class="docutils literal notranslate"><span class="pre">ubuntu-24.04</span></code>. Remove tests on <code class="docutils literal notranslate"><span class="pre">ubuntu-20.04</span></code>.</p></li>
+<li><p>Run workflows on <code class="docutils literal notranslate"><span class="pre">ubuntu-24.04</span></code>.</p></li>
+<li><p>Rely on frozen <code class="docutils literal notranslate"><span class="pre">uv.lock</span></code> for reproducibility.</p></li>
+</ul>
+</section>
+<section id="id8">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.4.0...v7.5.0">7.5.0 (2024-07-03)</a><a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Switch from Poetry to <code class="docutils literal notranslate"><span class="pre">uv</span></code>.</p></li>
+<li><p>Drop support for Python 3.8.</p></li>
+<li><p>Mark Python 3.13-dev tests as stable.</p></li>
+</ul>
+</section>
+<section id="id9">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.3.0...v7.4.0">7.4.0 (2024-06-20)</a><a class="headerlink" href="#id9" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Slim down package by moving unit tests out of the main package.</p></li>
+<li><p>Split <code class="docutils literal notranslate"><span class="pre">dev</span></code> dependency groups into optional <code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">typing</span></code> and <code class="docutils literal notranslate"><span class="pre">docs</span></code> groups.</p></li>
+<li><p>Remove direct dependency on <code class="docutils literal notranslate"><span class="pre">mypy</span></code>.</p></li>
+<li><p>Run tests on Python <code class="docutils literal notranslate"><span class="pre">3.13-dev</span></code> on all platforms but <code class="docutils literal notranslate"><span class="pre">macos</span></code>.</p></li>
+<li><p>Run tests on <code class="docutils literal notranslate"><span class="pre">macos-14</span></code>. Drop tests on <code class="docutils literal notranslate"><span class="pre">macos-12</span></code>.</p></li>
+<li><p>Build <code class="docutils literal notranslate"><span class="pre">arm64</span></code> binaries on <code class="docutils literal notranslate"><span class="pre">macos-14</span></code>.</p></li>
+</ul>
+</section>
+<section id="id10">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.3...v7.3.0">7.3.0 (2023-11-14)</a><a class="headerlink" href="#id10" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Drop support of Python 3.7.</p></li>
+<li><p>Reduce memory usage. Addresses <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/362">#362</a>.</p></li>
+<li><p>Replace unmaintained <code class="docutils literal notranslate"><span class="pre">bump2version</span></code> by <code class="docutils literal notranslate"><span class="pre">bump-my-version</span></code>.</p></li>
+<li><p>Test <code class="docutils literal notranslate"><span class="pre">mdedup</span></code> binaries.</p></li>
+<li><p>Run tests and actions on released Python 3.12 version.</p></li>
+<li><p>Run tests on macos-13. Remove tests on macos-11.</p></li>
+</ul>
+</section>
+<section id="id11">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.2...v7.2.3">7.2.3 (2023-05-04)</a><a class="headerlink" href="#id11" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Reverts distribution of package via trusted channel.</p></li>
+</ul>
+</section>
+<section id="id12">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.1...v7.2.2">7.2.2 (2023-05-04)</a><a class="headerlink" href="#id12" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Redo release to fix trusted publisher on PyPi.</p></li>
+</ul>
+</section>
+<section id="id13">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.0...v7.2.1">7.2.1 (2023-05-04)</a><a class="headerlink" href="#id13" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Produce dependency graph in Mermaid instead of Graphviz. Add new dev dependency on <code class="docutils literal notranslate"><span class="pre">sphinxcontrib-mermaid</span></code>.</p></li>
+<li><p>Move all documentation assets to <code class="docutils literal notranslate"><span class="pre">assets</span></code> subfolder.</p></li>
+<li><p>Distribute package on PyPi via a trusted publisher channel.</p></li>
+</ul>
+</section>
+<section id="id14">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.1.0...v7.2.0">7.2.0 (2023-02-15)</a><a class="headerlink" href="#id14" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Build standalone executable for macOS, Linux and Windows.</p></li>
+<li><p>Generates dependency graph in Graphviz format.</p></li>
+<li><p>Run tests on Python <code class="docutils literal notranslate"><span class="pre">3.12-dev</span></code>.</p></li>
+<li><p>Code, comments and documentation style change to conform to new QA workflows based on <code class="docutils literal notranslate"><span class="pre">ruff</span></code>.</p></li>
+</ul>
+</section>
+<section id="id15">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v7.0.0...v7.1.0">7.1.0 (2022-12-02)</a><a class="headerlink" href="#id15" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Renumber and rename phases to steps.</p></li>
+<li><p>Group options per steps.</p></li>
+<li><p>Add minimal code typing and checking.</p></li>
+<li><p>Add logo.</p></li>
+<li><p>Execute all workflows with Python 3.11.</p></li>
+</ul>
+</section>
+<section id="id16">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v6.2.0...v7.0.0">7.0.0 (2022-11-26)</a><a class="headerlink" href="#id16" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Drop Python 3.6 support.</p></li>
+<li><p>Add support for Python 3.11.</p></li>
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">--time</span></code>/<code class="docutils literal notranslate"><span class="pre">--no-time</span></code> option to measure elapsed execution time.</p></li>
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">--color</span></code>/<code class="docutils literal notranslate"><span class="pre">--no-color</span></code> and <code class="docutils literal notranslate"><span class="pre">--ansi</span></code>/<code class="docutils literal notranslate"><span class="pre">--no-ansi</span></code> alias options to deactivate CLI color rendering.</p></li>
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">--color</span></code>/<code class="docutils literal notranslate"><span class="pre">--no-color</span></code> and <code class="docutils literal notranslate"><span class="pre">--ansi</span></code>/<code class="docutils literal notranslate"><span class="pre">--no-ansi</span></code> alias options to deactivate CLI color rendering.</p></li>
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">-C</span></code>/<code class="docutils literal notranslate"><span class="pre">--config</span></code> option which support local and remote configuration file in TOML, YAML, JSON, INI or XML formats.</p></li>
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">--show-params</span></code> option to debug default parameter value and provenance.</p></li>
+<li><p>Fix incconsistent printing of help screen. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/160">#160</a>.</p></li>
+<li><p>Force linear rendering of options in help screen to improve readability.</p></li>
+<li><p>Fix run on Python 3.10. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/361">#361</a>.</p></li>
+<li><p>Run unittests on Python 3.10 and Python 3.11.</p></li>
+<li><p>Add dependency on <code class="docutils literal notranslate"><span class="pre">click-extra</span></code> and <code class="docutils literal notranslate"><span class="pre">typing-extensions</span></code></p></li>
+<li><p>Remove direct dependency on <code class="docutils literal notranslate"><span class="pre">click-help-colors</span></code>, <code class="docutils literal notranslate"><span class="pre">click-log</span></code> and <code class="docutils literal notranslate"><span class="pre">tomlkit</span></code>.</p></li>
+<li><p>Fix broken selection logic in quantity-based strategies. Refs <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/146">#146</a>.</p></li>
+<li><p>Add unittests to cover time-based and size-based selection edge-cases.</p></li>
+<li><p>Drop unittests on deprecated <code class="docutils literal notranslate"><span class="pre">ubuntu-18.04</span></code> and <code class="docutils literal notranslate"><span class="pre">macos-10.15</span></code>.</p></li>
+<li><p>Add unittests on <code class="docutils literal notranslate"><span class="pre">ubuntu-22.04</span></code>, <code class="docutils literal notranslate"><span class="pre">macos-12</span></code> and <code class="docutils literal notranslate"><span class="pre">windows-2022</span></code>.</p></li>
+<li><p>Run tests on multiple cores.</p></li>
+<li><p>Simplify project management by abandoning the dual use of <code class="docutils literal notranslate"><span class="pre">main</span></code>/<code class="docutils literal notranslate"><span class="pre">develop</span></code> branches.</p></li>
+<li><p>Migrate to external workflows to automate builds, releases, autofixes, linting, documentation, changelog, mailmap maintenance and label management.</p></li>
+<li><p>Convert all documentation from RST to Markdown. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/368">#368</a>.</p></li>
+<li><p>Keep CLI output in sync in documentation. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/23">#23</a>.</p></li>
+<li><p>Move <code class="docutils literal notranslate"><span class="pre">sphinx</span></code> dependencies to dev requirements.</p></li>
+<li><p>Add citation file.</p></li>
+</ul>
+</section>
+<section id="id17">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.3...v6.2.0">6.2.0 (2021-09-12)</a><a class="headerlink" href="#id17" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Upgrade to Click 8.x.</p></li>
+<li><p>Implements all missing <code class="docutils literal notranslate"><span class="pre">copy-discarded</span></code>, <code class="docutils literal notranslate"><span class="pre">move-discarded</span></code> and
+<code class="docutils literal notranslate"><span class="pre">delete-discarded</span></code> actions. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/270">#270</a> and <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/146">#146</a>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">-b</span></code>/<code class="docutils literal notranslate"><span class="pre">--hash-body</span></code> option to set the way each email body is
+hashed.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">--export-append</span></code> option to allow for the resulting deduplicated
+email to be appended to an existing mail box.</p></li>
+<li><p>Skip duplicate sets without any matching duplicate candidates. Closes
+<a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/203">#203</a>.</p></li>
+</ul>
+</section>
+<section id="id18">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.2...v6.1.3">6.1.3 (2021-04-13)</a><a class="headerlink" href="#id18" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Fix dynamic <code class="docutils literal notranslate"><span class="pre">mailbox.Message</span></code> inheritance. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/191">#191</a>.</p></li>
+</ul>
+</section>
+<section id="id19">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.1...v6.1.2">6.1.2 (2021-01-26)</a><a class="headerlink" href="#id19" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Reconcile <code class="docutils literal notranslate"><span class="pre">v3</span></code> branch with <code class="docutils literal notranslate"><span class="pre">develop</span></code>.</p></li>
+</ul>
+</section>
+<section id="id20">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.0...v6.1.1">6.1.1 (2021-01-26)</a><a class="headerlink" href="#id20" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Simple re-release.</p></li>
+</ul>
+</section>
+<section id="id21">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.2...v6.1.0">6.1.0 (2021-01-26)</a><a class="headerlink" href="#id21" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Add retroactive support for Python 3.6. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/154">#154</a>.</p></li>
+<li><p>Fix documentation link and generation. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/66">#66</a>.</p></li>
+<li><p>Auto-generate API documentation via a GitHub action workflow.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">tomlkit</span></code> dependency.</p></li>
+<li><p>Add test runs against new OSes and distributions: <code class="docutils literal notranslate"><span class="pre">ubuntu-18.04</span></code> and
+<code class="docutils literal notranslate"><span class="pre">macos-11.0</span></code>.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">pycodestyle</span></code>, it brings nothing more now that we rely on
+<code class="docutils literal notranslate"><span class="pre">black</span></code>.</p></li>
+</ul>
+</section>
+<section id="id22">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.1...v6.0.2">6.0.2 (2020-11-05)</a><a class="headerlink" href="#id22" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Load up all subfolders from <code class="docutils literal notranslate"><span class="pre">Maildir</span></code> and <code class="docutils literal notranslate"><span class="pre">MH</span></code> boxes. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/123">#123</a>.</p></li>
+</ul>
+</section>
+<section id="id23">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.0...v6.0.1">6.0.1 (2020-10-22)</a><a class="headerlink" href="#id23" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Check early that <code class="docutils literal notranslate"><span class="pre">--export</span></code> file doesn’t exists. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/119">#119</a>.</p></li>
+<li><p>Add screenshots.</p></li>
+</ul>
+</section>
+<section id="id24">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v5.1.0...v6.0.0">6.0.0 (2020-10-17)</a><a class="headerlink" href="#id24" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">-a</span></code>/<code class="docutils literal notranslate"><span class="pre">--action</span></code> option to choose what to do on the final mail
+selection.</p></li>
+<li><p>Implements new <code class="docutils literal notranslate"><span class="pre">copy-discarded</span></code>, <code class="docutils literal notranslate"><span class="pre">copy-selected</span></code>, <code class="docutils literal notranslate"><span class="pre">delete-discarded</span></code>,
+<code class="docutils literal notranslate"><span class="pre">delete-selected</span></code>, <code class="docutils literal notranslate"><span class="pre">move-discarded</span></code> and <code class="docutils literal notranslate"><span class="pre">move-selected</span></code> actions.</p></li>
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">-E</span></code>/<code class="docutils literal notranslate"><span class="pre">--export</span></code> and <code class="docutils literal notranslate"><span class="pre">-e</span></code>/<code class="docutils literal notranslate"><span class="pre">--export-format</span></code> options to support
+the new <code class="docutils literal notranslate"><span class="pre">copy-*</span></code> and <code class="docutils literal notranslate"><span class="pre">moved-*</span></code> actions.</p></li>
+<li><p>Rename all <code class="docutils literal notranslate"><span class="pre">--delete-*</span></code> strategies to <code class="docutils literal notranslate"><span class="pre">--discard-*</span></code>.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">--select-*</span></code> aliases to all strategies.</p></li>
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">discard-all-but-one</span></code>, <code class="docutils literal notranslate"><span class="pre">discard-one</span></code>, <code class="docutils literal notranslate"><span class="pre">select-one</span></code> and
+<code class="docutils literal notranslate"><span class="pre">select-all-but-one</span></code> selection strategies.</p></li>
+<li><p>Rename <code class="docutils literal notranslate"><span class="pre">-f</span></code>/<code class="docutils literal notranslate"><span class="pre">--sources-format</span></code> option to <code class="docutils literal notranslate"><span class="pre">-i</span></code>/<code class="docutils literal notranslate"><span class="pre">--input-format</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--time-source</span></code> parameter is now optional and defaults to
+<code class="docutils literal notranslate"><span class="pre">date-header</span></code>.</p></li>
+<li><p>Add metric description in deduplication end report.</p></li>
+<li><p>Add detailed strategy description in help screen’s epilog.</p></li>
+<li><p>Colorize help screen.</p></li>
+<li><p>Colorize version screen and print environment data for bug reports.</p></li>
+<li><p>Run tests on Python 3.9.</p></li>
+</ul>
+</section>
+<section id="id25">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v5.0.0...v5.1.0">5.1.0 (2020-10-06)</a><a class="headerlink" href="#id25" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">-h</span></code>/<code class="docutils literal notranslate"><span class="pre">--hash-header</span></code> option to select which mail headers to
+use to compute hash.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">-i</span></code>/<code class="docutils literal notranslate"><span class="pre">--message-id</span></code> option. Can be emulated with
+<code class="docutils literal notranslate"><span class="pre">-h</span> <span class="pre">Message-ID</span></code> or <code class="docutils literal notranslate"><span class="pre">--hash-header</span> <span class="pre">Message-ID</span></code> option.</p></li>
+<li><p>Make all keyword-based choice parameters (<code class="docutils literal notranslate"><span class="pre">--sources-format</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--strategy</span></code> and <code class="docutils literal notranslate"><span class="pre">--time-source</span></code>) case-insensitive.</p></li>
+</ul>
+</section>
+<section id="id26">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v4.0.0...v5.0.0">5.0.0 (2020-10-05)</a><a class="headerlink" href="#id26" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Add supports for <code class="docutils literal notranslate"><span class="pre">Babyl</span></code>, <code class="docutils literal notranslate"><span class="pre">MH</span></code> and <code class="docutils literal notranslate"><span class="pre">MMDF</span></code> mailbox types.</p></li>
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">-f</span></code>/<code class="docutils literal notranslate"><span class="pre">--sources-format</span></code> option to force the type of mail
+sources on opening.</p></li>
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">-u</span></code>/<code class="docutils literal notranslate"><span class="pre">--force-unlock</span></code> option to force the removal of a lock on
+mailboxes on opening.</p></li>
+<li><p>Split-up the selection of mails candidate for removal and the deletion
+itself into two distinct batch operations.</p></li>
+<li><p>Add issue templates to guide users to report bugs and request
+features.</p></li>
+<li><p>Upgrade to <code class="docutils literal notranslate"><span class="pre">Poetry</span> <span class="pre">1.1.0</span></code>.</p></li>
+<li><p>Test publishing to PyPi in dry-run mode by the way of Poetry.</p></li>
+<li><p>Auto-optimize images.</p></li>
+<li><p>Auto-lock closed issues and PRs after a moment of inactivity.</p></li>
+</ul>
+</section>
+<section id="id27">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v4.0.0">4.0.0 (2020-10-02)</a><a class="headerlink" href="#id27" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Removes the <code class="docutils literal notranslate"><span class="pre">hash</span></code> subcommand. Replaced it with a <code class="docutils literal notranslate"><span class="pre">--hash-only</span></code>
+parameter to the main dedupe command.</p></li>
+<li><p>Removes <code class="docutils literal notranslate"><span class="pre">deduplicate</span></code> subcommand. <code class="docutils literal notranslate"><span class="pre">mdedup</span></code> is now a simple CLI.</p></li>
+<li><p>Fix calls to deduplication strategy. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/86">#86</a> and <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/88">#88</a>.</p></li>
+<li><p>Fix computation of stats. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/89">#89</a>.</p></li>
+<li><p>Drop support for Python 2. Refs <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/90">#90</a>.</p></li>
+<li><p>Bump minimal Python requirement to 3.7.</p></li>
+<li><p>Repackage project around Poetry and <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>. Get rid of
+<code class="docutils literal notranslate"><span class="pre">setup.py</span></code>.</p></li>
+<li><p>Replace unmaintained <code class="docutils literal notranslate"><span class="pre">bumpversion</span></code> by <code class="docutils literal notranslate"><span class="pre">bump2version</span></code>.</p></li>
+<li><p>Drop dependency on <code class="docutils literal notranslate"><span class="pre">progressbar2</span></code> and replace it with <code class="docutils literal notranslate"><span class="pre">click</span></code>’s.
+Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/37">#37</a>.</p></li>
+<li><p>Switch from Travis to GitHub Actions for all CI/CD jobs.</p></li>
+<li><p>Regularly run unittests against Windows, Linux and macOS.</p></li>
+<li><p>Removes all copyright dates.</p></li>
+<li><p>Auto-fix Python format, typos and JSON content.</p></li>
+<li><p>Let dependabot check for dependencies and update them.</p></li>
+<li><p>Keep <code class="docutils literal notranslate"><span class="pre">.gitignore</span></code> and <code class="docutils literal notranslate"><span class="pre">.mailmap</span></code> up to date and in sync.</p></li>
+<li><p>Auto-publish package on tagging events via <code class="docutils literal notranslate"><span class="pre">twine</span></code>.</p></li>
+<li><p>Always run test build and check resulting package on each commits.</p></li>
+<li><p>Use declarative JSON to maintain list of GitHub labels for issues and
+PRs.</p></li>
+<li><p>Lint both Python code and YAML content on each commit.</p></li>
+<li><p>Run unittests in random to order to detect coupling.</p></li>
+</ul>
+</section>
+<section id="id28">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v3.0.1">3.0.1 (2021-01-25)</a><a class="headerlink" href="#id28" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Add explicit warning in CLI output to warn about 3.x branch
+deprecation. Refs <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/180">#180</a>.</p></li>
+</ul>
+</section>
+<section id="id29">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v2.2.0...v3.0.0">3.0.0 (2020-09-03)</a><a class="headerlink" href="#id29" title="Link to this heading">¶</a></h2>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>As of <code class="docutils literal notranslate"><span class="pre">v3.0.0</span></code>, the project has been renamed to <em>Mail Deduplicate</em> and is
+now available on:</p>
+<ul class="simple">
+<li><p>Github at https://github.com/kdeldycke/mail-deduplicate</p></li>
+<li><p>PyPi at https://pypi.org/project/mail-deduplicate</p></li>
+</ul>
+</div>
+<ul class="simple">
+<li><p>Rename project from <code class="docutils literal notranslate"><span class="pre">maildir-deduplicate</span></code> to <code class="docutils literal notranslate"><span class="pre">mail-deduplicate</span></code>.</p></li>
+<li><p>Rename <code class="docutils literal notranslate"><span class="pre">master</span></code> branch to <code class="docutils literal notranslate"><span class="pre">main</span></code>.</p></li>
+<li><p>Add support for mboxes. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/48">#48</a>.</p></li>
+<li><p>Remove requirement on <code class="docutils literal notranslate"><span class="pre">-s</span></code>/<code class="docutils literal notranslate"><span class="pre">--strategy</span></code> parameter, to let mails being
+grouped into duplicate sets without any removal action, effectively
+acting as a second-level dry-run.</p></li>
+</ul>
+</section>
+<section id="id30">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v2.1.0...v2.2.0">2.2.0 (2020-09-03)</a><a class="headerlink" href="#id30" title="Link to this heading">¶</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This is the last version of the project known under the name <em>Maildir Deduplicate</em>
+(a.k.a. <code class="docutils literal notranslate"><span class="pre">maildir-deduplicate</span></code>).</p>
+</div>
+<ul class="simple">
+<li><p>Add disclaimer to prepare project name change.</p></li>
+<li><p>Fix Header being object instead of string (#61).</p></li>
+<li><p>Make body_lines conversion more reliable.</p></li>
+<li><p>Fix bugs in counter statistics (<a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/45">#45</a>, <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/57">#57</a>).</p></li>
+<li><p>Add Message-ID as a header to check.</p></li>
+<li><p>Fix <code class="docutils literal notranslate"><span class="pre">UnicodeDecodeError</span></code>. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/53">#53</a> and <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/55">#55</a>.</p></li>
+<li><p>Bump requirement to <code class="docutils literal notranslate"><span class="pre">click_log</span> <span class="pre">&gt;=</span> <span class="pre">0.2.0</span></code>. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/58">#58</a>, <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/59">#59</a> and <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/60">#60</a>.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">nose</span></code> by <code class="docutils literal notranslate"><span class="pre">pytest</span></code>.</p></li>
+<li><p>Only notify by mail of test failures.</p></li>
+<li><p>Drop support of Python 3.3.</p></li>
+</ul>
+</section>
+<section id="id31">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v2.0.1...v2.1.0">2.1.0 (2017-01-13)</a><a class="headerlink" href="#id31" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Fix rendering of changelog link in RST.</p></li>
+<li><p>Show selected log level in debug mode.</p></li>
+<li><p>Test builds against Python 3.6 and 3.7-dev, and most recent PyPy
+targeting Python 2.7 and 3.3.</p></li>
+<li><p>Bump requirement to <code class="docutils literal notranslate"><span class="pre">readme_renderer</span> <span class="pre">&gt;=</span> <span class="pre">16.0</span></code>.</p></li>
+<li><p>Skip sets with unparsable mails because of incorrect encoding. Closes
+<a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/47">#47</a>, <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/41">#41</a> and <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/39">#39</a>.</p></li>
+<li><p>Require the <code class="docutils literal notranslate"><span class="pre">-s</span></code>/<code class="docutils literal notranslate"><span class="pre">--strategy</span></code> CLI parameter to be set. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/44">#44</a>.</p></li>
+</ul>
+</section>
+<section id="id32">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v2.0.0...v2.0.1">2.0.1 (2016-11-28)</a><a class="headerlink" href="#id32" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Reject mails without <code class="docutils literal notranslate"><span class="pre">Message-ID</span></code> headers if <code class="docutils literal notranslate"><span class="pre">--message-id</span></code> option is
+active.</p></li>
+<li><p>Add a class to holds global config.</p></li>
+<li><p>Print more debug info in unittests when CLI produce tracebacks.</p></li>
+<li><p>Always check for package metadata in Travis CI jobs.</p></li>
+<li><p>Fix package’s long description against PyPi rendering constraints.</p></li>
+<li><p>Add link to full changelog in package’s long description.</p></li>
+</ul>
+</section>
+<section id="id33">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v1.3.0...v2.0.0">2.0.0 (2016-11-13)</a><a class="headerlink" href="#id33" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Refactor and redefine all removal strategies. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/40">#40</a>.</p></li>
+<li><p>Add a new <code class="docutils literal notranslate"><span class="pre">-t</span></code>/<code class="docutils literal notranslate"><span class="pre">--time-source</span></code> CLI parameter to point to the canonical
+source of a mail’s timestamp.</p></li>
+<li><p>Rename <code class="docutils literal notranslate"><span class="pre">-s</span></code>/<code class="docutils literal notranslate"><span class="pre">--show-diffs</span></code> parameter to <code class="docutils literal notranslate"><span class="pre">-d</span></code>/<code class="docutils literal notranslate"><span class="pre">--show-diff</span></code>.</p></li>
+<li><p>Rename <code class="docutils literal notranslate"><span class="pre">-D</span></code>/<code class="docutils literal notranslate"><span class="pre">--diff-threshold</span></code> parameter to
+<code class="docutils literal notranslate"><span class="pre">-C</span></code>/<code class="docutils literal notranslate"><span class="pre">--content-threshold</span></code>.</p></li>
+<li><p>Add new <code class="docutils literal notranslate"><span class="pre">-s</span></code> shorthand to <code class="docutils literal notranslate"><span class="pre">--strategy</span></code> parameter.</p></li>
+<li><p>Re-implement diff threshold options. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/43">#43</a>.</p></li>
+<li><p>Re-implement statistics. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/42">#42</a>.</p></li>
+<li><p>Normalize and canonicalize all paths to deduplicate on the fly mails
+pointing to the same file.</p></li>
+<li><p>Build documentation via Sphinx.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">develop</span></code> dependencies.</p></li>
+<li><p>Move coverage config to <code class="docutils literal notranslate"><span class="pre">setup.cfg</span></code>.</p></li>
+<li><p>Replace <code class="docutils literal notranslate"><span class="pre">pep8</span></code> package by <code class="docutils literal notranslate"><span class="pre">pycodestyle</span></code>.</p></li>
+<li><p>Enforce <code class="docutils literal notranslate"><span class="pre">pycodestyle</span></code> checks in Travis CI jobs.</p></li>
+<li><p>Remove popularity badge: PyPI download counters are broken and no
+longer displayed.</p></li>
+<li><p>Test production of packages in Travis CI jobs.</p></li>
+<li><p>Move development and packaging documentation to Sphinx. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/22">#22</a>.</p></li>
+<li><p>Make wheels generated under Python 2 environnment available for Python
+3 too.</p></li>
+<li><p>Let unittests generates their own fake and temporary maildirs.</p></li>
+<li><p>Print CLI output in unittests.</p></li>
+<li><p>Use generic factory to produce mail fixtures in unittests.</p></li>
+<li><p>Only show latest changes in the long description of the package
+instead of the full changelog.</p></li>
+</ul>
+</section>
+<section id="id34">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v1.2.0...v1.3.0">1.3.0 (2016-08-11)</a><a class="headerlink" href="#id34" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>User-friendly progress bar.</p></li>
+<li><p>Decrease memory usage on large datasets. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/19">#19</a>, <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/8">#8</a> and <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/3">#3</a>.</p></li>
+<li><p>Attempt several encodings when parsing message body. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/32">#32</a>.</p></li>
+<li><p>Fixed comparison issue in Python 3. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/34">#34</a>.</p></li>
+<li><p>Add a set of basic deduplication unittests.</p></li>
+</ul>
+</section>
+<section id="id35">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v1.1.0...v1.2.0">1.2.0 (2016-03-29)</a><a class="headerlink" href="#id35" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Use logger to output messages to the user.</p></li>
+<li><p>Activate tests on Python 3.3, PyPy and PyPy3.</p></li>
+<li><p>Fix date parsing. See <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/33">#33</a>.</p></li>
+<li><p>Fix decoding of unicode header value. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/24">#24</a> and <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/32">#32</a>.</p></li>
+</ul>
+</section>
+<section id="id36">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.2...v1.1.0">1.1.0 (2016-01-10)</a><a class="headerlink" href="#id36" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Add Python 3.4 and 3.5 support. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/30">#30</a>.</p></li>
+<li><p>Add default <code class="docutils literal notranslate"><span class="pre">isort</span></code> configuration.</p></li>
+<li><p>Remove hackish default encoding forcing in main code.</p></li>
+</ul>
+</section>
+<section id="id37">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.1...v1.0.2">1.0.2 (2015-12-22)</a><a class="headerlink" href="#id37" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Fix <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> on message instance. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/28">#28</a>.</p></li>
+<li><p>Various fixes of references to internal variables introduced by a
+switch to more Pythonic classes in 1.0.0.</p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">Message-ID</span></code> from the list of default canonical headers.</p></li>
+</ul>
+</section>
+<section id="id38">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.0...v1.0.1">1.0.1 (2015-11-23)</a><a class="headerlink" href="#id38" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Switch from coveralls to codecov.</p></li>
+</ul>
+</section>
+<section id="id39">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v0.1.0...v1.0.0">1.0.0 (2015-10-03)</a><a class="headerlink" href="#id39" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Fix package version parsing.</p></li>
+<li><p>Add installation instructions. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/21">#21</a>.</p></li>
+<li><p>Add PEP8 and PyLint configuration.</p></li>
+<li><p>Add bumpversion configuration.</p></li>
+<li><p>Rework CLI around click framework. Closes <a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/issues/26">#26</a>.</p></li>
+</ul>
+</section>
+<section id="id40">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v0.0.1...v0.1.0">0.1.0 (2014-12-15)</a><a class="headerlink" href="#id40" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Package the script for proper distribution.</p></li>
+</ul>
+</section>
+<section id="id41">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/v0.0.0...v0.0.1">0.0.1 (2011-04-27)</a><a class="headerlink" href="#id41" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>First external contribution.</p></li>
+</ul>
+</section>
+<section id="id42">
+<h2><a class="reference external" href="https://github.com/kdeldycke/mail-deduplicate/compare/init...v0.0.0">0.0.0 (2010-06-08)</a><a class="headerlink" href="#id42" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>First commit.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="history.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-log" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 8.25a.75.75 0 0 1 .75-.75h4a.75.75 0 0 1 0 1.5h-4A.75.75 0 0 1 5 8.25ZM4 10.5A.75.75 0 0 0 4 12h4a.75.75 0 0 0 0-1.5H4Z"></path><path d="M13-.005c1.654 0 3 1.328 3 3 0 .982-.338 1.933-.783 2.818-.443.879-1.028 1.758-1.582 2.588l-.011.017c-.568.853-1.104 1.659-1.501 2.446-.398.789-.623 1.494-.623 2.136a1.5 1.5 0 1 0 2.333-1.248.75.75 0 0 1 .834-1.246A3 3 0 0 1 13 16H3a3 3 0 0 1-3-3c0-1.582.891-3.135 1.777-4.506.209-.322.418-.637.623-.946.473-.709.923-1.386 1.287-2.048H2.51c-.576 0-1.381-.133-1.907-.783A2.68 2.68 0 0 1 0 2.995a3 3 0 0 1 3-3Zm0 1.5a1.5 1.5 0 0 0-1.5 1.5c0 .476.223.834.667 1.132A.75.75 0 0 1 11.75 5.5H5.368c-.467 1.003-1.141 2.015-1.773 2.963-.192.289-.381.571-.558.845C2.13 10.711 1.5 11.916 1.5 13A1.5 1.5 0 0 0 3 14.5h7.401A2.989 2.989 0 0 1 10 13c0-.979.338-1.928.784-2.812.441-.874 1.023-1.748 1.575-2.576l.017-.026c.568-.853 1.103-1.658 1.501-2.448.398-.79.623-1.497.623-2.143 0-.838-.669-1.5-1.5-1.5Zm-10 0a1.5 1.5 0 0 0-1.5 1.5c0 .321.1.569.27.778.097.12.325.227.74.227h7.674A2.737 2.737 0 0 1 10 2.995c0-.546.146-1.059.401-1.5Z"></path></svg> History</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="todolist.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-checklist" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 1.75v11.5c0 .138.112.25.25.25h3.17a.75.75 0 0 1 0 1.5H2.75A1.75 1.75 0 0 1 1 13.25V1.75C1 .784 1.784 0 2.75 0h8.5C12.216 0 13 .784 13 1.75v7.736a.75.75 0 0 1-1.5 0V1.75a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25Zm13.274 9.537v-.001l-4.557 4.45a.75.75 0 0 1-1.055-.008l-1.943-1.95a.75.75 0 0 1 1.062-1.058l1.419 1.425 4.026-3.932a.75.75 0 1 1 1.048 1.074ZM4.75 4h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM4 7.75A.75.75 0 0 1 4.75 7h2a.75.75 0 0 1 0 1.5h-2A.75.75 0 0 1 4 7.75Z"></path></svg> Todo-list</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; Kevin Deldycke and contributors
+            </div>
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2025-12-09</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#"><svg version="1.1" width="1.0em" height="1.0em" class="sd-octicon sd-octicon-diff" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.75 1.75V5H12a.75.75 0 0 1 0 1.5H8.75v3.25a.75.75 0 0 1-1.5 0V6.5H4A.75.75 0 0 1 4 5h3.25V1.75a.75.75 0 0 1 1.5 0ZM4 13h8a.75.75 0 0 1 0 1.5H4A.75.75 0 0 1 4 13Z"></path></svg> Changelog</a><ul>
+<li><a class="reference internal" href="#unreleased">8.1.3 (unreleased)</a></li>
+<li><a class="reference internal" href="#id1">8.1.2 (2025-12-02)</a></li>
+<li><a class="reference internal" href="#id2">8.1.1 (2025-12-01)</a></li>
+<li><a class="reference internal" href="#id3">8.1.0 (2025-11-27)</a></li>
+<li><a class="reference internal" href="#id4">8.0.0 (2025-11-21)</a></li>
+<li><a class="reference internal" href="#id5">7.6.2 (2025-04-20)</a></li>
+<li><a class="reference internal" href="#id6">7.6.1 (2024-11-29)</a></li>
+<li><a class="reference internal" href="#id7">7.6.0 (2024-11-24)</a></li>
+<li><a class="reference internal" href="#id8">7.5.0 (2024-07-03)</a></li>
+<li><a class="reference internal" href="#id9">7.4.0 (2024-06-20)</a></li>
+<li><a class="reference internal" href="#id10">7.3.0 (2023-11-14)</a></li>
+<li><a class="reference internal" href="#id11">7.2.3 (2023-05-04)</a></li>
+<li><a class="reference internal" href="#id12">7.2.2 (2023-05-04)</a></li>
+<li><a class="reference internal" href="#id13">7.2.1 (2023-05-04)</a></li>
+<li><a class="reference internal" href="#id14">7.2.0 (2023-02-15)</a></li>
+<li><a class="reference internal" href="#id15">7.1.0 (2022-12-02)</a></li>
+<li><a class="reference internal" href="#id16">7.0.0 (2022-11-26)</a></li>
+<li><a class="reference internal" href="#id17">6.2.0 (2021-09-12)</a></li>
+<li><a class="reference internal" href="#id18">6.1.3 (2021-04-13)</a></li>
+<li><a class="reference internal" href="#id19">6.1.2 (2021-01-26)</a></li>
+<li><a class="reference internal" href="#id20">6.1.1 (2021-01-26)</a></li>
+<li><a class="reference internal" href="#id21">6.1.0 (2021-01-26)</a></li>
+<li><a class="reference internal" href="#id22">6.0.2 (2020-11-05)</a></li>
+<li><a class="reference internal" href="#id23">6.0.1 (2020-10-22)</a></li>
+<li><a class="reference internal" href="#id24">6.0.0 (2020-10-17)</a></li>
+<li><a class="reference internal" href="#id25">5.1.0 (2020-10-06)</a></li>
+<li><a class="reference internal" href="#id26">5.0.0 (2020-10-05)</a></li>
+<li><a class="reference internal" href="#id27">4.0.0 (2020-10-02)</a></li>
+<li><a class="reference internal" href="#id28">3.0.1 (2021-01-25)</a></li>
+<li><a class="reference internal" href="#id29">3.0.0 (2020-09-03)</a></li>
+<li><a class="reference internal" href="#id30">2.2.0 (2020-09-03)</a></li>
+<li><a class="reference internal" href="#id31">2.1.0 (2017-01-13)</a></li>
+<li><a class="reference internal" href="#id32">2.0.1 (2016-11-28)</a></li>
+<li><a class="reference internal" href="#id33">2.0.0 (2016-11-13)</a></li>
+<li><a class="reference internal" href="#id34">1.3.0 (2016-08-11)</a></li>
+<li><a class="reference internal" href="#id35">1.2.0 (2016-03-29)</a></li>
+<li><a class="reference internal" href="#id36">1.1.0 (2016-01-10)</a></li>
+<li><a class="reference internal" href="#id37">1.0.2 (2015-12-22)</a></li>
+<li><a class="reference internal" href="#id38">1.0.1 (2015-11-23)</a></li>
+<li><a class="reference internal" href="#id39">1.0.0 (2015-10-03)</a></li>
+<li><a class="reference internal" href="#id40">0.1.0 (2014-12-15)</a></li>
+<li><a class="reference internal" href="#id41">0.0.1 (2011-04-27)</a></li>
+<li><a class="reference internal" href="#id42">0.0.0 (2010-06-08)</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=b04e2b79"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    </body>
+</html>
