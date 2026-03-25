@@ -75,12 +75,16 @@ jobs:
           uv run python -m mail_deduplicate --version
       - name: Run stable CLI
         run: |
-          uvx    --from mail-deduplicate -- mdedup --version
-          uv run --with mail-deduplicate -- mdedup --version
+          uvx    --from mail-deduplicate                                              -- mdedup --version
+          uv run --with mail-deduplicate                                              -- mdedup --version
+          uv run --with mail-deduplicate                                              -m mail_deduplicate --version
+          uv run --with mail-deduplicate                                        python -m mail_deduplicate --version
       - name: Run dev CLI
         run: |
           uvx    --from git+https://github.com/kdeldycke/mail-deduplicate -- mdedup --version
           uv run --with git+https://github.com/kdeldycke/mail-deduplicate -- mdedup --version
+          uv run --with git+https://github.com/kdeldycke/mail-deduplicate -m mail_deduplicate --version
+          uv run --with git+https://github.com/kdeldycke/mail-deduplicate python -m mail_deduplicate --version
 
       - name: Unittests
         run: |
