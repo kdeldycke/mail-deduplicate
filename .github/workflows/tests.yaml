@@ -98,14 +98,15 @@ jobs:
         # mail-deduplicate 8.1.2 (the current stable release on PyPI) requires
         # click-extra>=7.3.0 with no upper bound. In practice the 8.1.2 code only
         # works with click-extra<7.15 (7.15+ renamed default_theme, 8.0+ removed
-        # ExtraCommand). Constrain to click-extra<7.15 here so the test exercises
-        # the stable release against its known-working dependency range, until
-        # 9.0.0 is published to PyPI and supersedes 8.1.2.
+        # ExtraCommand). Pin click-extra<7.15 for the uvx and script-entrypoint
+        # variants that exercise the PyPI package's own code. The -m module
+        # variants run the local project's code (editable-installed, higher
+        # priority in sys.path), so they use the project's own click-extra range.
         run: |
           uvx    --from mail-deduplicate --with 'click-extra<7.15'                   -- mdedup --version
           uv run --with mail-deduplicate --with 'click-extra<7.15'                   -- mdedup --version
-          uv run --with mail-deduplicate --with 'click-extra<7.15'                   -m mail_deduplicate --version
-          uv run --with mail-deduplicate --with 'click-extra<7.15'             python -m mail_deduplicate --version
+          uv run --with mail-deduplicate                                              -m mail_deduplicate --version
+          uv run --with mail-deduplicate                                        python -m mail_deduplicate --version
       - name: Run dev CLI
         run: |
           uvx    --from git+https://github.com/kdeldycke/mail-deduplicate -- mdedup --version
