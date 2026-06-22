@@ -41,21 +41,21 @@ $ uv run -- mdedup --help
 
 ## Architecture
 
-`mdedup` runs a four-step pipeline, orchestrated by the `Deduplicate` class in `deduplicate.py`. Each step is documented in depth in [`docs/design.md`](docs/design.md):
+`mdedup` runs a four-step pipeline, orchestrated by the `Deduplicate` class in `deduplicate.py`. Each step is documented in depth in `docs/design.md`:
 
 1. **Load** the source boxes and read their mails (`mail_box.py`, `mail.py`).
 2. **Hash** mails into `DuplicateSet`s keyed by a hash of selected headers (`deduplicate.py`).
 3. **Select** which mails to keep within each set, via a selection strategy (`strategy.py`).
 4. **Act** on the selected or discarded mails: copy, move or delete (`action.py`).
 
-| Module | Responsibility |
-| --- | --- |
-| `cli.py` | The `mdedup` Click command, its `Config`, and option groups. |
-| `deduplicate.py` | `Deduplicate` orchestrator, `DuplicateSet`, hashing, statistics (`Stats`). |
-| `mail.py` | `DedupMailMixin`: a mail wrapped with dedup-relevant properties (hash, date, size). |
-| `mail_box.py` | Box formats (`BoxFormat`), autodetection, opening, locking, subfolders. |
-| `strategy.py` | Selection strategies (oldest/newest, size, content, matching-path, ...). |
-| `action.py` | Actions applied to the selected or discarded mails. |
+| Module           | Responsibility                                                                      |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| `cli.py`         | The `mdedup` Click command, its `Config`, and option groups.                        |
+| `deduplicate.py` | `Deduplicate` orchestrator, `DuplicateSet`, hashing, statistics (`Stats`).          |
+| `mail.py`        | `DedupMailMixin`: a mail wrapped with dedup-relevant properties (hash, date, size). |
+| `mail_box.py`    | Box formats (`BoxFormat`), autodetection, opening, locking, subfolders.             |
+| `strategy.py`    | Selection strategies (oldest/newest, size, content, matching-path, ...).            |
+| `action.py`      | Actions applied to the selected or discarded mails.                                 |
 
 ### Non-obvious rules
 

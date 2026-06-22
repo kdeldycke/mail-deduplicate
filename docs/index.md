@@ -22,7 +22,7 @@ caption: Development
 maxdepth: 2
 hidden:
 ---
-development
+contributing
 API <mail_deduplicate>
 tests
 genindex
