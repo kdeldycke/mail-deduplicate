@@ -5,7 +5,7 @@ build-backend = "uv_build"
 [project]
 # Docs: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 name = "mail-deduplicate"
-version = "8.1.3"
+version = "8.1.3.dev0"
 # Python versions and their status: https://devguide.python.org/versions/
 requires-python = ">= 3.10"
 description = "📧 CLI to deduplicate mails from mail boxes"
@@ -102,6 +102,7 @@ docs = [
 [project.urls]
 "Homepage" = 'https://github.com/kdeldycke/mail-deduplicate'
 "Documentation" = 'https://kdeldycke.github.io/mail-deduplicate'
+"Download" = "https://github.com/kdeldycke/mail-deduplicate/releases/tag/v8.1.3.dev0"
 "Repository" = 'https://github.com/kdeldycke/mail-deduplicate'
 "Funding" = "https://github.com/sponsors/kdeldycke"
 "Issues" = "https://github.com/kdeldycke/mail-deduplicate/issues"
@@ -146,8 +147,20 @@ addopts = [
 xfail_strict = true
 
 [tool.bumpversion]
-current_version = "8.1.3"
+current_version = "8.1.3.dev0"
+# Parse versions with an optional .devN suffix (PEP 440).
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(\\.dev(?P<dev>\\d+))?"
+serialize = [
+  "{major}.{minor}.{patch}.dev{dev}",
+  "{major}.{minor}.{patch}",
+]
+ignore_missing_files = true
 allow_dirty = true
+parts.dev.optional_value = "release"
+# When dev is "release" (its optional value), the .devN suffix is omitted.
+# Bumping patch/minor/major resets dev to "0", producing X.Y.Z.dev0.
+# Bumping dev goes from "0" to "release", stripping the suffix for release.
+parts.dev.values = [ "0", "release" ]
 
 [[tool.bumpversion.files]]
 # Update Python package version in any __init__.py file.
@@ -155,16 +168,38 @@ glob = "./**/__init__.py"
 ignore_missing_version = true
 
 [[tool.bumpversion.files]]
-# Update version in project section.
+# Update version in [project] section. Anchored to a line start (regex) so it
+# does not also match version-suffixed keys like file-version/product-version
+# under [tool.nuitka], which contain `version = "X"` as a substring (their
+# values collide with the package version on release commits, where the .devN
+# suffix is absent).
 filename = "./pyproject.toml"
-search = 'version = "{current_version}"'
+regex = true
+search = '(?m)^version = "{current_version}"'
 replace = 'version = "{new_version}"'
 
 [[tool.bumpversion.files]]
-# Update the version in standard Markdown changelog.
+# Update version in download URL.
+filename = "./pyproject.toml"
+search = "releases/tag/v{current_version}"
+replace = "releases/tag/v{new_version}"
+
+[[tool.bumpversion.files]]
+# Keep the numeric file-version/product-version under [tool.nuitka] in sync,
+# when present. Nuitka rejects PEP 440 .devN suffixes, so the file-specific
+# serialize strips them; the `-version = "` prefix matches both keys at once.
+# ignore_missing_version makes this a no-op in projects without [tool.nuitka].
+filename = "./pyproject.toml"
+ignore_missing_version = true
+serialize = [ "{major}.{minor}.{patch}" ]
+search = '-version = "{current_version}"'
+replace = '-version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+# Update the version in Markdown changelog.
 filename = "./changelog.md"
-search = "## [{current_version} (unreleased)]("
-replace = "## [{new_version} (unreleased)]("
+search = "## [`{current_version}` (unreleased)]("
+replace = "## [`{new_version}` (unreleased)]("
 
 [[tool.bumpversion.files]]
 # Update the version in the citation file.
