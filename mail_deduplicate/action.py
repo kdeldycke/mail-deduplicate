@@ -21,7 +21,7 @@ from contextlib import contextmanager
 from enum import Enum
 
 from boltons.iterutils import unique
-from click_extra.colorize import default_theme as theme
+from click_extra import get_default_theme
 
 from .deduplicate import Stat
 from .mail_box import create_box
@@ -31,6 +31,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
     from .deduplicate import Deduplicate
+
+
+theme = get_default_theme()
 
 
 @contextmanager

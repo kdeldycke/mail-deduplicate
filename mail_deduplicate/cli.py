@@ -23,20 +23,20 @@ from typing import TypedDict
 from boltons.iterutils import unique
 from click_extra import (
     BadParameter,
+    Command,
     EnumChoice,
-    ExtraCommand,
     IntRange,
     ParameterSource,
     argument,
     command,
     echo,
+    get_default_theme,
     option,
     option_group,
     pass_context,
     path,
     progressbar,
 )
-from click_extra.colorize import default_theme as theme
 
 from .action import Action
 from .deduplicate import BodyHasher, Deduplicate
@@ -49,7 +49,10 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
-    from click_extra import Context, HelpExtraFormatter, Parameter
+    from click_extra import Context, HelpFormatter, Parameter
+
+
+theme = get_default_theme()
 
 
 DEFAULT_HASH_HEADERS: tuple[str, ...] = (
@@ -145,11 +148,11 @@ def compile_regexp(
     return None
 
 
-class MdedupCommand(ExtraCommand):
+class MdedupCommand(Command):
     def format_help(
         self,
-        ctx: Context,
-        formatter: HelpExtraFormatter,  # type: ignore[override]
+        ctx: Context,  # type: ignore[override]
+        formatter: HelpFormatter,  # type: ignore[override]
     ) -> None:
         """Extend the help screen with the description of all available strategies."""
         # Populate the formatter with the default help screen content.
@@ -415,7 +418,7 @@ def mdedup(
     """
     # Print help screen and exit if no mail source provided.
     if not mail_sources:
-        # Same as click_extra.colorize.HelpOption.print_help.
+        # Same as Click Extra's HelpOption.print_help.
         echo(ctx.get_help(), color=ctx.color)
         ctx.exit()
 

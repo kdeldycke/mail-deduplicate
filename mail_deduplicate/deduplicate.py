@@ -28,9 +28,7 @@ from operator import attrgetter
 from pathlib import Path
 from typing import NamedTuple
 
-from click_extra import get_current_context, progressbar
-from click_extra.colorize import default_theme as theme
-from typing_extensions import Self
+from click_extra import get_current_context, get_default_theme, progressbar
 
 from .mail import TooFewHeaders
 from .mail_box import open_box
@@ -44,8 +42,13 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from mailbox import Mailbox, Message
 
+    from typing_extensions import Self
+
     from .cli import Config
     from .mail import DedupMailMixin
+
+
+theme = get_default_theme()
 
 
 class StatDef(NamedTuple):
@@ -164,13 +167,13 @@ class Stats:
 
 class SizeDiffAboveThreshold(Exception):
     """Difference in mail size is greater than `threshold
-    <https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-S>`_.
+    <https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-S>`__.
     """
 
 
 class ContentDiffAboveThreshold(Exception):
     """Difference in mail content is greater than `threshold
-    <https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-C>`_.
+    <https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-C>`__.
     """
 
 

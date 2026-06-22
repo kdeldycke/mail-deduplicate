@@ -22,7 +22,7 @@ from mailbox import Maildir
 from typing import Any, cast
 
 import pytest
-from extra_platforms.pytest import skip_windows  # type: ignore[attr-defined]
+from extra_platforms.pytest import skip_windows
 
 from mail_deduplicate.mail import DedupMailMixin
 

@@ -27,9 +27,11 @@ from enum import Enum, auto
 from functools import partial
 from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
 
-from click_extra.colorize import default_theme as theme
+from click_extra import get_default_theme
 
 from .mail import DedupMailMixin
+
+theme = get_default_theme()
 
 
 def make_dedup_mail(name: str, base: type) -> type:

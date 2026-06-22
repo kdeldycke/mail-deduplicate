@@ -64,15 +64,15 @@ dependencies = [
     "backports.strenum >= 1.3.0 ; python_version < '3.11'",
     # boltons 25.0.0 is the first version to support Python 3.13.
     "boltons >= 25.0.0",
-    # click-extra 7.3.0 fix version fetching.
-    "click-extra >= 7.3.0",
+    # click-extra 8.0.0 renamed ExtraCommand to Command and restructured the theme API.
+    "click-extra >= 8.0.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 ## Non-runtime dependencies, for development and CI, are using the ~= specifier to reduce randomness.
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
 test = [
-    "click-extra [pytest] >= 7.2.0",
+    "click-extra [pytest] >= 8.0.0",
     "coverage [toml] ~= 7.12.0",
     "extra-platforms [pytest] >= 5.0.0",
     "pytest ~= 9.0.1",
@@ -82,8 +82,7 @@ test = [
 ]
 typing = ["types-boltons ~= 25.0.0.20250822"]
 docs = [
-    # click-extra 7.2.0 support transformation of GitHub alerts to MyST admonitions.
-    "click-extra [sphinx] >= 7.2.0",
+    "click-extra [sphinx] >= 8.0.0",
     "furo ~= 2025.9.25",
     "myst-parser ~= 4.0.0",
     # Sphinx  8.0.0 is the first version to drop Python 3.9, like us.

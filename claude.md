@@ -23,17 +23,17 @@ Record only conventions, rationale and non-obvious rules that cannot be discover
 ## Commands
 
 ```shell-session
-# Run the test suite (test dependencies live in the `test` extra).
-$ uv run --extra test -- pytest
+# Run the test suite (test dependencies live in the `test` group).
+$ uv run --group test -- pytest
 
 # Run a single test.
-$ uv run --extra test -- pytest tests/test_strategy.py::test_name
+$ uv run --group test -- pytest tests/test_strategy.py::test_name
 
 # Type-check with the CI-pinned mypy and minimum Python version.
 $ uvx repomatic run mypy -- mail_deduplicate tests
 
 # Build the documentation into the gitignored output directory.
-$ uv run --extra docs -- sphinx-build -b html ./docs ./docs/_build/html
+$ uv run --group docs -- sphinx-build -b html ./docs ./docs/_build/html
 
 # Run the CLI from the working tree.
 $ uv run -- mdedup --help

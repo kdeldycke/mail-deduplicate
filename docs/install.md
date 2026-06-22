@@ -25,7 +25,7 @@ $ uvx --from mail-deduplicate -- mdedup
 
 ````{tab-item} Specific version
 ```shell-session
-$ uvx --from mail-deduplicate@8.0.0 -- mdedup
+$ uvx --from mail-deduplicate@8.1.2 -- mdedup
 ```
 ````
 
@@ -162,7 +162,7 @@ Mail Deduplicate should now be available system-wide:
 
 ```shell-session
 $ mdedup --version
-mdedup, version 7.0.0
+mdedup, version 8.1.2
 (...)
 ```
 
@@ -170,7 +170,7 @@ If not, you can directly execute the module from Python:
 
 ```shell-session
 $ python -m mail_deduplicate --version
-mdedup, version 7.0.0
+mdedup, version 8.1.2
 (...)
 ```
 
