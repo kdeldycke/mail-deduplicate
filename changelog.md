@@ -96,13 +96,13 @@
 
 ## [7.2.2 (2023-05-04)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.1...v7.2.2)
 
-- Redo release to fix trusted publisher on PyPi.
+- Redo release to fix trusted publisher on PyPI.
 
 ## [7.2.1 (2023-05-04)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.0...v7.2.1)
 
 - Produce dependency graph in Mermaid instead of Graphviz. Add new dev dependency on `sphinxcontrib-mermaid`.
 - Move all documentation assets to `assets` subfolder.
-- Distribute package on PyPi via a trusted publisher channel.
+- Distribute package on PyPI via a trusted publisher channel.
 
 ## [7.2.0 (2023-02-15)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.1.0...v7.2.0)
 
@@ -232,7 +232,7 @@
 - Add issue templates to guide users to report bugs and request
   features.
 - Upgrade to `Poetry 1.1.0`.
-- Test publishing to PyPi in dry-run mode by the way of Poetry.
+- Test publishing to PyPI in dry-run mode by the way of Poetry.
 - Auto-optimize images.
 - Auto-lock closed issues and PRs after a moment of inactivity.
 
@@ -274,8 +274,8 @@
 > As of `v3.0.0`, the project has been renamed to *Mail Deduplicate* and is
 > now available on:
 >
-> - Github at https://github.com/kdeldycke/mail-deduplicate
-> - PyPi at https://pypi.org/project/mail-deduplicate
+> - GitHub at https://github.com/kdeldycke/mail-deduplicate
+> - PyPI at https://pypi.org/project/mail-deduplicate
 
 - Rename project from `maildir-deduplicate` to `mail-deduplicate`.
 - Rename `master` branch to `main`.
@@ -319,7 +319,7 @@
 - Add a class to holds global config.
 - Print more debug info in unittests when CLI produce tracebacks.
 - Always check for package metadata in Travis CI jobs.
-- Fix package's long description against PyPi rendering constraints.
+- Fix package's long description against PyPI rendering constraints.
 - Add link to full changelog in package's long description.
 
 ## [2.0.0 (2016-11-13)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.3.0...v2.0.0)

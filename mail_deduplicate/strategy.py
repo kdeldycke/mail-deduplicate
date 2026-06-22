@@ -27,7 +27,8 @@ from click_extra.colorize import default_theme as theme
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from typing import Callable, TypeAlias
+    from collections.abc import Callable
+    from typing import TypeAlias
 
     from .deduplicate import DuplicateSet
     from .mail import DedupMailMixin

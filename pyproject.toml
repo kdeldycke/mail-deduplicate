@@ -221,6 +221,9 @@ default.extend-words = { astroid = "astroid", oject = "oject" }
 # Skip content between <!-- typos:off --> and <!-- typos:on --> markers.
 default.extend-ignore-re = [ "(?s)<!-- typos:off -->.*?<!-- typos:on -->" ]
 default.extend-ignore-identifiers-re = [
+    # "certifi" is the certificate-bundle package name, surfaced in the Mermaid
+    # dependency graph at docs/assets/dependencies.mmd.
+    "certifi",
     # error: `ist` should be `is`, `it`, `its`, `sit`, `list`
     #     ╭▸ ./docs/development.md:107:10
     #     │

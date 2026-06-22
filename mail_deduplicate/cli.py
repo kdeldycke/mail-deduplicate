@@ -123,7 +123,7 @@ def normalize_headers(
     Mail headers are expected to be composed of ASCII characters between 33 and 126
     (both inclusive) according to RFC-5322.
     """
-    normalized_headers = unique((h.lower() for h in value))
+    normalized_headers = unique(h.lower() for h in value)
     for hid in normalized_headers:
         ascii_indexes = set(map(ord, hid))
         if min(ascii_indexes) < 33 or max(ascii_indexes) > 126:
@@ -517,11 +517,11 @@ def mdedup(
                 raise RuntimeError("Option group not associated to a step number.")
             # Only collect options from steps after #2.
             if int(step_number.group(1)) > 2:
-                for opt in group.options:
-                    if ctx.get_parameter_source(opt.name) != ParameterSource.DEFAULT:
-                        ignored_user_options.append(
-                            "/".join(opt.opts + opt.secondary_opts)
-                        )
+                ignored_user_options.extend(
+                    "/".join(opt.opts + opt.secondary_opts)
+                    for opt in group.options
+                    if ctx.get_parameter_source(opt.name) != ParameterSource.DEFAULT
+                )
         if ignored_user_options:
             logging.warning(
                 "Options provided by user, but ignored in -H/--hash-only mode: "

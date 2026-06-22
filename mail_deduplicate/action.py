@@ -28,8 +28,7 @@ from .mail_box import create_box
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from collections.abc import Iterator
-    from typing import Callable
+    from collections.abc import Callable, Iterator
 
     from .deduplicate import Deduplicate
 

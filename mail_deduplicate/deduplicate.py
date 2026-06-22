@@ -30,6 +30,7 @@ from typing import NamedTuple
 
 from click_extra import get_current_context, progressbar
 from click_extra.colorize import default_theme as theme
+from typing_extensions import Self
 
 from .mail import TooFewHeaders
 from .mail_box import open_box
@@ -154,7 +155,7 @@ class Stats:
     def __setitem__(self, key: Stat, value: int) -> None:
         self._counter[key] = value
 
-    def __iadd__(self, other: Stats) -> Stats:
+    def __iadd__(self, other: Stats) -> Self:
         """Support += operator for merging stats."""
         for stat in Stat:
             self._counter[stat] += other._counter[stat]
@@ -552,7 +553,8 @@ class Deduplicate:
         for category, title in (("mail", "Mails"), ("set", "Duplicate sets")):
             table = [
                 [
-                    stat.name.removeprefix(f"{category.upper()}_")
+                    stat.name
+                    .removeprefix(f"{category.upper()}_")
                     .replace("_", " - ")
                     .title(),
                     self.stats[stat],
