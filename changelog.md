@@ -9,16 +9,25 @@
 - Adopt the PEP 440 `.devN` development versioning scheme.
 - Switch to the `uv_build` build backend and declare the license as an SPDX expression.
 
-## [8.1.2 (2025-12-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.1...v8.1.2)
+## [`8.1.2` (2025-12-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.1...v8.1.2)
+
+> [!NOTE]
+> `8.1.2` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/8.1.2/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v8.1.2).
 
 - Refactor some code to improve readability.
 
-## [8.1.1 (2025-12-01)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.0...v8.1.1)
+## [`8.1.1` (2025-12-01)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.0...v8.1.1)
+
+> [!NOTE]
+> `8.1.1` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/8.1.1/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v8.1.1).
 
 - Do not ignore duplicate sets with unique mails. Closes {issue}`843` and {issue}`599`.
 - Fix parsing of `Date` headers. Closes {issue}`954`.
 
-## [8.1.0 (2025-11-27)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.0.0...v8.1.0)
+## [`8.1.0` (2025-11-27)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.0.0...v8.1.0)
+
+> [!NOTE]
+> `8.1.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/8.1.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v8.1.0).
 
 - Add new `-m`/`--minimal-headers` option to set the minimal number of headers required to compute a hash. Closes {issue}`943`.
 - Validate number of `--hash-header` options against `--minimal-headers` value.
@@ -26,7 +35,10 @@
 - Add installation instructions for `brew` on macOS and Arch Linux.
 - Use mixin classes to share common code between mailbox types and avoid dynamic inheritance.
 
-## [8.0.0 (2025-11-21)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.2...v8.0.0)
+## [`8.0.0` (2025-11-21)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.2...v8.0.0)
+
+> [!NOTE]
+> `8.0.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/8.0.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v8.0.0).
 
 - Log options explicitly set by user but ignored because of `--hash-only` mode.
 - Add `--no-config`, `--table-format` options inherited from Click Extra.
@@ -43,7 +55,10 @@
 - Use `astral-sh/setup-uv` action to install `uv` instead of manually installing it with `pip`.
 - Move `ubuntu-24.04` to `ubuntu-24.04-arm`, `macos-15` tests to `macos-26` and `windows-2025` tests to `windows-11-arm`.
 
-## [7.6.2 (2025-04-20)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.1...v7.6.2)
+## [`7.6.2` (2025-04-20)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.1...v7.6.2)
+
+> [!NOTE]
+> `7.6.2` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/7.6.2/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.6.2).
 
 - Ignore line endings when comparing content. Closes {issue}`844`.
 - Render failed statistics assertions in plain English.
@@ -54,11 +69,17 @@
 - To speed up the tests, we only test the latest available OS for each platform. Remove tests on `ubuntu-22.04`, `macos-13` and `windows-2019`.
 - Upgrade tests from `windows-2022` to `windows-2025`.
 
-## [7.6.1 (2024-11-29)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.0...v7.6.1)
+## [`7.6.1` (2024-11-30)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.6.0...v7.6.1)
+
+> [!NOTE]
+> `7.6.1` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/7.6.1/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.6.1).
 
 - Fix conflicting `-h`/`--hash-header` and `-h`/`--help` options. Closes {issue}`762`.
 
-## [7.6.0 (2024-11-24)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.5.0...v7.6.0)
+## [`7.6.0` (2024-11-24)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.5.0...v7.6.0)
+
+> [!NOTE]
+> `7.6.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/7.6.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.6.0).
 
 - Add official support for Python 3.13.
 - Drop support for Python 3.9. Refs {issue}`787`.
@@ -70,13 +91,19 @@
 - Run workflows on `ubuntu-24.04`.
 - Rely on frozen `uv.lock` for reproducibility.
 
-## [7.5.0 (2024-07-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.4.0...v7.5.0)
+## [`7.5.0` (2024-07-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.4.0...v7.5.0)
+
+> [!NOTE]
+> `7.5.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/7.5.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.5.0).
 
 - Switch from Poetry to `uv`.
 - Drop support for Python 3.8.
 - Mark Python 3.13-dev tests as stable.
 
-## [7.4.0 (2024-06-20)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.3.0...v7.4.0)
+## [`7.4.0` (2024-06-20)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.3.0...v7.4.0)
+
+> [!NOTE]
+> `7.4.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/7.4.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.4.0).
 
 - Slim down package by moving unit tests out of the main package.
 - Split `dev` dependency groups into optional `test`, `typing` and `docs` groups.
@@ -85,7 +112,10 @@
 - Run tests on `macos-14`. Drop tests on `macos-12`.
 - Build `arm64` binaries on `macos-14`.
 
-## [7.3.0 (2023-11-14)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.3...v7.3.0)
+## [`7.3.0` (2023-11-15)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.3...v7.3.0)
+
+> [!NOTE]
+> `7.3.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/7.3.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.3.0).
 
 - Drop support of Python 3.7.
 - Reduce memory usage. Addresses {issue}`362`.
@@ -94,28 +124,49 @@
 - Run tests and actions on released Python 3.12 version.
 - Run tests on macos-13. Remove tests on macos-11.
 
-## [7.2.3 (2023-05-04)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.2...v7.2.3)
+## [`7.2.3` (2023-05-04)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.2...v7.2.3)
+
+> [!NOTE]
+> `7.2.3` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/7.2.3/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.2.3).
 
 - Reverts distribution of package via trusted channel.
 
-## [7.2.2 (2023-05-04)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.1...v7.2.2)
+## [`7.2.2` (2023-05-04)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.1...v7.2.2)
+
+> [!NOTE]
+> `7.2.2` is available on [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.2.2).
+
+> [!WARNING]
+> `7.2.2` is **not available** on 🐍 PyPI.
 
 - Redo release to fix trusted publisher on PyPI.
 
-## [7.2.1 (2023-05-04)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.0...v7.2.1)
+## [`7.2.1` (2023-05-04)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.2.0...v7.2.1)
+
+> [!NOTE]
+> `7.2.1` is available on [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.2.1).
+
+> [!WARNING]
+> `7.2.1` is **not available** on 🐍 PyPI.
 
 - Produce dependency graph in Mermaid instead of Graphviz. Add new dev dependency on `sphinxcontrib-mermaid`.
 - Move all documentation assets to `assets` subfolder.
 - Distribute package on PyPI via a trusted publisher channel.
 
-## [7.2.0 (2023-02-15)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.1.0...v7.2.0)
+## [`7.2.0` (2023-02-15)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.1.0...v7.2.0)
+
+> [!NOTE]
+> `7.2.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/7.2.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.2.0).
 
 - Build standalone executable for macOS, Linux and Windows.
 - Generates dependency graph in Graphviz format.
 - Run tests on Python `3.12-dev`.
 - Code, comments and documentation style change to conform to new QA workflows based on `ruff`.
 
-## [7.1.0 (2022-12-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.0.0...v7.1.0)
+## [`7.1.0` (2022-12-07)](https://github.com/kdeldycke/mail-deduplicate/compare/v7.0.0...v7.1.0)
+
+> [!NOTE]
+> `7.1.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/7.1.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.1.0).
 
 - Renumber and rename phases to steps.
 - Group options per steps.
@@ -123,7 +174,10 @@
 - Add logo.
 - Execute all workflows with Python 3.11.
 
-## [7.0.0 (2022-11-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.2.0...v7.0.0)
+## [`7.0.0` (2022-11-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.2.0...v7.0.0)
+
+> [!NOTE]
+> `7.0.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/7.0.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v7.0.0).
 
 - Drop Python 3.6 support.
 - Add support for Python 3.11.
@@ -150,7 +204,10 @@
 - Move `sphinx` dependencies to dev requirements.
 - Add citation file.
 
-## [6.2.0 (2021-09-12)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.3...v6.2.0)
+## [`6.2.0` (2021-09-12)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.3...v6.2.0)
+
+> [!NOTE]
+> `6.2.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/6.2.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v6.2.0).
 
 - Upgrade to Click 8.x.
 - Implements all missing `copy-discarded`, `move-discarded` and
@@ -162,19 +219,31 @@
 - Skip duplicate sets without any matching duplicate candidates. Closes
   {issue}`203`.
 
-## [6.1.3 (2021-04-13)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.2...v6.1.3)
+## [`6.1.3` (2021-04-14)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.2...v6.1.3)
+
+> [!NOTE]
+> `6.1.3` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/6.1.3/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v6.1.3).
 
 - Fix dynamic `mailbox.Message` inheritance. Closes {issue}`191`.
 
-## [6.1.2 (2021-01-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.1...v6.1.2)
+## [`6.1.2` (2021-01-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.1...v6.1.2)
+
+> [!NOTE]
+> `6.1.2` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/6.1.2/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v6.1.2).
 
 - Reconcile `v3` branch with `develop`.
 
-## [6.1.1 (2021-01-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.0...v6.1.1)
+## [`6.1.1` (2021-01-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.1.0...v6.1.1)
+
+> [!NOTE]
+> `6.1.1` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/6.1.1/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v6.1.1).
 
 - Simple re-release.
 
-## [6.1.0 (2021-01-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.2...v6.1.0)
+## [`6.1.0` (2021-01-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.2...v6.1.0)
+
+> [!NOTE]
+> `6.1.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/6.1.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v6.1.0).
 
 - Add retroactive support for Python 3.6. Closes {issue}`154`.
 - Fix documentation link and generation. Closes {issue}`66`.
@@ -185,16 +254,25 @@
 - Remove `pycodestyle`, it brings nothing more now that we rely on
   `black`.
 
-## [6.0.2 (2020-11-05)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.1...v6.0.2)
+## [`6.0.2` (2020-11-05)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.1...v6.0.2)
+
+> [!NOTE]
+> `6.0.2` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/6.0.2/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v6.0.2).
 
 - Load up all subfolders from `Maildir` and `MH` boxes. Closes {issue}`123`.
 
-## [6.0.1 (2020-10-22)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.0...v6.0.1)
+## [`6.0.1` (2020-10-22)](https://github.com/kdeldycke/mail-deduplicate/compare/v6.0.0...v6.0.1)
+
+> [!NOTE]
+> `6.0.1` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/6.0.1/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v6.0.1).
 
 - Check early that `--export` file doesn't exists. Closes {issue}`119`.
 - Add screenshots.
 
-## [6.0.0 (2020-10-17)](https://github.com/kdeldycke/mail-deduplicate/compare/v5.1.0...v6.0.0)
+## [`6.0.0` (2020-10-17)](https://github.com/kdeldycke/mail-deduplicate/compare/v5.1.0...v6.0.0)
+
+> [!NOTE]
+> `6.0.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/6.0.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v6.0.0).
 
 - Add new `-a`/`--action` option to choose what to do on the final mail
   selection.
@@ -215,7 +293,10 @@
 - Colorize version screen and print environment data for bug reports.
 - Run tests on Python 3.9.
 
-## [5.1.0 (2020-10-06)](https://github.com/kdeldycke/mail-deduplicate/compare/v5.0.0...v5.1.0)
+## [`5.1.0` (2020-10-06)](https://github.com/kdeldycke/mail-deduplicate/compare/v5.0.0...v5.1.0)
+
+> [!NOTE]
+> `5.1.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/5.1.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v5.1.0).
 
 - Add new `-h`/`--hash-header` option to select which mail headers to
   use to compute hash.
@@ -224,7 +305,10 @@
 - Make all keyword-based choice parameters (`--sources-format`,
   `--strategy` and `--time-source`) case-insensitive.
 
-## [5.0.0 (2020-10-05)](https://github.com/kdeldycke/mail-deduplicate/compare/v4.0.0...v5.0.0)
+## [`5.0.0` (2020-10-05)](https://github.com/kdeldycke/mail-deduplicate/compare/v4.0.0...v5.0.0)
+
+> [!NOTE]
+> `5.0.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/5.0.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v5.0.0).
 
 - Add supports for `Babyl`, `MH` and `MMDF` mailbox types.
 - Add new `-f`/`--sources-format` option to force the type of mail
@@ -240,7 +324,10 @@
 - Auto-optimize images.
 - Auto-lock closed issues and PRs after a moment of inactivity.
 
-## [4.0.0 (2020-10-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v4.0.0)
+## [`4.0.0` (2020-10-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v4.0.0)
+
+> [!NOTE]
+> `4.0.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/4.0.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v4.0.0).
 
 - Removes the `hash` subcommand. Replaced it with a `--hash-only`
   parameter to the main dedupe command.
@@ -267,12 +354,18 @@
 - Lint both Python code and YAML content on each commit.
 - Run unittests in random to order to detect coupling.
 
-## [3.0.1 (2021-01-25)](https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v3.0.1)
+## [`3.0.1` (2021-01-25)](https://github.com/kdeldycke/mail-deduplicate/compare/v3.0.0...v3.0.1)
+
+> [!NOTE]
+> `3.0.1` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/3.0.1/).
+
+> [!WARNING]
+> `3.0.1` is **not available** on 🐙 GitHub.
 
 - Add explicit warning in CLI output to warn about 3.x branch
   deprecation. Refs {issue}`180`.
 
-## [3.0.0 (2020-09-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.2.0...v3.0.0)
+## [`3.0.0` (2020-09-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.2.0...v3.0.0)
 
 > [!CAUTION]
 > As of `v3.0.0`, the project has been renamed to *Mail Deduplicate* and is
@@ -281,6 +374,9 @@
 > - GitHub at https://github.com/kdeldycke/mail-deduplicate
 > - PyPI at https://pypi.org/project/mail-deduplicate
 
+> [!NOTE]
+> `3.0.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/3.0.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v3.0.0).
+
 - Rename project from `maildir-deduplicate` to `mail-deduplicate`.
 - Rename `master` branch to `main`.
 - Add support for mboxes. Closes {issue}`48`.
@@ -288,11 +384,14 @@
   grouped into duplicate sets without any removal action, effectively
   acting as a second-level dry-run.
 
-## [2.2.0 (2020-09-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.1.0...v2.2.0)
+## [`2.2.0` (2020-09-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.1.0...v2.2.0)
 
 > [!WARNING]
 > This is the last version of the project known under the name *Maildir Deduplicate*
 > (a.k.a. `maildir-deduplicate`).
+
+> [!NOTE]
+> `2.2.0` is the *first version* available on [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v2.2.0).
 
 - Add disclaimer to prepare project name change.
 - Fix Header being object instead of string (#61).
@@ -305,7 +404,7 @@
 - Only notify by mail of test failures.
 - Drop support of Python 3.3.
 
-## [2.1.0 (2017-01-13)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.0.1...v2.1.0)
+## [`2.1.0` (2017-01-13)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.0.1...v2.1.0)
 
 - Fix rendering of changelog link in RST.
 - Show selected log level in debug mode.
@@ -316,7 +415,7 @@
   {issue}`47`, {issue}`41` and {issue}`39`.
 - Require the `-s`/`--strategy` CLI parameter to be set. Closes {issue}`44`.
 
-## [2.0.1 (2016-11-28)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.0.0...v2.0.1)
+## [`2.0.1` (2016-11-28)](https://github.com/kdeldycke/mail-deduplicate/compare/v2.0.0...v2.0.1)
 
 - Reject mails without `Message-ID` headers if `--message-id` option is
   active.
@@ -326,7 +425,7 @@
 - Fix package's long description against PyPI rendering constraints.
 - Add link to full changelog in package's long description.
 
-## [2.0.0 (2016-11-13)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.3.0...v2.0.0)
+## [`2.0.0` (2016-11-13)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.3.0...v2.0.0)
 
 - Refactor and redefine all removal strategies. Closes {issue}`40`.
 - Add a new `-t`/`--time-source` CLI parameter to point to the canonical
@@ -356,7 +455,7 @@
 - Only show latest changes in the long description of the package
   instead of the full changelog.
 
-## [1.3.0 (2016-08-11)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.2.0...v1.3.0)
+## [`1.3.0` (2016-08-11)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.2.0...v1.3.0)
 
 - User-friendly progress bar.
 - Decrease memory usage on large datasets. Closes {issue}`19`, {issue}`8` and {issue}`3`.
@@ -364,31 +463,31 @@
 - Fixed comparison issue in Python 3. Closes {issue}`34`.
 - Add a set of basic deduplication unittests.
 
-## [1.2.0 (2016-03-29)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.1.0...v1.2.0)
+## [`1.2.0` (2016-03-29)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.1.0...v1.2.0)
 
 - Use logger to output messages to the user.
 - Activate tests on Python 3.3, PyPy and PyPy3.
 - Fix date parsing. See {issue}`33`.
 - Fix decoding of unicode header value. Closes {issue}`24` and {issue}`32`.
 
-## [1.1.0 (2016-01-10)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.2...v1.1.0)
+## [`1.1.0` (2016-01-10)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.2...v1.1.0)
 
 - Add Python 3.4 and 3.5 support. Closes {issue}`30`.
 - Add default `isort` configuration.
 - Remove hackish default encoding forcing in main code.
 
-## [1.0.2 (2015-12-22)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.1...v1.0.2)
+## [`1.0.2` (2015-12-22)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.1...v1.0.2)
 
 - Fix `AttributeError` on message instance. Closes {issue}`28`.
 - Various fixes of references to internal variables introduced by a
   switch to more Pythonic classes in 1.0.0.
 - Remove `Message-ID` from the list of default canonical headers.
 
-## [1.0.1 (2015-11-23)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.0...v1.0.1)
+## [`1.0.1` (2015-11-23)](https://github.com/kdeldycke/mail-deduplicate/compare/v1.0.0...v1.0.1)
 
 - Switch from coveralls to codecov.
 
-## [1.0.0 (2015-10-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v0.1.0...v1.0.0)
+## [`1.0.0` (2015-10-03)](https://github.com/kdeldycke/mail-deduplicate/compare/v0.1.0...v1.0.0)
 
 - Fix package version parsing.
 - Add installation instructions. Closes {issue}`21`.
@@ -396,14 +495,14 @@
 - Add bumpversion configuration.
 - Rework CLI around click framework. Closes {issue}`26`.
 
-## [0.1.0 (2014-12-15)](https://github.com/kdeldycke/mail-deduplicate/compare/v0.0.1...v0.1.0)
+## [`0.1.0` (2014-12-15)](https://github.com/kdeldycke/mail-deduplicate/compare/v0.0.1...v0.1.0)
 
 - Package the script for proper distribution.
 
-## [0.0.1 (2011-04-27)](https://github.com/kdeldycke/mail-deduplicate/compare/v0.0.0...v0.0.1)
+## [`0.0.1` (2011-04-27)](https://github.com/kdeldycke/mail-deduplicate/compare/v0.0.0...v0.0.1)
 
 - First external contribution.
 
-## [0.0.0 (2010-06-08)](https://github.com/kdeldycke/mail-deduplicate/compare/init...v0.0.0)
+## [`0.0.0` (2010-06-08)](https://github.com/kdeldycke/mail-deduplicate/compare/init...v0.0.0)
 
 - First commit.
