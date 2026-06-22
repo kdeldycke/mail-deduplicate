@@ -119,6 +119,11 @@ macos-app-icon = "docs/assets/icon.png"
 linux-icon = "docs/assets/icon.png"
 windows-icon-from-ico = "docs/assets/icon.png"
 
+[tool.uv]
+# click-extra 8.0.0 was published 2026-06-22, after the repomatic exclude-newer cooldown
+# cutoff. Pin it here so sync-uv-lock can resolve it before the cooldown expires.
+exclude-newer-package = {click-extra = "2026-06-23T00:00:00Z"}
+
 [tool.uv.build-backend]
 # Package is at root level, not in "./src/".
 module-root = ""
