@@ -1,0 +1,110 @@
+[defaults]
+# Get an explicit signal that manual intervention is needed to clean-up labels. See:
+# https://github.com/jwodder/labelmaker/issues/126#issuecomment-3791695032
+on-rename-clash = "error"
+
+# Default labels for all repositories. The rename-from fields below migrate GitHub's
+# default labels to our emoji-based equivalents. See:
+# https://docs.github.com/en/issues/using-labels-and-milestones-to-track-work/managing-labels#about-default-labels
+[profiles.default]
+
+[[profiles.default.labels]]
+name = "🪫 AI slop"
+color = "cfd3d7"
+description = "Low-effort LLM-generated contribution"
+
+[[profiles.default.labels]]
+name = "🐛 bug"
+color = "fbca04"
+description = "Something isn't working, or a fix is proposed"
+rename-from = ["bug"]
+
+[[profiles.default.labels]]
+name = "🎲 can't reproduce"
+color = "cfd3d7"
+description = "Bug cannot be replicated, or root cause not from project"
+
+[[profiles.default.labels]]
+name = "🆙 changelog"
+color = "c2e0c6"
+description = "Affects the changelog"
+
+[[profiles.default.labels]]
+name = "🤖 ci"
+color = "a4a837"
+description = "Continuous integration and automation"
+
+[[profiles.default.labels]]
+name = "🔗 dependencies"
+color = "9daf0d"
+description = "Dependency changes"
+
+[[profiles.default.labels]]
+name = "📚 documentation"
+color = "006b75"
+description = "Update to non-code (readme, docstrings, typos, …)"
+rename-from = ["documentation"]
+
+[[profiles.default.labels]]
+name = "🧑‍🤝‍🧑 duplicate"
+color = "cfd3d7"
+description = "This issue or pull request already exists"
+rename-from = ["duplicate"]
+
+[[profiles.default.labels]]
+name = "✨ enhancement"
+color = "1d76db"
+description = "New feature or improvement to an existing one"
+rename-from = ["enhancement", "🎁 feature request"]
+
+[[profiles.default.labels]]
+name = "🌱 good first issue"
+color = "b3cd7f"
+description = "A place for newcomers to start contributing"
+rename-from = ["good first issue"]
+
+[[profiles.default.labels]]
+name = "🙏 help wanted"
+color = "c2e0c6"
+description = "I can't do this alone and need contributors"
+rename-from = ["help wanted"]
+
+[[profiles.default.labels]]
+name = "❔ question"
+color = "d4c5f9"
+description = "Further information is requested"
+rename-from = ["question"]
+
+[[profiles.default.labels]]
+name = "💣 security"
+color = "f83911"
+description = "Exploit, token leaks, …"
+
+[[profiles.default.labels]]
+name = "💖 sponsor"
+color = "f9d0c4"
+description = "A sponsor is involved"
+
+[[profiles.default.labels]]
+name = "🚫 wont do/fix"
+color = "cfd3d7"
+description = "This will not be worked on"
+rename-from = ["invalid", "wontfix"]
+
+# Additional labels for awesome-* repositories.
+[profiles.awesome]
+
+[[profiles.awesome.labels]]
+name = "⚖️ curation"
+color = "f9d0c4"
+description = "Links or structure needs to be refined"
+
+[[profiles.awesome.labels]]
+name = "🆕 new link"
+color = "bfd4f2"
+description = "A link worth adding to the list"
+
+[[profiles.awesome.labels]]
+name = "🩹 fix link"
+color = "d4c5f9"
+description = "Existing link needs to be updated"

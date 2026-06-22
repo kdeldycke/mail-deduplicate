@@ -1,0 +1,54 @@
+name: Bug report
+description: Report a bug in mail-deduplicate
+labels: ["🐛 bug"]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for reporting a bug! Before filing, please check if the issue
+        is already fixed in the latest development version:
+
+
+        ```shell-session
+
+        $ uvx --from git+https://github.com/kdeldycke/mail-deduplicate -- mdedup --version
+
+        ```
+
+
+        If the bug is gone, it will be included in the next release.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened? What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: >
+        The full `mdedup` invocation you used, and the data set leading to the
+        bug. Try to reduce it to the minimal subset of mails that triggers the
+        problem (the `--hash-only` parameter helps isolate a duplicate set):
+        attaching those mails lets maintainers add the edge case to the test
+        suite and prevent regressions.
+      placeholder: $ mdedup --verbosity=DEBUG ./my_maildir/
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `mdedup --version`.
+      placeholder: "mdedup, version X.Y.Z"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: >
+        Relevant log output. Run with `--verbosity DEBUG` for full details.
+      render: text
