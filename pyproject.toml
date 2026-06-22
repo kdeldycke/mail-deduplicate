@@ -292,6 +292,7 @@ number = true
 validate = false
 
 [tool.repomatic]
-# Skills live in the canonical repomatic repository only; everything else
-# (workflows, labels, agents, renovate) is synced downstream.
+# Only the skills component is excluded. The label and renovate configs are
+# materialised at runtime by their own workflows, so they are not committed
+# here, matching the other downstream repositories.
 exclude = [ "skills" ]
