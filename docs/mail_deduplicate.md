@@ -1,58 +1,64 @@
-mail\_deduplicate package
-=========================
+# `mail_deduplicate` package
 
+```{eval-rst}
 .. automodule:: mail_deduplicate
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-Submodules
-----------
+## Submodules
 
-mail\_deduplicate.action module
--------------------------------
+## `mail_deduplicate.action` module
 
+```{eval-rst}
 .. automodule:: mail_deduplicate.action
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-mail\_deduplicate.cli module
-----------------------------
+## `mail_deduplicate.cli` module
 
+```{eval-rst}
 .. automodule:: mail_deduplicate.cli
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-mail\_deduplicate.deduplicate module
-------------------------------------
+## `mail_deduplicate.deduplicate` module
 
+```{eval-rst}
 .. automodule:: mail_deduplicate.deduplicate
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-mail\_deduplicate.mail module
------------------------------
+## `mail_deduplicate.mail` module
 
+```{eval-rst}
 .. automodule:: mail_deduplicate.mail
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-mail\_deduplicate.mail\_box module
-----------------------------------
+## `mail_deduplicate.mail_box` module
 
+```{eval-rst}
 .. automodule:: mail_deduplicate.mail_box
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-mail\_deduplicate.strategy module
----------------------------------
+## `mail_deduplicate.strategy` module
 
+```{eval-rst}
 .. automodule:: mail_deduplicate.strategy
    :members:
    :show-inheritance:
    :undoc-members:
+```

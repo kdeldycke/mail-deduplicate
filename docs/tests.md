@@ -1,58 +1,64 @@
-tests package
-=============
+# `tests` package
 
+```{eval-rst}
 .. automodule:: tests
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-Submodules
-----------
+## Submodules
 
-tests.conftest module
----------------------
+## `tests.conftest` module
 
+```{eval-rst}
 .. automodule:: tests.conftest
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-tests.test\_action module
--------------------------
+## `tests.test_action` module
 
+```{eval-rst}
 .. automodule:: tests.test_action
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-tests.test\_cli module
-----------------------
+## `tests.test_cli` module
 
+```{eval-rst}
 .. automodule:: tests.test_cli
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-tests.test\_mail module
------------------------
+## `tests.test_mail` module
 
+```{eval-rst}
 .. automodule:: tests.test_mail
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-tests.test\_mail\_box module
-----------------------------
+## `tests.test_mail_box` module
 
+```{eval-rst}
 .. automodule:: tests.test_mail_box
    :members:
    :show-inheritance:
    :undoc-members:
+```
 
-tests.test\_strategy module
----------------------------
+## `tests.test_strategy` module
 
+```{eval-rst}
 .. automodule:: tests.test_strategy
    :members:
    :show-inheritance:
    :undoc-members:
+```
