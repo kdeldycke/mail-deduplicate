@@ -5,6 +5,10 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Migrate repository tooling, CI and release automation to [`repomatic`](https://github.com/kdeldycke/repomatic) reusable workflows. Replace Dependabot with Renovate.
+- Adopt the PEP 440 `.devN` development versioning scheme.
+- Switch to the `uv_build` build backend and declare the license as an SPDX expression.
+
 ## [8.1.2 (2025-12-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.1...v8.1.2)
 
 - Refactor some code to improve readability.
