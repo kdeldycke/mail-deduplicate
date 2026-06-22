@@ -1,0 +1,16 @@
+---
+name: 🩺 Debug
+"on":
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/debug.yaml
+  schedule:
+    - cron: "0 12 1 * *"
+
+jobs:
+
+  debug:
+    uses: kdeldycke/repomatic/.github/workflows/debug.yaml@f024673c8cf50caa2a57eb04d258b85ce47c90cd # v6.28.1

@@ -1,0 +1,19 @@
+---
+name: 🆕 Renovate
+"on":
+  workflow_dispatch:
+  schedule:
+    - cron: "3 17 * * 1"
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/renovate.yaml
+      - renovate.json5
+
+jobs:
+
+  renovate:
+    uses: kdeldycke/repomatic/.github/workflows/renovate.yaml@f024673c8cf50caa2a57eb04d258b85ce47c90cd # v6.28.1
+    secrets:
+      REPOMATIC_PAT: ${{ secrets.REPOMATIC_PAT }}

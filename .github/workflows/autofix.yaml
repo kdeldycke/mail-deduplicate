@@ -1,13 +1,15 @@
 ---
-name: Autofix
+name: 🪄 Autofix
 "on":
+  workflow_dispatch:
   push:
-    # Only targets main branch to avoid amplification effects of auto-fixing
-    # the exact same stuff in multiple non-rebased branches.
     branches:
       - main
 
 jobs:
 
   autofix:
-    uses: kdeldycke/workflows/.github/workflows/autofix.yaml@v4.24.6
+    uses: kdeldycke/repomatic/.github/workflows/autofix.yaml@f024673c8cf50caa2a57eb04d258b85ce47c90cd # v6.28.1
+    secrets:
+      REPOMATIC_PAT: ${{ secrets.REPOMATIC_PAT }}
+      VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}

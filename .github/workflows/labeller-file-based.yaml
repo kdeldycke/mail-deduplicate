@@ -1,9 +1,0 @@
----
-name: Labeller (file-based)
-"on":
-  pull_request:
-
-jobs:
-
-  labeller:
-    uses: kdeldycke/workflows/.github/workflows/labeller-file-based.yaml@v4.24.6

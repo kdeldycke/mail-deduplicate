@@ -1,15 +1,58 @@
 ---
-name: Build & release
+name: 🚀 Build & release
 "on":
-  # Target are chosen so that all commits get a chance to have their build tested.
+  workflow_dispatch:
   push:
     branches:
       - main
-  pull_request:
 
 jobs:
 
+  build:
+    uses: kdeldycke/repomatic/.github/workflows/_release-build.yaml@f024673c8cf50caa2a57eb04d258b85ce47c90cd # v6.28.1
+
+  publish-pypi:
+    name: 🐍 Publish to PyPI (${{ matrix.short_sha }})
+    needs: build
+    # Gate decoupled from the run's overall result: always() lets this job run even when an unrelated job (like binary
+    # tests in the engine lane) failed the run, and package_built confirms the wheel actually built, so a cleanly-built
+    # wheel still publishes. Both signals come from the build lane (_release-build.yaml).
+    if: >-
+      always()
+      && needs.build.outputs.package_built == 'true'
+      && needs.build.outputs.release_commits_matrix
+    strategy:
+      # GitHub evaluates `strategy.matrix` during job setup even when `if:` will skip the job. On a non-release push
+      # the build lane emits an empty string for `release_commits_matrix` (not "null": see its output description for
+      # why). A bare `fromJSON('')` aborts the whole run with "Unexpected value ''", so we fall back to an empty
+      # `{"include":[]}` matrix, which expands the job to zero runs and skips it cleanly.
+      matrix: ${{ fromJSON(needs.build.outputs.release_commits_matrix || '{"include":[]}') }}
+    runs-on: ubuntu-slim
+    permissions:
+      id-token: write
+      # Lets the admonition step below edit the published release notes.
+      contents: write
+    steps:
+      - uses: kdeldycke/repomatic/.github/actions/publish-pypi@f024673c8cf50caa2a57eb04d258b85ce47c90cd # v6.28.1
+        with:
+          artifact-name: ${{ github.event.repository.name }}-${{ matrix.short_sha }}
+      # Backfill the "available on PyPI" admonition onto the release notes after a successful OIDC upload. The engine
+      # lane publishes the GitHub release without it (it cannot yet know the PyPI outcome). continue-on-error keeps a
+      # notes-edit hiccup from failing an upload that already succeeded.
+      - name: Add PyPI admonition to release notes
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.REPOMATIC_PAT || github.token }}
+          CURRENT_VERSION: ${{ matrix.current_version }}
+          RELEASE_NOTES: ${{ needs.build.outputs.release_notes_with_admonition }}
+        run: >
+          gh release edit "v${CURRENT_VERSION}"
+          --notes-file -
+          --repo "${{ github.repository }}" <<< "${RELEASE_NOTES}"
+
   release:
-    uses: kdeldycke/workflows/.github/workflows/release.yaml@v4.24.6
+    uses: kdeldycke/repomatic/.github/workflows/_release-engine.yaml@f024673c8cf50caa2a57eb04d258b85ce47c90cd # v6.28.1
+    needs: build
     secrets:
-      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      REPOMATIC_PAT: ${{ secrets.REPOMATIC_PAT }}
+      VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}

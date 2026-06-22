@@ -1,13 +1,21 @@
 ---
-name: Docs
+name: 📚 Docs
 "on":
+  workflow_dispatch:
   push:
-    # Only targets main branch to avoid amplification effects of auto-fixing
-    # the exact same stuff in multiple non-rebased branches.
     branches:
       - main
+    paths:
+      - .github/workflows/docs.yaml
+      - changelog.md
+      - citation.cff
+      - "docs/**"
+      - pyproject.toml
+      - readme.md
+      - uv.lock
+      - "**/*.py"
 
 jobs:
 
   docs:
-    uses: kdeldycke/workflows/.github/workflows/docs.yaml@v4.24.6
+    uses: kdeldycke/repomatic/.github/workflows/docs.yaml@f024673c8cf50caa2a57eb04d258b85ce47c90cd # v6.28.1
