@@ -8,7 +8,7 @@ authors:
     email: kevin@deldycke.com
     orcid: "https://orcid.org/0000-0001-9748-9014"
 doi: 10.5281/zenodo.7364256
-version: 9.0.0.dev0
+version: 9.0.0
 # The release date is kept up to date by repomatic's release workflow.
-date-released: 2026-06-22
+date-released: 2026-06-23
 url: "https://github.com/kdeldycke/mail-deduplicate"
