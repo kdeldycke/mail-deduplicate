@@ -349,10 +349,12 @@ class DedupMailMixin(Message):
             return
 
         for header_value in all_values:
-            if isinstance(header_value, email.header.Header):  # type: ignore[unreachable]
+            # type: ignore[unreachable]
+            if isinstance(header_value, email.header.Header):
                 value = str(header_value)  # type: ignore[unreachable]
             elif isinstance(header_value, bytes):  # type: ignore[unreachable]
-                value = header_value.decode("utf-8", "replace")  # type: ignore[unreachable]
+                # type: ignore[unreachable]
+                value = header_value.decode("utf-8", "replace")
             else:
                 value = header_value
 
