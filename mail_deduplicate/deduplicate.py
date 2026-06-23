@@ -28,7 +28,7 @@ from operator import attrgetter
 from pathlib import Path
 from typing import NamedTuple
 
-from click_extra import get_current_context, get_default_theme, progressbar
+from click_extra import get_current_context, get_current_theme, progressbar
 
 from .mail import TooFewHeaders
 from .mail_box import open_box
@@ -46,9 +46,6 @@ if TYPE_CHECKING:
 
     from .cli import Config
     from .mail import DedupMailMixin
-
-
-theme = get_default_theme()
 
 
 class StatDef(NamedTuple):
@@ -465,6 +462,7 @@ class Deduplicate:
 
         Displays a progress bar as the operation might be slow.
         """
+        theme = get_current_theme()
         logging.info(
             f"Use [{', '.join(map(theme.choice, self.conf['hash_headers']))}] headers to "
             "compute hashes.",
@@ -509,6 +507,7 @@ class Deduplicate:
         We apply the selection strategy one duplicate set at a time to keep memory
         footprint low and make the log easier to read.
         """
+        theme = get_current_theme()
         if self.conf["strategy"]:
             logging.info(
                 f"{theme.choice(self.conf['strategy'])} strategy will be applied on each "

@@ -27,11 +27,9 @@ from enum import Enum, auto
 from functools import partial
 from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
 
-from click_extra import get_default_theme
+from click_extra import get_current_theme
 
 from .mail import DedupMailMixin
-
-theme = get_default_theme()
 
 
 def make_dedup_mail(name: str, base: type) -> type:
@@ -159,7 +157,7 @@ def autodetect_box_type(path: Path) -> BoxFormat:
     if not box_format:
         raise ValueError("Unrecognized mail source type.")
 
-    logging.info(f"{theme.choice(str(box_format))} detected.")
+    logging.info(f"{get_current_theme().choice(str(box_format))} detected.")
     return box_format
 
 
@@ -175,7 +173,7 @@ def open_box(
     If ``box_format`` is provided, forces the opening of the box in the specified format.
     Else, defaults to autodetection.
     """
-    logging.info(f"\nOpening {theme.choice(str(path))} ...")
+    logging.info(f"\nOpening {get_current_theme().choice(str(path))} ...")
     if not box_format:
         box_format = autodetect_box_type(path)
     else:
@@ -236,6 +234,7 @@ def create_box(
     export_append: bool = False,
 ) -> Mailbox:
     """Creates a brand new box from scratch."""
+    theme = get_current_theme()
     logging.info(
         f"Creating new {theme.choice(str(box_format))} box "
         f"at {theme.choice(str(path))} ..."

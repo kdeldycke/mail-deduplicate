@@ -23,7 +23,7 @@ import random
 import re
 from functools import wraps
 
-from click_extra import get_default_theme
+from click_extra import get_current_theme
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -34,9 +34,6 @@ if TYPE_CHECKING:
     from .mail import DedupMailMixin
 
     SelectionFunc: TypeAlias = Callable[[DuplicateSet], set[DedupMailMixin]]
-
-
-theme = get_default_theme()
 
 
 def log_selection(message_template: str):
@@ -255,5 +252,5 @@ class Strategy(enum.Enum):
 
         Returns a set of selected mails objects.
         """
-        logging.info(f"Apply {theme.choice(str(self))} strategy...")
+        logging.info(f"Apply {get_current_theme().choice(str(self))} strategy...")
         return set(self.strategy_function(duplicates))

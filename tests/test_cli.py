@@ -18,6 +18,9 @@ from __future__ import annotations
 
 from mailbox import Maildir
 
+import pytest
+from click_extra import BUILTIN_THEMES
+
 
 def test_bare_call(invoke):
     result = invoke()
@@ -48,3 +51,31 @@ def test_early_export_file_check(invoke, make_box, tmp_path):
         str(result.exception)
         == f"Cannot export to existing file {file!r} unless --export-append is set."
     )
+
+
+@pytest.mark.parametrize("theme_id", ("dark", "light"))
+def test_theme_styles_runtime_output(invoke, make_box, theme_id):
+    """The active ``--theme`` must style runtime output, not just the help screen.
+
+    Regression test: the theme used to be captured once at import time via
+    ``get_default_theme()``, so ``--theme`` was ignored everywhere but ``--help``.
+    """
+    box_path, _, export_path = make_box(Maildir)
+
+    # --color=always forces click-extra to resolve the color mode on (the runner
+    # is not a real terminal), and color=True keeps the ANSI codes in the captured
+    # output instead of stripping them.
+    result = invoke(
+        "--theme",
+        theme_id,
+        "--color=always",
+        "--export",
+        export_path,
+        box_path,
+        color=True,
+    )
+    assert result.exit_code == 0
+
+    # The Step #1 heading must carry the styling of the selected theme.
+    styled_heading = BUILTIN_THEMES[theme_id].heading("\n● Step #1 - Load mails")
+    assert styled_heading in result.stdout

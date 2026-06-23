@@ -30,7 +30,7 @@ from click_extra import (
     argument,
     command,
     echo,
-    get_default_theme,
+    get_current_theme,
     option,
     option_group,
     pass_context,
@@ -50,9 +50,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from click_extra import Context, HelpFormatter, Parameter
-
-
-theme = get_default_theme()
 
 
 DEFAULT_HASH_HEADERS: tuple[str, ...] = (
@@ -497,6 +494,7 @@ def mdedup(
 
     dedup = Deduplicate(conf)
 
+    theme = get_current_theme()
     echo(theme.heading("\n● Step #1 - Load mails"))
     with progressbar(
         mail_sources,

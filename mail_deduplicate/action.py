@@ -21,7 +21,7 @@ from contextlib import contextmanager
 from enum import Enum
 
 from boltons.iterutils import unique
-from click_extra import get_default_theme
+from click_extra import get_current_theme
 
 from .deduplicate import Stat
 from .mail_box import create_box
@@ -31,9 +31,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
     from .deduplicate import Deduplicate
-
-
-theme = get_default_theme()
 
 
 @contextmanager
@@ -147,7 +144,7 @@ class Action(Enum):
 
     def perform_action(self, dedup: Deduplicate) -> None:
         """Performs the action on selected mail candidates."""
-        logging.info(f"Perform {theme.choice(str(self))} action...")
+        logging.info(f"Perform {get_current_theme().choice(str(self))} action...")
 
         selection_count = len(dedup.selection)
         if selection_count == 0:
