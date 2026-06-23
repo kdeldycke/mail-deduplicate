@@ -123,6 +123,8 @@ windows-icon-from-ico = "docs/assets/icon.png"
 # click-extra 8.0.0 was published 2026-06-22, after the repomatic exclude-newer cooldown
 # cutoff. Pin it here so sync-uv-lock can resolve it before the cooldown expires.
 exclude-newer-package = {click-extra = "2026-06-23T00:00:00Z"}
+required-version = ">=0.11.23,<0.12"
+exclude-newer = "1 week"
 
 [tool.uv.build-backend]
 # Package is at root level, not in "./src/".
