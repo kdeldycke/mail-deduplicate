@@ -124,9 +124,13 @@ jobs:
       - name: Upload coverage to Codecov
         # Skip on sync-repomatic PRs (data-only changes with no coverable lines)
         # and fork PRs (secrets are not available).
+        # continue-on-error: codecov-cli depends on test-results-parser, a Rust
+        # extension with no wheel for win-arm64 or free-threaded Python. A build
+        # failure there must not fail the overall test job.
         if: >
           github.head_ref != 'sync-repomatic'
           && env.CODECOV_TOKEN != ''
+        continue-on-error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         shell: bash
@@ -141,6 +145,7 @@ jobs:
         if: >
           github.head_ref != 'sync-repomatic'
           && env.CODECOV_TOKEN != ''
+        continue-on-error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         shell: bash
