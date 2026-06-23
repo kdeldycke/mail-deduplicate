@@ -32,7 +32,7 @@ The list of headers to consider can be set with the `-h`/`--hash-header` option.
 You can still use `Message-ID` as the sole reference header by passing `--hash-header Message-ID --minimal-headers 1` to the CLI.
 ```
 
-### Default headers and mailing lists
+### Default headers and mailing lists {#mailing-lists}
 
 The [default headers](https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.cli.DEFAULT_HASH_HEADERS) used for hashing are currently set to:
 
