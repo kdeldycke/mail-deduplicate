@@ -1,10 +1,13 @@
 # This test plan checks some high-level behavior of the mdedup CLI.
 
 # Check mdedup is reporting the correct version of itself.
-- cli_parameters: --version
+# --color=always forces ANSI in the piped subprocess output. click-extra renders
+# the program name bold bright-white and the version green. The version is matched
+# as \S+ so dev builds (9.0.0.dev0+<sha>) pass alongside plain releases.
+- cli_parameters: --version --color=always
   exit_code: 0
-  stdout_contains: "\x1b[97mmdedup\x1b[0m, version \x1b[32m"
-  stdout_regex_fullmatch: "\x1b\\[97mmdedup\x1b\\[0m, version \x1b\\[32m[0-9]+\\.[0-9]+\\.[0-9]+\x1b\\[0m\n"
+  stdout_contains: "\x1b[97m\x1b[1mmdedup\x1b[0m, version \x1b[32m"
+  stdout_regex_fullmatch: "\x1b\\[97m\x1b\\[1mmdedup\x1b\\[0m, version \x1b\\[32m\\S+\x1b\\[0m\n"
 
 
 # Check mdedup is reporting its usage in help screen.

@@ -28,7 +28,13 @@ from operator import attrgetter
 from pathlib import Path
 from typing import NamedTuple
 
-from click_extra import get_current_context, get_current_theme, progressbar
+from click_extra import (
+    context,
+    get_current_context,
+    get_current_theme,
+    progressbar,
+    run_jobs,
+)
 
 from .mail import TooFewHeaders
 from .mail_box import open_box
@@ -461,6 +467,12 @@ class Deduplicate:
         by hash.
 
         Displays a progress bar as the operation might be slow.
+
+        Hashing fans out across worker threads when ``--jobs`` resolves above 1; at the
+        default of a single job, mails stream through one at a time for the lowest
+        memory footprint. Mail reading always stays single-threaded because ``mailbox``
+        box objects are not safe for concurrent access: only the CPU-bound hashing is
+        parallelized, so the speedup is largest with ``--hash-body raw``/``normalized``.
         """
         theme = get_current_theme()
         logging.info(
@@ -470,27 +482,53 @@ class Deduplicate:
 
         body_hasher = self.conf["hash_body"].hash_function()
 
+        def compute(item):
+            """Hash a single mail. Pure per-mail work, safe in a worker thread: it only
+            touches its own mail and the read-only shared config."""
+            box, mail_id, mail = item
+            mail.add_box_metadata(box, mail_id)
+            mail.conf = self.conf
+            try:
+                return mail, mail.hash_key() + body_hasher(mail), None
+            except TooFewHeaders as expt:
+                return mail, None, expt
+
+        def absorb(result):
+            """Merge one hashed mail into the shared groups and stats. Called only from
+            the main thread, keeping the parallel path race-free."""
+            mail, mail_hash, expt = result
+            if expt is not None:
+                logging.warning(f"Rejecting {mail!r}: {expt.args[0]}")
+                self.stats[Stat.MAIL_REJECTED] += 1
+            else:
+                # Use a set to deduplicate entries pointing to the same file.
+                self.mails.setdefault(mail_hash, set()).add(mail)
+                self.stats[Stat.MAIL_RETAINED] += 1
+
+        jobs = context.get(get_current_context(), context.JOBS, 1)
+
         with progressbar(
             length=self.stats[Stat.MAIL_FOUND],
             label="Hashed mails",
             show_pos=True,
         ) as progress:
-            for box in self.sources.values():
-                for mail_id, mail in box.iteritems():
-                    mail.add_box_metadata(box, mail_id)
-
-                    mail.conf = self.conf
-
-                    try:
-                        mail_hash = mail.hash_key() + body_hasher(mail)
-                    except TooFewHeaders as expt:
-                        logging.warning(f"Rejecting {mail!r}: {expt.args[0]}")
-                        self.stats[Stat.MAIL_REJECTED] += 1
-                    else:
-                        # Use a set to deduplicate entries pointing to the same file.
-                        self.mails.setdefault(mail_hash, set()).add(mail)
-                        self.stats[Stat.MAIL_RETAINED] += 1
-
+            if jobs <= 1:
+                # Stream one mail at a time: lowest memory, progress tracks each read.
+                for box in self.sources.values():
+                    for mail_id, mail in box.iteritems():
+                        absorb(compute((box, mail_id, mail)))
+                        progress.update(1)
+            else:
+                # Read single-threaded (box objects are not concurrency-safe), then
+                # parallel-hash. run_jobs yields in submission order, so grouping and
+                # stats stay deterministic regardless of the job count.
+                mails = [
+                    (box, mail_id, mail)
+                    for box in self.sources.values()
+                    for mail_id, mail in box.iteritems()
+                ]
+                for result in run_jobs(compute, mails, jobs=jobs):
+                    absorb(result)
                     progress.update(1)
 
         self.stats[Stat.MAIL_HASHES] += len(self.mails)

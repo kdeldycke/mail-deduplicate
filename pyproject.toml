@@ -72,7 +72,7 @@ dependencies = [
 ## Non-runtime dependencies, for development and CI, are using the ~= specifier to reduce randomness.
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
 test = [
-    "click-extra [pytest] >= 8.0.0",
+    "click-extra [pytest, yaml] >= 8.0.0",
     "coverage [toml] ~= 7.12.0",
     "extra-platforms [pytest] ~= 13.0.0",
     "pytest ~= 9.0.1",

@@ -253,6 +253,9 @@ sphinx = [
     { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
+yaml = [
+    { name = "pyyaml" },
+]
 
 [[package]]
 name = "cloup"
@@ -508,7 +511,7 @@ docs = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
 ]
 test = [
-    { name = "click-extra", extra = ["pytest"] },
+    { name = "click-extra", extra = ["pytest", "yaml"] },
     { name = "coverage", extra = ["toml"] },
     { name = "extra-platforms", extra = ["pytest"] },
     { name = "pytest" },
@@ -543,7 +546,7 @@ docs = [
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2" },
 ]
 test = [
-    { name = "click-extra", extras = ["pytest"], specifier = ">=8.0.0" },
+    { name = "click-extra", extras = ["pytest", "yaml"], specifier = ">=8.0.0" },
     { name = "coverage", extras = ["toml"], specifier = "~=7.12.0" },
     { name = "extra-platforms", extras = ["pytest"], specifier = "~=13.0.0" },
     { name = "pytest", specifier = "~=9.0.1" },

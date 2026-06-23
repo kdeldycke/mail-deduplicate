@@ -28,7 +28,7 @@ from mailbox import Message
 from typing import cast
 
 import arrow
-from click_extra import get_current_context
+from click_extra import get_current_context, render_table
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -300,14 +300,20 @@ class DedupMailMixin(Message):
 
         Returns a string ready to be printed.
         """
-        ctx = get_current_context()
-        return (  # type: ignore[no-any-return]
-            "\n"
-            + ctx.find_root().render_table(  # type: ignore[attr-defined]
-                [*list(self.canonical_headers)],
-                headers=("Header ID", "Header value"),
+        table_data = list(self.canonical_headers)
+        headers = ("Header ID", "Header value")
+        # get_current_context() is silent here so hashing can run in a --jobs worker
+        # thread, where Click's thread-local context is not available. With a context
+        # the table honors --table-format; without one it falls back to the default.
+        ctx = get_current_context(silent=True)
+        if ctx is not None:
+            rendered: str = ctx.find_root().render_table(  # type: ignore[attr-defined]
+                table_data,
+                headers=headers,
             )
-        )
+        else:
+            rendered = render_table(table_data, headers=headers)
+        return "\n" + rendered
 
     def serialized_headers(self) -> bytes:
         """Serialize the canonical headers into a single string ready to be hashed.

@@ -17,9 +17,13 @@
 from __future__ import annotations
 
 from mailbox import Maildir
+from pathlib import Path
 
 import pytest
 from click_extra import BUILTIN_THEMES
+from click_extra.test_plan import parse_test_plan, run_test_plan
+
+from .conftest import MailFactory
 
 
 def test_bare_call(invoke):
@@ -45,7 +49,10 @@ def test_early_export_file_check(invoke, make_box, tmp_path):
     file.touch()
     result = invoke(f"--export={file!s}", box_path)
     assert result.exit_code == 1
-    assert not result.stderr
+    # The export-existence check fails before any box is opened or scanned. (Parsing
+    # the eager --jobs option logs its resolution, so stderr is not strictly empty.)
+    assert "Opening" not in result.stderr
+    assert "mails found" not in result.stderr
     assert isinstance(result.exception, FileExistsError)
     assert (
         str(result.exception)
@@ -79,3 +86,45 @@ def test_theme_styles_runtime_output(invoke, make_box, theme_id):
     # The Step #1 heading must carry the styling of the selected theme.
     styled_heading = BUILTIN_THEMES[theme_id].heading("\n● Step #1 - Load mails")
     assert styled_heading in result.stdout
+
+
+def test_cli_test_plan():
+    """Run the YAML black-box plan (cli-test-plan.yaml) against the installed mdedup.
+
+    Each case is executed as a subprocess by click-extra's test_plan runner, so this
+    exercises the real entry point (version reporting, help screen rendering).
+    """
+    plan = (Path(__file__).parent / "cli-test-plan.yaml").read_text(encoding="utf-8")
+    cases = list(parse_test_plan(plan))
+    assert cases, "Empty test plan: cli-test-plan.yaml parsed to zero cases."
+    result = run_test_plan("mdedup", cases)
+    assert result["failed"] == 0
+
+
+def test_parallel_hashing_matches_sequential(invoke, make_box):
+    """Hashing with --jobs > 1 must yield the same dedup result as the sequential
+    default. Reading stays single-threaded and run_jobs preserves submission order,
+    so the grouping, stats, and report must be identical at any job count.
+    """
+    # Three duplicate pairs (distinct Message-IDs give three hash groups; each mail
+    # repeated makes each group a genuine duplicate set).
+    pairs = [
+        MailFactory(message_id="<a@nohost.com>"),
+        MailFactory(message_id="<b@nohost.com>"),
+        MailFactory(message_id="<c@nohost.com>"),
+    ]
+    box_path, _, _ = make_box(Maildir, [mail for mail in pairs for _ in range(2)])
+
+    # --dry-run leaves the box untouched, so both invocations see identical input.
+    args = (
+        "--strategy=select-newest",
+        "--action=delete-selected",
+        "--dry-run",
+        box_path,
+    )
+    sequential = invoke(*args)
+    parallel = invoke("--jobs=2", *args)
+
+    assert sequential.exit_code == 0
+    assert parallel.exit_code == 0
+    assert parallel.stdout == sequential.stdout

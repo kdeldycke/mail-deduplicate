@@ -31,6 +31,7 @@ from click_extra import (
     command,
     echo,
     get_current_theme,
+    jobs_option,
     option,
     option_group,
     pass_context,
@@ -379,6 +380,15 @@ class MdedupCommand(Command):
     metavar="MAIL_SOURCE_1 MAIL_SOURCE_2 ...",
     type=path(exists=True, resolve_path=True),
     help="Mail sources to deduplicate. Can be a single mail box or a list of mails.",
+)
+@jobs_option(
+    default=1,
+    help=(
+        "Number of parallel jobs used to hash mails (step #2). Accepts an integer, "
+        "'auto' (one fewer than the host's logical CPUs) or 'max'. Defaults to 1 "
+        "(sequential); higher values speed up --hash-body raw/normalized on large "
+        "boxes."
+    ),
 )
 @pass_context
 def mdedup(

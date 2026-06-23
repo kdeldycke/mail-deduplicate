@@ -61,6 +61,16 @@ myst_fence_as_directive = ["mermaid"]
 
 mermaid_d3_zoom = True
 
+# Emit a roff man page (man/mdedup.1, plus an .html sibling when mandoc or groff is
+# on PATH) into the HTML build via click-extra's generator, giving packagers a .1
+# artifact to install. Uses the same generator as the `mdedup --man` option.
+click_extra_manpages = [
+    {
+        "script": "mail_deduplicate.cli:mdedup",
+        "prog_name": "mdedup",
+    },
+]
+
 master_doc = "index"
 
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
