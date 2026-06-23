@@ -1,5 +1,10 @@
 # Changelog
 
+## [`9.0.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.0.0...main)
+
+> [!WARNING]
+> This version is **not released yet** and is under active development.
+
 ## [`9.0.0` (2026-06-23)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.2...v9.0.0)
 
 - Migrate repository tooling, CI and release automation to [`repomatic`](https://github.com/kdeldycke/repomatic) reusable workflows. Replace Dependabot with Renovate.
