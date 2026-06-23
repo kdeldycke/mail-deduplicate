@@ -120,6 +120,11 @@ linux-icon = "docs/assets/icon.png"
 windows-icon-from-ico = "docs/assets/icon.png"
 
 [tool.uv]
+# Pin uv to a single minor series so every contributor and CI runner resolves
+# uv.lock with the same resolver (astral-sh/setup-uv reads this automatically).
+required-version = ">=0.11.23,<0.12"
+# Cooldown buffer before adopting newly released packages.
+exclude-newer = "1 week"
 # click-extra 8.0.0 was published 2026-06-22, after the repomatic exclude-newer cooldown
 # cutoff. Pin it here so sync-uv-lock can resolve it before the cooldown expires.
 exclude-newer-package = {click-extra = "2026-06-23T00:00:00Z"}
@@ -145,6 +150,10 @@ addopts = [
     "--cov-precision=2",
     "--cov-report=term",
     "--cov-report=xml",
+    # Codecov's test analytics requires a JUnit XML file:
+    # https://docs.codecov.com/docs/test-analytics#1-output-a-junit-xml-file-in-your-ci
+    "--junitxml=junit.xml",
+    "--override-ini=junit_family=legacy",
 ]
 # Make sure tests that are expected to fail do not resurect and start working all of a sudden.
 xfail_strict = true
