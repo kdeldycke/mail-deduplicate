@@ -5,7 +5,7 @@ build-backend = "uv_build"
 [project]
 # Docs: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 name = "mail-deduplicate"
-version = "9.0.0.dev0"
+version = "9.0.1.dev0"
 # Python versions and their status: https://devguide.python.org/versions/
 requires-python = ">= 3.10"
 description = "📧 CLI to deduplicate mails from mail boxes"
@@ -101,7 +101,7 @@ docs = [
 [project.urls]
 "Homepage" = 'https://github.com/kdeldycke/mail-deduplicate'
 "Documentation" = 'https://kdeldycke.github.io/mail-deduplicate'
-"Download" = "https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.0.0.dev0"
+"Download" = "https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.0.1.dev0"
 "Repository" = 'https://github.com/kdeldycke/mail-deduplicate'
 "Funding" = "https://github.com/sponsors/kdeldycke"
 "Issues" = "https://github.com/kdeldycke/mail-deduplicate/issues"
@@ -114,8 +114,8 @@ mdedup = "mail_deduplicate.__main__:main"
 product-name = "Mail Deduplicate"
 file-description = "📧 CLI to deduplicate mails from mail boxes"
 copyright = "Kevin Deldycke <kevin@deldycke.com> and contributors. Distributed under GPL-2.0-or-later license."
-file-version = "9.0.0"
-product-version = "9.0.0"
+file-version = "9.0.1"
+product-version = "9.0.1"
 macos-app-icon = "docs/assets/icon.png"
 linux-icon = "docs/assets/icon.png"
 windows-icon-from-ico = "docs/assets/icon.png"
@@ -160,7 +160,7 @@ addopts = [
 xfail_strict = true
 
 [tool.bumpversion]
-current_version = "9.0.0.dev0"
+current_version = "9.0.1.dev0"
 # Parse versions with an optional .devN suffix (PEP 440).
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(\\.dev(?P<dev>\\d+))?"
 serialize = [
