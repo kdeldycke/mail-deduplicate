@@ -27,8 +27,8 @@ from functools import cached_property
 from mailbox import Message
 from typing import cast
 
-import arrow
 from click_extra import get_current_context, render_table
+from whenever import Instant
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -405,7 +405,7 @@ class DedupMailMixin(Message):
         only honour the date for now and normalize them to UTC timezone.
         """
         if self.parsed_date is not None:
-            return arrow.get(self.parsed_date).format("YYYY-MM-DD")
+            return Instant.from_timestamp(self.parsed_date).format("YYYY-MM-DD")
         return value
 
     def normalize_address_header(self, value: str) -> str:

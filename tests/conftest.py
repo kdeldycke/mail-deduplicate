@@ -24,10 +24,10 @@ from mailbox import Mailbox, Maildir, Message, mbox
 from textwrap import dedent
 from uuid import uuid4
 
-import arrow
 import pytest
 from boltons.iterutils import same
 from click_extra.pytest import runner  # noqa: F401
+from whenever import Date, Instant, Time
 
 from mail_deduplicate.cli import mdedup
 
@@ -54,7 +54,7 @@ class MailFactory:
         # Defaults fields values.
         self.fields = {
             "body": "Да, они летят.\n",
-            "date": arrow.utcnow(),
+            "date": Instant.now(),
             "date_rfc2822": None,
             "message_id": "<201111231111.abcdef101@mail.nohost.com>",
         }
@@ -62,17 +62,21 @@ class MailFactory:
         # Check all custom fields are recognized and supported.
         assert set(custom_fields).issubset(self.fields)
 
-        # Parse dates and normalize to Arrow instance.
+        # Normalize the date to a whenever Instant. ISO date strings are anchored at
+        # midnight UTC; whenever instances are passed through untouched.
         if "date" in custom_fields:
-            custom_fields["date"] = arrow.get(custom_fields["date"])
+            date = custom_fields["date"]
+            if isinstance(date, str):
+                date = Date.parse_iso(date).at(Time.MIDNIGHT).assume_utc()
+            custom_fields["date"] = date
 
         # Update default values with custom ones.
         self.fields.update(custom_fields)
 
-        # Derive RFC-2822 date from arrow object if not set.
+        # Derive RFC-2822 date from the Instant if not set.
         if not self.fields.get("date_rfc2822"):
-            assert isinstance(self.fields["date"], arrow.arrow.Arrow)
-            self.fields["date_rfc2822"] = maildate(self.fields["date"].float_timestamp)
+            assert isinstance(self.fields["date"], Instant)
+            self.fields["date_rfc2822"] = maildate(self.fields["date"].timestamp())
 
     def render(self):
         """Returns the full, rendered content of the mail."""

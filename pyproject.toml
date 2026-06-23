@@ -58,14 +58,14 @@ classifiers = [
 # - aligns minimal Python requirements to ours,
 # - adds new explicit support Python version.
 dependencies = [
-    # arrow.get() and Arrow.format() (mail.py) are stable since the 1.0 API.
-    "arrow >= 1.0.0",
     # Provides enum.StrEnum for Python < 3.11; all versions expose the class.
     "backports.strenum >= 1 ; python_version < '3.11'",
     # boltons 25.0.0 dropped Python 3.9, matching our requires-python >= 3.10.
     "boltons >= 25.0.0",
     # click-extra 8.0.0 renamed ExtraCommand to Command and restructured the theme API.
     "click-extra >= 8.0.0",
+    # Instant.from_timestamp() and Instant.format() pattern formatting (mail.py). whenever's pre-1.0 API still renames methods between releases, so pin to the 0.10 shape we build against.
+    "whenever >= 0.10.0",
 ]
 
 [dependency-groups]

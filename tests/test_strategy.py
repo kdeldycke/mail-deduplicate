@@ -19,8 +19,8 @@ from __future__ import annotations
 from mailbox import Maildir
 from string import ascii_lowercase
 
-import arrow
 import pytest
+from whenever import Instant
 
 from mail_deduplicate.strategy import Strategy
 
@@ -48,11 +48,11 @@ def test_strategy_definitions():
 
 
 # Time-based collection of pre-defined fixtures.
-now = arrow.utcnow()
+now = Instant.now()
 newest_mail = MailFactory(date=now)
-newer_mail = MailFactory(date=now.shift(minutes=-1))
-older_mail = MailFactory(date=now.shift(minutes=-2))
-oldest_mail = MailFactory(date=now.shift(minutes=-3))
+newer_mail = MailFactory(date=now.subtract(minutes=1))
+older_mail = MailFactory(date=now.subtract(minutes=2))
+oldest_mail = MailFactory(date=now.subtract(minutes=3))
 
 
 # Size-based collection of pre-defined fixtures.

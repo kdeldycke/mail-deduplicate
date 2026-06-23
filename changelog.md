@@ -10,6 +10,7 @@
 - Switch to the `uv_build` build backend and declare the license as an SPDX expression.
 - Upgrade to `click-extra` `8.0.0`.
 - Move `test`, `typing` and `docs` extras to dependency groups.
+- Replace the `arrow` date library with [`whenever`](https://github.com/ariebovenberg/whenever).
 
 ## [`8.1.2` (2025-12-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.1...v8.1.2)
 
