@@ -6,10 +6,8 @@ hide-toc: true
 ```
 
 ```{toctree}
----
-maxdepth: 2
-hidden:
----
+:maxdepth: 2
+:hidden:
 install
 design
 cli-parameters
@@ -17,11 +15,9 @@ configuration
 ```
 
 ```{toctree}
----
-caption: Development
-maxdepth: 2
-hidden:
----
+:caption: Development
+:maxdepth: 2
+:hidden:
 contributing
 API <mail_deduplicate>
 tests
