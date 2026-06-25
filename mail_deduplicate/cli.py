@@ -433,7 +433,8 @@ def mdedup(
     if len(hash_header) < minimal_headers:
         raise BadParameter(
             f"Provided number of headers to hash ({len(hash_header)}) is less than "
-            f"the minimal required number of headers ({minimal_headers})."
+            f"the minimal required number of headers ({minimal_headers}). "
+            f"Use -m/--minimal-headers to allow fewer headers."
         )
 
     # Validate exclusive options requirement depending on strategy or action.
