@@ -1,51 +1,51 @@
 [build-system]
-requires = ["uv_build >= 0.9.0"]
 build-backend = "uv_build"
+requires = [ "uv-build>=0.9" ]
 
 [project]
 # Docs: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 name = "mail-deduplicate"
 version = "9.0.0.dev0"
-# Python versions and their status: https://devguide.python.org/versions/
-requires-python = ">= 3.10"
 description = "📧 CLI to deduplicate mails from mail boxes"
-authors = [{ name = "Kevin Deldycke", email = "kevin@deldycke.com" }]
 readme = "readme.md"
+keywords = [
+  "Babyl",
+  "cleanup",
+  "CLI",
+  "dedupe",
+  "deduplication",
+  "email",
+  "mail",
+  "mailbox",
+  "maildir",
+  "mbox",
+  "MH",
+  "MMDF",
+]
 license = "GPL-2.0-or-later"
 license-files = [ "license" ]
-keywords = [
-    'Babyl',
-    'CLI',
-    'MH',
-    'MMDF',
-    'cleanup',
-    'dedupe',
-    'deduplication',
-    'email',
-    'mail',
-    'mailbox',
-    'maildir',
-    'mbox',
-]
+authors = [ { name = "Kevin Deldycke", email = "kevin@deldycke.com" } ]
+# Python versions and their status: https://devguide.python.org/versions/
+requires-python = ">=3.10"
 classifiers = [
-    # See: https://pypi.org/pypi?%3Aaction=list_classifiers
-    'Development Status :: 5 - Production/Stable',
-    'Environment :: Console',
-    'Intended Audience :: Developers',
-    'Intended Audience :: Information Technology',
-    'Operating System :: MacOS',
-    'Operating System :: Microsoft :: Windows',
-    'Operating System :: POSIX',
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
-    'Programming Language :: Python :: Implementation :: CPython',
-    'Topic :: Communications :: Email',
-    'Topic :: Utilities',
-    'Typing :: Typed',
+  # See: https://pypi.org/pypi?%3Aaction=list_classifiers
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Topic :: Communications :: Email",
+  "Topic :: Utilities",
+  "Typing :: Typed",
 ]
 # Semantic versioning works in theory. In practice, it is hard to guarantee.
 # That's why we rely on >= specifier instead of ~= to relax constraints. This gives more freedom to packagers to
@@ -58,57 +58,65 @@ classifiers = [
 # - aligns minimal Python requirements to ours,
 # - adds new explicit support Python version.
 dependencies = [
-    # Provides enum.StrEnum for Python < 3.11; all versions expose the class.
-    "backports.strenum >= 1 ; python_version < '3.11'",
-    # boltons 25.0.0 dropped Python 3.9, matching our requires-python >= 3.10.
-    "boltons >= 25.0.0",
-    # click-extra 8.0.0 renamed ExtraCommand to Command and restructured the theme API.
-    "click-extra >= 8.0.0",
-    # Instant.from_timestamp() and Instant.format() pattern formatting (mail.py). whenever's pre-1.0 API still renames methods between releases, so pin to the 0.10 shape we build against.
-    "whenever >= 0.10.0",
+  # Provides enum.StrEnum for Python < 3.11; all versions expose the class.
+  "backports-strenum>=1; python_version<'3.11'",
+  # boltons 25.0.0 dropped Python 3.9, matching our requires-python >= 3.10.
+  "boltons>=25",
+  # click-extra 8.0.0 renamed ExtraCommand to Command and restructured the theme API.
+  "click-extra>=8",
+  # Instant.from_timestamp() and Instant.format() pattern formatting (mail.py). whenever's pre-1.0 API still renames methods between releases, so pin to the 0.10 shape we build against.
+  "whenever>=0.10",
 ]
+urls.Changelog = "https://github.com/kdeldycke/mail-deduplicate/blob/main/changelog.md"
+urls.Documentation = "https://kdeldycke.github.io/mail-deduplicate"
+urls.Download = "https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.0.0.dev0"
+urls.Funding = "https://github.com/sponsors/kdeldycke"
+urls.Homepage = "https://github.com/kdeldycke/mail-deduplicate"
+urls.Issues = "https://github.com/kdeldycke/mail-deduplicate/issues"
+urls.Repository = "https://github.com/kdeldycke/mail-deduplicate"
+scripts.mdedup = "mail_deduplicate.__main__:main"
 
 [dependency-groups]
 ## Non-runtime dependencies, for development and CI, are using the ~= specifier to reduce randomness.
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
 test = [
-    "click-extra [pytest, yaml] >= 8.0.0",
-    "coverage [toml] ~= 7.12.0",
-    "extra-platforms [pytest] ~= 13.0.0",
-    "pytest ~= 9.0.1",
-    "pytest-cov ~= 7.0.0",
-    "pytest-github-actions-annotate-failures ~= 0.3.0",
-    "pytest-randomly ~= 4.0.0",
+  "click-extra[pytest,yaml]>=8",
+  "coverage[toml]~=7.12.0",
+  "extra-platforms[pytest]~=13.0.0",
+  "pytest~=9.0.1",
+  "pytest-cov~=7.0.0",
+  "pytest-github-actions-annotate-failures~=0.3.0",
+  "pytest-randomly~=4.0.0",
 ]
-typing = ["types-boltons ~= 25.0.0.20250822"]
 docs = [
-    "click-extra [sphinx] >= 8.0.0",
-    "furo ~= 2025.9.25",
-    "myst-parser ~= 4.0.0",
-    # Sphinx  8.0.0 is the first version to drop Python 3.9, like us.
-    "sphinx >= 8.0.0",
-    # sphinx-autodoc-typehints 2.4.0 is the first version that is aligned to our Python >= 3.10 requirement.
-    "sphinx-autodoc-typehints >= 2.4.0",
-    "sphinx-click ~= 6.1.0",
-    "sphinx-copybutton ~= 0.5.2",
-    "sphinx-design ~= 0.6.0",
-    "sphinxcontrib-mermaid ~= 1.2.3",
-    "sphinxext-opengraph ~= 0.13.0",
-    # tomli provides tomllib.loads() for Python < 3.11; docs/conf.py reads pyproject.toml.
-    "tomli >= 2 ; python_version < '3.11'",
+  "click-extra[sphinx]>=8",
+  "furo~=2025.9.25",
+  "myst-parser~=4.0.0",
+  # Sphinx  8.0.0 is the first version to drop Python 3.9, like us.
+  "sphinx>=8",
+  # sphinx-autodoc-typehints 2.4.0 is the first version that is aligned to our Python >= 3.10 requirement.
+  "sphinx-autodoc-typehints>=2.4",
+  "sphinx-click~=6.1.0",
+  "sphinx-copybutton~=0.5.2",
+  "sphinx-design~=0.6.0",
+  "sphinxcontrib-mermaid~=1.2.3",
+  "sphinxext-opengraph~=0.13.0",
+  # tomli provides tomllib.loads() for Python < 3.11; docs/conf.py reads pyproject.toml.
+  "tomli>=2; python_version<'3.11'",
 ]
+typing = [ "types-boltons~=25.0.0.20250822" ]
 
-[project.urls]
-"Homepage" = 'https://github.com/kdeldycke/mail-deduplicate'
-"Documentation" = 'https://kdeldycke.github.io/mail-deduplicate'
-"Download" = "https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.0.0.dev0"
-"Repository" = 'https://github.com/kdeldycke/mail-deduplicate'
-"Funding" = "https://github.com/sponsors/kdeldycke"
-"Issues" = "https://github.com/kdeldycke/mail-deduplicate/issues"
-"Changelog" = "https://github.com/kdeldycke/mail-deduplicate/blob/main/changelog.md"
-
-[project.scripts]
-mdedup = "mail_deduplicate.__main__:main"
+[tool.uv]
+# Pin uv to a single minor series so every contributor and CI runner resolves
+# uv.lock with the same resolver (astral-sh/setup-uv reads this automatically).
+required-version = ">=0.11.23,<0.12"
+# Cooldown buffer before adopting newly released packages.
+exclude-newer = "1 week"
+# click-extra 8.0.0 was published 2026-06-22, after the repomatic exclude-newer cooldown
+# cutoff. Pin it here so sync-uv-lock can resolve it before the cooldown expires.
+exclude-newer-package = { click-extra = "2026-06-23T00:00:00Z" }
+# Package is at root level, not in "./src/".
+build-backend.module-root = ""
 
 [tool.nuitka]
 product-name = "Mail Deduplicate"
@@ -120,41 +128,77 @@ macos-app-icon = "docs/assets/icon.png"
 linux-icon = "docs/assets/icon.png"
 windows-icon-from-ico = "docs/assets/icon.png"
 
-[tool.uv]
-# Pin uv to a single minor series so every contributor and CI runner resolves
-# uv.lock with the same resolver (astral-sh/setup-uv reads this automatically).
-required-version = ">=0.11.23,<0.12"
-# Cooldown buffer before adopting newly released packages.
-exclude-newer = "1 week"
-# click-extra 8.0.0 was published 2026-06-22, after the repomatic exclude-newer cooldown
-# cutoff. Pin it here so sync-uv-lock can resolve it before the cooldown expires.
-exclude-newer-package = {click-extra = "2026-06-23T00:00:00Z"}
+[tool.ruff]
+# Enable formatting of Python code blocks in Markdown files.
+# https://docs.astral.sh/ruff/formatter/#markdown-code-formatting
+extend-include = [ "*.{markdown,mdown,mkdn,mdwn,mkd,md,mdtxt,mdtext,mdx}" ]
+preview = true
+fix = true
+unsafe-fixes = true
+show-fixes = true
+# Enable reformatting of code snippets in docstrings.
+# https://docs.astral.sh/ruff/formatter/#docstring-formatting
+format.docstring-code-format = true
+# D400: First line should end with a period.
+#   Allows docstrings to end up with any punctuation, not just a period.
+#   See: https://github.com/astral-sh/ruff/issues/1858#issuecomment-1382640623
+# ERA001: Found commented-out code.
+#   Do not remove commented code, as it might be used for documentation.
+#   See: https://docs.astral.sh/ruff/rules/#eradicate-era
+# LOG015: Root logger calls (logging.info(), etc.).
+#   The CLI configures the root logger via Click, so root logger calls are intentional.
+#   See: https://docs.astral.sh/ruff/rules/root-logger-call/
+lint.ignore = [ "D400", "ERA001", "LOG015" ]
+lint.isort.combine-as-imports = true
+# Allow rules to add `from __future__ import annotations` in cases where
+# this would simplify a fix or enable a new diagnostic.
+# https://docs.astral.sh/ruff/settings/#lint_future-annotations
+lint.future-annotations = true
 
-[tool.uv.build-backend]
-# Package is at root level, not in "./src/".
-module-root = ""
+[tool.typos]
+default.extend-identifiers = { Github = "GitHub", IOS = "iOS", Javascript = "JavaScript", MacOS = "macOS", PyPi = "PyPI", Typescript = "TypeScript" }
+# False positives: "astroid" is a Python AST library (not "asteroid"); "oject" appears when "pyproject.toml" is split across line breaks in CLI help output.
+default.extend-words = { astroid = "astroid", oject = "oject" }
+# Skip content between <!-- typos:off --> and <!-- typos:on --> markers.
+default.extend-ignore-re = [ "(?s)<!-- typos:off -->.*?<!-- typos:on -->" ]
+default.extend-ignore-identifiers-re = [
+  # "certifi" is the certificate-bundle package name, surfaced in the Mermaid
+  # dependency graph at docs/assets/dependencies.mmd.
+  "certifi",
+  # error: `ist` should be `is`, `it`, `its`, `sit`, `list`
+  #     ╭▸ ./docs/development.md:107:10
+  #     │
+  # 107 │ - [chalk.ist](https://chalk.ist)
+  #     ╰╴         ━━━
+  # error: `ist` should be `is`, `it`, `its`, `sit`, `list`
+  #     ╭▸ ./docs/development.md:107:29
+  #     │
+  # 107 │ - [chalk.ist](https://chalk.ist)
+  #     ╰╴                            ━━━
+  "ist",
+]
 
 [tool.mypy]
-warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_return_any = true
 warn_unreachable = true
 pretty = true
+warn_unused_configs = true
 
 [tool.pytest]
 # https://docs.pytest.org/en/latest/customize.html#pyproject-toml
 addopts = [
-    "--durations=10",
-    "--cov=mail_deduplicate",
-    "--cov-branch",
-    "--cov-precision=2",
-    "--cov-report=term",
-    "--cov-report=xml",
-    # Codecov's test analytics requires a JUnit XML file:
-    # https://docs.codecov.com/docs/test-analytics#1-output-a-junit-xml-file-in-your-ci
-    "--junitxml=junit.xml",
-    "--override-ini=junit_family=legacy",
+  "--durations=10",
+  "--cov=mail_deduplicate",
+  "--cov-branch",
+  "--cov-precision=2",
+  "--cov-report=term",
+  "--cov-report=xml",
+  # Codecov's test analytics requires a JUnit XML file:
+  # https://docs.codecov.com/docs/test-analytics#1-output-a-junit-xml-file-in-your-ci
+  "--junitxml=junit.xml",
+  "--override-ini=junit_family=legacy",
 ]
 # Make sure tests that are expected to fail do not resurect and start working all of a sudden.
 xfail_strict = true
@@ -227,29 +271,6 @@ regex = true
 search = "date-released: \\d{{4}}-\\d{{2}}-\\d{{2}}"
 replace = "date-released: {utcnow:%Y-%m-%d}"
 
-[tool.typos]
-default.extend-identifiers = { Github = "GitHub", IOS = "iOS", Javascript = "JavaScript", MacOS = "macOS", PyPi = "PyPI", Typescript = "TypeScript" }
-# False positives: "astroid" is a Python AST library (not "asteroid"); "oject" appears when "pyproject.toml" is split across line breaks in CLI help output.
-default.extend-words = { astroid = "astroid", oject = "oject" }
-# Skip content between <!-- typos:off --> and <!-- typos:on --> markers.
-default.extend-ignore-re = [ "(?s)<!-- typos:off -->.*?<!-- typos:on -->" ]
-default.extend-ignore-identifiers-re = [
-    # "certifi" is the certificate-bundle package name, surfaced in the Mermaid
-    # dependency graph at docs/assets/dependencies.mmd.
-    "certifi",
-    # error: `ist` should be `is`, `it`, `its`, `sit`, `list`
-    #     ╭▸ ./docs/development.md:107:10
-    #     │
-    # 107 │ - [chalk.ist](https://chalk.ist)
-    #     ╰╴         ━━━
-    # error: `ist` should be `is`, `it`, `its`, `sit`, `list`
-    #     ╭▸ ./docs/development.md:107:29
-    #     │
-    # 107 │ - [chalk.ist](https://chalk.ist)
-    #     ╰╴                            ━━━
-    "ist",
-]
-
 [tool.lychee]
 exclude = [
   # Skip archive.ph and Sci-Hub because they restrict access to crawlers.
@@ -268,36 +289,8 @@ exclude = [
   "^https://pip.pypa.io/.*$",
 ]
 
-[tool.ruff]
-preview = true
-fix = true
-unsafe-fixes = true
-show-fixes = true
-# Enable formatting of Python code blocks in Markdown files.
-# https://docs.astral.sh/ruff/formatter/#markdown-code-formatting
-extend-include = [ "*.{markdown,mdown,mkdn,mdwn,mkd,md,mdtxt,mdtext,mdx}" ]
-# Enable reformatting of code snippets in docstrings.
-# https://docs.astral.sh/ruff/formatter/#docstring-formatting
-format.docstring-code-format = true
-# D400: First line should end with a period.
-#   Allows docstrings to end up with any punctuation, not just a period.
-#   See: https://github.com/astral-sh/ruff/issues/1858#issuecomment-1382640623
-# ERA001: Found commented-out code.
-#   Do not remove commented code, as it might be used for documentation.
-#   See: https://docs.astral.sh/ruff/rules/#eradicate-era
-# LOG015: Root logger calls (logging.info(), etc.).
-#   The CLI configures the root logger via Click, so root logger calls are intentional.
-#   See: https://docs.astral.sh/ruff/rules/root-logger-call/
-lint.ignore = [ "D400", "ERA001", "LOG015" ]
-# Allow rules to add `from __future__ import annotations` in cases where
-# this would simplify a fix or enable a new diagnostic.
-# https://docs.astral.sh/ruff/settings/#lint_future-annotations
-lint.future-annotations = true
-lint.isort.combine-as-imports = true
-
 [tool.mdformat]
 number = true
-
 # Disable URL validation so mdformat-recover-urls can decode percent-encoded
 # non-ASCII characters in link destinations back to their original form.
 # See https://github.com/hukkin/mdformat/issues/312 and
