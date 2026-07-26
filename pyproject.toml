@@ -123,9 +123,12 @@ file-description = "📧 CLI to deduplicate mails from mail boxes"
 copyright = "Kevin Deldycke <kevin@deldycke.com> and contributors. Distributed under GPL-2.0-or-later license."
 file-version = "9.0.0"
 product-version = "9.0.0"
-macos-app-icon = "docs/assets/icon.png"
+# Each platform points at its native icon format. Passing a non-native image
+# (like a PNG to --windows-icon-from-ico) makes Nuitka require the imageio
+# package to convert it, which fails the build.
+macos-app-icon = "docs/assets/icon.icns"
 linux-icon = "docs/assets/icon.png"
-windows-icon-from-ico = "docs/assets/icon.png"
+windows-icon-from-ico = "docs/assets/icon.ico"
 
 [tool.ruff]
 # Enable formatting of Python code blocks in Markdown files.
