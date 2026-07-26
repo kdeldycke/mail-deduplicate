@@ -542,7 +542,7 @@ def mdedup(
         # Print all computed hashes.
         for all_mails in dedup.mails.values():
             for mail in all_mails:
-                echo(mail.pretty_headers)
+                echo(mail.pretty_canonical_headers())
                 echo(f"Hash: {mail.hash_key()}")
 
         # Exit right away.

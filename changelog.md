@@ -5,6 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Fix `AttributeError` crash in `-H`/`--hash-only` mode.
 - Add `--jobs` option to parallelize mail hashing.
 - Migrate repository tooling, CI and release automation to [`repomatic`](https://github.com/kdeldycke/repomatic) reusable workflows. Replace Dependabot with Renovate.
 - Adopt the PEP 440 `.devN` development versioning scheme.

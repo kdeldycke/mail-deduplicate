@@ -88,6 +88,20 @@ def test_theme_styles_runtime_output(invoke, make_box, theme_id):
     assert styled_heading in result.stdout
 
 
+def test_hash_only_prints_canonical_headers(invoke, make_box):
+    """``-H/--hash-only`` must print each mail's canonical headers and its hash.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/1004
+    """
+    box_path, _, _ = make_box(Maildir, [MailFactory(message_id="<a@nohost.com>")])
+
+    result = invoke("--action=delete-selected", "--hash-only", box_path)
+    assert result.exit_code == 0
+    assert result.exception is None
+    assert "message-id" in result.stdout.lower()
+    assert "Hash: " in result.stdout
+
+
 def test_cli_test_suite():
     """Run the TOML black-box suite (cli-test-suite.toml) against the installed mdedup.
 
