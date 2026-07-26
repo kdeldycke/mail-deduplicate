@@ -6,6 +6,7 @@
 > This version is **not released yet** and is under active development.
 
 - **Breaking:** upgrade to `click-extra` `8.1`, which renames the `--show-params` option to `--params`. The upgrade also drops the removed `ExtraCommand` import that broke `8.1.2` against recent `click-extra`. Closes [#1009](https://github.com/kdeldycke/mail-deduplicate/issues/1009).
+- **Breaking:** remove the `-m`/`--minimal-headers` option. The per-mail floor is now derived automatically as `min(4, number of --hash-header values)`, so narrowing the hash below four headers, down to a single one, no longer needs a separate flag. Closes [#974](https://github.com/kdeldycke/mail-deduplicate/issues/974).
 - Fix `AttributeError` crash in `-H`/`--hash-only` mode when displaying each mail's canonical headers. Closes [#1004](https://github.com/kdeldycke/mail-deduplicate/issues/1004).
 - Add `--jobs` option to parallelize mail hashing.
 - Add `--theme` option to select the CLI color theme.

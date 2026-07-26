@@ -29,7 +29,7 @@ Hashing is done by cherry-picking certain headers, in some cases doing some mino
 The list of headers to consider can be set with the `-h`/`--hash-header` option.
 
 ```{tip}
-You can still use `Message-ID` as the sole reference header by passing `--hash-header Message-ID --minimal-headers 1` to the CLI.
+You can use `Message-ID` as the sole reference header by passing `--hash-header Message-ID` to the CLI.
 ```
 
 ### Default headers and mailing lists
@@ -57,9 +57,9 @@ This set was crafted to limit the effects of mailing-lists on both the mail head
 
 ### ❎ Safeguard: minimal headers
 
-To avoid hashing mails with too few headers (e.g., corrupted mails), we introduced a minimal number of headers required to compute a hash.
+To avoid hashing mails with too few headers (like corrupted mails), a minimal number of the selected headers must be present in a mail before its hash is trusted.
 
-By default, this minimal number of headers is set to **4**. It can be changed via the `--minimal-headers` option.
+This floor is derived automatically as the smaller of **4** and the number of headers selected via `--hash-header`. The default ten-header set therefore requires at least four to be present, while narrowing the selection down to a single header relaxes the floor to match, so no dedicated option is needed.
 
 ## Step 3: Selecting duplicates
 

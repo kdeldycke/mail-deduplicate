@@ -155,3 +155,32 @@ def test_hash_only_prints_headers(invoke, make_box, box_type):
     # The canonical-headers table and the computed hash are printed for the mail.
     assert "Header ID" in result.stdout
     assert "Hash:" in result.stdout
+
+
+def test_single_hash_header_needs_no_minimal_flag(invoke, make_box):
+    """A single ``--hash-header`` must work without a separate minimal-headers flag.
+
+    Regression test: narrowing the hash below four headers used to raise "Provided
+    number of headers to hash (1) is less than the minimal required number of headers
+    (4)" and then reject every mail. The floor is now derived as
+    ``min(4, number of --hash-header values)``, so a lone header is enough.
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/974
+    """
+    box_path, _, export_path = make_box(
+        Maildir,
+        [MailFactory(message_id="<solo@nohost.com>")],
+    )
+
+    result = invoke(
+        "--hash-header",
+        "message-id",
+        "--hash-only",
+        "--export",
+        export_path,
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    # The mail is hashed rather than rejected by the minimal-headers floor.
+    assert "Hash:" in result.stdout
+    assert "Rejecting" not in result.stderr

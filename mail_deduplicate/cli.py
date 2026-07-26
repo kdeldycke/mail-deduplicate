@@ -89,6 +89,16 @@ By default we choose to exclude:
 """
 
 
+DEFAULT_MINIMAL_HEADERS = 4
+"""Cap on the number of headers that must be present in a mail to compute a solid hash.
+
+The per-mail floor is ``min(DEFAULT_MINIMAL_HEADERS, len(hash_headers))``: it rejects
+near-empty or corrupted mails whose hash would rest on too few headers, while relaxing
+automatically when the hash is narrowed to fewer headers than this cap via
+``--hash-header``.
+"""
+
+
 class Config(TypedDict):
     """Holds global configuration."""
 
@@ -222,17 +232,6 @@ class MdedupCommand(Command):
         help="Headers to use to compute each mail's hash. Must be repeated multiple "
         "times to set an ordered list of headers. Header IDs are case-insensitive. "
         "Repeating entries are ignored.",
-    ),
-    option(
-        "-m",
-        "--minimal-headers",
-        type=IntRange(min=1),
-        metavar="INTEGER",
-        default=4,
-        help="Minimum number of headers required in a mail to compute its hash. Below "
-        "this value, we consider not having enough headers to compute a solid hash. "
-        "Increase this value to be more strict and avoid hashing mails with too few "
-        "headers (e.g., corrupted mails).",
     ),
     option(
         "-b",
@@ -396,7 +395,6 @@ def mdedup(
     input_format,
     force_unlock,
     hash_header,
-    minimal_headers,
     hash_body,
     hash_only,
     size_threshold,
@@ -428,13 +426,6 @@ def mdedup(
         # Same as Click Extra's HelpOption.print_help.
         echo(ctx.get_help(), color=ctx.color)
         ctx.exit()
-
-    # Check hash_header and minimal_headers consistency.
-    if len(hash_header) < minimal_headers:
-        raise BadParameter(
-            f"Provided number of headers to hash ({len(hash_header)}) is less than "
-            f"the minimal required number of headers ({minimal_headers})."
-        )
 
     # Validate exclusive options requirement depending on strategy or action.
     # TODO: use Cloup option constraints to express these dependencies?
@@ -486,7 +477,7 @@ def mdedup(
         input_format=input_format,
         force_unlock=force_unlock,
         hash_headers=hash_header,
-        minimal_headers=minimal_headers,
+        minimal_headers=min(DEFAULT_MINIMAL_HEADERS, len(hash_header)),
         hash_body=hash_body,
         hash_only=hash_only,
         size_threshold=size_threshold,

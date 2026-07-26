@@ -60,4 +60,4 @@ $ uv run -- mdedup --help
 ### Non-obvious rules
 
 - `DedupMailMixin` is mixed into each `mailbox.Message` subclass at runtime by `make_dedup_mail()`, so every box format shares one dedup implementation. Keep format-specific code in `mail_box.py`; keep format-agnostic dedup logic on the mixin.
-- Three opt-in safeguards make destructive runs safer: a minimal-headers floor, a size threshold and a content threshold. They are described in `docs/design.md`; run `mdedup --help` for the exact option names. When changing selection or hashing, re-read those safeguards: they exist to avoid deleting mails that only look like duplicates.
+- Three safeguards make destructive runs safer: an automatic minimal-headers floor (derived as `min(4, number of --hash-header values)`, no option) plus two opt-in thresholds on size and content. They are described in `docs/design.md`; run `mdedup --help` for the threshold option names. When changing selection or hashing, re-read those safeguards: they exist to avoid deleting mails that only look like duplicates.
