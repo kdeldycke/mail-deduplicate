@@ -16,7 +16,7 @@
 
 from __future__ import annotations
 
-from mailbox import Maildir
+from mailbox import Maildir, mbox
 from pathlib import Path
 
 import pytest
@@ -132,3 +132,26 @@ def test_parallel_hashing_matches_sequential(invoke, make_box):
     assert sequential.exit_code == 0
     assert parallel.exit_code == 0
     assert parallel.stdout == sequential.stdout
+
+
+@pytest.mark.parametrize("box_type", (Maildir, mbox))
+def test_hash_only_prints_headers(invoke, make_box, box_type):
+    """``--hash-only`` must print each mail's canonical headers and hash, not crash.
+
+    Regression test: the display loop referenced a non-existent ``mail.pretty_headers``
+    attribute, so ``--hash-only`` died with ``AttributeError`` on the first mail.
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/1004
+    """
+    box_path, _, export_path = make_box(
+        box_type,
+        [MailFactory(message_id="<a@nohost.com>")],
+    )
+
+    # --export satisfies the default copy-selected action's requirement; --hash-only
+    # exits before any action runs, so nothing is written there.
+    result = invoke("--hash-only", "--export", export_path, box_path)
+
+    assert result.exit_code == 0
+    # The canonical-headers table and the computed hash are printed for the mail.
+    assert "Header ID" in result.stdout
+    assert "Hash:" in result.stdout
