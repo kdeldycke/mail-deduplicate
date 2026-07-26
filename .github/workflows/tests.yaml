@@ -39,40 +39,46 @@ concurrency:
 
 jobs:
 
+  metadata:
+    name: 🧬 Project metadata
+    # Real version-bump skip: the trigger's `branches-ignore` matches the PR's
+    # base branch (always `main`), not its head, so version-bump PRs slip
+    # through it. Skipping `metadata` propagates to every `needs: metadata` job
+    # below. The branch and commit-prefix lists mirror repomatic's
+    # `VERSION_BUMP_BRANCHES` and `MANUAL_VERSION_BUMP_COMMIT_PREFIXES`. The
+    # `[changelog] Post-release bump ` prefix is intentionally excluded: that
+    # push also carries the release commit, our only post-merge test of the
+    # release-frozen tree.
+    if: >
+      !contains(fromJSON('["major-version-increment","minor-version-increment","prepare-release"]'),
+      github.head_ref)
+      && !startsWith(github.event.head_commit.message || '', 'Bump major version to ')
+      && !startsWith(github.event.head_commit.message || '', 'Bump minor version to ')
+    runs-on: ubuntu-slim
+    outputs:
+      metadata: ${{ steps.metadata.outputs.metadata }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - name: Run repomatic metadata
+        id: metadata
+        run: >
+          uvx --no-progress 'repomatic==7.3.0' metadata
+          --format github-json --output "$GITHUB_OUTPUT"
+          coverage_cells test_matrix test_matrix_pr
+
   tests:
+    needs:
+      - metadata
     strategy:
       # We delegate the failure decision to each job, by the way of the "continue-on-error" flag.
       fail-fast: false
-      matrix:
-        # Available OS: https://github.com/actions/runner-images#available-images
-        # To speed up the tests, we only test the latest available OS for each platform.
-        os:
-          - ubuntu-24.04-arm # arm64
-          - macos-26         # arm64
-          - windows-11-arm   # arm64
-        python-version:
-          - "3.10"
-          # Ignore intermediate versions to reduce CI load.
-          # - "3.11"
-          # - "3.12"
-          # - "3.13"
-          - "3.14"
-          - "3.14t"
-          - "3.15"
-          - "3.15t"
-        exclude:
-          # No aarch64 Windows build of CPython 3.10 exists upstream: uv has
-          # no managed interpreter for cpython-3.10-aarch64-pc-windows-msvc.
-          - os: windows-11-arm
-            python-version: "3.10"
-        include:
-          # Default all jobs as stable, unless marked otherwise below.
-          - state: stable
-          # XXX Python 3.15 is still in development.
-          - state: unstable
-            python-version: "3.15"
-          - state: unstable
-            python-version: "3.15t"
+      # Matrix is pre-computed by repomatic metadata. PRs get a reduced matrix
+      # (fewer OS variants and Python versions) to save CI minutes.
+      matrix: >-
+        ${{ github.event_name != 'pull_request'
+        && fromJSON(needs.metadata.outputs.metadata).test_matrix
+        || fromJSON(needs.metadata.outputs.metadata).test_matrix_pr }}
     name: "${{ matrix.state == 'stable' && '✅' || '⁉️' }} ${{ matrix.os }} / py${{ matrix.python-version }}"
     runs-on: ${{ matrix.os }}
     # We keep going when a job flagged as not stable fails.
@@ -143,6 +149,12 @@ jobs:
         run: uv --no-progress run --frozen -- pytest
 
       - name: Upload coverage to Codecov
+        # Upload coverage only from the coverage-distinct cells (the
+        # `coverage_cells` set from repomatic metadata): coverage depends on OS
+        # family and Python version, never CPU architecture, so architecture
+        # twins and prerelease cells run the suite but produce coverage already
+        # captured by these. The membership test pads both operands with spaces
+        # to match a whole `os|python-version` token, not a substring.
         # Skip on sync-repomatic PRs (data-only changes with no coverable lines)
         # and fork PRs (secrets are not available).
         # continue-on-error: codecov-cli depends on test-results-parser, a Rust
@@ -151,6 +163,8 @@ jobs:
         if: >
           github.head_ref != 'sync-repomatic'
           && env.CODECOV_TOKEN != ''
+          && contains(format(' {0} ', fromJSON(needs.metadata.outputs.metadata).coverage_cells),
+          format(' {0}|{1} ', matrix.os, matrix.python-version))
         continue-on-error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
