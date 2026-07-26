@@ -5,7 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
-- **Breaking:** upgrade to `click-extra` `8.1`, which renames the `--show-params` option to `--params`.
+- **Breaking:** upgrade to `click-extra` `8.1`, which renames the `--show-params` option to `--params`. The upgrade also drops the removed `ExtraCommand` import that broke `8.1.2` against recent `click-extra`. Closes [#1009](https://github.com/kdeldycke/mail-deduplicate/issues/1009).
 - Add `--jobs` option to parallelize mail hashing.
 - Add `--theme` option to select the CLI color theme.
 - Migrate repository tooling, CI and release automation to [`repomatic`](https://github.com/kdeldycke/repomatic) reusable workflows. Replace Dependabot with Renovate.
