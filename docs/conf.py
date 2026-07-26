@@ -59,6 +59,11 @@ myst_enable_extensions = [
 # https://github.com/mgaitan/sphinxcontrib-mermaid/issues/99#issuecomment-2339587001
 myst_fence_as_directive = ["mermaid"]
 
+# Generate implicit anchors for headings (down to H6) so same-page `#slug` links in
+# included Markdown resolve in the build (like readme.md's `#executables`), matching
+# GitHub. Drop to 3 if deeper headings ever collide into duplicate-anchor warnings.
+myst_heading_anchors = 6
+
 mermaid_d3_zoom = True
 
 # Emit a roff man page (man/mdedup.1, plus an .html sibling when mandoc or groff is
@@ -70,6 +75,11 @@ click_extra_manpages = [
         "prog_name": "mdedup",
     },
 ]
+
+# The click:run directives (and their python: siblings) execute build-time Python,
+# so click-extra 8.x gates them behind this opt-in (default off). Pages under docs/
+# use {click:run} to render live CLI output, so it must be turned on here.
+click_extra_enable_exec_directives = True
 
 master_doc = "index"
 
@@ -91,6 +101,7 @@ github_user = "kdeldycke"
 issues_github_path = f"{github_user}/{project_id}"
 
 intersphinx_mapping = {
+    "click_extra": ("https://kdeldycke.github.io/click-extra", None),
     "python": ("https://docs.python.org/3", None),
 }
 

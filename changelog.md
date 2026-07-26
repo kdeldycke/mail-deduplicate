@@ -5,12 +5,14 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Add `--jobs` option to parallelize mail hashing.
 - Migrate repository tooling, CI and release automation to [`repomatic`](https://github.com/kdeldycke/repomatic) reusable workflows. Replace Dependabot with Renovate.
 - Adopt the PEP 440 `.devN` development versioning scheme.
 - Switch to the `uv_build` build backend and declare the license as an SPDX expression.
-- Upgrade to `click-extra` `8.0.0`.
+- Upgrade to `click-extra` `8.1.0`.
 - Move `test`, `typing` and `docs` extras to dependency groups.
 - Replace the `arrow` date library with [`whenever`](https://github.com/ariebovenberg/whenever).
+- Rename the development documentation page to contributing, convert the API docs to MyST Markdown and add a Claude Code project guide.
 
 ## [`8.1.2` (2025-12-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.1...v8.1.2)
 

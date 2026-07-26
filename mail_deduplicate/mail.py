@@ -16,12 +16,12 @@
 
 from __future__ import annotations
 
-import email.header
 import email.utils
 import hashlib
 import logging
 import os
 import re
+from email.header import Header
 from enum import Enum
 from functools import cached_property
 from mailbox import Message
@@ -143,7 +143,7 @@ class DedupMailMixin(Message):
         self.mail_id = mail_id
 
         # Extract file name and close it right away to reclaim memory.
-        mail_file: _ProxyFile = box.get_file(mail_id)
+        mail_file = box.get_file(mail_id)
         self.path = mail_file._file.name  # type: ignore[attr-defined]
         mail_file.close()
 
@@ -349,10 +349,12 @@ class DedupMailMixin(Message):
             return
 
         for header_value in all_values:
-            if isinstance(header_value, email.header.Header):  # type: ignore[unreachable]
+            if isinstance(header_value, Header):  # type: ignore[unreachable]
                 value = str(header_value)  # type: ignore[unreachable]
             elif isinstance(header_value, bytes):  # type: ignore[unreachable]
-                value = header_value.decode("utf-8", "replace")  # type: ignore[unreachable]
+                value = header_value.decode(  # type: ignore[unreachable]
+                    "utf-8", "replace"
+                )
             else:
                 value = header_value
 

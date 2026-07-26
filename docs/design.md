@@ -69,12 +69,12 @@ Once all mails have been hashed, mails with the same hash are grouped together a
 
 Sets of duplicates are verified by comparing body sizes, and if they differ by more than a threshold, they are not counted as duplicates and the whole set is skipped with a warning.
 
-Since we're ignoring the `Content-Length` header by default [because of mailing-list effects](https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists), we introduced a limit on the allowed difference between the sizes of the message payloads.
+Since we're ignoring the `Content-Length` header by default [because of mailing-list effects](https://kdeldycke.github.io/mail-deduplicate/design.html#default-headers-and-mailing-lists), we introduced a limit on the allowed difference between the sizes of the message payloads.
 
 If this threshold is exceeded, a warning is issued and the messages are not considered duplicates, because this could point to message corruption somewhere, or a false positive.
 
 ```{caution}
-Headers are not counted towards this threshold, because many [headers can be added by mailing list software](https://kdeldycke.github.io/mail-deduplicate/design.html#mailing-lists) such as `mailman`, or even by the process of sending the mail through various MTAs.
+Headers are not counted towards this threshold, because many [headers can be added by mailing list software](https://kdeldycke.github.io/mail-deduplicate/design.html#default-headers-and-mailing-lists) such as `mailman`, or even by the process of sending the mail through various MTAs.
 
 One copy could have been stored by the sender's MUA prior to sending, without any `Received` headers, and another copy could be reflected back via a `CC`-to-self mechanism or mailing list server.
 

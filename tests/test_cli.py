@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 from click_extra import BUILTIN_THEMES
-from click_extra.test_plan import parse_test_plan, run_test_plan
+from click_extra.test_suite import load_test_suite, run_test_suite
 
 from .conftest import MailFactory
 
@@ -88,16 +88,16 @@ def test_theme_styles_runtime_output(invoke, make_box, theme_id):
     assert styled_heading in result.stdout
 
 
-def test_cli_test_plan():
-    """Run the YAML black-box plan (cli-test-plan.yaml) against the installed mdedup.
+def test_cli_test_suite():
+    """Run the TOML black-box suite (cli-test-suite.toml) against the installed mdedup.
 
-    Each case is executed as a subprocess by click-extra's test_plan runner, so this
+    Each case is executed as a subprocess by click-extra's test-suite runner, so this
     exercises the real entry point (version reporting, help screen rendering).
     """
-    plan = (Path(__file__).parent / "cli-test-plan.yaml").read_text(encoding="utf-8")
-    cases = list(parse_test_plan(plan))
-    assert cases, "Empty test plan: cli-test-plan.yaml parsed to zero cases."
-    result = run_test_plan("mdedup", cases)
+    suite = Path(__file__).parent / "cli-test-suite.toml"
+    cases = list(load_test_suite(suite))
+    assert cases, "Empty test suite: cli-test-suite.toml parsed to zero cases."
+    result = run_test_suite("mdedup", cases)
     assert result["failed"] == 0
 
 
