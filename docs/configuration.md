@@ -25,9 +25,9 @@ action = "delete-discarded"
 
 ## Troubleshooting
 
-You can easily debug the way `mdedup` source its configuration with the `--show-params`:
+You can easily debug the way `mdedup` source its configuration with the `--params`:
 
 ```{click:run}
 from mail_deduplicate.cli import mdedup
-invoke(mdedup, args=["--table-format", "vertical", "--show-params"])
+invoke(mdedup, args=["--table-format", "vertical", "--params"])
 ```
