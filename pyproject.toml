@@ -137,6 +137,9 @@ typing = [
 # Pin uv to a single minor series so every contributor and CI runner resolves
 # uv.lock with the same resolver (astral-sh/setup-uv reads this automatically).
 required-version = ">=0.11.23,<0.12"
+# The docs are only built on modern Python, letting the docs group adopt
+# packages (like myst-parser 5.1) that dropped support for our older floors.
+dependency-groups.docs = { requires-python = ">= 3.14" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
 # Per-package cooldown control. A fixed date holds a package at the version
@@ -150,9 +153,6 @@ exclude-newer = "1 week"
 exclude-newer-package = { click-extra = "2026-07-25T00:00:00Z" }
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
-# The docs are only built on modern Python, letting the docs group adopt
-# packages (like myst-parser 5.1) that dropped support for our older floors.
-dependency-groups.docs = { requires-python = ">= 3.14" }
 
 [tool.nuitka]
 product-name = "Mail Deduplicate"
