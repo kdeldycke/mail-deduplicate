@@ -1,5 +1,10 @@
 # Changelog
 
+## [`9.0.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.0.0...main)
+
+> [!WARNING]
+> This version is **not released yet** and is under active development.
+
 ## [`9.0.0` (2026-07-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.2...v9.0.0)
 
 - **Breaking:** upgrade to `click-extra` `8.1`, which renames the `--show-params` option to `--params`. The upgrade also drops the removed `ExtraCommand` import that broke `8.1.2` against recent `click-extra`. Closes [#1009](https://github.com/kdeldycke/mail-deduplicate/issues/1009).
