@@ -79,34 +79,59 @@ urls.Repository = "https://github.com/kdeldycke/mail-deduplicate"
 scripts.mdedup = "mail_deduplicate.__main__:main"
 
 [dependency-groups]
-## Non-runtime dependencies, for development and CI, are using the ~= specifier to reduce randomness.
+## Non-runtime dependencies, for development and CI, use minimal-version floors: uv.lock pins the
+## exact versions and the sync-deps updaters manage bumps within the cooldown.
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
 test = [
   "click-extra[pytest]>=8.1",
-  "coverage[toml]~=7.12.0",
-  "extra-platforms[pytest]~=13.0.0",
-  "pytest~=9.0.1",
-  "pytest-cov~=7.0.0",
-  "pytest-github-actions-annotate-failures~=0.3.0",
-  "pytest-randomly~=4.0.0",
+  # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
+  "coverage[toml]>=7.11",
+  # extra-platforms 13 is the major in use; its [pytest] extra ships the skip_windows
+  # marker used by the test suite.
+  "extra-platforms[pytest]>=13",
+  # Pytest 9.0.0 introduced support for native TOML configuration files.
+  "pytest>=9",
+  # pytest-cov 4.0 stabilized the modern pytest plugin interface; --cov/--cov-report in addopts.
+  "pytest-cov>=4",
+  # pytest-github-actions-annotate-failures 0.2 requires Python >= 3.8; CI annotation
+  # API stable since 0.1.x.
+  "pytest-github-actions-annotate-failures>=0.2",
+  # pytest-randomly 3.x is the modern API; basic test randomization compatible with pytest >= 9.
+  "pytest-randomly>=3",
+  # pytest-xdist < 3.7 fails on Python 3.14 (no requires-python guard in older releases);
+  # [psutil] extra needed for --numprocesses=auto.
+  "pytest-xdist[psutil]>=3.7",
 ]
 docs = [
   "click-extra[sphinx]>=8.1",
-  "furo~=2025.9.25",
-  "myst-parser~=4.0.0",
+  # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
+  "furo>=2025.9.25",
+  # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
+  # that renders GitHub-style alerts as admonitions; earlier 5.x reject "alert".
+  "myst-parser>=5.1",
   # Sphinx  8.0.0 is the first version to drop Python 3.9, like us.
   "sphinx>=8",
   # sphinx-autodoc-typehints 2.4.0 is the first version that is aligned to our Python >= 3.10 requirement.
   "sphinx-autodoc-typehints>=2.4",
-  "sphinx-click~=6.1.0",
-  "sphinx-copybutton~=0.5.2",
-  "sphinx-design~=0.6.0",
-  "sphinxcontrib-mermaid~=1.2.3",
-  "sphinxext-opengraph~=0.13.0",
-  # tomli provides tomllib.loads() for Python < 3.11; docs/conf.py reads pyproject.toml.
-  "tomli>=2; python_version<'3.11'",
+  # sphinx-click 6.1 is the release in use when the group switched to minimal-version floors.
+  "sphinx-click>=6.1",
+  # sphinx-copybutton 0.5.2 stabilized the copy button behavior for code blocks.
+  "sphinx-copybutton>=0.5.2",
+  # sphinx-design 0.6 introduced the current directive syntax for cards, grids, and tabs.
+  "sphinx-design>=0.6",
+  # sphinxcontrib-mermaid 1.2.3 fixed mermaid_d3_zoom configuration support.
+  "sphinxcontrib-mermaid>=1.2.3",
+  # sphinxext-opengraph 0.13 stabilized OpenGraph metadata generation for Sphinx 8+.
+  "sphinxext-opengraph>=0.13",
 ]
-typing = [ "types-boltons~=25.0.0.20250822" ]
+typing = [
+  # backports-strenum provides StrEnum stubs for mypy --python-version 3.10 analysis;
+  # version-gated to Python < 3.11 in the runtime deps, so added here unconditionally
+  # for type checking from modern interpreters.
+  "backports-strenum>=1",
+  # types-boltons 25.0.0.20250822 is the first stub release covering the boltons 25.0 API.
+  "types-boltons>=25.0.0.20250822",
+]
 
 [tool.uv]
 # Pin uv to a single minor series so every contributor and CI runner resolves
@@ -114,8 +139,20 @@ typing = [ "types-boltons~=25.0.0.20250822" ]
 required-version = ">=0.11.23,<0.12"
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
+# Per-package cooldown control. A fixed date holds a package at the version
+# available then (the day after it shipped), so `uv lock --upgrade` keeps that
+# version instead of tracking newer releases. `sync-uv-lock` freezes new
+# bypasses at that date and prunes each entry once its held version ages past
+# `exclude-newer`, returning the package to the normal cooldown. click-extra
+# 8.6.0 is let through early: its CLI test-suite runner stops resolving venv
+# interpreter symlinks, which the `python -m` self-test step in tests.yaml
+# relies on.
+exclude-newer-package = { click-extra = "2026-07-25T00:00:00Z" }
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
+# The docs are only built on modern Python, letting the docs group adopt
+# packages (like myst-parser 5.1) that dropped support for our older floors.
+dependency-groups.docs = { requires-python = ">= 3.14" }
 
 [tool.nuitka]
 product-name = "Mail Deduplicate"
@@ -133,33 +170,6 @@ include-package-data = [ "click_extra" ]
 macos-app-icon = "docs/assets/icon.icns"
 linux-icon = "docs/assets/icon.png"
 windows-icon-from-ico = "docs/assets/icon.ico"
-
-[tool.ruff]
-# Enable formatting of Python code blocks in Markdown files.
-# https://docs.astral.sh/ruff/formatter/#markdown-code-formatting
-extend-include = [ "*.{markdown,mdown,mkdn,mdwn,mkd,md,mdtxt,mdtext,mdx}" ]
-preview = true
-fix = true
-unsafe-fixes = true
-show-fixes = true
-# Enable reformatting of code snippets in docstrings.
-# https://docs.astral.sh/ruff/formatter/#docstring-formatting
-format.docstring-code-format = true
-# D400: First line should end with a period.
-#   Allows docstrings to end up with any punctuation, not just a period.
-#   See: https://github.com/astral-sh/ruff/issues/1858#issuecomment-1382640623
-# ERA001: Found commented-out code.
-#   Do not remove commented code, as it might be used for documentation.
-#   See: https://docs.astral.sh/ruff/rules/#eradicate-era
-# LOG015: Root logger calls (logging.info(), etc.).
-#   The CLI configures the root logger via Click, so root logger calls are intentional.
-#   See: https://docs.astral.sh/ruff/rules/root-logger-call/
-lint.ignore = [ "D400", "ERA001", "LOG015" ]
-lint.isort.combine-as-imports = true
-# Allow rules to add `from __future__ import annotations` in cases where
-# this would simplify a fix or enable a new diagnostic.
-# https://docs.astral.sh/ruff/settings/#lint_future-annotations
-lint.future-annotations = true
 
 [tool.typos]
 default.extend-identifiers = { Github = "GitHub", IOS = "iOS", Javascript = "JavaScript", MacOS = "macOS", PyPi = "PyPI", Typescript = "TypeScript" }
@@ -196,18 +206,31 @@ warn_unused_configs = true
 # https://docs.pytest.org/en/latest/customize.html#pyproject-toml
 addopts = [
   "--durations=10",
-  "--cov=mail_deduplicate",
-  "--cov-branch",
-  "--cov-precision=2",
+  # Coverage sources and settings live in [tool.coverage]; the CI test workflow
+  # passes --cov-report=xml on the command line to produce the Codecov artifact.
+  "--cov",
   "--cov-report=term",
-  "--cov-report=xml",
-  # Codecov's test analytics requires a JUnit XML file:
-  # https://docs.codecov.com/docs/test-analytics#1-output-a-junit-xml-file-in-your-ci
-  "--junitxml=junit.xml",
-  "--override-ini=junit_family=legacy",
+  # Run tests in parallel across all logical cores (pytest-xdist).
+  "--numprocesses=auto",
+  # Import test modules via importlib instead of prepending their root dir to
+  # sys.path. Avoids "import file mismatch" collection errors when an installed
+  # copy of the package coexists with the source tree, as in distro builds.
+  "--import-mode=importlib",
 ]
-# Make sure tests that are expected to fail do not resurect and start working all of a sudden.
+markers = [
+  "once: Tests that only need to run once, not across the full CI matrix.",
+]
+# Restrict collection to the test suite, so pytest never descends into the
+# package or an installed copy of it in dual-copy builds.
+testpaths = [ "tests" ]
+# Make sure tests that are expected to fail do not resurrect and start working all of a sudden.
 xfail_strict = true
+
+[tool.coverage]
+# https://coverage.readthedocs.io/en/latest/config.html
+run.branch = true
+run.source = [ "mail_deduplicate" ]
+report.precision = 2
 
 [tool.bumpversion]
 current_version = "9.0.0.dev0"

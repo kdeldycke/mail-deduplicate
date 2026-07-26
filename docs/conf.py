@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib  # type: ignore[import-not-found]
-
+import tomllib
 
 project_path = Path(__file__).parent.parent.resolve()
 
@@ -45,6 +40,9 @@ extensions = [
 
 # https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
 myst_enable_extensions = [
+    # Render GitHub-style alerts (`> [!NOTE]`, `> [!IMPORTANT]`, ...) as
+    # admonitions.
+    "alert",
     "attrs_block",
     "attrs_inline",
     "deflist",
@@ -52,8 +50,6 @@ myst_enable_extensions = [
     "smartquotes",
     "strikethrough",
     "tasklist",
-    # XXX Only enabled so we can support GitHub admonitions.
-    "colon_fence",
 ]
 # XXX Allow ```mermaid``` directive to be used without curly braces (```{mermaid}```), see:
 # https://github.com/mgaitan/sphinxcontrib-mermaid/issues/99#issuecomment-2339587001

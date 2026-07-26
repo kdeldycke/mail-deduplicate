@@ -65,7 +65,8 @@ jobs:
         run: >
           uvx --no-progress 'repomatic==7.3.0' metadata
           --format github-json --output "$GITHUB_OUTPUT"
-          coverage_cells test_matrix test_matrix_pr
+          cli_scripts coverage_cells package_name
+          test_matrix test_matrix_pr
 
   tests:
     needs:
@@ -85,12 +86,14 @@ jobs:
     continue-on-error: ${{ matrix.state == 'unstable' }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-tags: true
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
       - name: Force native ARM64 Python on Windows ARM64
         # Workaround for https://github.com/astral-sh/uv/issues/12906: uv defaults to x86_64 Python on ARM64 Windows,
-        # relying on transparent emulation. Native extensions with Rust (e.g., test-results-parser from codecov-cli)
-        # fail to compile because the ARM64 Rust toolchain lacks the x86_64-pc-windows-msvc target. Setting UV_PYTHON
-        # to an architecture-qualified specifier forces uv (and uvx) to use native ARM64 Python for all steps.
+        # relying on transparent emulation, so the windows-11-arm cell would silently test emulated x86_64 Python
+        # instead of native ARM64. Setting UV_PYTHON to an architecture-qualified specifier forces uv (and uvx) to use
+        # native ARM64 Python for all steps.
         if: runner.os == 'Windows' && runner.arch == 'ARM64'
         shell: bash
         env:
@@ -114,58 +117,37 @@ jobs:
         shell: bash
         run: echo "PYTHONIOENCODING=utf8" >> "$GITHUB_ENV"
       - name: Install project
-        run: |
-          uv --no-progress sync --frozen --all-extras --group test
-
-      - name: Run local CLI
-        run: |
-          uv run -- mdedup --version
-      - name: Run CLI from module
-        run: |
-          uv run        -m mail_deduplicate --version
-          uv run python -m mail_deduplicate --version
-      - name: Run stable CLI
-        # mail-deduplicate 8.1.2 (the current stable release on PyPI) requires
-        # click-extra>=7.3.0 with no upper bound. In practice the 8.1.2 code only
-        # works with click-extra<7.15 (7.15+ renamed default_theme, 8.0+ removed
-        # ExtraCommand). Pin click-extra<7.15 for the uvx and script-entrypoint
-        # variants that exercise the PyPI package's own code. The -m module
-        # variants run the local project's code (editable-installed, higher
-        # priority in sys.path), so they use the project's own click-extra range.
-        run: |
-          uvx    --from mail-deduplicate --with 'click-extra<7.15'                   -- mdedup --version
-          uv run --with mail-deduplicate --with 'click-extra<7.15'                   -- mdedup --version
-          uv run --with mail-deduplicate                                              -m mail_deduplicate --version
-          uv run --with mail-deduplicate                                        python -m mail_deduplicate --version
-      - name: Run dev CLI
-        run: |
-          uvx    --from git+https://github.com/kdeldycke/mail-deduplicate -- mdedup --version
-          uv run --with git+https://github.com/kdeldycke/mail-deduplicate -- mdedup --version
-          uv run --with git+https://github.com/kdeldycke/mail-deduplicate -m mail_deduplicate --version
-          uv run --with git+https://github.com/kdeldycke/mail-deduplicate python -m mail_deduplicate --version
+        run: uv --no-progress sync --frozen --all-extras --group test
 
       - name: Unittests
-        # Coverage and JUnit XML artifacts for Codecov are configured in [tool.pytest] addopts.
-        run: uv --no-progress run --frozen -- pytest
+        # Produce the coverage XML artifact consumed by the Codecov upload below.
+        # `once`-marked tests are excluded from every matrix cell: the dedicated
+        # `once-tests` job below runs them on a single runner instead.
+        run: >
+          uv --no-progress run --frozen -- pytest
+          -m "not once"
+          --cov-report=xml
 
       - name: Upload coverage to Codecov
-        # Upload coverage only from the coverage-distinct cells (the
-        # `coverage_cells` set from repomatic metadata): coverage depends on OS
-        # family and Python version, never CPU architecture, so architecture
-        # twins and prerelease cells run the suite but produce coverage already
-        # captured by these. The membership test pads both operands with spaces
-        # to match a whole `os|python-version` token, not a substring.
-        # Skip on sync-repomatic PRs (data-only changes with no coverable lines)
-        # and fork PRs (secrets are not available).
-        # continue-on-error: codecov-cli depends on test-results-parser, a Rust
-        # extension with no wheel for win-arm64 or free-threaded Python. A build
-        # failure there must not fail the overall test job.
+        # Upload coverage only from the coverage-distinct cells: one runner per
+        # OS at released Python (the `coverage_cells` set, mirroring the PR
+        # matrix). Coverage depends on OS family and Python version, never CPU
+        # architecture, so architecture twins, prerelease, and free-threaded
+        # cells run the suite but produce coverage already captured by these.
+        #
+        # coverage_cells arrives as a space-joined string of `os|python-version`
+        # tokens (the GitHub list-output convention), so the membership test
+        # pads both operands with spaces to match a whole token, not a substring.
+        #
+        # Also skip sync-repomatic PRs (data-only changes with no coverable
+        # lines) and fork PRs (secrets are not available). The version-bump PR
+        # family is already filtered by the metadata job's `github.head_ref`
+        # gate above.
         if: >
           github.head_ref != 'sync-repomatic'
           && env.CODECOV_TOKEN != ''
           && contains(format(' {0} ', fromJSON(needs.metadata.outputs.metadata).coverage_cells),
           format(' {0}|{1} ', matrix.os, matrix.python-version))
-        continue-on-error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         shell: bash
@@ -176,11 +158,62 @@ jobs:
           --git-service github
           --report-type coverage
           --token "${CODECOV_TOKEN}"
-      - name: Upload test results to Codecov
+
+      - name: Self-tests against test suite via console script
+        # click-extra owns the test-suite engine and CLI; it reads the suite from
+        # ./tests/cli-test-suite.toml (the click-extra 8.1 default, parsed with the
+        # built-in tomllib so no extra is needed). `--jobs max` runs cases across every
+        # logical core. The outer `uv run` provides the environment, avoiding per-case
+        # uv lock contention between parallel workers. The target is this repo's own
+        # console script (from repomatic metadata), so the self-test stays correct when
+        # this workflow is synced to downstream repos.
+        # Skipped for repos that ship no console script (nothing to self-test).
+        if: fromJSON(needs.metadata.outputs.metadata).cli_scripts[0]
+        env:
+          CLI_SCRIPT: ${{ fromJSON(needs.metadata.outputs.metadata).cli_scripts[0] }}
+        run: >
+          uv run --frozen --no-progress --
+          click-extra test-suite --command "${CLI_SCRIPT}" --jobs max
+      - name: Self-tests against test suite via python -m
+        # Same suite as above, driven through the interpreter's `-m` entry
+        # point so `__main__` stays exercised against the checkout on every
+        # cell (the package-install job only covers it for released builds).
+        if: fromJSON(needs.metadata.outputs.metadata).cli_scripts[0]
+        env:
+          PACKAGE: ${{ fromJSON(needs.metadata.outputs.metadata).package_name }}
+        shell: bash
+        run: |
+          module=$(echo "$PACKAGE" | tr '-' '_')
+          uv run --frozen --no-progress -- click-extra test-suite --command "python -m ${module}" --jobs max
+
+  once-tests:
+    name: 1️⃣ Run-once tests
+    needs:
+      - metadata
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-tags: true
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - name: Install Python
+        run: uv --no-progress venv --python 3.14
+      - name: Install project
+        run: uv --no-progress sync --frozen --all-extras --group test
+      - name: Run-once unittests
+        # `once`-marked tests (CLI invocability, plugin registration, metadata
+        # checks) behave identically on every OS and Python, so the matrix
+        # `tests` job excludes them and this single runner is their only
+        # executor.
+        run: uv --no-progress run --frozen -- pytest -m once --cov-report=xml
+      - name: Upload coverage to Codecov
+        # Same skip conditions as the matrix cells (data-only sync-repomatic
+        # PRs, fork PRs without secrets). No `coverage_cells` membership test:
+        # this job runs exactly once, and its upload keeps the lines only
+        # `once` tests cover counted in the merged report.
         if: >
           github.head_ref != 'sync-repomatic'
           && env.CODECOV_TOKEN != ''
-        continue-on-error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         shell: bash
@@ -189,5 +222,77 @@ jobs:
           --auto-load-params-from githubactions
           upload-process
           --git-service github
-          --report-type test_results
+          --report-type coverage
           --token "${CODECOV_TOKEN}"
+
+  test-package-install:
+    name: 📦 Package install
+    needs:
+      - metadata
+    # Installs from PyPI/GitHub (released version), not the PR code.
+    if: >-
+      github.event_name != 'pull_request'
+      && fromJSON(needs.metadata.outputs.metadata).cli_scripts
+    runs-on: ubuntu-slim
+    env:
+      CLI_SCRIPTS: ${{ fromJSON(needs.metadata.outputs.metadata).cli_scripts }}
+      GIT_URL: git+https://github.com/${{ github.repository }}
+      PACKAGE: ${{ fromJSON(needs.metadata.outputs.metadata).package_name }}
+    steps:
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      - name: Install Python
+        run: uv --no-progress venv --python 3.14
+      - name: Run stable CLI
+        run: |
+          for script in $CLI_SCRIPTS; do
+            uvx "$script" --version
+            uvx --from "$PACKAGE" -- "$script" --version
+            uv run --with "$PACKAGE" -- "$script" --version
+          done
+          module=$(echo "$PACKAGE" | tr '-' '_')
+          uv run --with "$PACKAGE" -m "$module" --version
+          uv run --with "$PACKAGE" python -m "$module" --version
+      - name: Run dev CLI
+        run: |
+          for script in $CLI_SCRIPTS; do
+            uvx --from "$GIT_URL" -- "$script" --version
+          done
+          module=$(echo "$PACKAGE" | tr '-' '_')
+          uvx --from "$GIT_URL" -- python -m "$module" --version
+      - name: Run stable CLI via uv tool
+        run: |
+          uv --no-progress tool install "$PACKAGE"
+          for script in $CLI_SCRIPTS; do
+            "$script" --version
+          done
+          uv --no-progress tool uninstall "$PACKAGE"
+      - name: Run dev CLI via uv tool
+        run: |
+          uv --no-progress tool install "$GIT_URL"
+          for script in $CLI_SCRIPTS; do
+            "$script" --version
+          done
+          uv --no-progress tool uninstall "$PACKAGE"
+      - name: Run stable CLI via pip
+        run: |
+          uv --no-progress pip install "$PACKAGE"
+          for script in $CLI_SCRIPTS; do
+            .venv/bin/"$script" --version
+          done
+          uv --no-progress pip uninstall "$PACKAGE"
+      - name: Run dev CLI via pip
+        run: |
+          uv --no-progress pip install "$GIT_URL"
+          for script in $CLI_SCRIPTS; do
+            .venv/bin/"$script" --version
+          done
+          uv --no-progress pip uninstall "$PACKAGE"
+      - name: Run CLI via pipx
+        run: |
+          uv --no-progress tool install pipx
+          for script in $CLI_SCRIPTS; do
+            pipx run "$script" --version
+            pipx run --spec "$PACKAGE" "$script" --version
+            pipx run --spec "$GIT_URL" "$script" --version
+          done
+          uv --no-progress tool uninstall pipx

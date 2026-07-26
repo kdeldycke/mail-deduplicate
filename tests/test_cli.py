@@ -88,11 +88,15 @@ def test_theme_styles_runtime_output(invoke, make_box, theme_id):
     assert styled_heading in result.stdout
 
 
+@pytest.mark.once
 def test_cli_test_suite():
     """Run the TOML black-box suite (cli-test-suite.toml) against the installed mdedup.
 
     Each case is executed as a subprocess by click-extra's test-suite runner, so this
     exercises the real entry point (version reporting, help screen rendering).
+
+    Marked ``once``: the CI matrix drives the same TOML suite in every cell through
+    click-extra's runner, so this Python-level wrapper only needs a single executor.
     """
     suite = Path(__file__).parent / "cli-test-suite.toml"
     cases = list(load_test_suite(suite))

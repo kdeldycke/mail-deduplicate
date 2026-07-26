@@ -13,6 +13,10 @@
 - Move `test`, `typing` and `docs` extras to dependency groups.
 - Replace the `arrow` date library with [`whenever`](https://github.com/ariebovenberg/whenever).
 - Rename the development documentation page to contributing, convert the API docs to MyST Markdown and add a Claude Code project guide.
+- Run the test suite in parallel with `pytest-xdist`, import test modules via `importlib` and restrict collection to `tests/`.
+- Run the CLI test suite in every CI matrix cell and move package-install smoke tests to a dedicated CI job.
+- Drop the Codecov Test Analytics upload and the `junit.xml` artifact it required.
+- Render GitHub-style alerts in the documentation with the native `alert` extension of `myst-parser` `5.1`.
 
 ## [`8.1.2` (2025-12-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.1...v8.1.2)
 
