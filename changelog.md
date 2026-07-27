@@ -5,7 +5,10 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
-## [`9.0.0` (2026-07-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.2...v9.0.0)
+## [`9.0.0` (2026-07-27)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.2...v9.0.0)
+
+> [!NOTE]
+> `9.0.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/9.0.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.0.0).
 
 - **Breaking:** upgrade to `click-extra` `8.1`, which renames the `--show-params` option to `--params`. The upgrade also drops the removed `ExtraCommand` import that broke `8.1.2` against recent `click-extra`. Closes [#1009](https://github.com/kdeldycke/mail-deduplicate/issues/1009).
 - **Breaking:** remove the `-m`/`--minimal-headers` option. The per-mail floor is now derived automatically as `min(4, number of --hash-header values)`, so narrowing the hash below four headers, down to a single one, no longer needs a separate flag. Closes [#974](https://github.com/kdeldycke/mail-deduplicate/issues/974).
