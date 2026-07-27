@@ -4,99 +4,98 @@ flowchart LR
     subgraph primary-deps [Primary dependencies]
         click_extra{{"`click-extra`"}}
         extra_platforms{{"`extra-platforms`"}}
-        arrow{{"`arrow`"}}
-        tomli{{"`tomli`"}}
+        whenever{{"`whenever`"}}
         boltons{{"`boltons`"}}
         backports_strenum{{"`backports-strenum`"}}
     end
 
+    pygments(["`pygments`"])
+    requests(["`requests`"])
     click_0(["`click`"])
+    docutils(["`docutils`"])
+    jinja2(["`jinja2`"])
+    beautifulsoup4(["`beautifulsoup4`"])
     cloup(["`cloup`"])
     colorama(["`colorama`"])
+    markdown_it_py(["`markdown-it-py`"])
+    tomli(["`tomli`"])
     typing_extensions(["`typing-extensions`"])
-    python_dateutil(["`python-dateutil`"])
+    accessible_pygments(["`accessible-pygments`"])
+    exceptiongroup(["`exceptiongroup`"])
+    mdit_py_plugins(["`mdit-py-plugins`"])
+    packaging(["`packaging`"])
+    pluggy(["`pluggy`"])
+    pyyaml(["`pyyaml`"])
+    sphinx_basic_ng(["`sphinx-basic-ng`"])
     tabulate(["`tabulate`"])
+    tzdata(["`tzdata`"])
+    tzlocal(["`tzlocal`"])
     wcmatch(["`wcmatch`"])
     wcwidth(["`wcwidth`"])
+    alabaster(["`alabaster`"])
+    babel(["`babel`"])
     bracex(["`bracex`"])
+    certifi(["`certifi`"])
+    charset_normalizer(["`charset-normalizer`"])
     deepmerge(["`deepmerge`"])
-    six(["`six`"])
-    tzdata(["`tzdata`"])
+    execnet(["`execnet`"])
+    idna(["`idna`"])
+    imagesize(["`imagesize`"])
+    iniconfig(["`iniconfig`"])
+    markupsafe(["`markupsafe`"])
+    mdurl(["`mdurl`"])
+    psutil(["`psutil`"])
+    roman_numerals(["`roman-numerals`"])
+    snowballstemmer(["`snowballstemmer`"])
+    soupsieve(["`soupsieve`"])
+    sphinxcontrib_applehelp(["`sphinxcontrib-applehelp`"])
+    sphinxcontrib_devhelp(["`sphinxcontrib-devhelp`"])
+    sphinxcontrib_htmlhelp(["`sphinxcontrib-htmlhelp`"])
+    sphinxcontrib_jsmath(["`sphinxcontrib-jsmath`"])
+    sphinxcontrib_qthelp(["`sphinxcontrib-qthelp`"])
+    sphinxcontrib_serializinghtml(["`sphinxcontrib-serializinghtml`"])
+    urllib3(["`urllib3`"])
 
     subgraph grp_docs [--group docs]
-        sphinx{{"`sphinx >=8.0.0`"}}
-        myst_parser{{"`myst-parser ~=4.0.0`"}}
-        furo{{"`furo ~=2025.9.25`"}}
-        pygments(["`pygments`"])
-        requests(["`requests`"])
-        docutils(["`docutils`"])
-        sphinx_click{{"`sphinx-click ~=6.1.0`"}}
-        beautifulsoup4(["`beautifulsoup4`"])
-        jinja2(["`jinja2`"])
-        markdown_it_py(["`markdown-it-py`"])
-        sphinxcontrib_mermaid{{"`sphinxcontrib-mermaid ~=1.2.3`"}}
-        accessible_pygments(["`accessible-pygments`"])
-        mdit_py_plugins(["`mdit-py-plugins`"])
-        packaging(["`packaging`"])
-        pyyaml(["`pyyaml`"])
-        roman_numerals_py(["`roman-numerals-py`"])
-        sphinx_autodoc_typehints{{"`sphinx-autodoc-typehints >=2.4.0`"}}
-        sphinx_basic_ng(["`sphinx-basic-ng`"])
-        sphinx_copybutton{{"`sphinx-copybutton ~=0.5.2`"}}
-        sphinx_design{{"`sphinx-design ~=0.6.0`"}}
-        sphinxext_opengraph{{"`sphinxext-opengraph ~=0.13.0`"}}
-        alabaster(["`alabaster`"])
-        babel(["`babel`"])
-        certifi(["`certifi`"])
-        charset_normalizer(["`charset-normalizer`"])
-        idna(["`idna`"])
-        imagesize(["`imagesize`"])
-        markupsafe(["`markupsafe`"])
-        mdurl(["`mdurl`"])
-        roman_numerals(["`roman-numerals`"])
-        snowballstemmer(["`snowballstemmer`"])
-        soupsieve(["`soupsieve`"])
-        sphinxcontrib_applehelp(["`sphinxcontrib-applehelp`"])
-        sphinxcontrib_devhelp(["`sphinxcontrib-devhelp`"])
-        sphinxcontrib_htmlhelp(["`sphinxcontrib-htmlhelp`"])
-        sphinxcontrib_jsmath(["`sphinxcontrib-jsmath`"])
-        sphinxcontrib_qthelp(["`sphinxcontrib-qthelp`"])
-        sphinxcontrib_serializinghtml(["`sphinxcontrib-serializinghtml`"])
-        urllib3(["`urllib3`"])
+        sphinx{{"`sphinx >=8`"}}
+        myst_parser{{"`myst-parser >=5.1`"}}
+        furo{{"`furo >=2025.9.25`"}}
+        sphinx_click{{"`sphinx-click >=6.1`"}}
+        sphinxcontrib_mermaid{{"`sphinxcontrib-mermaid >=1.2.3`"}}
+        sphinx_autodoc_typehints{{"`sphinx-autodoc-typehints >=2.4`"}}
+        sphinx_copybutton{{"`sphinx-copybutton >=0.5.2`"}}
+        sphinx_design{{"`sphinx-design >=0.6`"}}
+        sphinxext_opengraph{{"`sphinxext-opengraph >=0.13`"}}
     end
 
     subgraph grp_test [--group test]
-        pytest{{"`pytest ~=9.0.1`"}}
-        pytest_cov{{"`pytest-cov ~=7.0.0`"}}
-        coverage{{"`coverage ~=7.12.0`"}}
-        exceptiongroup(["`exceptiongroup`"])
-        pluggy(["`pluggy`"])
-        pytest_github_actions_annotate_failures{{"`pytest-github-actions-annotate-failures ~=0.3.0`"}}
-        pytest_randomly{{"`pytest-randomly ~=4.0.0`"}}
-        iniconfig(["`iniconfig`"])
+        pytest{{"`pytest >=9`"}}
+        pytest_cov{{"`pytest-cov >=4`"}}
+        pytest_xdist{{"`pytest-xdist >=3.7`"}}
+        coverage{{"`coverage >=7.11`"}}
+        pytest_github_actions_annotate_failures{{"`pytest-github-actions-annotate-failures >=0.2`"}}
+        pytest_randomly{{"`pytest-randomly >=3`"}}
     end
 
     subgraph grp_typing [--group typing]
-        types_boltons{{"`types-boltons ~=25.0.0.20250822`"}}
+        types_boltons{{"`types-boltons >=25.0.0.20250822`"}}
     end
 
-    mail_deduplicate ==>|" >=8.0.0 "| click_extra
-    mail_deduplicate ==>|" >=2.3.0 "| tomli
-    mail_deduplicate ==>|" >=1.3.0 "| arrow
-    mail_deduplicate ==>|" >=5.0.0 "| extra_platforms
-    mail_deduplicate ==>|" >=25.0.0 "| boltons
-    mail_deduplicate ==>|" >=1.3.0 "| backports_strenum
+    mail_deduplicate ==>|" >=8.1 "| click_extra
+    mail_deduplicate ==>|" >=13 "| extra_platforms
+    mail_deduplicate ==>|" >=0.10 "| whenever
+    mail_deduplicate ==>|" >=25 "| boltons
+    mail_deduplicate ==>|" >=1 "| backports_strenum
     sphinx --> pygments
     sphinx --> requests
-    sphinx ==> tomli
     sphinx --> docutils
-    sphinx --> colorama
     sphinx --> jinja2
+    sphinx --> colorama
     sphinx --> packaging
-    sphinx --> roman_numerals_py
     sphinx --> alabaster
     sphinx --> babel
     sphinx --> imagesize
+    sphinx --> roman_numerals
     sphinx --> snowballstemmer
     sphinx --> sphinxcontrib_applehelp
     sphinx --> sphinxcontrib_devhelp
@@ -104,73 +103,76 @@ flowchart LR
     sphinx --> sphinxcontrib_jsmath
     sphinx --> sphinxcontrib_qthelp
     sphinx --> sphinxcontrib_serializinghtml
-    click_extra ==> sphinx
-    click_extra ==> pytest
+    click_extra --> sphinx
+    click_extra --> pytest
     click_extra --> pygments
-    click_extra ==> tomli
     click_extra --> click_0
     click_extra --> docutils
     click_extra --> cloup
-    click_extra ==> extra_platforms
-    click_extra ==> boltons
+    click_extra --> extra_platforms
+    click_extra --> tomli
+    click_extra --> boltons
     click_extra --> tabulate
     click_extra --> wcmatch
     click_extra --> wcwidth
     click_extra --> deepmerge
     pytest --> pygments
-    pytest ==> tomli
     pytest --> colorama
+    pytest --> tomli
     pytest --> exceptiongroup
     pytest --> packaging
     pytest --> pluggy
     pytest --> iniconfig
-    myst_parser ==> sphinx
+    myst_parser --> sphinx
     myst_parser --> docutils
     myst_parser --> jinja2
     myst_parser --> markdown_it_py
     myst_parser --> mdit_py_plugins
     myst_parser --> pyyaml
-    furo ==> sphinx
+    furo --> sphinx
     furo --> pygments
     furo --> beautifulsoup4
     furo --> accessible_pygments
     furo --> sphinx_basic_ng
-    pytest_cov ==> pytest
-    pytest_cov ==> coverage
+    pytest_cov --> pytest
+    pytest_cov --> coverage
     pytest_cov --> pluggy
-    sphinx_click ==> sphinx
+    pytest_xdist --> pytest
+    pytest_xdist --> execnet
+    pytest_xdist --> psutil
+    sphinx_click --> sphinx
     sphinx_click --> click_0
     sphinx_click --> docutils
-    arrow --> python_dateutil
-    arrow --> tzdata
-    coverage ==> tomli
-    extra_platforms ==> pytest
-    sphinxcontrib_mermaid ==> sphinx
+    sphinxcontrib_mermaid --> sphinx
+    sphinxcontrib_mermaid --> jinja2
     sphinxcontrib_mermaid --> pyyaml
-    pytest_github_actions_annotate_failures ==> pytest
-    pytest_randomly ==> pytest
-    sphinx_autodoc_typehints ==> sphinx
-    sphinx_copybutton ==> sphinx
-    sphinx_design ==> sphinx
-    sphinxext_opengraph ==> sphinx
+    coverage --> tomli
+    extra_platforms --> pytest
+    whenever --> tzdata
+    whenever --> tzlocal
+    pytest_github_actions_annotate_failures --> pytest
+    pytest_randomly --> pytest
+    sphinx_autodoc_typehints --> sphinx
+    sphinx_copybutton --> sphinx
+    sphinx_design --> sphinx
+    sphinxext_opengraph --> sphinx
     requests --> certifi
     requests --> charset_normalizer
     requests --> idna
     requests --> urllib3
     click_0 --> colorama
+    jinja2 --> markupsafe
     beautifulsoup4 --> typing_extensions
     beautifulsoup4 --> soupsieve
     cloup --> click_0
     cloup --> typing_extensions
-    jinja2 --> markupsafe
     markdown_it_py --> mdurl
     accessible_pygments --> pygments
     exceptiongroup --> typing_extensions
     mdit_py_plugins --> markdown_it_py
-    python_dateutil --> six
-    roman_numerals_py --> roman_numerals
-    sphinx_basic_ng ==> sphinx
+    sphinx_basic_ng --> sphinx
     tabulate --> wcwidth
+    tzlocal --> tzdata
     wcmatch --> bracex
     mail_deduplicate -.-> grp_docs
     mail_deduplicate -.-> grp_test
@@ -178,7 +180,6 @@ flowchart LR
 
     click accessible_pygments "https://pypi.org/project/accessible-pygments/" _blank
     click alabaster "https://pypi.org/project/alabaster/" _blank
-    click arrow "https://pypi.org/project/arrow/" _blank
     click babel "https://pypi.org/project/babel/" _blank
     click backports_strenum "https://pypi.org/project/backports-strenum/" _blank
     click beautifulsoup4 "https://pypi.org/project/beautifulsoup4/" _blank
@@ -194,6 +195,7 @@ flowchart LR
     click deepmerge "https://pypi.org/project/deepmerge/" _blank
     click docutils "https://pypi.org/project/docutils/" _blank
     click exceptiongroup "https://pypi.org/project/exceptiongroup/" _blank
+    click execnet "https://pypi.org/project/execnet/" _blank
     click extra_platforms "https://pypi.org/project/extra-platforms/" _blank
     click furo "https://pypi.org/project/furo/" _blank
     click idna "https://pypi.org/project/idna/" _blank
@@ -208,17 +210,16 @@ flowchart LR
     click myst_parser "https://pypi.org/project/myst-parser/" _blank
     click packaging "https://pypi.org/project/packaging/" _blank
     click pluggy "https://pypi.org/project/pluggy/" _blank
+    click psutil "https://pypi.org/project/psutil/" _blank
     click pygments "https://pypi.org/project/pygments/" _blank
     click pytest "https://pypi.org/project/pytest/" _blank
     click pytest_cov "https://pypi.org/project/pytest-cov/" _blank
     click pytest_github_actions_annotate_failures "https://pypi.org/project/pytest-github-actions-annotate-failures/" _blank
     click pytest_randomly "https://pypi.org/project/pytest-randomly/" _blank
-    click python_dateutil "https://pypi.org/project/python-dateutil/" _blank
+    click pytest_xdist "https://pypi.org/project/pytest-xdist/" _blank
     click pyyaml "https://pypi.org/project/pyyaml/" _blank
     click requests "https://pypi.org/project/requests/" _blank
     click roman_numerals "https://pypi.org/project/roman-numerals/" _blank
-    click roman_numerals_py "https://pypi.org/project/roman-numerals-py/" _blank
-    click six "https://pypi.org/project/six/" _blank
     click snowballstemmer "https://pypi.org/project/snowballstemmer/" _blank
     click soupsieve "https://pypi.org/project/soupsieve/" _blank
     click sphinx "https://pypi.org/project/sphinx/" _blank
@@ -240,12 +241,13 @@ flowchart LR
     click types_boltons "https://pypi.org/project/types-boltons/" _blank
     click typing_extensions "https://pypi.org/project/typing-extensions/" _blank
     click tzdata "https://pypi.org/project/tzdata/" _blank
+    click tzlocal "https://pypi.org/project/tzlocal/" _blank
     click urllib3 "https://pypi.org/project/urllib3/" _blank
     click wcmatch "https://pypi.org/project/wcmatch/" _blank
     click wcwidth "https://pypi.org/project/wcwidth/" _blank
+    click whenever "https://pypi.org/project/whenever/" _blank
 
     style mail_deduplicate stroke-width:3px
-    style arrow stroke-width:3px
     style backports_strenum stroke-width:3px
     style boltons stroke-width:3px
     style click_extra stroke-width:3px
@@ -257,6 +259,7 @@ flowchart LR
     style pytest_cov stroke-width:3px
     style pytest_github_actions_annotate_failures stroke-width:3px
     style pytest_randomly stroke-width:3px
+    style pytest_xdist stroke-width:3px
     style sphinx stroke-width:3px
     style sphinx_autodoc_typehints stroke-width:3px
     style sphinx_click stroke-width:3px
@@ -264,8 +267,8 @@ flowchart LR
     style sphinx_design stroke-width:3px
     style sphinxcontrib_mermaid stroke-width:3px
     style sphinxext_opengraph stroke-width:3px
-    style tomli stroke-width:3px
     style types_boltons stroke-width:3px
+    style whenever stroke-width:3px
 
     style primary-deps fill:#1565C020,stroke:#42A5F5
     style grp_docs fill:#546E7A20,stroke:#90A4AE
