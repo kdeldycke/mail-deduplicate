@@ -65,6 +65,8 @@ This floor is derived automatically as the smaller of **4** and the number of he
 
 Once all mails have been hashed, mails with the same hash are grouped together as duplicates. Then a selection strategy is applied to each group of duplicates to select which mails will be acted upon.
 
+Several strategies can be chained into a fallback cascade by repeating the `--strategy` option. Each group is submitted to the first strategy, and handed over to the next each time a strategy fails to discriminate its mails: because it selected all of them, none of them, or could not compare mails missing a timestamp. The group is only skipped once the whole cascade is exhausted. A cascade ending with one of the random strategies, which always succeed, resolves the byte-identical copies that time-based and size-based criteria cannot tell apart.
+
 ### ❎ Safeguard: size threshold
 
 Sets of duplicates are verified by comparing the body sizes of every pair of mails they contain, and pairs differing by more than a threshold are not considered copies of each other.

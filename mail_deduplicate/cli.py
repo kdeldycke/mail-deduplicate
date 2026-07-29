@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import re
+from operator import attrgetter
 from typing import TypedDict
 
 from boltons.iterutils import unique
@@ -111,7 +112,7 @@ class Config(TypedDict):
     size_threshold: int
     content_threshold: int
     show_diff: bool
-    strategy: Strategy
+    strategy: tuple[Strategy, ...]
     time_source: TimeSource
     regexp: re.Pattern | None
     action: Action
@@ -142,6 +143,17 @@ def normalize_headers(
     if len(normalized_headers) == 0:
         raise BadParameter("At least one header ID must be provided.")
     return tuple(normalized_headers)
+
+
+def unique_strategies(
+    ctx: Context, param: Parameter, value: tuple[Strategy, ...]
+) -> tuple[Strategy, ...]:
+    """Deduplicate strategies provided as parameters to the CLI, preserving order.
+
+    Strategies are deduplicated by the selection function they point to, so repeating
+    a strategy already listed under one of its aliases is ignored too.
+    """
+    return tuple(unique(value, key=attrgetter("strategy_function")))
 
 
 def compile_regexp(
@@ -265,11 +277,18 @@ class MdedupCommand(Command):
     option(
         "-s",
         "--strategy",
+        multiple=True,
         type=EnumChoice(Strategy),
-        help="Selection strategy to apply within a subset of duplicates. If not set, "
-        "duplicates will be grouped and counted but all be skipped, selection will be "
-        "empty, and no action will be performed. Description of each strategy is "
-        "available further down that help screen.",
+        callback=unique_strategies,
+        help="Selection strategy to apply within a subset of duplicates. Can be "
+        "repeated multiple times to set an ordered list of fallback strategies: each "
+        "duplicate set is handed over to the next strategy each time a strategy "
+        "fails to discriminate its mails, by selecting all of them, none of them, or "
+        "by missing the timestamps to compare them. Repeating entries are ignored, "
+        "including aliases of strategies already listed. If not set, duplicates will "
+        "be grouped and counted but all be skipped, selection will be empty, and no "
+        "action will be performed. Description of each strategy is available further "
+        "down that help screen.",
     ),
     option(
         "-t",
@@ -429,44 +448,48 @@ def mdedup(
 
     # Validate exclusive options requirement depending on strategy or action.
     # TODO: use Cloup option constraints to express these dependencies?
-    validation_requirements = {
-        strategy: (
-            (
-                regexp,
-                "-r/--regexp",
-                {
-                    Strategy.DISCARD_MATCHING_PATH,
-                    Strategy.DISCARD_NON_MATCHING_PATH,
-                    Strategy.SELECT_MATCHING_PATH,
-                    Strategy.SELECT_NON_MATCHING_PATH,
-                },
-            ),
+    validation_requirements = (
+        (
+            strategy,
+            regexp,
+            "-r/--regexp",
+            {
+                Strategy.DISCARD_MATCHING_PATH,
+                Strategy.DISCARD_NON_MATCHING_PATH,
+                Strategy.SELECT_MATCHING_PATH,
+                Strategy.SELECT_NON_MATCHING_PATH,
+            },
         ),
-        action: (
-            (
-                export,
-                "-E/--export",
-                {
-                    Action.COPY_SELECTED,
-                    Action.COPY_DISCARDED,
-                    Action.MOVE_SELECTED,
-                    Action.MOVE_DISCARDED,
-                },
-            ),
+        (
+            (action,),
+            export,
+            "-E/--export",
+            {
+                Action.COPY_SELECTED,
+                Action.COPY_DISCARDED,
+                Action.MOVE_SELECTED,
+                Action.MOVE_DISCARDED,
+            },
         ),
-    }
+    )
 
-    for conf_value, requirements in validation_requirements.items():
-        for param_value, param_name, required_values in requirements:
-            if conf_value in required_values:
-                if not param_value:
-                    raise BadParameter(
-                        f"{conf_value} requires the {param_name} parameter."
-                    )
-            elif param_value:
+    for conf_values, param_value, param_name, required_values in (
+        validation_requirements
+    ):
+        # Configuration values requiring the parameter, in their provided order.
+        requiring = [value for value in conf_values if value in required_values]
+        if requiring:
+            if not param_value:
                 raise BadParameter(
-                    f"{param_name} parameter not allowed in {conf_value}."
+                    f"{', '.join(map(str, requiring))} "
+                    f"require{'s' if len(requiring) == 1 else ''} the "
+                    f"{param_name} parameter."
                 )
+        elif param_value:
+            raise BadParameter(
+                f"{param_name} parameter not allowed in "
+                f"{', '.join(map(str, conf_values)) or None}."
+            )
 
     if export and export.exists() and not export_append:
         raise FileExistsError(

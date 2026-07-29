@@ -425,7 +425,8 @@ class DuplicateSet:
     def categorize_candidates(self):
         """Process the list of duplicates for action.
 
-        Run preliminary checks, then apply the strategy to the pool of mails.
+        Run preliminary checks, then apply the strategies to the pool of mails, each
+        in turn until one produces a proper selection.
 
         The process results in two subsets of mails: the selected and the discarded.
         """
@@ -468,35 +469,54 @@ class DuplicateSet:
             self.pool = frozenset(self.pool.difference(evicted))
             self.__dict__.pop("size", None)
 
-        if not self.conf["strategy"]:
+        strategies = self.conf["strategy"]
+        if not strategies:
             return self.skip_set("no strategy to apply.", Stat.SET_SKIPPED_STRATEGY)
 
-        # Fetch the subset of selected mails from the set by applying strategy.
-        try:
-            selected = self.conf["strategy"].apply_strategy(self)
-        except MissingTimestamps as expt:
-            return self.skip_set(
-                f"the strategy cannot compare mails without a timestamp. {expt}",
-                Stat.SET_SKIPPED_TIMESTAMP,
-            )
+        # Fetch the subset of selected mails from the set by applying each strategy in
+        # turn on the whole pool, until one achieves a proper selection. A strategy
+        # failing to discriminate the set, by selecting all its mails, none of them,
+        # or by missing the timestamps to compare them, hands the set over to the next
+        # strategy. See: https://github.com/kdeldycke/mail-deduplicate/issues/647
+        selected = set()
+        skip_reason = ""
+        skip_stat = Stat.SET_SKIPPED_STRATEGY
+        for strategy_counter, strategy in enumerate(strategies, 1):
+            skip_stat = Stat.SET_SKIPPED_STRATEGY
+            try:
+                selected = strategy.apply_strategy(self)
+            except MissingTimestamps as expt:
+                selected = set()
+                skip_reason = (
+                    f"the strategy cannot compare mails without a timestamp. {expt}"
+                )
+                skip_stat = Stat.SET_SKIPPED_TIMESTAMP
+            else:
+                # A strategy selecting the whole set achieves nothing.
+                if len(selected) == self.size:
+                    skip_reason = (
+                        f"all {len(selected)} mails within were selected. "
+                        "The strategy criterion was not able to discard some."
+                    )
+                    selected = set()
+                elif not selected:
+                    skip_reason = (
+                        "No mail within were selected. "
+                        "The strategy criterion was not able to select some."
+                    )
+            if selected:
+                break
+            if strategy_counter < len(strategies):
+                logging.info(
+                    f"{get_current_theme().choice(str(strategy))} strategy failed: "
+                    f"{skip_reason} Fall back to the next strategy..."
+                )
+
+        # The whole cascade was exhausted without producing a proper selection.
+        if not selected:
+            return self.skip_set(skip_reason, skip_stat)
+
         candidate_count = len(selected)
-
-        # Duplicate sets matching as a whole are skipped altogether.
-        if candidate_count == self.size:
-            return self.skip_set(
-                f"all {candidate_count} mails within were selected. "
-                "The strategy criterion was not able to discard some.",
-                Stat.SET_SKIPPED_STRATEGY,
-            )
-
-        # Duplicate sets matching none are skipped altogether.
-        if candidate_count == 0:
-            return self.skip_set(
-                "No mail within were selected. "
-                "The strategy criterion was not able to select some.",
-                Stat.SET_SKIPPED_STRATEGY,
-            )
-
         logging.info(f"{candidate_count} mail candidates selected for action.")
         self.stats[Stat.MAIL_SELECTED] += candidate_count
         self.stats[Stat.MAIL_DISCARDED] += self.size - candidate_count
@@ -643,10 +663,12 @@ class Deduplicate:
         footprint low and make the log easier to read.
         """
         theme = get_current_theme()
-        if self.conf["strategy"]:
+        strategies = self.conf["strategy"]
+        if strategies:
             logging.info(
-                f"{theme.choice(self.conf['strategy'])} strategy will be applied on each "
-                "duplicate set to select candidates.",
+                f"{', '.join(theme.choice(str(s)) for s in strategies)} "
+                f"{'strategies' if len(strategies) > 1 else 'strategy'} will be "
+                "applied on each duplicate set to select candidates.",
             )
         else:
             logging.warning("No strategy configured, skip selection.")

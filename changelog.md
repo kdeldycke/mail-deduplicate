@@ -11,6 +11,7 @@
 - Set aside mails exceeding the size or content thresholds against the rest of their set instead of skipping the whole set, so an outlier no longer prevents the deduplication of the true copies sharing its hash. Closes [#851](https://github.com/kdeldycke/mail-deduplicate/issues/851).
 - Discover nested maildir folders stored as plain directories at any depth, as produced by `isync`/`mbsync`'s Verbatim naming style, even when the root directory holds no mail itself. Closes [#973](https://github.com/kdeldycke/mail-deduplicate/issues/973).
 - Add a new `eml` source and export format, reading and writing loose `.eml` files from a folder, walked recursively. Autodetected, and the unrecognized-folder error now points at `--input-format`. Closes [#760](https://github.com/kdeldycke/mail-deduplicate/issues/760).
+- Allow repeating `--strategy` to chain fallback strategies: each duplicate set is handed over to the next strategy when one fails to discriminate its mails. Closes [#647](https://github.com/kdeldycke/mail-deduplicate/issues/647).
 - Add a hands-on tutorial page to the documentation and rework the README quickstart around use cases and example commands. Closes [#984](https://github.com/kdeldycke/mail-deduplicate/issues/984).
 - Execute the tutorial's commands at documentation build time with `click-extra`'s `click:run` directives, so the rendered outputs always match the current implementation. Closes [#23](https://github.com/kdeldycke/mail-deduplicate/issues/23).
 

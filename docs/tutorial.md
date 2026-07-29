@@ -157,6 +157,8 @@ The full list, with the exact semantics of each, sits at the bottom of `mdedup -
 
 Backup copies of the same mail are usually byte-identical: same `Date` header, same size. Time-based and size-based strategies cannot tell such copies apart, and skip the set as a whole rather than acting on it. That makes `select-one`, which keeps an arbitrary copy of each mail, the right strategy for merging identical copies.
 
+Strategies can also be chained into a fallback cascade by repeating the option: `--strategy select-oldest --strategy select-one` keeps the oldest copy in the sets where dates differ, and falls back to an arbitrary copy in the sets where they do not.
+
 ## Merge into a clean box
 
 Now for the real run. `--strategy select-one` picks one copy per set, and the default action (`copy-selected`) writes every selected mail to the `--export` box, leaving the sources untouched:
@@ -255,7 +257,7 @@ Several safeguards run before any mail is acted upon, each detailed in the [desi
 
 - Mails with too few of the hashed headers are rejected as unparsable instead of being trusted.
 - Mails differing too much in size or content from the rest of their set are considered suspicious: they are set aside, and only the mails that all match each other are deduplicated. The set is skipped as a whole when no such core remains. The `--size-threshold` and `--content-threshold` options tune these limits, and `--show-diff` prints the offending differences.
-- A strategy that would select all mails of a set, or none, leaves the set untouched.
+- A strategy that would select all mails of a set, or none, achieves nothing: the set is handed over to the next `--strategy` if one was chained, and left untouched otherwise.
 - Unique mails are always part of the final selection, so a merge never drops them.
 
 ## When nothing gets deduplicated
@@ -263,7 +265,7 @@ Several safeguards run before any mail is acted upon, each detailed in the [desi
 A run ending with `Duplicates: 0` or `Deduplicated: 0` is the number one source of confusion, so map the statistics report to its cause:
 
 - `Duplicates: 0`: no two mails shared a hash. A single box that was never merged or re-synced typically holds no duplicates: `mdedup` shines on piles of overlapping boxes. If you are certain copies are in there, they may differ in the hashed headers: mails re-delivered or forwarded can get a new `Message-ID` for instance. Narrow the matching down with repeated `--hash-header` options, or inspect what each mail hashes to with `--hash-only`.
-- `Duplicates` above zero but `Skipped - Strategy` counting sets: either no `--strategy` was given, or the chosen criterion cannot split the copies apart (identical copies share the same date and size). Switch to `select-one`, or to a path-based strategy.
+- `Duplicates` above zero but `Skipped - Strategy` counting sets: either no `--strategy` was given, or the chosen criterion cannot split the copies apart (identical copies share the same date and size). Switch to `select-one` or a path-based strategy, or chain one as a fallback with a repeated `--strategy` option.
 - `Skipped - Size` or `Skipped - Content` counting sets, or `Set aside ... mails too dissimilar` warnings in the logs: mails grouped under the same hash differ more than the thresholds allow. Inspect with `--show-diff`, and raise `--size-threshold` or `--content-threshold` deliberately if the differences are legitimate.
 
 ## Going further

@@ -460,6 +460,132 @@ def test_maildir_strategy_selected(
     check_box(dest_box_path, box_type, content=mailbox_results)
 
 
+undated_mail = MailFactory(date_rfc2822="Not a date")
+"""A mail with an unparseable ``Date`` header, from which no timestamp can be
+derived."""
+
+
+def test_strategy_fallback_resolves_identical_copies(invoke, make_box):
+    """Time-based strategies cannot discriminate byte-identical copies: the next
+    strategy of the cascade takes over the sets they fail on.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/647
+    """
+    box_path, box_type, _ = make_box(
+        Maildir,
+        [
+            # A set of copies discriminable by their timestamps.
+            oldest_mail,
+            newest_mail,
+            # A set of identical copies, sharing the same timestamp.
+            random_mail_1,
+            random_mail_1,
+        ],
+    )
+
+    result = invoke(
+        "--strategy=select-oldest",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    # Only the identical pair was handed over to the fallback strategy.
+    assert result.stderr.count("Fall back to the next strategy...") == 1
+    # select-oldest resolved the dated pair, select-one the identical pair.
+    check_box(box_path, box_type, content=[oldest_mail, random_mail_1])
+
+
+def test_strategy_fallback_on_missing_timestamp(invoke, make_box):
+    """A set whose mails have no parseable timestamp is handed over to the next
+    strategy of the cascade instead of being skipped."""
+    box_path, box_type, _ = make_box(Maildir, [undated_mail, undated_mail])
+
+    result = invoke(
+        "--strategy=select-oldest",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "cannot compare mails without a timestamp" in result.stderr
+    assert "Fall back to the next strategy..." in result.stderr
+    check_box(box_path, box_type, content=[undated_mail])
+
+
+def test_strategy_cascade_exhausted(invoke, make_box):
+    """A set failing every strategy of the cascade is skipped as a whole."""
+    box_path, box_type, _ = make_box(Maildir, [random_mail_1, random_mail_1])
+
+    result = invoke(
+        "--strategy=select-older",
+        "--strategy=select-newer",
+        "--action=delete-selected",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert result.stderr.count("Fall back to the next strategy...") == 1
+    assert "Skip set: No mail within were selected." in result.stderr
+    check_box(box_path, box_type, content=[random_mail_1, random_mail_1])
+
+
+def test_strategy_cascade_dedup_aliases(invoke, make_box):
+    """Repeated strategies are collapsed into one, even under their aliases."""
+    box_path, box_type, _ = make_box(Maildir, [oldest_mail, newest_mail])
+
+    result = invoke(
+        "--strategy=select-oldest",
+        "--strategy=select-oldest",
+        "--strategy=discard-newer",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    # The chain was reduced to a single strategy, reported in the singular.
+    assert "strategy will be applied" in result.stderr
+    assert "strategies will be applied" not in result.stderr
+    check_box(box_path, box_type, content=[oldest_mail])
+
+
+def test_strategy_cascade_regexp_required(invoke, make_box):
+    """--regexp is required as soon as a path-based strategy is part of the
+    cascade."""
+    box_path, _, _ = make_box(Maildir, [random_mail_1, random_mail_1])
+
+    result = invoke(
+        "--strategy=select-oldest",
+        "--strategy=select-matching-path",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 2
+    assert "select-matching-path requires the -r/--regexp parameter." in result.stderr
+
+
+def test_strategy_cascade_regexp_not_allowed(invoke, make_box):
+    """--regexp is rejected when no strategy of the cascade makes use of it."""
+    box_path, _, _ = make_box(Maildir, [random_mail_1, random_mail_1])
+
+    result = invoke(
+        "--strategy=select-oldest",
+        "--strategy=select-one",
+        "--regexp=.*",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 2
+    assert (
+        "-r/--regexp parameter not allowed in select-oldest, select-one."
+        in result.stderr
+    )
+
+
 outlier_mail = MailFactory(body="An entirely different mail body. " * 60)
 """A mail whose body size and content exceed the default thresholds against the
 other fixtures."""
