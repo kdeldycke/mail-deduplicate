@@ -735,22 +735,22 @@ class Deduplicate:
             ),
         )
 
-        # Action stats.
-        self.assert_stats(
-            (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED), ">=", Stat.MAIL_COPIED
-        )
-        if self.conf["action"] != "move-discarded":
-            # The number of moved mails may be larger than the number of selected
-            # mails for move-discarded action, because discarded mails are moved.
-            self.assert_stats(Stat.MAIL_SELECTED, ">=", Stat.MAIL_MOVED)
-        self.assert_stats(
-            (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED), ">=", Stat.MAIL_DELETED
-        )
-        self.assert_stats(
-            (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED),
-            "in",
-            (Stat.MAIL_COPIED, Stat.MAIL_MOVED, Stat.MAIL_DELETED),
-        )
+        # Action stats. Each action targets a single subset of mails: the union of
+        # unique and selected mails for *-selected actions, the discarded mails for
+        # *-discarded ones. The action's counter is expected to match its target
+        # exactly, as counters are also incremented in dry-run mode.
+        action_id = str(self.conf["action"])
+        action_counter = {
+            "copy": Stat.MAIL_COPIED,
+            "move": Stat.MAIL_MOVED,
+            "delete": Stat.MAIL_DELETED,
+        }[action_id.split("-")[0]]
+        if action_id.endswith("-discarded"):
+            self.assert_stats(Stat.MAIL_DISCARDED, "==", action_counter)
+        else:
+            self.assert_stats(
+                (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED), "==", action_counter
+            )
 
         # Sets accounting.
         self.assert_stats(Stat.SET_TOTAL, "==", Stat.MAIL_HASHES)

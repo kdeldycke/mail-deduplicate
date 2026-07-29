@@ -1,6 +1,6 @@
 # {octicon}`mortar-board` Tutorial
 
-This page walks through a complete deduplication run on two tiny mail boxes built for the occasion, so you can rehearse every command in a sandbox before pointing `mdedup` at your precious archives.
+This page walks through a complete deduplication run on two tiny mail boxes built for the occasion, so you can rehearse every command in a sandbox before pointing `mdedup` at your precious archives. Every `mdedup` output below is captured live while building this page, so what you read is exactly what the documented version does: the commands run from a scratch folder, whose absolute path shows up in the outputs.
 
 ## Where duplicates come from
 
@@ -18,7 +18,18 @@ That last case is why `mdedup` does not blindly compare raw files: mails are gro
 
 Save this script as `make_playground.py`. It creates two overlapping `mbox` archives, mimicking two backups of the same account taken a year apart:
 
-```python
+```{click:source}
+:hide-source:
+import os
+import tempfile
+
+# Play the whole tutorial session from a scratch folder, like the reader would.
+# The original directory is restored by the last hidden block of this page.
+_original_cwd = os.getcwd()
+os.chdir(tempfile.mkdtemp(prefix="mdedup-tutorial-"))
+```
+
+```{click:source}
 import mailbox
 from email.message import EmailMessage
 
@@ -94,36 +105,28 @@ archive-2024.mbox: 3 mails
 archive-2025.mbox: 4 mails
 ```
 
+```{click:source}
+:hide-source:
+# The script above just ran for real: check the boxes match the counts shown.
+for _path, _count in (("archive-2024.mbox", 3), ("archive-2025.mbox", 4)):
+    _box = mailbox.mbox(_path)
+    assert len(_box) == _count
+    _box.close()
+```
+
 That is 7 mails in total, of which only 5 are distinct. Notice the trap laid for naive matchers: the two archives each contain a *different* "Weekly digest" mail, sent a year apart. A deduplicator keying on subjects alone would wrongly collapse them.
 
 ## Take stock, without a strategy
 
 Your first instinct might be to just feed both boxes to `mdedup`:
 
-```shell-session
-$ mdedup --export merged.mbox archive-2024.mbox archive-2025.mbox
-(...)
-● Step #3 - Select mails in each group
-warning: No strategy configured, skip selection.
-info: ◼ 2 mails sharing hash 68125abccc1b04c54f5922415b0d8c258630374d4183b1b00bc0717b
-info: Check mail differences are below the thresholds.
-warning: Skip set: no strategy to apply.
-info: ◼ 2 mails sharing hash 27002f26e42a10bd0046ec327a54a5547b7ea99b4b38bab4fc5b01dd
-info: Check mail differences are below the thresholds.
-warning: Skip set: no strategy to apply.
-(...)
-│ Found      │ 7      │ Total number of mails encountered from all mail sources.     │
-(...)
-│ Duplicates │ 4      │ Number of duplicate mails (sum of mails in all duplicate     │
-│            │        │ sets with at least 2 mails).                                 │
-│ Skipped    │ 4      │ Number of mails ignored in the selection step because the    │
-│            │        │ whole set they belong to was skipped.                        │
-(...)
-│ Skipped - Strategy │ 2      │ Number of sets skipped from the selection process because  │
-│                    │        │ the strategy could not be applied.                         │
-│ Deduplicated       │ 0      │ Number of valid sets on which the selection strategy was   │
-│                    │        │ successfully applied.                                      │
-(...)
+```{click:run}
+from mail_deduplicate.cli import mdedup
+
+result = invoke(mdedup, args=["--export", "merged.mbox", "archive-2024.mbox", "archive-2025.mbox"])
+assert result.exit_code == 0
+assert "No strategy configured, skip selection." in result.output
+assert result.output.count("Skip set: no strategy to apply.") == 2
 ```
 
 The run went fine, yet ended with `Deduplicated: 0`. This is `mdedup` being cautious, not broken: it did detect the 2 duplicate pairs (`Duplicates: 4` mails), but it refuses to guess which copy of each pair you want to keep. Without a `--strategy`, every duplicate set is skipped, and only the mails without copies end up in `merged.mbox`.
@@ -132,6 +135,13 @@ Delete that incomplete `merged.mbox` before moving on, as `mdedup` will refuse t
 
 ```shell-session
 $ rm merged.mbox
+```
+
+```{click:source}
+:hide-source:
+import os
+
+os.remove("merged.mbox")
 ```
 
 ## Choose a strategy
@@ -151,34 +161,12 @@ Backup copies of the same mail are usually byte-identical: same `Date` header, s
 
 Now for the real run. `--strategy select-one` picks one copy per set, and the default action (`copy-selected`) writes every selected mail to the `--export` box, leaving the sources untouched:
 
-```shell-session
-$ mdedup --strategy select-one --export merged.mbox archive-2024.mbox archive-2025.mbox
-(...)
-● Step #3 - Select mails in each group
-info: select-one strategy will be applied on each duplicate set to select candidates.
-info: ◼ 2 mails sharing hash 68125abccc1b04c54f5922415b0d8c258630374d4183b1b00bc0717b
-info: Check mail differences are below the thresholds.
-info: Apply select-one strategy...
-info: Randomly select one duplicate...
-info: 1 mail candidates selected for action.
-(...)
-● Step #4 - Perform action on selected mails
-info: Perform copy-selected action...
-info: 5 mails selected for action.
-info: Creating new mbox box at merged.mbox ...
-(...)
-│ Unique     │ 3      │ Number of unique mails (which were automatically added to    │
-│            │        │ selection).                                                  │
-(...)
-│ Discarded  │ 2      │ Number of mails discarded from the final selection.          │
-│ Selected   │ 2      │ Number of mails kept in the final selection on which the     │
-│            │        │ action will be performed.                                    │
-│ Copied     │ 5      │ Number of mails copied from their original mailbox to        │
-│            │        │ another.                                                     │
-(...)
-│ Deduplicated       │ 2      │ Number of valid sets on which the selection strategy was   │
-│                    │        │ successfully applied.                                      │
-(...)
+```{click:run}
+from mail_deduplicate.cli import mdedup
+
+result = invoke(mdedup, args=["--strategy", "select-one", "--export", "merged.mbox", "archive-2024.mbox", "archive-2025.mbox"])
+assert result.exit_code == 0
+assert "5 mails selected for action." in result.output
 ```
 
 Read the report bottom-up: both duplicate sets were deduplicated, one copy of each was selected and the other discarded, and the 2 selected mails were copied to `merged.mbox` together with the 3 unique mails. 7 mails in, 5 mails out, nothing lost:
@@ -186,6 +174,15 @@ Read the report bottom-up: both duplicate sets were deduplicated, one copy of ea
 ```shell-session
 $ grep --count "^From " merged.mbox
 5
+```
+
+```{click:source}
+:hide-source:
+import mailbox
+
+_merged = mailbox.mbox("merged.mbox")
+assert len(_merged) == 5
+_merged.close()
 ```
 
 Both "Weekly digest" mails made it through, as their different `Date` and `Message-ID` headers put them in different sets.
@@ -200,29 +197,50 @@ Copying is the safe default, but sometimes you want to prune the originals: say 
 
 Path-based strategies handle this preference: `select-matching-path` keeps the copies whose location matches `--regexp`, so the `delete-discarded` action removes the copies living elsewhere. Destructive actions deserve a rehearsal first:
 
-```shell-session
-$ mdedup --strategy select-matching-path --regexp 2025 --action delete-discarded --dry-run archive-2024.mbox archive-2025.mbox
-(...)
-● Step #4 - Perform action on selected mails
-info: Perform delete-discarded action...
-info: 5 mails selected for action.
-warning: DRY RUN: Skip action.
-warning: DRY RUN: Skip action.
-(...)
+```{click:run}
+from mail_deduplicate.cli import mdedup
+
+result = invoke(mdedup, args=["--strategy", "select-matching-path", "--regexp", "2025", "--action", "delete-discarded", "--dry-run", "archive-2024.mbox", "archive-2025.mbox"])
+assert result.exit_code == 0
+assert result.output.count("DRY RUN: Skip action.") == 2
+```
+
+```{click:source}
+:hide-source:
+import mailbox
+
+# The rehearsal must not have touched any box.
+for _path, _count in (("archive-2024.mbox", 3), ("archive-2025.mbox", 4)):
+    _box = mailbox.mbox(_path)
+    assert len(_box) == _count
+    _box.close()
 ```
 
 Two deletions planned, as expected: the two shared mails, in their `archive-2024.mbox` incarnation. Do not let the `5 mails selected` line worry you: it counts the mails that will survive, while the action itself only touches the 2 discarded copies. Drop `--dry-run` to proceed:
 
+```{click:run}
+from mail_deduplicate.cli import mdedup
+
+result = invoke(mdedup, args=["--strategy", "select-matching-path", "--regexp", "2025", "--action", "delete-discarded", "archive-2024.mbox", "archive-2025.mbox"])
+assert result.exit_code == 0
+assert result.output.count(" deleted.") == 2
+```
+
 ```shell-session
-$ mdedup --strategy select-matching-path --regexp 2025 --action delete-discarded archive-2024.mbox archive-2025.mbox
-(...)
-info: <mboxDedupMail archive-2024.mbox:1> deleted.
-info: <mboxDedupMail archive-2024.mbox:0> deleted.
-(...)
 $ grep --count "^From " archive-2024.mbox
 1
 $ grep --count "^From " archive-2025.mbox
 4
+```
+
+```{click:source}
+:hide-source:
+import mailbox
+
+for _path, _count in (("archive-2024.mbox", 1), ("archive-2025.mbox", 4)):
+    _box = mailbox.mbox(_path)
+    assert len(_box) == _count
+    _box.close()
 ```
 
 `archive-2024.mbox` is down to its single unique mail, and `archive-2025.mbox` was not touched. Mails without duplicates are never deleted, whatever the strategy: only discarded members of a duplicate set are.
@@ -254,3 +272,12 @@ A run ending with `Duplicates: 0` or `Deduplicated: 0` is the number one source 
 - Recurring options can be saved in a [configuration file](https://kdeldycke.github.io/mail-deduplicate/configuration.html).
 - The [design page](https://kdeldycke.github.io/mail-deduplicate/design.html) details hashing, header normalization and the safeguards.
 - Header-based hashing can be complemented by body hashing for stricter matching: see `--hash-body`, and `--jobs` to parallelize it on big boxes.
+
+```{click:source}
+:hide-source:
+import os
+
+# Leave the scratch folder, so documents built after this one in the same
+# process do not inherit it as their working directory.
+os.chdir(_original_cwd)
+```
