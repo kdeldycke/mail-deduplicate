@@ -127,6 +127,11 @@ class Stat(Enum):
         "too dissimilar in content.",
         "set",
     )
+    SET_SKIPPED_TIMESTAMP = StatDef(
+        "Number of sets skipped from the selection process because a timestamp "
+        "could not be derived for some of their mails.",
+        "set",
+    )
     SET_SKIPPED_STRATEGY = StatDef(
         "Number of sets skipped from the selection process because the strategy "
         "could not be applied.",
@@ -177,6 +182,15 @@ class SizeDiffAboveThreshold(Exception):
 class ContentDiffAboveThreshold(Exception):
     """Difference in mail content is greater than `threshold
     <https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-C>`__.
+    """
+
+
+class MissingTimestamps(Exception):
+    """Some mails of a duplicate set have no timestamp, so they cannot be compared by
+    time-based strategies.
+
+    Happens for mails without a parseable ``Date`` header, when the timestamp is
+    sourced from it.
     """
 
 
@@ -243,14 +257,37 @@ class DuplicateSet:
         return len(self.pool)
 
     @cached_property
+    def timestamps(self) -> tuple[float, ...]:
+        """Returns the timestamps of all mails in the set.
+
+        Raises ``MissingTimestamps`` if a timestamp could not be derived for some
+        mails, naming them so users can locate and fix them. See:
+        https://github.com/kdeldycke/mail-deduplicate/issues/132
+        """
+        timestamps = []
+        undated = []
+        for mail in self.pool:
+            if mail.timestamp is None:
+                undated.append(mail)
+            else:
+                timestamps.append(mail.timestamp)
+        if undated:
+            raise MissingTimestamps(
+                "No timestamp for "
+                + ", ".join(sorted(repr(mail) for mail in undated))
+                + "."
+            )
+        return tuple(timestamps)
+
+    @cached_property
     def newest_timestamp(self):
         """Returns the newest timestamp among all mails in the set."""
-        return max(map(attrgetter("timestamp"), self.pool))
+        return max(self.timestamps)
 
     @cached_property
     def oldest_timestamp(self):
         """Returns the oldest timestamp among all mails in the set."""
-        return min(map(attrgetter("timestamp"), self.pool))
+        return min(self.timestamps)
 
     @cached_property
     def biggest_size(self):
@@ -332,8 +369,12 @@ class DuplicateSet:
                 mail_b.body_lines,
                 fromfile=f"Normalized body of {mail_a!r}",
                 tofile=f"Normalized body of {mail_b!r}",
-                fromfiledate=f"{mail_a.timestamp:0.2f}",
-                tofiledate=f"{mail_b.timestamp:0.2f}",
+                fromfiledate=""
+                if mail_a.timestamp is None
+                else f"{mail_a.timestamp:0.2f}",
+                tofiledate=""
+                if mail_b.timestamp is None
+                else f"{mail_b.timestamp:0.2f}",
                 n=0,
                 lineterm="\n",
             ),
@@ -381,7 +422,13 @@ class DuplicateSet:
             return self.skip_set("no strategy to apply.", Stat.SET_SKIPPED_STRATEGY)
 
         # Fetch the subset of selected mails from the set by applying strategy.
-        selected = self.conf["strategy"].apply_strategy(self)
+        try:
+            selected = self.conf["strategy"].apply_strategy(self)
+        except MissingTimestamps as expt:
+            return self.skip_set(
+                f"the strategy cannot compare mails without a timestamp. {expt}",
+                Stat.SET_SKIPPED_TIMESTAMP,
+            )
         candidate_count = len(selected)
 
         # Duplicate sets matching as a whole are skipped altogether.
@@ -716,6 +763,7 @@ class Deduplicate:
                 Stat.SET_SKIPPED_ENCODING,
                 Stat.SET_SKIPPED_SIZE,
                 Stat.SET_SKIPPED_CONTENT,
+                Stat.SET_SKIPPED_TIMESTAMP,
                 Stat.SET_SKIPPED_STRATEGY,
                 Stat.SET_DEDUPLICATED,
             ),

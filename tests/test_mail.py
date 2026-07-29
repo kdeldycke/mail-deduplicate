@@ -46,6 +46,11 @@ def create_mail_with_headers(
     mail = cast(DedupMailMixin, msg)
     mail.__class__ = DedupMailMixin
 
+    # Swapping __class__ bypasses __init__, so mirror the box metadata defaults it
+    # sets, as they are required to render the mail's repr.
+    mail.source_path = None
+    mail.mail_id = None
+
     # Replace headers with provided ones
     if headers:
         cast(Any, mail)._headers = list(headers)
@@ -532,3 +537,79 @@ def test_invalid_date_parsing_dedup(invoke, make_box):
             invalid_date_mail_1,
         ],
     )
+
+
+undated_mail = MailFactory(date_rfc2822="invalid date")
+""" A mail whose ``Date`` header cannot be parsed into a timestamp. """
+
+
+@pytest.mark.parametrize("date_value", ["invalid date", "", "Hello, World!"])
+def test_unparseable_date_returns_none(date_value):
+    """An unparseable ``Date`` header produces no timestamp instead of crashing."""
+    mail = create_mail_with_headers(("Date", date_value))
+    assert mail.parsed_date is None
+
+
+def test_unparseable_date_skips_time_strategy(invoke, make_box):
+    """Time-based strategies skip duplicate sets containing mails without a parseable
+    ``Date`` header, and name the offending mails instead of crashing.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/132
+    """
+    box_path, box_type, _ = make_box(Maildir, [undated_mail, undated_mail])
+
+    result = invoke("--strategy=select-oldest", "--action=delete-selected", box_path)
+
+    assert result.exit_code == 0
+    assert "cannot compare mails without a timestamp" in result.stderr
+    assert "No timestamp for <MaildirDedupMail" in result.stderr
+
+    # No mail was removed.
+    check_box(box_path, box_type, content=[undated_mail, undated_mail])
+
+
+def test_mixed_missing_date_skips_time_strategy(invoke, make_box):
+    """A single mail without a parseable ``Date`` header is enough to skip its whole
+    set when a time-based strategy is applied."""
+    dated_mail = MailFactory(date="2021-01-01")
+    box_path, box_type, _ = make_box(Maildir, [undated_mail, dated_mail])
+
+    result = invoke(
+        # Remove the date from the hashed headers so both mails are grouped in the
+        # same duplicate set.
+        "--hash-header=message-id",
+        "--hash-header=from",
+        "--hash-header=to",
+        "--hash-header=subject",
+        "--strategy=select-newest",
+        "--action=delete-selected",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "cannot compare mails without a timestamp" in result.stderr
+    assert "No timestamp for <MaildirDedupMail" in result.stderr
+
+    # No mail was removed.
+    check_box(box_path, box_type, content=[undated_mail, dated_mail])
+
+
+def test_unparseable_date_show_diff(invoke, make_box):
+    """Rendering the diff of mails without a parseable ``Date`` header does not
+    crash."""
+    undated_variant = MailFactory(date_rfc2822="invalid date", body="A different body.")
+    box_path, box_type, _ = make_box(Maildir, [undated_mail, undated_variant])
+
+    result = invoke(
+        "--content-threshold=0",
+        "--show-diff",
+        "--strategy=select-oldest",
+        "--action=delete-selected",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "mails are too dissimilar in content" in result.stderr
+
+    # No mail was removed.
+    check_box(box_path, box_type, content=[undated_mail, undated_variant])

@@ -165,7 +165,7 @@ class DedupMailMixin(Message):
         parsed = email.utils.parsedate_tz(value)
 
         if not parsed:
-            logging.debug(f"Mail {self} has no valid Date header: {value!r}")
+            logging.debug(f"Mail {self!r} has no valid Date header: {value!r}")
             return None
 
         return float(email.utils.mktime_tz(parsed))
