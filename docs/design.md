@@ -67,11 +67,11 @@ Once all mails have been hashed, mails with the same hash are grouped together a
 
 ### ❎ Safeguard: size threshold
 
-Sets of duplicates are verified by comparing body sizes, and if they differ by more than a threshold, they are not counted as duplicates and the whole set is skipped with a warning.
+Sets of duplicates are verified by comparing the body sizes of every pair of mails they contain, and pairs differing by more than a threshold are not considered copies of each other.
 
 Since we're ignoring the `Content-Length` header by default [because of mailing-list effects](https://kdeldycke.github.io/mail-deduplicate/design.html#default-headers-and-mailing-lists), we introduced a limit on the allowed difference between the sizes of the message payloads.
 
-If this threshold is exceeded, a warning is issued and the messages are not considered duplicates, because this could point to message corruption somewhere, or a false positive.
+If this threshold is exceeded, this could point to message corruption somewhere, or a false positive. The mails involved in the most offending pairs are then set aside with a warning naming them, so a single outlier does not prevent the deduplication of the true copies sharing its set. Every mail still acted upon is within the thresholds of all the other mails of its reduced set. When fewer than 2 similar mails remain, there is nothing coherent left to deduplicate and the whole set is skipped, with a warning.
 
 ```{caution}
 Headers are not counted towards this threshold, because many [headers can be added by mailing list software](https://kdeldycke.github.io/mail-deduplicate/design.html#default-headers-and-mailing-lists) such as `mailman`, or even by the process of sending the mail through various MTAs.

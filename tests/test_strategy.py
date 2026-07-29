@@ -458,3 +458,68 @@ def test_maildir_strategy_selected(
 
     assert result.exit_code == 0
     check_box(dest_box_path, box_type, content=mailbox_results)
+
+
+outlier_mail = MailFactory(body="An entirely different mail body. " * 60)
+"""A mail whose body size and content exceed the default thresholds against the
+other fixtures."""
+
+
+def test_outlier_eviction_keeps_core_dedup(invoke, make_box):
+    """A mail exceeding the thresholds against its set no longer prevents the
+    deduplication of the true copies sharing the set.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/851
+    """
+    box_path, box_type, _ = make_box(
+        Maildir,
+        [smallest_mail, smallest_mail, outlier_mail],
+    )
+
+    result = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
+
+    assert result.exit_code == 0
+    assert "Set aside 1 mails too dissimilar" in result.stderr
+    assert "--hash-header" in result.stderr
+
+    # One of the two identical copies was deleted, the outlier was left untouched.
+    check_box(box_path, box_type, content=[smallest_mail, outlier_mail])
+
+
+def test_dissimilar_pair_still_skipped(invoke, make_box):
+    """A set with no coherent core of at least 2 similar mails is skipped as a whole,
+    like before outlier eviction was introduced."""
+    box_path, box_type, _ = make_box(Maildir, [smallest_mail, outlier_mail])
+
+    result = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
+
+    assert result.exit_code == 0
+    assert "Skip set: mails are too dissimilar in size." in result.stderr
+
+    # No mail was removed.
+    check_box(box_path, box_type, content=[smallest_mail, outlier_mail])
+
+
+def test_eviction_is_not_transitive(invoke, make_box):
+    """A chain of mails, each within threshold of the next but not of the whole set,
+    is not collapsed into a single group: an endpoint is set aside, and the coherent
+    remainder is deduplicated."""
+    chain = [
+        MailFactory(body="z" * 100),
+        MailFactory(body="z" * 500),
+        MailFactory(body="z" * 900),
+    ]
+    box_path, _, _ = make_box(Maildir, chain)
+
+    result = invoke(
+        "--content-threshold=-1",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "Set aside 1 mails too dissimilar" in result.stderr
+
+    # The evicted endpoint remains, plus one survivor of the two-mail core.
+    assert len(Maildir(box_path, create=False)) == 2

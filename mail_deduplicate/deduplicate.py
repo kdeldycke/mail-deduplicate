@@ -299,13 +299,21 @@ class DuplicateSet:
         """Returns the smallest size among all mails in the set."""
         return min(map(attrgetter("size"), self.pool))
 
-    def check_differences(self):
-        """Ensures all mail differs in the limits imposed by size and content
-        thresholds.
+    def check_differences(self) -> set[DedupMailMixin]:
+        """Checks all mails of the set against each other, for size and content
+        differences within the limits imposed by the thresholds.
 
-        Compare all mails of the duplicate set with each other, both in size and
-        content. Raise an error if we're not within the limits imposed by the threshold
-        settings.
+        Instead of rejecting the whole set on the first offending pair, the mails
+        involved in the most offending pairs are greedily set aside until every
+        remaining pair passes the thresholds. This keeps a single outlier from
+        preventing the deduplication of the true copies sharing its set. See:
+        https://github.com/kdeldycke/mail-deduplicate/issues/851
+
+        Returns the mails to set aside, empty if the whole pool already passes.
+
+        Raises ``SizeDiffAboveThreshold`` or ``ContentDiffAboveThreshold`` if fewer
+        than 2 mails would remain, in which case there is no coherent core of
+        duplicates and the whole set is to be skipped, as before.
         """
         size_threshold = self.conf["size_threshold"]
         content_threshold = self.conf["content_threshold"]
@@ -316,9 +324,13 @@ class DuplicateSet:
         if content_threshold < 0:
             logging.info("Skip checking for content differences.")
         if size_threshold < 0 and content_threshold < 0:
-            return
+            return set()
 
+        # Adjacency of mails linked by a pair exceeding a threshold.
+        offending_peers: dict[DedupMailMixin, set[DedupMailMixin]] = {}
+        size_offense = False
         for mail_a, mail_b in combinations(self.pool, 2):
+            offense = False
             if size_threshold >= 0:
                 size_difference = abs(mail_a.size - mail_b.size)
                 logging.debug(
@@ -326,18 +338,42 @@ class DuplicateSet:
                     "in size.",
                 )
                 if size_difference > size_threshold:
-                    raise SizeDiffAboveThreshold
+                    offense = size_offense = True
 
-            if content_threshold >= 0:
+            if not offense and content_threshold >= 0:
                 content_difference = self.diff(mail_a, mail_b)
                 logging.debug(
                     f"{mail_a!r} and {mail_b!r} differs by {content_difference} bytes "
                     "in content.",
                 )
                 if content_difference > content_threshold:
+                    offense = True
                     if self.conf["show_diff"]:
                         logging.info(self.pretty_diff(mail_a, mail_b))
-                    raise ContentDiffAboveThreshold
+
+            if offense:
+                offending_peers.setdefault(mail_a, set()).add(mail_b)
+                offending_peers.setdefault(mail_b, set()).add(mail_a)
+
+        # Greedily evict the mail with the most offending pairs left, breaking ties
+        # on the mail's repr for determinism, until no offending pair remains.
+        evicted = set()
+        while any(offending_peers.values()):
+            outlier = sorted(
+                (mail for mail, peers in offending_peers.items() if peers),
+                key=lambda mail: (-len(offending_peers[mail]), repr(mail)),
+            )[0]
+            evicted.add(outlier)
+            offending_peers.pop(outlier)
+            for peers in offending_peers.values():
+                peers.discard(outlier)
+
+        if evicted and self.size - len(evicted) < 2:
+            if size_offense:
+                raise SizeDiffAboveThreshold
+            raise ContentDiffAboveThreshold
+
+        return evicted
 
     def diff(self, mail_a, mail_b):
         """Return difference in bytes between two mails' normalized body.
@@ -403,7 +439,7 @@ class DuplicateSet:
             return
 
         try:
-            self.check_differences()
+            evicted = self.check_differences()
         except UnicodeDecodeError as expt:
             logging.debug(f"{expt}")
             return self.skip_set(
@@ -417,6 +453,20 @@ class DuplicateSet:
             return self.skip_set(
                 "mails are too dissimilar in content.", Stat.SET_SKIPPED_CONTENT
             )
+
+        if evicted:
+            logging.warning(
+                f"Set aside {len(evicted)} mails too dissimilar from the rest of "
+                "the set: "
+                + ", ".join(sorted(repr(mail) for mail in evicted))
+                + ". Narrow down the --hash-header selection if they were expected "
+                "to be recognized as copies."
+            )
+            self.stats[Stat.MAIL_SKIPPED] += len(evicted)
+            # Resume the selection on the remaining core of coherent duplicates, and
+            # invalidate the cached size so it tracks the reduced pool.
+            self.pool = frozenset(self.pool.difference(evicted))
+            self.__dict__.pop("size", None)
 
         if not self.conf["strategy"]:
             return self.skip_set("no strategy to apply.", Stat.SET_SKIPPED_STRATEGY)
