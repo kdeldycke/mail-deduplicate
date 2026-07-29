@@ -9,6 +9,7 @@ hide-toc: true
 :maxdepth: 2
 :hidden:
 install
+tutorial
 design
 cli-parameters
 configuration
