@@ -18,8 +18,9 @@ from __future__ import annotations
 
 import email
 import email.header
-from mailbox import Maildir, mbox
+from mailbox import Maildir, mbox, mboxMessage
 from pathlib import Path
+from textwrap import dedent
 from typing import Any, cast
 
 import pytest
@@ -550,6 +551,48 @@ def test_unparseable_date_returns_none(date_value):
     """An unparseable ``Date`` header produces no timestamp instead of crashing."""
     mail = create_mail_with_headers(("Date", date_value))
     assert mail.parsed_date is None
+
+
+def test_missing_date_header_returns_none():
+    """A mail without any ``Date`` header produces no timestamp instead of crashing."""
+    mail = create_mail_with_headers(("Subject", "No date around here"))
+    assert mail.parsed_date is None
+
+
+def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
+    """Duplicate mails without any ``Date`` header, as saved into mbox files by some
+    clients, are skipped by time-based strategies instead of crashing.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/600
+    """
+    dateless_mail = dedent("""\
+        X-Mozilla-Status: 0001
+        X-Mozilla-Status2: 00000000
+        MIME-Version: 1.0
+        From: "Mailbox Support" <support@example.com>
+        To: "Joseph Turian" <joseph@example.com>
+        Subject: Tips for Using Mailbox in Gmail
+        Content-Type: text/plain; charset=utf-8
+
+        Hi Joseph,
+        """)
+    box_path = tmp_path / "dateless.mbox"
+    box = mbox(str(box_path))
+    for _ in range(2):
+        box.add(mboxMessage(dateless_mail))
+    box.flush()
+    box.close()
+
+    result = invoke("--strategy=select-oldest", "--action=delete-selected", str(box_path))
+
+    assert result.exit_code == 0
+    assert "cannot compare mails without a timestamp" in result.stderr
+    assert "No timestamp for <mboxDedupMail" in result.stderr
+
+    # No mail was removed.
+    box = mbox(str(box_path), create=False)
+    assert len(box) == 2
+    box.close()
 
 
 def test_unparseable_date_skips_time_strategy(invoke, make_box):

@@ -5,7 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
-- Skip duplicate sets containing mails without a parseable `Date` header instead of crashing on time-based strategies. The warning names the offending mails, and a new `Skipped - Timestamp` metric counts these sets. Closes [#132](https://github.com/kdeldycke/mail-deduplicate/issues/132).
+- Skip duplicate sets containing mails with an unparseable or absent `Date` header instead of crashing on time-based strategies. The warning names the offending mails, and a new `Skipped - Timestamp` metric counts these sets. Closes [#132](https://github.com/kdeldycke/mail-deduplicate/issues/132) and [#600](https://github.com/kdeldycke/mail-deduplicate/issues/600).
 - Identify mails from folder-based boxes in logs by the fully-qualified path of their own file, so it can be copy-pasted for direct inspection. Closes [#157](https://github.com/kdeldycke/mail-deduplicate/issues/157).
 - Fix a spurious metrics-inconsistency exit (code `115`) for `*-discarded` actions and dry runs: the statistics self-check now compares each action counter to the subset of mails the action targets.
 - Add a hands-on tutorial page to the documentation and rework the README quickstart around use cases and example commands. Closes [#984](https://github.com/kdeldycke/mail-deduplicate/issues/984).
