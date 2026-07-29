@@ -124,8 +124,8 @@ class DedupMailMixin(Message):
         """Real filesystem location of the mail.
 
         Returns the individual mail's file for folder-based box types (``maildir`` &
-        co.), but returns the whole box path for file-based boxes (``mbox`` & co.). Only
-        used by regexp-based selection strategies.
+        co.), but returns the whole box path for file-based boxes (``mbox`` & co.).
+        Used by regexp-based selection strategies and to render the mail's repr.
         """
 
         self.conf: Config
@@ -148,6 +148,16 @@ class DedupMailMixin(Message):
         mail_file.close()
 
     def __repr__(self) -> str:
+        """Renders the fully-qualified path of the mail's own file, so it can be
+        copy-pasted as-is for direct inspection.
+
+        Mails from file-based boxes share the box's path, so the mail ID is appended
+        to tell them apart. See:
+        https://github.com/kdeldycke/mail-deduplicate/issues/157
+        """
+        path = getattr(self, "path", None)
+        if path and path != self.source_path:
+            return f"<{self.__class__.__name__} {path}>"
         return f"<{self.__class__.__name__} {self.source_path}:{self.mail_id}>"
 
     @cached_property

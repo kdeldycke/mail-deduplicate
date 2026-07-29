@@ -18,13 +18,15 @@ from __future__ import annotations
 
 import email
 import email.header
-from mailbox import Maildir
+from mailbox import Maildir, mbox
+from pathlib import Path
 from typing import Any, cast
 
 import pytest
 from extra_platforms.pytest import skip_windows
 
 from mail_deduplicate.mail import DedupMailMixin
+from mail_deduplicate.mail_box import MAILDIR_SUBDIRS, BoxFormat
 
 from .conftest import MailFactory, check_box
 
@@ -613,3 +615,40 @@ def test_unparseable_date_show_diff(invoke, make_box):
 
     # No mail was removed.
     check_box(box_path, box_type, content=[undated_mail, undated_variant])
+
+
+def test_maildir_repr_renders_mail_file_path(make_box):
+    """The repr of a maildir mail is the fully-qualified path of its own file, ready
+    to be copy-pasted for direct inspection.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/157
+    """
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+    box = BoxFormat.MAILDIR.constructor(box_path, create=False)
+    mail_id, mail = next(iter(box.iteritems()))
+    mail.add_box_metadata(box, mail_id)
+    box.close()
+
+    assert repr(mail) == f"<MaildirDedupMail {mail.path}>"
+
+    # The rendered path points to the mail's own file within the box.
+    path = Path(mail.path)
+    assert path.is_file()
+    assert path.parent.name in MAILDIR_SUBDIRS
+    assert path.parent.parent == Path(box_path)
+
+
+def test_mbox_repr_appends_mail_id(make_box):
+    """Mails of a file-based box all share the box's path, so their repr keeps the
+    mail ID to tell them apart."""
+    box_path, _, _ = make_box(mbox, [MailFactory(), MailFactory()])
+    box = BoxFormat.MBOX.constructor(box_path, create=False)
+    reprs = set()
+    for mail_id, mail in box.iteritems():
+        mail.add_box_metadata(box, mail_id)
+        assert repr(mail) == f"<mboxDedupMail {box_path}:{mail_id}>"
+        reprs.add(repr(mail))
+    box.close()
+
+    assert len(reprs) == 2
+    assert Path(box_path).is_file()
