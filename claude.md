@@ -4,7 +4,7 @@ This file provides guidance to [Claude Code](https://claude.ai/code) when workin
 
 ## Project overview
 
-Mail Deduplicate (`mdedup`) is a CLI that finds and removes duplicate mails across mail boxes. It reads `maildir`, `mbox`, `MH`, `Babyl` and `MMDF` boxes, groups mails into duplicate sets by a hash of selected headers, applies a user-chosen strategy to pick which copies to keep, then copies, moves or deletes the rest.
+Mail Deduplicate (`mdedup`) is a CLI that finds and removes duplicate mails across mail boxes. It reads `maildir`, `mbox`, `MH`, `Babyl`, `MMDF` and `eml` boxes, groups mails into duplicate sets by a hash of selected headers, applies a user-chosen strategy to pick which copies to keep, then copies, moves or deletes the rest.
 
 ## Upstream conventions
 

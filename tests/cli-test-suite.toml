@@ -21,7 +21,7 @@ stdout_contains = [
     # Check that Enums are properly rendered in help.
     "  -b, --hash-body [skip|raw|normalized]",
     "  [default: skip]",
-    "  -e, --export-format [maildir|mbox|mh|babyl|mmdf]",
+    "  -e, --export-format [maildir|mbox|mh|babyl|mmdf|eml]",
     "  [default: mbox]",
 
     # Numeric ranges are properly rendered in help.

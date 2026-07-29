@@ -56,7 +56,6 @@ def test_box_format_definition():
     """Ensures all box formats are correctly defined."""
     for box in BoxFormat:
         assert issubclass(box.base_class, Mailbox)
-        assert box.base_class in stdlib_box_types()
 
         assert box.base_class.__name__.upper() == box.name
         assert str(box) == box.name.lower()
@@ -69,8 +68,9 @@ def test_box_format_definition():
 
         assert callable(box.constructor)
 
-    # Check all standard library box types are covered.
-    assert set(stdlib_box_types()) == {box.base_class for box in BoxFormat}
+    # Check all standard library box types are covered, on top of which custom
+    # formats like eml are provided.
+    assert set(stdlib_box_types()) <= {box.base_class for box in BoxFormat}
 
     assert set(FOLDER_FORMATS).isdisjoint(FILE_FORMATS)
     assert set(BoxFormat) == set(FOLDER_FORMATS) | set(FILE_FORMATS)
@@ -189,7 +189,8 @@ def test_invalid_maildir_structure(invoke):
     assert result.exit_code == 1
     assert "Step #1" in result.stdout
     assert "Opening " in result.stderr
-    assert "Missing sub-directory" in str(result.exc_info[1])
+    assert "Unrecognized folder" in str(result.exc_info[1])
+    assert "--input-format" in str(result.exc_info[1])
 
 
 def test_verbatim_nested_maildirs(invoke, tmp_path):
@@ -258,3 +259,76 @@ def test_mixed_maildir_folder_conventions(invoke, tmp_path):
 
     assert result.exit_code == 0
     assert result.stderr.count("1 mails found.") == 3
+
+
+def test_eml_autodetect_and_dedup(invoke, tmp_path):
+    """A folder of loose ``.eml`` files is autodetected and deduplicated, nested
+    directories included.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/760
+    """
+    root = tmp_path / "export"
+    (root / "2024").mkdir(parents=True)
+    dup_mail = MailFactory()
+    unique_mail = MailFactory(message_id="<unique@example.com>")
+
+    (root / "one.eml").write_bytes(dup_mail.render())
+    (root / "2024" / "two.eml").write_bytes(dup_mail.render())
+    (root / "2024" / "three.EML").write_bytes(unique_mail.render())
+    # Non-mail and hidden files are ignored.
+    (root / "notes.txt").write_text("Not a mail.")
+    (root / ".hidden.eml").write_bytes(dup_mail.render())
+
+    result = invoke("--strategy=select-one", "--action=delete-discarded", str(root))
+
+    assert result.exit_code == 0
+    assert "eml detected." in result.stderr
+    assert "3 mails found." in result.stderr
+
+    # One copy of the duplicated mail was deleted, everything else was preserved.
+    from mail_deduplicate.mail_box import EML
+
+    box = EML(str(root), create=False)
+    assert len(box) == 2
+    assert (root / "notes.txt").is_file()
+    assert (root / ".hidden.eml").is_file()
+
+
+def test_eml_forced_format(invoke, tmp_path):
+    """The ``eml`` format can be forced on any folder."""
+    root = tmp_path / "export"
+    root.mkdir()
+    (root / "one.eml").write_bytes(MailFactory().render())
+
+    result = invoke("--input-format=eml", "--action=delete-discarded", str(root))
+
+    assert result.exit_code == 0
+    assert "1 mails found." in result.stderr
+
+
+def test_eml_export_format(invoke, tmp_path):
+    """Deduplicated mails can be exported as a folder of ``.eml`` files."""
+    root = tmp_path / "export"
+    root.mkdir()
+    dup_mail = MailFactory()
+    (root / "one.eml").write_bytes(dup_mail.render())
+    (root / "two.eml").write_bytes(dup_mail.render())
+
+    dest = tmp_path / "deduped"
+    result = invoke(
+        "--strategy=select-one",
+        "--action=copy-selected",
+        f"--export={dest}",
+        "--export-format=eml",
+        str(root),
+    )
+
+    assert result.exit_code == 0
+
+    from mail_deduplicate.mail_box import EML
+
+    box = EML(str(dest), create=False)
+    assert len(box) == 1
+    assert [str(box.get_message(key)) for key in box.iterkeys()] == [
+        str(dup_mail.as_message())
+    ]

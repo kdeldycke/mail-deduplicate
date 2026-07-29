@@ -24,7 +24,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 
 - Duplicate detection based on cherry-picked and normalized mail headers.
 - Fetch mails from multiple sources.
-- Reads and writes to `mbox`, `maildir`, `babyl`, `mh` and `mmdf` formats.
+- Reads and writes to `mbox`, `maildir`, `babyl`, `mh`, `mmdf` and `eml` formats.
 - Deduplication strategies based on size, content, timestamp, file path or random choice.
 - Copy, move or delete the resulting set of duplicates.
 - Dry-run mode.

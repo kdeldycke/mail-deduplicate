@@ -23,10 +23,12 @@ from __future__ import annotations
 
 import logging
 import mailbox
+import os
 from enum import Enum, auto
 from functools import partial
 from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
 from pathlib import Path
+from uuid import uuid4
 
 from click_extra import get_current_theme
 
@@ -43,6 +45,99 @@ mboxDedupMail = make_dedup_mail("mboxDedupMail", mailbox.mboxMessage)
 MHDedupMail = make_dedup_mail("MHDedupMail", mailbox.MHMessage)
 BabylDedupMail = make_dedup_mail("BabylDedupMail", mailbox.BabylMessage)
 MMDFDedupMail = make_dedup_mail("MMDFDedupMail", mailbox.MMDFMessage)
+EMLDedupMail = make_dedup_mail("EMLDedupMail", mailbox.Message)
+
+
+class EML(Mailbox):
+    """A folder of loose ``.eml`` files, walked recursively.
+
+    Supports mail archives exported as individual RFC 5322 files, one mail per
+    file, as produced by Outlook PST/OST conversion tools for instance. See:
+    https://github.com/kdeldycke/mail-deduplicate/issues/760
+
+    Keys are the paths of the mail files, relative to the folder's root. Files
+    without the ``.eml`` extension (case-insensitive) are ignored, as well as
+    hidden files and directories.
+
+    Follows the interface of Python's `mailbox.Mailbox
+    <https://docs.python.org/3/library/mailbox.html#mailbox.Mailbox>`_. Like
+    ``maildir``, the one-file-per-mail storage needs no locking.
+    """
+
+    def __init__(self, dirname, factory=None, create=True) -> None:
+        super().__init__(dirname, factory, create)
+        if not os.path.exists(self._path):
+            if create:
+                os.mkdir(self._path, 0o700)
+            else:
+                raise mailbox.NoSuchMailboxError(self._path)
+
+    def _full_path(self, key: str) -> str:
+        return os.path.join(self._path, key)
+
+    def iterkeys(self):
+        for dirpath, dirnames, filenames in os.walk(self._path):
+            dirnames[:] = sorted(d for d in dirnames if not d.startswith("."))
+            for filename in sorted(filenames):
+                if not filename.startswith(".") and filename.lower().endswith(".eml"):
+                    yield os.path.relpath(
+                        os.path.join(dirpath, filename), self._path
+                    )
+
+    def __contains__(self, key) -> bool:
+        return key.lower().endswith(".eml") and os.path.isfile(self._full_path(key))
+
+    def __len__(self) -> int:
+        return sum(1 for _ in self.iterkeys())
+
+    def get_file(self, key):
+        try:
+            file = open(self._full_path(key), "rb")  # noqa: SIM115
+        except FileNotFoundError:
+            raise KeyError(key) from None
+        return mailbox._ProxyFile(file)
+
+    def get_bytes(self, key) -> bytes:
+        try:
+            with open(self._full_path(key), "rb") as file:
+                return file.read()
+        except FileNotFoundError:
+            raise KeyError(key) from None
+
+    def get_message(self, key):
+        return mailbox.Message(self.get_bytes(key))
+
+    def add(self, message) -> str:
+        key = f"{uuid4().hex}.eml"
+        with open(self._full_path(key), "wb") as file:
+            self._dump_message(message, file)
+        return key
+
+    def remove(self, key) -> None:
+        try:
+            os.remove(self._full_path(key))
+        except FileNotFoundError:
+            raise KeyError(key) from None
+
+    def list_folders(self) -> list[str]:
+        """No dedicated subfolder objects: the recursive walk covers nested
+        directories."""
+        return []
+
+    def get_folder(self, folder):
+        raise NotImplementedError("EML folders are walked recursively instead.")
+
+    def flush(self) -> None:
+        """Mails are written straight to the filesystem: nothing to flush."""
+
+    def lock(self) -> None:
+        """One-file-per-mail storage needs no locking."""
+
+    def unlock(self) -> None:
+        """One-file-per-mail storage needs no locking."""
+
+    def close(self) -> None:
+        """No resource is kept open between operations."""
 
 
 class BoxStructure(Enum):
@@ -76,6 +171,8 @@ class BoxFormat(Enum):
     MH = (MH, BoxStructure.FOLDER, MHDedupMail)
     BABYL = (Babyl, BoxStructure.FILE, BabylDedupMail)
     MMDF = (MMDF, BoxStructure.FILE, MMDFDedupMail)
+    # Custom format, not part of the standard library.
+    EML = (EML, BoxStructure.FOLDER, EMLDedupMail)
 
     def __init__(
         self,
@@ -144,6 +241,21 @@ def contains_maildir(path: Path) -> bool:
     )
 
 
+def contains_eml(path: Path) -> bool:
+    """Returns ``True`` when the path holds at least one ``.eml`` file, at any depth.
+
+    Hidden files and directories are ignored, and the extension is matched
+    case-insensitively, mirroring the walk of ``EML`` boxes.
+    """
+    for dirpath, dirnames, filenames in os.walk(path):
+        dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+        if any(
+            not f.startswith(".") and f.lower().endswith(".eml") for f in filenames
+        ):
+            return True
+    return False
+
+
 def autodetect_box_type(path: Path) -> BoxFormat:
     """Auto-detect the format of the mailbox located at the provided path.
 
@@ -155,6 +267,7 @@ def autodetect_box_type(path: Path) -> BoxFormat:
     provided path is a folder and feature the `expecteed sub-directories
     <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.MAILDIR_SUBDIRS>`_,
     or holds nested maildir folders at any depth, it is parsed as a ``maildir``.
+    A folder holding loose ``.eml`` files instead is parsed as an ``eml`` source.
 
     .. todo::
         Future finer autodetection heuristics should be implemented here. Some ideas:
@@ -170,13 +283,18 @@ def autodetect_box_type(path: Path) -> BoxFormat:
     box_format = None
 
     # Validates folder as a maildir, either by its own structure or by the nested
-    # maildir folders it contains.
+    # maildir folders it contains. Falls back to a folder of loose .eml files.
     if path.is_dir():
-        if not contains_maildir(path):
-            for subdir in MAILDIR_SUBDIRS:
-                if not path.joinpath(subdir).is_dir():
-                    raise ValueError(f"Missing sub-directory {subdir!r}")
-        box_format = BoxFormat.MAILDIR
+        if contains_maildir(path):
+            box_format = BoxFormat.MAILDIR
+        elif contains_eml(path):
+            box_format = BoxFormat.EML
+        else:
+            raise ValueError(
+                f"Unrecognized folder: no {'/'.join(sorted(MAILDIR_SUBDIRS))} "
+                "maildir structure, no nested maildir folders, and no .eml files "
+                "found. Force a format with --input-format."
+            )
 
     # Validates folder as an mbox.
     elif path.is_file():

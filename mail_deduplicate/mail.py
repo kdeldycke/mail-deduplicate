@@ -52,7 +52,8 @@ class TimeSource(Enum):
     """Timestamp is from the email's file on the filesystem.
 
     .. attention::
-        Only available for ``maildir`` sources.
+        Only meaningful for sources storing one mail per file, like ``maildir``
+        and ``eml``.
     """
 
     def __str__(self) -> str:
