@@ -190,3 +190,71 @@ def test_invalid_maildir_structure(invoke):
     assert "Step #1" in result.stdout
     assert "Opening " in result.stderr
     assert "Missing sub-directory" in str(result.exc_info[1])
+
+
+def test_verbatim_nested_maildirs(invoke, tmp_path):
+    """Nested plain-directory maildir folders (isync's Verbatim naming style) are
+    discovered at any depth, without requiring the root to be a maildir itself.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/973
+    """
+    root = tmp_path / "backup"
+    dup_mail = MailFactory()
+    unique_mail_1 = MailFactory(message_id="<unique-1@example.com>")
+    unique_mail_2 = MailFactory(message_id="<unique-2@example.com>")
+
+    (root / "Dev").mkdir(parents=True)
+    layout = {
+        "INBOX": [dup_mail, unique_mail_1],
+        "Archive": [dup_mail],
+        "Dev/GitHub": [unique_mail_2],
+    }
+    for folder, mails in layout.items():
+        box = mailbox.Maildir(str(root / folder), create=True)
+        for mail in mails:
+            box.add(mail.render())
+        box.close()
+
+    result = invoke("--strategy=select-one", "--action=delete-discarded", str(root))
+
+    assert result.exit_code == 0
+    assert "No mails at this level: only browse nested folders." in result.stderr
+
+    # One copy of the duplicated mail was deleted, everything else is untouched.
+    total = sum(
+        len(mailbox.Maildir(str(root / folder), create=False)) for folder in layout
+    )
+    assert total == 3
+
+
+def test_verbatim_forced_maildir_format(invoke, tmp_path):
+    """Forcing the maildir format on a Verbatim-style tree does not crash on the
+    mail-less root."""
+    root = tmp_path / "backup"
+    root.mkdir()
+    box = mailbox.Maildir(str(root / "INBOX"), create=True)
+    box.add(MailFactory().render())
+    box.close()
+
+    result = invoke("--input-format=maildir", "--action=delete-discarded", str(root))
+
+    assert result.exit_code == 0
+    assert "1 mails found." in result.stderr
+
+
+def test_mixed_maildir_folder_conventions(invoke, tmp_path):
+    """Maildir++ dot-folders and Verbatim plain folders coexist under the same
+    maildir root, each opened exactly once."""
+    root = tmp_path / "backup"
+    box = mailbox.Maildir(str(root), create=True)
+    box.add(MailFactory(message_id="<root@example.com>").render())
+    box.close()
+    for folder in (".Old", "Sub"):
+        sub_box = mailbox.Maildir(str(root / folder), create=True)
+        sub_box.add(MailFactory(message_id=f"<{folder}@example.com>").render())
+        sub_box.close()
+
+    result = invoke("--action=delete-discarded", str(root))
+
+    assert result.exit_code == 0
+    assert result.stderr.count("1 mails found.") == 3

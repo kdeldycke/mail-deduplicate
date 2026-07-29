@@ -26,6 +26,7 @@ import mailbox
 from enum import Enum, auto
 from functools import partial
 from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
+from pathlib import Path
 
 from click_extra import get_current_theme
 
@@ -42,10 +43,6 @@ mboxDedupMail = make_dedup_mail("mboxDedupMail", mailbox.mboxMessage)
 MHDedupMail = make_dedup_mail("MHDedupMail", mailbox.MHMessage)
 BabylDedupMail = make_dedup_mail("BabylDedupMail", mailbox.BabylMessage)
 MMDFDedupMail = make_dedup_mail("MMDFDedupMail", mailbox.MMDFMessage)
-
-TYPE_CHECKING = False
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 class BoxStructure(Enum):
@@ -118,6 +115,35 @@ MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 """List of required sub-folders defining a properly structured maildir."""
 
 
+def is_maildir(path: Path) -> bool:
+    """Returns ``True`` when the path holds all the sub-directories of a properly
+    structured maildir."""
+    return all(path.joinpath(subdir).is_dir() for subdir in MAILDIR_SUBDIRS)
+
+
+def contains_maildir(path: Path) -> bool:
+    """Returns ``True`` when the path is a maildir or holds one at any depth.
+
+    Allows the discovery of nested maildir folders stored as plain directories, as
+    produced by `isync/mbsync's Verbatim naming style
+    <https://isync.sourceforge.io/mbsync.html>`_. See:
+    https://github.com/kdeldycke/mail-deduplicate/issues/973
+
+    Dot-prefixed directories are ignored, as they are covered by the ``Maildir++``
+    folder convention. The mail-holding sub-directories of maildirs are not
+    explored either.
+    """
+    if is_maildir(path):
+        return True
+    return any(
+        contains_maildir(sub)
+        for sub in path.iterdir()
+        if sub.is_dir()
+        and not sub.name.startswith(".")
+        and sub.name not in MAILDIR_SUBDIRS
+    )
+
+
 def autodetect_box_type(path: Path) -> BoxFormat:
     """Auto-detect the format of the mailbox located at the provided path.
 
@@ -128,7 +154,7 @@ def autodetect_box_type(path: Path) -> BoxFormat:
     If the path is a file, then it is considered as an ``mbox``. Else, if the
     provided path is a folder and feature the `expecteed sub-directories
     <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.MAILDIR_SUBDIRS>`_,
-    it is parsed as a ``maildir``.
+    or holds nested maildir folders at any depth, it is parsed as a ``maildir``.
 
     .. todo::
         Future finer autodetection heuristics should be implemented here. Some ideas:
@@ -143,11 +169,13 @@ def autodetect_box_type(path: Path) -> BoxFormat:
     """
     box_format = None
 
-    # Validates folder as a maildir.
+    # Validates folder as a maildir, either by its own structure or by the nested
+    # maildir folders it contains.
     if path.is_dir():
-        for subdir in MAILDIR_SUBDIRS:
-            if not path.joinpath(subdir).is_dir():
-                raise ValueError(f"Missing sub-directory {subdir!r}")
+        if not contains_maildir(path):
+            for subdir in MAILDIR_SUBDIRS:
+                if not path.joinpath(subdir).is_dir():
+                    raise ValueError(f"Missing sub-directory {subdir!r}")
         box_format = BoxFormat.MAILDIR
 
     # Validates folder as an mbox.
@@ -214,9 +242,18 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
 
     Returns a list of opened and locked boxes, each for one subfolder.
 
-    Skips box types not supporting subfolders.
+    Skips box types not supporting subfolders. For ``maildir``, both the
+    ``Maildir++`` convention (dot-prefixed folders) and Verbatim-style layouts
+    (nested plain directories, each a maildir of its own) are browsed. A directory
+    without the maildir structure only acts as a container of nested folders and
+    carries no mail of its own.
     """
-    folder_list = [lock_box(box, force_unlock)]
+    folder_list = []
+
+    if isinstance(box, Maildir) and not is_maildir(Path(box._path)):
+        logging.info("No mails at this level: only browse nested folders.")
+    else:
+        folder_list.append(lock_box(box, force_unlock))
 
     if isinstance(box, tuple(FOLDER_FORMAT_CLASSES)):
         # Asserts to please the type checker.
@@ -225,6 +262,20 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
         for folder_id in box.list_folders():
             logging.info(f"Opening subfolder {folder_id} ...")
             folder_list += open_subfolders(box.get_folder(folder_id), force_unlock)
+
+        # Python's mailbox module only lists dot-prefixed Maildir++ folders, so
+        # browse the filesystem for Verbatim-style nested maildir folders.
+        if isinstance(box, Maildir):
+            for sub_path in sorted(Path(box._path).iterdir()):
+                if (
+                    sub_path.is_dir()
+                    and not sub_path.name.startswith(".")
+                    and sub_path.name not in MAILDIR_SUBDIRS
+                    and contains_maildir(sub_path)
+                ):
+                    logging.info(f"Opening subfolder {sub_path.name} ...")
+                    sub_box = Maildir(sub_path, factory=box._factory, create=False)
+                    folder_list += open_subfolders(sub_box, force_unlock)
     return folder_list
 
 

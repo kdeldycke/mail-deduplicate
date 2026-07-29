@@ -9,6 +9,7 @@
 - Identify mails from folder-based boxes in logs by the fully-qualified path of their own file, so it can be copy-pasted for direct inspection. Closes [#157](https://github.com/kdeldycke/mail-deduplicate/issues/157).
 - Fix a spurious metrics-inconsistency exit (code `115`) for `*-discarded` actions and dry runs: the statistics self-check now compares each action counter to the subset of mails the action targets. Closes [#841](https://github.com/kdeldycke/mail-deduplicate/issues/841).
 - Set aside mails exceeding the size or content thresholds against the rest of their set instead of skipping the whole set, so an outlier no longer prevents the deduplication of the true copies sharing its hash. Closes [#851](https://github.com/kdeldycke/mail-deduplicate/issues/851).
+- Discover nested maildir folders stored as plain directories at any depth, as produced by `isync`/`mbsync`'s Verbatim naming style, even when the root directory holds no mail itself. Closes [#973](https://github.com/kdeldycke/mail-deduplicate/issues/973).
 - Add a hands-on tutorial page to the documentation and rework the README quickstart around use cases and example commands. Closes [#984](https://github.com/kdeldycke/mail-deduplicate/issues/984).
 - Execute the tutorial's commands at documentation build time with `click-extra`'s `click:run` directives, so the rendered outputs always match the current implementation. Closes [#23](https://github.com/kdeldycke/mail-deduplicate/issues/23).
 
