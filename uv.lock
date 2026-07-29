@@ -76,20 +76,20 @@ wheels = [
 
 [[package]]
 name = "bracex"
-version = "3.0"
+version = "3.0.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d0/f5/4473ad9b48cd0420a2d762a3750fa0e078e23e060b1af72662e5987e5530/bracex-3.0.tar.gz", hash = "sha256:b73f718d6bd98d8419e45df02426c86e9967c179949f779340d6c3a8c83b9111", size = 43162, upload-time = "2026-06-30T00:43:35.279Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ac/01/5f394b8bcd6e5b92f73130990960423bbb19711f906bd9fe9ea5557c667c/bracex-3.0.1.tar.gz", hash = "sha256:4e38e32392e4a4780fe15d644bfc7c8514057cfc3861e060b11814ce829c25e4", size = 44019, upload-time = "2026-07-20T13:43:00.335Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/2e/68781b78e764e5ccc4af1e3d27e060069c73af90234853fa80000e7ee79d/bracex-3.0-py3-none-any.whl", hash = "sha256:3833e61c2f092d5aa0468fa2e6c6e990a306185abf763b6d122f0158e59c58a5", size = 11738, upload-time = "2026-06-30T00:43:34.196Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/8f/6f7273a7adb8d73fc8d21ede4376a3e475e52f98435c6007f69100dec8ca/bracex-3.0.1-py3-none-any.whl", hash = "sha256:6523ad83aeb5098a4ee597cff0f964442ff74e460bd3fafaffab6a013ff2288c", size = 11940, upload-time = "2026-07-20T13:42:59.268Z" },
 ]
 
 [[package]]
 name = "certifi"
-version = "2026.6.17"
+version = "2026.7.22"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c9/c7/424b75da314c1045981bd9777432fad05a9e0c69daa4ed7e308bbaffe405/certifi-2026.6.17.tar.gz", hash = "sha256:024c88eeec92ca068db80f02b8b07c9cef7b9fe261d1d535abfd5abd6f6af432", size = 134594, upload-time = "2026-06-17T10:31:07.894Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/c2/24167ea9858356b47a87a50d39908bfdb72ceeefe0041586e704e5376b3a/certifi-2026.7.22.tar.gz", hash = "sha256:741e2c3b351ddf169a738da9f2c048608ff7f2c5cc02f1ebc6b118bb090d5d55", size = 138112, upload-time = "2026-07-22T03:35:12.644Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ef/2f/c5464532e965badff2f4c4c1a3a83f5697f0d7c407ed0cda44aaa99bb451/certifi-2026.6.17-py3-none-any.whl", hash = "sha256:2227dcbaafe0d2f59279d1762ddddc37783ed4354594f194ffc31d20f41fc3db", size = 133289, upload-time = "2026-06-17T10:31:06.348Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl", hash = "sha256:62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775", size = 136983, upload-time = "2026-07-22T03:35:11.276Z" },
 ]
 
 [[package]]
@@ -892,11 +892,11 @@ wheels = [
 
 [[package]]
 name = "soupsieve"
-version = "2.9"
+version = "2.9.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/80/f1/93422647dd7e461f23d254e6b2bfa687a85b53aeb4903fcdbb74474d4584/soupsieve-2.9.tar.gz", hash = "sha256:acee8417325c5653e1377dc31eccad59eb82cbc65942afe6174c53b3aaad63fc", size = 122122, upload-time = "2026-07-19T01:35:18.425Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d9/38/e12680bbe6b4f8f3d17adcaf38d26850aa756c85cf4a80e79fc12a018fe8/soupsieve-2.9.1.tar.gz", hash = "sha256:c33e6605bbc71dd628b00c632d58ae607c22bade247e52553928f83bbb75b4ba", size = 122261, upload-time = "2026-07-21T16:57:17.452Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7b/d6/3185ab5ad1280319b31986898f3206dd7227cd75e293d4dba2a5e6bf27a0/soupsieve-2.9-py3-none-any.whl", hash = "sha256:a2b2c76d67df2382d245409fd71e321a571717e58463efa32ace87dcadac2c12", size = 37387, upload-time = "2026-07-19T01:35:17.106Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/2c/437fe806897c2d6cfdc3ee43a18da8bf8e568530a4ae9bac781541ca9896/soupsieve-2.9.1-py3-none-any.whl", hash = "sha256:4f4477399246b7a0c720a88ca2454b11cd6bb9ae4c9d170140786e916776c14c", size = 37404, upload-time = "2026-07-21T16:57:16.421Z" },
 ]
 
 [[package]]
@@ -929,14 +929,14 @@ wheels = [
 
 [[package]]
 name = "sphinx-autodoc-typehints"
-version = "3.12.1"
+version = "3.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "sphinx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/de/ae/8ad5e79a0f7beac5e5810b2a8d0a1c6c63c795ba265a81970070abf15f32/sphinx_autodoc_typehints-3.12.1.tar.gz", hash = "sha256:4bbf6f6b907586d3b2a3ae2b23e0f86be939f19a7449e917d304df57ff9674d1", size = 84421, upload-time = "2026-07-03T13:52:09.056Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/22/99/e5a23a7bc3f9b6b799dbf72ab3955cdc0b2382803b5d11eaafcc76621662/sphinx_autodoc_typehints-3.13.0.tar.gz", hash = "sha256:59eb4fe26f71ccd7a8f10caadddcb3c3b31df7016f91bda546da2a333bae4e12", size = 85285, upload-time = "2026-07-21T13:10:44.981Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2a/a2/d5964523f0c98e39ef608a09f3de23032aa32fbe3e98a262e2112c39f985/sphinx_autodoc_typehints-3.12.1-py3-none-any.whl", hash = "sha256:932472c9cc160e6a0dc34eca13d3d6a9823ed6e6dc505d7c12f6963c983cf8f6", size = 42950, upload-time = "2026-07-03T13:52:07.696Z" },
+    { url = "https://files.pythonhosted.org/packages/39/1c/4b3c9b1a3130b9d717f517351ce8325a62fad7c4f846cc324025c22a43c6/sphinx_autodoc_typehints-3.13.0-py3-none-any.whl", hash = "sha256:d71c388c865f3bedc1f32416febb0f8886b3051a4cd8bd8677e64b8b65c9b475", size = 43440, upload-time = "2026-07-21T13:10:43.793Z" },
 ]
 
 [[package]]
@@ -1139,11 +1139,11 @@ wheels = [
 
 [[package]]
 name = "types-boltons"
-version = "25.0.0.20260612"
+version = "26.1.0.20260722"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a3/20/0f1d798ee2a11e59e228e8fea0947042bd80123b00fb4fd44673fb51e7db/types_boltons-25.0.0.20260612.tar.gz", hash = "sha256:85c2c90d17cdabe049037f1614af86bc858b214a5a16cc871230777e7cec39c9", size = 22004, upload-time = "2026-06-12T06:22:30.937Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/52/93/2bf0fb36a9a414b2355358800c189e06e7aa373abb1731dea774acd33d04/types_boltons-26.1.0.20260722.tar.gz", hash = "sha256:9cb5d0497343361a6a834fff91498d607b34ce6f3fe5c8cdc59ba6b78d9c5538", size = 22249, upload-time = "2026-07-22T04:55:57.374Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fd/31/b8a58cffa7af1ebf6f9116168fcb129b175556794b815176d7a9118bf801/types_boltons-25.0.0.20260612-py3-none-any.whl", hash = "sha256:4ed2f2f3eca268c9b9a1ff4c4bc6c82cc460194d3c0ba6a9113316243f58feca", size = 28378, upload-time = "2026-06-12T06:22:29.816Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/0c/b6e4252b5ed8e130f15ccb22c58b5c9dbe32933120acca7b3ba9aa4704b9/types_boltons-26.1.0.20260722-py3-none-any.whl", hash = "sha256:4f129f96dd7f96a670e12ae22d93968151f6c7e9d530e598fd9683a22df02423", size = 28723, upload-time = "2026-07-22T04:55:56.407Z" },
 ]
 
 [[package]]
