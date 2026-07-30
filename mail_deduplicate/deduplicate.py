@@ -48,8 +48,6 @@ TYPE_CHECKING = False
 if TYPE_CHECKING:
     from mailbox import Mailbox, Message
 
-    from typing_extensions import Self
-
     from .cli import Config
     from .mail import DedupMailMixin
 
@@ -154,33 +152,12 @@ class Stat(Enum):
         return self.value.category
 
 
-class Stats:
-    """Type-safe statistics counter using Stat enum keys."""
-
-    def __init__(self) -> None:
-        self._counter: Counter[Stat] = Counter({stat: 0 for stat in Stat})
-
-    def __getitem__(self, key: Stat) -> int:
-        return self._counter[key]
-
-    def __setitem__(self, key: Stat, value: int) -> None:
-        self._counter[key] = value
-
-    def __iadd__(self, other: Stats) -> Self:
-        """Support += operator for merging stats."""
-        for stat in Stat:
-            self._counter[stat] += other._counter[stat]
-        return self
-
-
 class SizeDiffAboveThreshold(Exception):
-    """Difference in mail size is greater than [threshold](https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-S)_.
-    """
+    """Difference in mail size is greater than [threshold](https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-S)_."""
 
 
 class ContentDiffAboveThreshold(Exception):
-    """Difference in mail content is greater than [threshold](https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-C)_.
-    """
+    """Difference in mail content is greater than [threshold](https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-C)_."""
 
 
 class MissingTimestamps(Exception):
@@ -238,8 +215,8 @@ class DuplicateSet:
         self.pool: frozenset[DedupMailMixin] = frozenset(mail_set)
         """Pool referencing all duplicated mails and their attributes."""
 
-        self.stats: Stats = Stats()
-        """Set metrics."""
+        self.stats: Counter[Stat] = Counter()
+        """Set metrics. Unset statistics naturally read as zero."""
 
         self.stats[Stat.MAIL_DUPLICATES] += self.size
 
@@ -553,8 +530,8 @@ class Deduplicate:
         self.conf = conf
         """Configuration shared across the deduplication process."""
 
-        self.stats: Stats = Stats()
-        """Deduplication statistics."""
+        self.stats: Counter[Stat] = Counter()
+        """Deduplication statistics. Unset statistics naturally read as zero."""
 
     def add_source(self, source_path: Path | str) -> None:
         """Registers a source of mails, validates and opens it.
@@ -661,6 +638,9 @@ class Deduplicate:
         We apply the selection strategy one duplicate set at a time to keep memory
         footprint low and make the log easier to read.
         """
+        # Imported here because action.py imports this module at load time.
+        from .action import Action
+
         theme = get_current_theme()
         strategies = self.conf["strategy"]
         if strategies:
@@ -692,7 +672,7 @@ class Deduplicate:
             # See: https://github.com/kdeldycke/mail-deduplicate/issues/362
             for mail in duplicates.discard | duplicates.selection:
                 self.cleanup_mail_attrs(mail, self.CLEANUP_ATTRS)
-            if self.conf["action"] == "move-discarded":
+            if self.conf["action"] is Action.MOVE_DISCARDED:
                 for mail in duplicates.selection:
                     mail.__dict__.pop("_payload", None)
 

@@ -16,7 +16,8 @@
 
 from __future__ import annotations
 
-from mailbox import Maildir
+from mailbox import Maildir, mbox
+from pathlib import Path
 from string import ascii_lowercase
 
 import pytest
@@ -72,3 +73,39 @@ def test_discarded_action_stats(invoke, make_box, dry_run):
         # One arbitrary copy of the duplicated mail survives, next to the unique mail.
         expected = [duplicate_mail, unique_mail]
     check_box(box_path, box_type, content=expected)
+
+
+@pytest.mark.parametrize("dry_run", [False, True], ids=["real", "dry_run"])
+def test_move_discarded_action(invoke, make_box, dry_run):
+    """Move the discarded copies to a new box, keeping the selection in place.
+
+    Also exercises the payload purge of selected mails, a memory optimization
+    specific to the move-discarded action.
+    """
+    box_path, box_type, export_path = make_box(
+        Maildir,
+        [duplicate_mail, duplicate_mail, duplicate_mail, unique_mail],
+    )
+
+    args = [
+        "--strategy=select-one",
+        "--action=move-discarded",
+        f"--export={export_path}",
+        box_path,
+    ]
+    if dry_run:
+        args.insert(0, "--dry-run")
+    result = invoke(*args)
+
+    assert result.exit_code == 0
+    assert "Metrics appear inconsistent" not in result.stderr
+
+    if dry_run:
+        # Source box left untouched, no export box created.
+        check_box(box_path, box_type, content=[duplicate_mail] * 3 + [unique_mail])
+        assert not Path(export_path).exists()
+    else:
+        # The selected copy of the duplicated mail and the unique mail stay in
+        # place, while the 2 discarded copies moved to the export box.
+        check_box(box_path, box_type, content=[duplicate_mail, unique_mail])
+        check_box(export_path, mbox, content=[duplicate_mail, duplicate_mail])

@@ -21,14 +21,19 @@ import hashlib
 import logging
 import os
 import re
+import sys
+from datetime import datetime, timezone
 from email.header import Header
-from enum import Enum
 from functools import cached_property
 from mailbox import Message
 from typing import cast
 
 from click_extra import get_current_context, render_table
-from whenever import Instant
+
+if sys.version_info >= (3, 11):
+    from enum import StrEnum
+else:
+    from backports.strenum import StrEnum
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -42,7 +47,7 @@ class TooFewHeaders(Exception):
     """Not enough headers were found to produce a solid hash."""
 
 
-class TimeSource(Enum):
+class TimeSource(StrEnum):
     """Enumeration of all supported mail timestamp sources."""
 
     DATE_HEADER = "date-header"
@@ -56,9 +61,6 @@ class TimeSource(Enum):
     and `eml`.
     ```
     """
-
-    def __str__(self) -> str:
-        return self.value
 
 
 ADDRESS_HEADERS = frozenset((
@@ -412,7 +414,8 @@ class DedupMailMixin(Message):
         only honour the date for now and normalize them to UTC timezone.
         """
         if self.parsed_date is not None:
-            return Instant.from_timestamp(self.parsed_date).format("YYYY-MM-DD")
+            utc_date = datetime.fromtimestamp(self.parsed_date, tz=timezone.utc).date()
+            return utc_date.isoformat()
         return value
 
     def normalize_address_header(self, value: str) -> str:

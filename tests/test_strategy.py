@@ -564,7 +564,11 @@ def test_strategy_cascade_regexp_required(invoke, make_box):
     )
 
     assert result.exit_code == 2
-    assert "select-matching-path requires the -r/--regexp parameter." in result.stderr
+    assert (
+        "when -s/--strategy is one of discard-matching-path, "
+        "discard-non-matching-path, select-matching-path, select-non-matching-path, "
+        "--regexp is required" in result.stderr
+    )
 
 
 def test_strategy_cascade_regexp_not_allowed(invoke, make_box):
@@ -581,9 +585,11 @@ def test_strategy_cascade_regexp_not_allowed(invoke, make_box):
 
     assert result.exit_code == 2
     assert (
-        "-r/--regexp parameter not allowed in select-oldest, select-one."
-        in result.stderr
+        "when -s/--strategy is none of discard-matching-path, "
+        "discard-non-matching-path, select-matching-path, select-non-matching-path, "
+        "the following parameters should not be provided:" in result.stderr
     )
+    assert "--regexp (-r)" in result.stderr
 
 
 outlier_mail = MailFactory(body="An entirely different mail body. " * 60)

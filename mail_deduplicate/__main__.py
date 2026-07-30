@@ -25,12 +25,7 @@ from __future__ import annotations
 
 
 def main():
-    """Execute the CLI but force its name to not let Click defaults to:
-
-    ```{code-block} shell-session
-    $ python -m mail_deduplicate --version
-    python -m mail_deduplicate, version 7.2.0
-    ```
+    """Execute the CLI.
 
     Indirection via this `main()` method was [required to reconcile](https://github.com/python-poetry/poetry/issues/5981):
 
@@ -40,10 +35,14 @@ def main():
           `python -m nuitka (...) mail_deduplicate/__main__.py`
 
     That way we can deduce all three cases from the entry point.
+
+    The CLI's display name doesn't need to be forced here: `click-extra`'s
+    `Command.main()` already defaults `prog_name` to the command's name, so even
+    `python -m mail_deduplicate --version` reports itself as `mdedup`.
     """
     from mail_deduplicate.cli import mdedup
 
-    mdedup(prog_name=mdedup.name)
+    mdedup()
 
 
 if __name__ == "__main__":

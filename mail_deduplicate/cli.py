@@ -18,10 +18,8 @@ from __future__ import annotations
 
 import logging
 import re
-from operator import attrgetter
 from typing import TypedDict
 
-from boltons.iterutils import unique
 from click_extra import (
     BadParameter,
     Command,
@@ -30,6 +28,7 @@ from click_extra import (
     ParameterSource,
     argument,
     command,
+    constraint,
     echo,
     get_current_theme,
     jobs_option,
@@ -39,6 +38,8 @@ from click_extra import (
     path,
     progressbar,
 )
+from cloup.constraints import If, accept_none, require_all
+from cloup.constraints.conditions import Predicate
 
 from .action import Action
 from .deduplicate import BodyHasher, Deduplicate
@@ -48,9 +49,10 @@ from .strategy import Strategy
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
     from pathlib import Path
 
+    import click
     from click_extra import Context, HelpFormatter, Parameter
 
 
@@ -134,14 +136,14 @@ def normalize_headers(
     Mail headers are expected to be composed of ASCII characters between 33 and 126
     (both inclusive) according to RFC-5322.
     """
-    normalized_headers = unique(h.lower() for h in value)
+    normalized_headers = tuple(dict.fromkeys(h.lower() for h in value))
     for hid in normalized_headers:
         ascii_indexes = set(map(ord, hid))
         if min(ascii_indexes) < 33 or max(ascii_indexes) > 126:
             raise BadParameter(f"invalid header ID: {hid!r}.")
     if len(normalized_headers) == 0:
         raise BadParameter("At least one header ID must be provided.")
-    return tuple(normalized_headers)
+    return normalized_headers
 
 
 def unique_strategies(
@@ -152,7 +154,10 @@ def unique_strategies(
     Strategies are deduplicated by the selection function they point to, so repeating
     a strategy already listed under one of its aliases is ignored too.
     """
-    return tuple(unique(value, key=attrgetter("strategy_function")))
+    deduplicated: dict[Callable, Strategy] = {}
+    for strategy in value:
+        deduplicated.setdefault(strategy.strategy_function, strategy)
+    return tuple(deduplicated.values())
 
 
 def compile_regexp(
@@ -162,9 +167,64 @@ def compile_regexp(
     if value:
         try:
             return re.compile(value)
-        except ValueError:
+        except re.error:
             raise BadParameter(f"invalid regular expression: {value!r}.")
     return None
+
+
+PATH_STRATEGIES = frozenset((
+    Strategy.DISCARD_MATCHING_PATH,
+    Strategy.DISCARD_NON_MATCHING_PATH,
+    Strategy.SELECT_MATCHING_PATH,
+    Strategy.SELECT_NON_MATCHING_PATH,
+))
+"""Strategies relying on the `-r`/`--regexp` parameter."""
+
+
+EXPORT_ACTIONS = frozenset((
+    Action.COPY_SELECTED,
+    Action.COPY_DISCARDED,
+    Action.MOVE_SELECTED,
+    Action.MOVE_DISCARDED,
+))
+"""Actions relying on the `-E`/`--export` parameter."""
+
+
+class AnyValueIn(Predicate):
+    """Condition that is true when any of a parameter's values is in a target set.
+
+    The parameter's resolved value is inspected, so defaults count, not only
+    user-provided values. Single values and `multiple=True` tuples are normalized
+    to a common shape. Set `negate` to invert the membership test: true when none
+    of the values is in the target set.
+
+    Whatever `negate` says, the condition silently evaluates to false when no mail
+    source is provided: the CLI then only prints its help screen and exits, so no
+    parameter combination deserves a validation error.
+    """
+
+    def __init__(
+        self, param_name: str, targets: Iterable, label: str, negate: bool = False
+    ) -> None:
+        self.param_name = param_name
+        self.targets = frozenset(targets)
+        self.label = label
+        self.negate = negate
+
+    def description(self, ctx: click.Context) -> str:
+        quantifier = "none of" if self.negate else "one of"
+        target_ids = ", ".join(sorted(map(str, self.targets)))
+        return f"{self.label} is {quantifier} {target_ids}"
+
+    def __call__(self, ctx: click.Context) -> bool:
+        if not ctx.params.get("mail_sources"):
+            return False
+        value = ctx.params[self.param_name]
+        if value is None:
+            value = ()
+        elif not isinstance(value, tuple):
+            value = (value,)
+        return self.targets.isdisjoint(value) == self.negate
 
 
 class MdedupCommand(Command):
@@ -391,6 +451,32 @@ class MdedupCommand(Command):
         "would have been performed otherwise.",
     ),
 )
+# Enforce the parameters that must accompany, or are forbidden by, specific
+# --strategy and --action values. Each rule is split into a requiring and a
+# forbidding constraint so each side reports the condition that actually
+# triggered it, without dragging the other into the error message.
+@constraint(
+    If(AnyValueIn("strategy", PATH_STRATEGIES, "-s/--strategy"), then=require_all),
+    ["regexp"],
+)
+@constraint(
+    If(
+        AnyValueIn("strategy", PATH_STRATEGIES, "-s/--strategy", negate=True),
+        then=accept_none,
+    ),
+    ["regexp"],
+)
+@constraint(
+    If(AnyValueIn("action", EXPORT_ACTIONS, "-a/--action"), then=require_all),
+    ["export"],
+)
+@constraint(
+    If(
+        AnyValueIn("action", EXPORT_ACTIONS, "-a/--action", negate=True),
+        then=accept_none,
+    ),
+    ["export"],
+)
 @argument(
     "mail_sources",
     nargs=-1,
@@ -444,51 +530,6 @@ def mdedup(
         # Same as Click Extra's HelpOption.print_help.
         echo(ctx.get_help(), color=ctx.color)
         ctx.exit()
-
-    # Validate exclusive options requirement depending on strategy or action.
-    # TODO: use Cloup option constraints to express these dependencies?
-    validation_requirements = (
-        (
-            strategy,
-            regexp,
-            "-r/--regexp",
-            {
-                Strategy.DISCARD_MATCHING_PATH,
-                Strategy.DISCARD_NON_MATCHING_PATH,
-                Strategy.SELECT_MATCHING_PATH,
-                Strategy.SELECT_NON_MATCHING_PATH,
-            },
-        ),
-        (
-            (action,),
-            export,
-            "-E/--export",
-            {
-                Action.COPY_SELECTED,
-                Action.COPY_DISCARDED,
-                Action.MOVE_SELECTED,
-                Action.MOVE_DISCARDED,
-            },
-        ),
-    )
-
-    for conf_values, param_value, param_name, required_values in (
-        validation_requirements
-    ):
-        # Configuration values requiring the parameter, in their provided order.
-        requiring = [value for value in conf_values if value in required_values]
-        if requiring:
-            if not param_value:
-                raise BadParameter(
-                    f"{', '.join(map(str, requiring))} "
-                    f"require{'s' if len(requiring) == 1 else ''} the "
-                    f"{param_name} parameter."
-                )
-        elif param_value:
-            raise BadParameter(
-                f"{param_name} parameter not allowed in "
-                f"{', '.join(map(str, conf_values)) or None}."
-            )
 
     if export and export.exists() and not export_append:
         raise FileExistsError(

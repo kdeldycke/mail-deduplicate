@@ -17,14 +17,18 @@
 from __future__ import annotations
 
 import logging
+import sys
 from contextlib import contextmanager
-from enum import Enum
 
-from boltons.iterutils import unique
-from click_extra import get_current_theme
+from click_extra import OperationTrail, get_current_theme
 
 from .deduplicate import Stat
 from .mail_box import create_box
+
+if sys.version_info >= (3, 11):
+    from enum import StrEnum
+else:
+    from backports.strenum import StrEnum
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -54,6 +58,7 @@ def export_box(dedup: Deduplicate) -> Iterator:
 
 def copy_mails(dedup: Deduplicate, mails) -> None:
     """Copy provided `mails` to a brand new box or an existing one."""
+    trail = OperationTrail(label="Copying", unit="mails", total=len(mails))
     with export_box(dedup) as box:
         for mail in mails:
             logging.debug(f"Copying {mail!r} to {dedup.conf['export']}...")
@@ -62,11 +67,17 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
                 logging.warning("DRY RUN: Skip action.")
             else:
                 box.add(mail)
-                logging.info(f"{mail!r} copied.")
+                trail.mark(True, f"{mail!r} copied")
+    if not dedup.conf["dry_run"]:
+        trail.finish(
+            trail.ok_count == len(mails),
+            f"Copied {trail.ok_count}/{len(mails)} mails",
+        )
 
 
 def move_mails(dedup: Deduplicate, mails) -> None:
     """Move provided `mails` to a brand new box or an existing one."""
+    trail = OperationTrail(label="Moving", unit="mails", total=len(mails))
     with export_box(dedup) as box:
         for mail in mails:
             logging.debug(
@@ -78,11 +89,17 @@ def move_mails(dedup: Deduplicate, mails) -> None:
             else:
                 box.add(mail)
                 dedup.sources[mail.source_path].remove(mail.mail_id)
-                logging.info(f"{mail!r} moved.")
+                trail.mark(True, f"{mail!r} moved")
+    if not dedup.conf["dry_run"]:
+        trail.finish(
+            trail.ok_count == len(mails),
+            f"Moved {trail.ok_count}/{len(mails)} mails",
+        )
 
 
 def delete_mails(dedup: Deduplicate, mails) -> None:
     """Remove provided `mails` in-place, from their original boxes."""
+    trail = OperationTrail(label="Deleting", unit="mails", total=len(mails))
     for mail in mails:
         logging.debug(f"Deleting {mail!r} in-place...")
         dedup.stats[Stat.MAIL_DELETED] += 1
@@ -90,7 +107,12 @@ def delete_mails(dedup: Deduplicate, mails) -> None:
             logging.warning("DRY RUN: Skip action.")
         else:
             dedup.sources[mail.source_path].remove(mail.mail_id)
-            logging.info(f"{mail!r} deleted.")
+            trail.mark(True, f"{mail!r} deleted")
+    if not dedup.conf["dry_run"]:
+        trail.finish(
+            trail.ok_count == len(mails),
+            f"Deleted {trail.ok_count}/{len(mails)} mails",
+        )
 
 
 def copy_selected(dedup: Deduplicate) -> None:
@@ -123,7 +145,7 @@ def delete_discarded(dedup: Deduplicate) -> None:
     delete_mails(dedup, dedup.discard)
 
 
-class Action(Enum):
+class Action(StrEnum):
     """Define all available action IDs."""
 
     COPY_SELECTED = "copy-selected"
@@ -132,9 +154,6 @@ class Action(Enum):
     MOVE_DISCARDED = "move-discarded"
     DELETE_SELECTED = "delete-selected"
     DELETE_DISCARDED = "delete-discarded"
-
-    def __str__(self) -> str:
-        return self.value
 
     @property
     def action_function(self) -> Callable:
@@ -152,9 +171,8 @@ class Action(Enum):
             return
         logging.info(f"{selection_count} mails selected for action.")
 
-        # Check our indexing and selection methods are not flagging candidates
-        # several times.
-        assert len(unique(dedup.selection)) == len(dedup.selection)
+        # Check the selection is consistent with the statistics gathered during
+        # the selection phase.
         assert (
             len(dedup.selection)
             == dedup.stats[Stat.MAIL_SELECTED] + dedup.stats[Stat.MAIL_UNIQUE]

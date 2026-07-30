@@ -67,14 +67,12 @@ classifiers = [
 dependencies = [
   # Provides enum.StrEnum for Python < 3.11; all versions expose the class.
   "backports-strenum>=1; python_version<'3.11'",
-  # boltons 25.0.0 dropped Python 3.9, matching our requires-python >= 3.10.
-  "boltons>=25",
-  # 8.1.0 added the `test-suite` subcommand: the release engine runs it from the
-  # runtime-only environment for the binary self-test, so the runtime deps must
-  # ship it. (8.0.0 renamed ExtraCommand to Command and reworked the theme API.)
-  "click-extra>=8.1",
-  # Instant.from_timestamp() and Instant.format() pattern formatting (mail.py). whenever's pre-1.0 API still renames methods between releases, so pin to the 0.10 shape we build against.
-  "whenever>=0.10",
+  # 8.6.0 is required on three counts: its test-suite runner stops resolving venv
+  # interpreter symlinks (the binary self-test run by the release engine from the
+  # runtime-only environment relies on it), 8.5.0 promoted ctx.render_table to a
+  # Context method reading --table-format from the context meta (deduplicate.py,
+  # mail.py), and 8.6.0 added OperationTrail (action.py).
+  "click-extra>=8.6",
 ]
 urls.Changelog = "https://github.com/kdeldycke/mail-deduplicate/blob/main/changelog.md"
 urls.Documentation = "https://kdeldycke.github.io/mail-deduplicate"
@@ -90,7 +88,11 @@ scripts.mdedup = "mail_deduplicate.__main__:main"
 ## exact versions and the sync-deps updaters manage bumps within the cooldown.
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
 test = [
-  "click-extra[pytest]>=8.1",
+  # boltons 25.0.0 dropped Python 3.9, matching our requires-python >= 3.10.
+  # Test-only: conftest.py uses iterutils.same to check fixture homogeneity.
+  "boltons>=25",
+  # Aligned to the runtime click-extra floor.
+  "click-extra[pytest]>=8.6",
   # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
   "coverage[toml]>=7.11",
   # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That module,
@@ -111,9 +113,15 @@ test = [
   # pytest-xdist < 3.7 fails on Python 3.14 (no requires-python guard in older releases);
   # [psutil] extra needed for --numprocesses=auto.
   "pytest-xdist[psutil]>=3.7",
+  # Test-only: fixtures build RFC-2822 dates with Instant/Date/Time (conftest.py,
+  # test_strategy.py). whenever's pre-1.0 API still renames methods between
+  # releases, so pin to the 0.10 shape we build against.
+  "whenever>=0.10",
 ]
 docs = [
-  "click-extra[sphinx]>=8.1",
+  # 8.5.0 renamed --show-params to --params, which docs/configuration.md runs at
+  # build time via the click:run directive. Aligned to the runtime floor.
+  "click-extra[sphinx]>=8.6",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
@@ -137,7 +145,8 @@ typing = [
   # version-gated to Python < 3.11 in the runtime deps, so added here unconditionally
   # for type checking from modern interpreters.
   "backports-strenum>=1",
-  # types-boltons 25.0.0.20250822 is the first stub release covering the boltons 25.0 API.
+  # types-boltons 25.0.0.20250822 is the first stub release covering the boltons 25.0
+  # API. boltons is a test-only dependency, but mypy also checks the test suite.
   "types-boltons>=25.0.0.20250822",
 ]
 
