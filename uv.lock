@@ -508,7 +508,7 @@ docs = [
     { name = "myst-parser", marker = "python_full_version >= '3.14'", specifier = ">=5.1" },
     { name = "sphinx", marker = "python_full_version >= '3.14'", specifier = ">=8" },
     { name = "sphinx-autodoc-typehints", marker = "python_full_version >= '3.14'", specifier = ">=2.4" },
-    { name = "sphinx-click", marker = "python_full_version >= '3.14'", specifier = ">=6.1" },
+    { name = "sphinx-click", marker = "python_full_version >= '3.14'", specifier = ">=6" },
     { name = "sphinx-copybutton", marker = "python_full_version >= '3.14'", specifier = ">=0.5.2" },
     { name = "sphinx-design", marker = "python_full_version >= '3.14'", specifier = ">=0.6" },
     { name = "sphinxcontrib-mermaid", marker = "python_full_version >= '3.14'", specifier = ">=1.2.3" },
@@ -517,7 +517,7 @@ docs = [
 test = [
     { name = "click-extra", extras = ["pytest"], specifier = ">=8.1" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.11" },
-    { name = "extra-platforms", extras = ["pytest"], specifier = ">=13" },
+    { name = "extra-platforms", extras = ["pytest"], specifier = ">=2" },
     { name = "pytest", specifier = ">=9" },
     { name = "pytest-cov", specifier = ">=4" },
     { name = "pytest-github-actions-annotate-failures", specifier = ">=0.2" },

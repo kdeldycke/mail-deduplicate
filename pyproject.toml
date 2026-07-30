@@ -93,9 +93,12 @@ test = [
   "click-extra[pytest]>=8.1",
   # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
   "coverage[toml]>=7.11",
-  # extra-platforms 13 is the major in use; its [pytest] extra ships the skip_windows
-  # marker used by the test suite.
-  "extra-platforms[pytest]>=13",
+  # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That module,
+  # its @skip_<id> platform decorators, and the [pytest] extra that installs pytest for
+  # it all date back to 2.0.0 (which already required Python >= 3.10, like us). The
+  # skip_windows name has been stable since: the later 6.x/7.x renames only touched
+  # group decorators (like unknown_linux), never the per-OS ones.
+  "extra-platforms[pytest]>=2",
   # Pytest 9.0.0 introduced support for native TOML configuration files.
   "pytest>=9",
   # pytest-cov 4.0 stabilized the modern pytest plugin interface; --cov/--cov-report in addopts.
@@ -120,8 +123,11 @@ docs = [
   "sphinx>=8",
   # sphinx-autodoc-typehints 2.4.0 is the first version that is aligned to our Python >= 3.10 requirement.
   "sphinx-autodoc-typehints>=2.4",
-  # sphinx-click 6.1 is the release in use when the group switched to minimal-version floors.
-  "sphinx-click>=6.1",
+  # docs/cli-parameters.md documents the mdedup CLI through sphinx-click's `.. click::`
+  # directive, which is long-stable. 6.0.0 is the current major of the maintained line
+  # (requires sphinx>=4, click>=8), compatible with our sphinx>=8 floor and installable
+  # on the Python 3.14 the docs group pins.
+  "sphinx-click>=6",
   # sphinx-copybutton 0.5.2 stabilized the copy button behavior for code blocks.
   "sphinx-copybutton>=0.5.2",
   # sphinx-design 0.6 introduced the current directive syntax for cards, grids, and tabs.
@@ -321,6 +327,9 @@ exclude = [
   "sci-hub\\.st",
   "ycombinator\\.com",
   "x\\.com",
+  # VirusTotal analysis pages are a JS app that rate-limits bots, and the
+  # binaries page links one per released binary.
+  "^https://www\\.virustotal\\.com/gui/.*$",
   # Skip suggesting redirecting generic download links to their binary artefact.
   "^https://github.com/.+/releases/.+/download/.*$",
   # Allow redirects of generic DOI URLs to their specific Zenodo release page.

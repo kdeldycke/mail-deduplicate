@@ -245,7 +245,12 @@ jobs:
       - name: Run stable CLI
         run: |
           for script in $CLI_SCRIPTS; do
-            uvx "$script" --version
+            # A bare `uvx <script>` resolves the script name as a PyPI package,
+            # which only exists when the package is named after its script (like
+            # repomatic); skip it when the two differ (mail-deduplicate's mdedup).
+            if [ "$script" = "$PACKAGE" ]; then
+              uvx "$script" --version
+            fi
             uvx --from "$PACKAGE" -- "$script" --version
             uv run --with "$PACKAGE" -- "$script" --version
           done
