@@ -46,14 +46,15 @@ class TimeSource(Enum):
     """Enumeration of all supported mail timestamp sources."""
 
     DATE_HEADER = "date-header"
-    """Timestamp sourced from the message's ``Date`` header."""
+    """Timestamp sourced from the message's `Date` header."""
 
     CTIME = "ctime"
     """Timestamp is from the email's file on the filesystem.
 
-    .. attention::
-        Only meaningful for sources storing one mail per file, like ``maildir``
-        and ``eml``.
+    ```{attention}
+    Only meaningful for sources storing one mail per file, like `maildir`
+    and `eml`.
+    ```
     """
 
     def __str__(self) -> str:
@@ -84,32 +85,24 @@ ADDRESS_HEADERS = frozenset((
 ))
 """Headers that contain email addresses.
 
-.. hint::
-    Headers from which quotes should be discarded. E.g.:
+```{hint}
+Headers from which quotes should be discarded, so `"Bob" <bob@example.com>` hashes
+to the same thing as `Bob <bob@example.com>`.
+```
 
-    .. code-block:: text
-
-        "Bob" <bob@example.com>
-
-    should hash to the same thing as:
-
-    .. code-block:: text
-
-        Bob <bob@example.com>
-
-.. attention::
-    These IDs should be kept lower-case, because they are compared to the one provided
-    to those provided to the ``-h``/``--hash-header`` option, that is carried by the
-    ``hash_headers`` property of the configuration.
+```{attention}
+These IDs should be kept lower-case, because they are compared to the one provided
+to those provided to the `-h`/`--hash-header` option, that is carried by the
+`hash_headers` property of the configuration.
+```
 """
 
 
 class DedupMailMixin(Message):
     """Message with deduplication-specific properties and utilities.
 
-    Extends `standard library's mailbox.Message
-    <https://github.com/python/cpython/blob/061965c/Lib/mailbox.py#L1564-L1598>`_,
-    and shouldn't be used directly, but composed with ``mailbox.Message`` sub-classes.
+    Extends [standard library's mailbox.Message](https://github.com/python/cpython/blob/061965c/Lib/mailbox.py#L1564-L1598),
+    and shouldn't be used directly, but composed with `mailbox.Message` sub-classes.
     """
 
     def __init__(self, message: _ProxyFile | None = None) -> None:
@@ -124,8 +117,8 @@ class DedupMailMixin(Message):
         self.path: str
         """Real filesystem location of the mail.
 
-        Returns the individual mail's file for folder-based box types (``maildir`` &
-        co.), but returns the whole box path for file-based boxes (``mbox`` & co.).
+        Returns the individual mail's file for folder-based box types (`maildir` &
+        co.), but returns the whole box path for file-based boxes (`mbox` & co.).
         Used by regexp-based selection strategies and to render the mail's repr.
         """
 
@@ -136,7 +129,7 @@ class DedupMailMixin(Message):
         """Post-instantiation utility to attach to mail some metadata derived from its
         parent box.
 
-        Called right after the ``__init__()`` constructor.
+        Called right after the `__init__()` constructor.
 
         This allows the mail to carry its own information on its origin box and index.
         """
@@ -170,7 +163,7 @@ class DedupMailMixin(Message):
     def parsed_date(self) -> float | None:
         """Parse the mail's date header into float timestamp.
 
-        Returns ``None`` if the mail has no valid date header.
+        Returns `None` if the mail has no valid date header.
         """
         value = self.get("Date")
         parsed = email.utils.parsedate_tz(value)
@@ -185,18 +178,18 @@ class DedupMailMixin(Message):
     def timestamp(self) -> float | None:
         """Compute the normalized canonical timestamp of the mail.
 
-        Sourced from the message's ``Date`` header by default. In the case of
-        ``maildir``, can be sourced from the email's file from the filesystem.
+        Sourced from the message's `Date` header by default. In the case of
+        `maildir`, can be sourced from the email's file from the filesystem.
 
-        .. warning::
-            ``ctime`` does not refer to creation time on POSIX systems, but
-            rather `the last time the inode data changed
-            <https://userprimary.net/posts/2007/11/18/ctime-in-unix-means-last-change-time-not-create-time/>`_.
+        ```{warning}
+        `ctime` does not refer to creation time on POSIX systems, but
+        rather [the last time the inode data changed](https://userprimary.net/posts/2007/11/18/ctime-in-unix-means-last-change-time-not-create-time/).
+        ```
 
-        .. todo::
-            Investigate what `mailbox.MaildirMessage.get_date()
-            <https://docs.python.org/3.11/library/mailbox.html#mailbox.MaildirMessage.get_date>`_
-            does and if we can use it.
+        ```{todo}
+        Investigate what [mailbox.MaildirMessage.get_date()](https://docs.python.org/3.11/library/mailbox.html#mailbox.MaildirMessage.get_date)
+        does and if we can use it.
+        ```
         """
         if self.conf["time_source"] == TimeSource.CTIME:
             return os.path.getctime(self.path)
@@ -211,12 +204,10 @@ class DedupMailMixin(Message):
         stripped of all its headers, not from the mail file persisting on the file-
         system.
 
-        .. todo::
-            Allow customization of the way the size is computed, by getting the file
-            size instead for example:
-            ```python
-            size = os.path.getsize(mail_file)
-            ```
+        ```{todo}
+        Allow customization of the way the size is computed, by getting the file
+        size instead, for example with `os.path.getsize(mail_file)`.
+        ```
         """
         return len("".join(self.body_lines))
 
@@ -264,9 +255,10 @@ class DedupMailMixin(Message):
     def hash_key(self) -> str:
         """Returns the canonical hash of a mail.
 
-        .. caution::
-            This method hasn't been made explicitly into a cached property in order to
-            reduce the overall memory footprint.
+        ```{caution}
+        This method hasn't been made explicitly into a cached property in order to
+        reduce the overall memory footprint.
+        ```
         """
         serialized_headers = self.serialized_headers()
         logging.debug(f"Serialized headers: {serialized_headers!r}")
@@ -305,9 +297,10 @@ class DedupMailMixin(Message):
     def pretty_canonical_headers(self) -> str:
         """Renders a table of headers names and values used to produce the mail's hash.
 
-        .. caution::
-            This method hasn't been explicitly made into a cached property in order to
-            reduce the overall memory footprint.
+        ```{caution}
+        This method hasn't been explicitly made into a cached property in order to
+        reduce the overall memory footprint.
+        ```
 
         Returns a string ready to be printed.
         """
@@ -331,9 +324,10 @@ class DedupMailMixin(Message):
 
         At this point we should have an absolute minimum of headers.
 
-        .. caution::
-            This method hasn't been explicitly made into a cached property in order to
-            reduce the overall memory footprint.
+        ```{caution}
+        This method hasn't been explicitly made into a cached property in order to
+        reduce the overall memory footprint.
+        ```
         """
         headers_count = len(self.canonical_headers)
         minimal_headers = self.conf["minimal_headers"]
@@ -384,22 +378,22 @@ class DedupMailMixin(Message):
                 yield value
 
     def normalize_subject(self, subject: str) -> str:
-        """Strip ``Re:``/``Fwd:`` and ``[list-name]`` prefixes from ``Subject``.
+        """Strip `Re:`/`Fwd:` and `[list-name]` prefixes from `Subject`.
 
         This cleans up prefixes automatically added by mailing list software, since the
-        mail could have been ``CC``'d to multiple lists, in which case it will receive a
+        mail could have been `CC`'d to multiple lists, in which case it will receive a
         different prefix for each.
         """
         return re.sub(r"(?i)^(?:(?:re|fwd?): +|\[\w[\w_-]*\w?\] +)+", "", subject)
 
     def normalize_content_type(self, value: str) -> str:
-        """Normalize ``Content-Type`` by stripping parameters.
+        """Normalize `Content-Type` by stripping parameters.
 
         Removes everything after the semicolon, keeping only the MIME type.
-        E.g., ``text/plain; charset=utf-8`` becomes ``text/plain``.
+        E.g., `text/plain; charset=utf-8` becomes `text/plain`.
 
-        Apparently list servers actually munge ``Content-Type`` e.g. by stripping the
-        quotes from ``charset="us-ascii"``. Section 5.1 of RFC2045 says that either form
+        Apparently list servers actually munge `Content-Type` e.g. by stripping the
+        quotes from `charset="us-ascii"`. Section 5.1 of RFC2045 says that either form
         is valid (and they are equivalent).
 
         Additionally, with multipart/mixed, boundary delimiters can vary by recipient.
@@ -412,7 +406,7 @@ class DedupMailMixin(Message):
         return re.sub(";.*", "", value)
 
     def normalize_date(self, value: str) -> str:
-        """Normalize ``Date`` to ``YYYY-MM-DD`` format.
+        """Normalize `Date` to `YYYY-MM-DD` format.
 
         Date timestamps can differ by seconds or hours for various reasons, so let's
         only honour the date for now and normalize them to UTC timezone.
@@ -424,15 +418,16 @@ class DedupMailMixin(Message):
     def normalize_address_header(self, value: str) -> str:
         """Normalize address headers by removing quotes and collapsing whitespace.
 
-        E.g., ``"Bob" <bob@example.com>`` becomes ``Bob <bob@example.com>``.
+        E.g., `"Bob" <bob@example.com>` becomes `Bob <bob@example.com>`.
 
         Remove quotes in any headers that contain addresses to ensure a quoted name is
         hashed to the same value as an unquoted one.
 
-        .. danger::
-            This may not be the cleanest way to normalize email addresses. E.g.
-            ``"Robert \\"Bob\\"```` becomes ``Robert \\Bob\\``, but this shouldn't matter for
-            hashing purposes as we're just trying to get a good heuristic. Refs: #847 and #846.
+        ```{danger}
+        This may not be the cleanest way to normalize email addresses. E.g.
+        ``"Robert \\"Bob\\"```` becomes `Robert \\Bob\\`, but this shouldn't matter for
+        hashing purposes as we're just trying to get a good heuristic. Refs: #847 and #846.
+        ```
         """
         value = re.sub(r'["]', "", value)
         value = " ".join(value.split())
@@ -441,22 +436,23 @@ class DedupMailMixin(Message):
     def normalize_message_id(self, value: str) -> str:
         """Normalize Message-ID header by stripping angle brackets.
 
-        E.g., ``<unique-id@example.com>`` becomes ``unique-id@example.com``.
+        E.g., `<unique-id@example.com>` becomes `unique-id@example.com`.
         """
         return self.strip_angle_brackets(value)
 
     def strip_angle_brackets(self, value: str) -> str:
         """Strip angle brackets from a value if it's a single bracketed item.
 
-        Only strips if the value matches ``<something>`` with no commas.
+        Only strips if the value matches `<something>` with no commas.
 
-        .. note::
-            Sometimes ``email.parser`` strips the ``<>`` brackets from a ``To:`` header which has a
-            single address. I have seen this happen for only one mail in a duplicate pair.
-            I'm not sure why (presumably the parser uses ``email.utils.unquote`` somewhere in
-            its code path which was only triggered by that mail and not its sister mail),
-            but to be safe, we should always strip the ``<>`` brackets to avoid this
-            difference preventing duplicate detection.
+        ```{note}
+        Sometimes `email.parser` strips the `<>` brackets from a `To:` header which has a
+        single address. I have seen this happen for only one mail in a duplicate pair.
+        I'm not sure why (presumably the parser uses `email.utils.unquote` somewhere in
+        its code path which was only triggered by that mail and not its sister mail),
+        but to be safe, we should always strip the `<>` brackets to avoid this
+        difference preventing duplicate detection.
+        ```
         """
         if re.match(r"^<[^<>,]+>$", value):
             return str(email.utils.unquote(value))

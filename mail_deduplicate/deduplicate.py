@@ -174,14 +174,12 @@ class Stats:
 
 
 class SizeDiffAboveThreshold(Exception):
-    """Difference in mail size is greater than `threshold
-    <https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-S>`__.
+    """Difference in mail size is greater than [threshold](https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-S)_.
     """
 
 
 class ContentDiffAboveThreshold(Exception):
-    """Difference in mail content is greater than `threshold
-    <https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-C>`__.
+    """Difference in mail content is greater than [threshold](https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-C)_.
     """
 
 
@@ -189,7 +187,7 @@ class MissingTimestamps(Exception):
     """Some mails of a duplicate set have no timestamp, so they cannot be compared by
     time-based strategies.
 
-    Happens for mails without a parseable ``Date`` header, when the timestamp is
+    Happens for mails without a parseable `Date` header, when the timestamp is
     sourced from it.
     """
 
@@ -260,7 +258,7 @@ class DuplicateSet:
     def timestamps(self) -> tuple[float, ...]:
         """Returns the timestamps of all mails in the set.
 
-        Raises ``MissingTimestamps`` if a timestamp could not be derived for some
+        Raises `MissingTimestamps` if a timestamp could not be derived for some
         mails, naming them so users can locate and fix them. See:
         https://github.com/kdeldycke/mail-deduplicate/issues/132
         """
@@ -311,7 +309,7 @@ class DuplicateSet:
 
         Returns the mails to set aside, empty if the whole pool already passes.
 
-        Raises ``SizeDiffAboveThreshold`` or ``ContentDiffAboveThreshold`` if fewer
+        Raises `SizeDiffAboveThreshold` or `ContentDiffAboveThreshold` if fewer
         than 2 mails would remain, in which case there is no coherent core of
         duplicates and the whole set is to be skipped, as before.
         """
@@ -378,8 +376,9 @@ class DuplicateSet:
     def diff(self, mail_a, mail_b):
         """Return difference in bytes between two mails' normalized body.
 
-        .. todo::
-            Rewrite the diff algorithm to not rely on naive unified diff result parsing.
+        ```{todo}
+        Rewrite the diff algorithm to not rely on naive unified diff result parsing.
+        ```
         """
         return len(
             "".join(
@@ -529,7 +528,7 @@ class Deduplicate:
     """Load-up messages, search for duplicates, apply selection strategy and perform the
     action.
 
-    Similar messages sharing the same hash are grouped together in a ``DuplicateSet``.
+    Similar messages sharing the same hash are grouped together in a `DuplicateSet`.
     """
 
     CLEANUP_ATTRS: tuple[str, ...] = ("canonical_headers", "body_lines", "subject")
@@ -585,11 +584,11 @@ class Deduplicate:
 
         Displays a progress bar as the operation might be slow.
 
-        Hashing fans out across worker threads when ``--jobs`` resolves above 1; at the
+        Hashing fans out across worker threads when `--jobs` resolves above 1; at the
         default of a single job, mails stream through one at a time for the lowest
-        memory footprint. Mail reading always stays single-threaded because ``mailbox``
+        memory footprint. Mail reading always stays single-threaded because `mailbox`
         box objects are not safe for concurrent access: only the CPU-bound hashing is
-        parallelized, so the speedup is largest with ``--hash-body raw``/``normalized``.
+        parallelized, so the speedup is largest with `--hash-body raw`/`normalized`.
         """
         theme = get_current_theme()
         logging.info(

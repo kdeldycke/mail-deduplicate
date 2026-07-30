@@ -38,8 +38,8 @@ from .conftest import MailFactory, check_box
 def stdlib_box_types() -> list[type[Mailbox]]:
     """Yields all mailbox types defined in the standard library.
 
-    Only collect direct subclasses of the ``mailbox.Mailbox`` interface. Ignore
-    ``mailbox.Mailbox`` itself and all others starting with an underscore.
+    Only collect direct subclasses of the `mailbox.Mailbox` interface. Ignore
+    `mailbox.Mailbox` itself and all others starting with an underscore.
     """
     klass_list = []
     for _, klass in inspect.getmembers(mailbox, inspect.isclass):
@@ -262,7 +262,7 @@ def test_mixed_maildir_folder_conventions(invoke, tmp_path):
 
 
 def test_eml_autodetect_and_dedup(invoke, tmp_path):
-    """A folder of loose ``.eml`` files is autodetected and deduplicated, nested
+    """A folder of loose `.eml` files is autodetected and deduplicated, nested
     directories included.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/760
@@ -295,7 +295,7 @@ def test_eml_autodetect_and_dedup(invoke, tmp_path):
 
 
 def test_eml_forced_format(invoke, tmp_path):
-    """The ``eml`` format can be forced on any folder."""
+    """The `eml` format can be forced on any folder."""
     root = tmp_path / "export"
     root.mkdir()
     (root / "one.eml").write_bytes(MailFactory().render())
@@ -307,7 +307,7 @@ def test_eml_forced_format(invoke, tmp_path):
 
 
 def test_eml_export_format(invoke, tmp_path):
-    """Deduplicated mails can be exported as a folder of ``.eml`` files."""
+    """Deduplicated mails can be exported as a folder of `.eml` files."""
     root = tmp_path / "export"
     root.mkdir()
     dup_mail = MailFactory()

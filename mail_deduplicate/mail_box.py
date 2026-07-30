@@ -15,8 +15,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """Utilities to read and write mail boxes in various formats.
 
-Based on `Python's standard library mailbox module
-<https://docs.python.org/3.11/library/mailbox.html>`_.
+Based on [Python's standard library mailbox module](https://docs.python.org/3.11/library/mailbox.html).
 """
 
 from __future__ import annotations
@@ -49,19 +48,18 @@ EMLDedupMail = make_dedup_mail("EMLDedupMail", mailbox.Message)
 
 
 class EML(Mailbox):
-    """A folder of loose ``.eml`` files, walked recursively.
+    """A folder of loose `.eml` files, walked recursively.
 
     Supports mail archives exported as individual RFC 5322 files, one mail per
     file, as produced by Outlook PST/OST conversion tools for instance. See:
     https://github.com/kdeldycke/mail-deduplicate/issues/760
 
     Keys are the paths of the mail files, relative to the folder's root. Files
-    without the ``.eml`` extension (case-insensitive) are ignored, as well as
+    without the `.eml` extension (case-insensitive) are ignored, as well as
     hidden files and directories.
 
-    Follows the interface of Python's `mailbox.Mailbox
-    <https://docs.python.org/3/library/mailbox.html#mailbox.Mailbox>`_. Like
-    ``maildir``, the one-file-per-mail storage needs no locking.
+    Follows the interface of Python's [mailbox.Mailbox](https://docs.python.org/3/library/mailbox.html#mailbox.Mailbox). Like
+    `maildir`, the one-file-per-mail storage needs no locking.
     """
 
     def __init__(self, dirname, factory=None, create=True) -> None:
@@ -157,12 +155,13 @@ class BoxFormat(Enum):
     - the structure they implement (file-based or folder-based),
     - the custom message factory class to use.
 
-    From these, we can derive the proper constructor with our own custom ``DedupMail``
+    From these, we can derive the proper constructor with our own custom `DedupMail`
     factory.
 
-    .. hint::
-        This could be extended in the future to add support for other mailbox formats
-        and sources, like Gmail accounts, IMAP servers, etc.
+    ```{hint}
+    This could be extended in the future to add support for other mailbox formats
+    and sources, like Gmail accounts, IMAP servers, etc.
+    ```
     """
 
     # Same order as in `mailbox` module documentation.
@@ -197,14 +196,14 @@ class BoxFormat(Enum):
 FOLDER_FORMATS = tuple(box for box in BoxFormat if box.structure == BoxStructure.FOLDER)
 """Box formats implementing a folder-based structure.
 
-Is a tuple to keep natural order defined by ``BoxFormat``.
+Is a tuple to keep natural order defined by `BoxFormat`.
 """
 
 
 FILE_FORMATS = tuple(box for box in BoxFormat if box.structure == BoxStructure.FILE)
 """Box formats implementing a file-based structure.
 
-Is a tuple to keep natural order defined by ``BoxFormat``.
+Is a tuple to keep natural order defined by `BoxFormat`.
 """
 
 
@@ -213,20 +212,19 @@ MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 
 
 def is_maildir(path: Path) -> bool:
-    """Returns ``True`` when the path holds all the sub-directories of a properly
+    """Returns `True` when the path holds all the sub-directories of a properly
     structured maildir."""
     return all(path.joinpath(subdir).is_dir() for subdir in MAILDIR_SUBDIRS)
 
 
 def contains_maildir(path: Path) -> bool:
-    """Returns ``True`` when the path is a maildir or holds one at any depth.
+    """Returns `True` when the path is a maildir or holds one at any depth.
 
     Allows the discovery of nested maildir folders stored as plain directories, as
-    produced by `isync/mbsync's Verbatim naming style
-    <https://isync.sourceforge.io/mbsync.html>`_. See:
+    produced by [isync/mbsync's Verbatim naming style](https://isync.sourceforge.io/mbsync.html). See:
     https://github.com/kdeldycke/mail-deduplicate/issues/973
 
-    Dot-prefixed directories are ignored, as they are covered by the ``Maildir++``
+    Dot-prefixed directories are ignored, as they are covered by the `Maildir++`
     folder convention. The mail-holding sub-directories of maildirs are not
     explored either.
     """
@@ -242,10 +240,10 @@ def contains_maildir(path: Path) -> bool:
 
 
 def contains_eml(path: Path) -> bool:
-    """Returns ``True`` when the path holds at least one ``.eml`` file, at any depth.
+    """Returns `True` when the path holds at least one `.eml` file, at any depth.
 
     Hidden files and directories are ignored, and the extension is matched
-    case-insensitively, mirroring the walk of ``EML`` boxes.
+    case-insensitively, mirroring the walk of `EML` boxes.
     """
     for dirpath, dirnames, filenames in os.walk(path):
         dirnames[:] = [d for d in dirnames if not d.startswith(".")]
@@ -259,26 +257,25 @@ def contains_eml(path: Path) -> bool:
 def autodetect_box_type(path: Path) -> BoxFormat:
     """Auto-detect the format of the mailbox located at the provided path.
 
-    Returns a box type as indexed in the `BOX_TYPES
-    <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.BOX_TYPES>`_
+    Returns a box type as indexed in the [BOX_TYPES](https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.BOX_TYPES)
     dictionary above.
 
-    If the path is a file, then it is considered as an ``mbox``. Else, if the
-    provided path is a folder and feature the `expecteed sub-directories
-    <https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.MAILDIR_SUBDIRS>`_,
-    or holds nested maildir folders at any depth, it is parsed as a ``maildir``.
-    A folder holding loose ``.eml`` files instead is parsed as an ``eml`` source.
+    If the path is a file, then it is considered as an `mbox`. Else, if the
+    provided path is a folder and feature the [expecteed sub-directories](https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.MAILDIR_SUBDIRS),
+    or holds nested maildir folders at any depth, it is parsed as a `maildir`.
+    A folder holding loose `.eml` files instead is parsed as an `eml` source.
 
-    .. todo::
-        Future finer autodetection heuristics should be implemented here. Some ideas:
+    ```{todo}
+    Future finer autodetection heuristics should be implemented here. Some ideas:
 
-        - single mail from a ``maildir``
-        - plain text mail content
-        - other mailbox formats supported in Python's standard library:
+    - single mail from a `maildir`
+    - plain text mail content
+    - other mailbox formats supported in Python's standard library:
 
-          - ``MH``
-          - ``Babyl``
-          - ``MMDF``
+      - `MH`
+      - `Babyl`
+      - `MMDF`
+    ```
     """
     box_format = None
 
@@ -316,7 +313,7 @@ def open_box(
 
     Returns a list of boxes, one per sub-folder. All are locked, ready for operations.
 
-    If ``box_format`` is provided, forces the opening of the box in the specified format.
+    If `box_format` is provided, forces the opening of the box in the specified format.
     Else, defaults to autodetection.
     """
     logging.info(f"\nOpening {get_current_theme().choice(str(path))} ...")
@@ -360,8 +357,8 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
 
     Returns a list of opened and locked boxes, each for one subfolder.
 
-    Skips box types not supporting subfolders. For ``maildir``, both the
-    ``Maildir++`` convention (dot-prefixed folders) and Verbatim-style layouts
+    Skips box types not supporting subfolders. For `maildir`, both the
+    `Maildir++` convention (dot-prefixed folders) and Verbatim-style layouts
     (nested plain directories, each a maildir of its own) are browsed. A directory
     without the maildir structure only acts as a container of nested folders and
     carries no mail of its own.

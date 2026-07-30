@@ -62,10 +62,10 @@ def test_early_export_file_check(invoke, make_box, tmp_path):
 
 @pytest.mark.parametrize("theme_id", ("dark", "light"))
 def test_theme_styles_runtime_output(invoke, make_box, theme_id):
-    """The active ``--theme`` must style runtime output, not just the help screen.
+    """The active `--theme` must style runtime output, not just the help screen.
 
     Regression test: the theme used to be captured once at import time via
-    ``get_default_theme()``, so ``--theme`` was ignored everywhere but ``--help``.
+    `get_default_theme()`, so `--theme` was ignored everywhere but `--help`.
     """
     box_path, _, export_path = make_box(Maildir)
 
@@ -95,7 +95,7 @@ def test_cli_test_suite():
     Each case is executed as a subprocess by click-extra's test-suite runner, so this
     exercises the real entry point (version reporting, help screen rendering).
 
-    Marked ``once``: the CI matrix drives the same TOML suite in every cell through
+    Marked `once`: the CI matrix drives the same TOML suite in every cell through
     click-extra's runner, so this Python-level wrapper only needs a single executor.
     """
     suite = Path(__file__).parent / "cli-test-suite.toml"
@@ -136,10 +136,10 @@ def test_parallel_hashing_matches_sequential(invoke, make_box):
 
 @pytest.mark.parametrize("box_type", (Maildir, mbox))
 def test_hash_only_prints_headers(invoke, make_box, box_type):
-    """``--hash-only`` must print each mail's canonical headers and hash, not crash.
+    """`--hash-only` must print each mail's canonical headers and hash, not crash.
 
-    Regression test: the display loop referenced a non-existent ``mail.pretty_headers``
-    attribute, so ``--hash-only`` died with ``AttributeError`` on the first mail.
+    Regression test: the display loop referenced a non-existent `mail.pretty_headers`
+    attribute, so `--hash-only` died with `AttributeError` on the first mail.
     See: https://github.com/kdeldycke/mail-deduplicate/issues/1004
     """
     box_path, _, export_path = make_box(
@@ -158,12 +158,12 @@ def test_hash_only_prints_headers(invoke, make_box, box_type):
 
 
 def test_single_hash_header_needs_no_minimal_flag(invoke, make_box):
-    """A single ``--hash-header`` must work without a separate minimal-headers flag.
+    """A single `--hash-header` must work without a separate minimal-headers flag.
 
     Regression test: narrowing the hash below four headers used to raise "Provided
     number of headers to hash (1) is less than the minimal required number of headers
     (4)" and then reject every mail. The floor is now derived as
-    ``min(4, number of --hash-header values)``, so a lone header is enough.
+    `min(4, number of --hash-header values)`, so a lone header is enough.
     See: https://github.com/kdeldycke/mail-deduplicate/issues/974
     """
     box_path, _, export_path = make_box(

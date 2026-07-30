@@ -15,9 +15,10 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """Allow the module to be run as a CLI. I.e.:
 
-.. code-block:: shell-session
+```{code-block} shell-session
 
-    $ python -m mail_deduplicate
+$ python -m mail_deduplicate
+```
 """
 
 from __future__ import annotations
@@ -26,17 +27,17 @@ from __future__ import annotations
 def main():
     """Execute the CLI but force its name to not let Click defaults to:
 
-    .. code-block:: shell-session
-        $ python -m mail_deduplicate --version
-        python -m mail_deduplicate, version 7.2.0
+    ```{code-block} shell-session
+    $ python -m mail_deduplicate --version
+    python -m mail_deduplicate, version 7.2.0
+    ```
 
-    Indirection via this ``main()`` method was `required to reconcile
-    <https://github.com/python-poetry/poetry/issues/5981>`_:
+    Indirection via this `main()` method was [required to reconcile](https://github.com/python-poetry/poetry/issues/5981):
 
-        - plain inline package call: ``python -m mail_deduplicate``,
-        - ``pyproject.toml`` entry point: ``mdedup = 'mail_deduplicate.__main__:main``,
+        - plain inline package call: `python -m mail_deduplicate`,
+        - `pyproject.toml` entry point: `mdedup = 'mail_deduplicate.__main__:main`,
         - Nuitka's main module invocation requirement:
-          ``python -m nuitka (...) mail_deduplicate/__main__.py``
+          `python -m nuitka (...) mail_deduplicate/__main__.py`
 
     That way we can deduce all three cases from the entry point.
     """

@@ -49,7 +49,7 @@ class MailFactory:
         """Init the mail with custom fields.
 
         You can bypass data normalization by passing the pre-formatted date string with
-        ``date_rfc2822`` custom field instead of ``date``.
+        `date_rfc2822` custom field instead of `date`.
         """
         # Defaults fields values.
         self.fields = {
@@ -105,7 +105,7 @@ class MailFactory:
         ).encode("utf-8")
 
     def as_message(self):
-        """Returns the mail as an instance of ``mailbox.Message``."""
+        """Returns the mail as an instance of `mailbox.Message`."""
         return Message(self.render())
 
     @staticmethod
@@ -118,8 +118,8 @@ def make_box(tmp_path):
     """A generic fixture to produce a temporary box of mails.
 
     The mail container can be created in any format supported by Python standard
-    library, by the way of the ``box_type`` parameter. Supported values: only
-    ``Maildir`` and ``mbox`` for the moment.
+    library, by the way of the `box_type` parameter. Supported values: only
+    `Maildir` and `mbox` for the moment.
     """
 
     def _make_box(box_type, mails=None):
@@ -148,8 +148,8 @@ def make_box(tmp_path):
 def check_box(box_path, box_type, content=None):
     """Check the content of a mail box (in any of maildir of mbox format).
 
-    Does not use ``set()`` types internally to avoid silent deduplication. Translates
-    all mails provided to ``mailbox.Message`` instances to provide fair comparison in a
+    Does not use `set()` types internally to avoid silent deduplication. Translates
+    all mails provided to `mailbox.Message` instances to provide fair comparison in a
     normalized space.
     """
     # Check provided parameters.

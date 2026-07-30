@@ -46,7 +46,7 @@ unique_mail = MailFactory(message_id="<no-copies-anywhere@example.com>")
 
 @pytest.mark.parametrize("dry_run", [False, True], ids=["real", "dry_run"])
 def test_discarded_action_stats(invoke, make_box, dry_run):
-    """A ``*-discarded`` action targets the discarded mails, so its counter differs
+    """A `*-discarded` action targets the discarded mails, so its counter differs
     from the number of unique and selected mails. The final statistics self-check
     must account for it, in dry-run mode too.
 

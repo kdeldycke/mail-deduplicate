@@ -34,6 +34,12 @@ extensions = [
     "sphinxext.opengraph",
     "myst_parser",
     "sphinx.ext.autosectionlabel",
+    # Docstrings are authored in MyST; this extension converts them to reST at
+    # build time. It hooks autodoc-process-docstring at priority 400 (vs the
+    # default 500) so it always runs before sphinx_autodoc_typehints. Listing it
+    # first makes the intent explicit; the extension enforces the order at load
+    # time and raises ExtensionError if it is placed after.
+    "click_extra.sphinx.myst_docstrings",
     "sphinx_autodoc_typehints",
     "click_extra.sphinx",
     "sphinxcontrib.mermaid",
@@ -96,12 +102,6 @@ suppress_warnings = [
     # name is only defined under `TYPE_CHECKING` in `click.exceptions`. Third-
     # party and cosmetic; our own annotations resolve.
     "sphinx_autodoc_typehints.forward_reference",
-    # `click_extra.sphinx` renders the live command help (option groups and the
-    # excluded-headers reference) into reST for autodoc. Its definition lists and
-    # inline-literal spans trip docutils' strict inline parser even though the
-    # rendered HTML is correct. There is no source line to fix: the reST is
-    # synthesized by the extension, not written by us.
-    "docutils",
 ]
 
 # Concatenates the docstrings of the class and the __init__ method.

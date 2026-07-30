@@ -188,14 +188,14 @@ def select_all_but_one(duplicates: DuplicateSet) -> set[DedupMailMixin]:
 class Strategy(enum.Enum):
     """Selection strategies to apply on a sets of duplicate mails.
 
-    Each strategy in the ``Enum`` points to the function implementing the selection
-    logic, by the way of the ``strategy_function()`` method.
+    Each strategy in the `Enum` points to the function implementing the selection
+    logic, by the way of the `strategy_function()` method.
 
     Strategies whose member value is a string are simply aliases to other strategies,
     pointing to the name of the function implementing the logic. The other members have
     integer values, to indicate their function ID is to be derived from the member name.
     This arrangement allow for each member to have its own existence without being
-    hidden by the aliasing mechanism of ``Enum``.
+    hidden by the aliasing mechanism of `Enum`.
 
     Aliases are great usability features to represent inverse operations. They helps
     users to better reason about the selection operators depending on their mental
@@ -240,7 +240,7 @@ class Strategy(enum.Enum):
 
     @property
     def strategy_function(self) -> Callable:
-        """Return the function's ID is the value of the ``Enum`` member."""
+        """Return the function's ID is the value of the `Enum` member."""
         if isinstance(self.value, str):
             func_id = self.value
         else:

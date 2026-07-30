@@ -73,19 +73,18 @@ DEFAULT_HASH_HEADERS: tuple[str, ...] = (
 
 By default we choose to exclude:
 
-``CC``
-  Since ``mailman`` apparently `sometimes trims list members
-  <https://mail.python.org/pipermail/mailman-developers/2002-September/013233.html>`_
-  from the ``CC`` header to avoid sending duplicates. Which means that copies of mail
-  reflected back from the list server will have a different ``CC`` to the copy saved by
+`CC`
+  Since `mailman` apparently [sometimes trims list members](https://mail.python.org/pipermail/mailman-developers/2002-September/013233.html)
+  from the `CC` header to avoid sending duplicates. Which means that copies of mail
+  reflected back from the list server will have a different `CC` to the copy saved by
   the MUA at send-time.
 
-``BCC``
-  Because copies of the mail saved by the MUA at send-time will have ``BCC``, but copies
+`BCC`
+  Because copies of the mail saved by the MUA at send-time will have `BCC`, but copies
   reflected back from the list server won't.
 
-``Reply-To``
-  Since a mail could be ``CC``'d to two lists with different ``Reply-To`` munging
+`Reply-To`
+  Since a mail could be `CC`'d to two lists with different `Reply-To` munging
   options set.
 """
 
@@ -93,10 +92,10 @@ By default we choose to exclude:
 DEFAULT_MINIMAL_HEADERS = 4
 """Cap on the number of headers that must be present in a mail to compute a solid hash.
 
-The per-mail floor is ``min(DEFAULT_MINIMAL_HEADERS, len(hash_headers))``: it rejects
+The per-mail floor is `min(DEFAULT_MINIMAL_HEADERS, len(hash_headers))`: it rejects
 near-empty or corrupted mails whose hash would rest on too few headers, while relaxing
 automatically when the hash is narrowed to fewer headers than this cap via
-``--hash-header``.
+`--hash-header`.
 """
 
 

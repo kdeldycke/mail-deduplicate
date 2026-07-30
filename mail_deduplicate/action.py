@@ -53,7 +53,7 @@ def export_box(dedup: Deduplicate) -> Iterator:
 
 
 def copy_mails(dedup: Deduplicate, mails) -> None:
-    """Copy provided ``mails`` to a brand new box or an existing one."""
+    """Copy provided `mails` to a brand new box or an existing one."""
     with export_box(dedup) as box:
         for mail in mails:
             logging.debug(f"Copying {mail!r} to {dedup.conf['export']}...")
@@ -66,7 +66,7 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
 
 
 def move_mails(dedup: Deduplicate, mails) -> None:
-    """Move provided ``mails`` to a brand new box or an existing one."""
+    """Move provided `mails` to a brand new box or an existing one."""
     with export_box(dedup) as box:
         for mail in mails:
             logging.debug(
@@ -82,7 +82,7 @@ def move_mails(dedup: Deduplicate, mails) -> None:
 
 
 def delete_mails(dedup: Deduplicate, mails) -> None:
-    """Remove provided ``mails`` in-place, from their original boxes."""
+    """Remove provided `mails` in-place, from their original boxes."""
     for mail in mails:
         logging.debug(f"Deleting {mail!r} in-place...")
         dedup.stats[Stat.MAIL_DELETED] += 1

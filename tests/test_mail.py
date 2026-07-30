@@ -37,8 +37,8 @@ def create_mail_with_headers(
 ) -> DedupMailMixin:
     """Helper to create a DedupMailMixin object with custom headers.
 
-    :param headers: ``(name, value)`` tuples to set as mail headers. Values can be
-        strings, bytes, or ``email.header.Header`` objects.
+    :param headers: `(name, value)` tuples to set as mail headers. Values can be
+        strings, bytes, or `email.header.Header` objects.
     """
     # Create minimal valid email structure
     raw_mail = b"Subject: placeholder\n\nTest body"
@@ -541,24 +541,24 @@ def test_invalid_date_parsing_dedup(invoke, make_box):
 
 
 undated_mail = MailFactory(date_rfc2822="invalid date")
-""" A mail whose ``Date`` header cannot be parsed into a timestamp. """
+""" A mail whose `Date` header cannot be parsed into a timestamp. """
 
 
 @pytest.mark.parametrize("date_value", ["invalid date", "", "Hello, World!"])
 def test_unparseable_date_returns_none(date_value):
-    """An unparseable ``Date`` header produces no timestamp instead of crashing."""
+    """An unparseable `Date` header produces no timestamp instead of crashing."""
     mail = create_mail_with_headers(("Date", date_value))
     assert mail.parsed_date is None
 
 
 def test_missing_date_header_returns_none():
-    """A mail without any ``Date`` header produces no timestamp instead of crashing."""
+    """A mail without any `Date` header produces no timestamp instead of crashing."""
     mail = create_mail_with_headers(("Subject", "No date around here"))
     assert mail.parsed_date is None
 
 
 def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
-    """Duplicate mails without any ``Date`` header, as saved into mbox files by some
+    """Duplicate mails without any `Date` header, as saved into mbox files by some
     clients, are skipped by time-based strategies instead of crashing.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/600
@@ -595,7 +595,7 @@ def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
 
 def test_unparseable_date_skips_time_strategy(invoke, make_box):
     """Time-based strategies skip duplicate sets containing mails without a parseable
-    ``Date`` header, and name the offending mails instead of crashing.
+    `Date` header, and name the offending mails instead of crashing.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/132
     """
@@ -612,7 +612,7 @@ def test_unparseable_date_skips_time_strategy(invoke, make_box):
 
 
 def test_mixed_missing_date_skips_time_strategy(invoke, make_box):
-    """A single mail without a parseable ``Date`` header is enough to skip its whole
+    """A single mail without a parseable `Date` header is enough to skip its whole
     set when a time-based strategy is applied."""
     dated_mail = MailFactory(date="2021-01-01")
     box_path, box_type, _ = make_box(Maildir, [undated_mail, dated_mail])
@@ -638,7 +638,7 @@ def test_mixed_missing_date_skips_time_strategy(invoke, make_box):
 
 
 def test_unparseable_date_show_diff(invoke, make_box):
-    """Rendering the diff of mails without a parseable ``Date`` header does not
+    """Rendering the diff of mails without a parseable `Date` header does not
     crash."""
     undated_variant = MailFactory(date_rfc2822="invalid date", body="A different body.")
     box_path, box_type, _ = make_box(Maildir, [undated_mail, undated_variant])
