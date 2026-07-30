@@ -67,18 +67,17 @@ classifiers = [
 dependencies = [
   # Provides enum.StrEnum for Python < 3.11; all versions expose the class.
   "backports-strenum>=1; python_version<'3.11'",
-  # 8.6.0 is required on three counts: its test-suite runner stops resolving venv
-  # interpreter symlinks (the binary self-test run by the release engine from the
-  # runtime-only environment relies on it), 8.5.0 promoted ctx.render_table to a
-  # Context method reading --table-format from the context meta (deduplicate.py,
-  # mail.py), and 8.6.0 added OperationTrail (action.py).
-  # 8.6.4.dev0 is the development version carrying the config machinery cli.py
-  # relies on: config_strict/excluded_params forwarding in @command, kebab-case
-  # config keys, and complete --export-config output. Bump to the release that
-  # ships these (>=8.7) once it is out.
+  # 8.7.0 is the release carrying the config machinery cli.py relies on:
+  # config_strict/excluded_params forwarding in @command, kebab-case config keys,
+  # and complete --export-config output. It also covers the earlier features this
+  # code still depends on: 8.5.0 promoted ctx.render_table to a Context method
+  # reading --table-format from the context meta (deduplicate.py, mail.py), and
+  # 8.6.0 added OperationTrail (action.py) and stopped its test-suite runner from
+  # resolving venv interpreter symlinks (the binary self-test run by the release
+  # engine from the runtime-only environment relies on it).
   # The [toml] extra pulls the TOML writer (tomlkit) so --export-config toml
   # works out of the box, TOML being the format the documentation showcases.
-  "click-extra[toml]>=8.6.4.dev0",
+  "click-extra[toml]>=8.7",
 ]
 urls.Changelog = "https://github.com/kdeldycke/mail-deduplicate/blob/main/changelog.md"
 urls.Documentation = "https://kdeldycke.github.io/mail-deduplicate"
@@ -98,7 +97,7 @@ test = [
   # Test-only: conftest.py uses iterutils.same to check fixture homogeneity.
   "boltons>=25",
   # Aligned to the runtime click-extra floor.
-  "click-extra[pytest]>=8.6.4.dev0",
+  "click-extra[pytest]>=8.7",
   # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
   "coverage[toml]>=7.11",
   # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That module,
@@ -127,7 +126,7 @@ test = [
 docs = [
   # 8.5.0 renamed --show-params to --params, which docs/configuration.md runs at
   # build time via the click:run directive. Aligned to the runtime floor.
-  "click-extra[sphinx]>=8.6.4.dev0",
+  "click-extra[sphinx]>=8.7",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
@@ -160,14 +159,6 @@ typing = [
 # Pin uv to a narrow range so every contributor and CI runner resolves uv.lock
 # with the same resolver (astral-sh/setup-uv reads this automatically).
 required-version = ">=0.11.23,<0.13"
-# Interim override: resolve click-extra from its git main, which carries the
-# unreleased config machinery (config_strict/excluded_params forwarding,
-# kebab-case keys, complete kebab-cased --export-config). Once the matching
-# release is on PyPI: drop this table, raise the click-extra floor to that
-# release, regenerate uv.lock, and let sync-uv-lock refresh the click-extra
-# entry in exclude-newer-package (its current freeze date predates the
-# release and would hold the resolution back).
-sources = { click-extra = { git = "https://github.com/kdeldycke/click-extra", branch = "main" } }
 # The docs are only built on modern Python, letting the docs group adopt
 # packages (like myst-parser 5.1) that dropped support for our older floors.
 dependency-groups.docs = { requires-python = ">= 3.14" }
@@ -178,10 +169,9 @@ exclude-newer = "1 week"
 # version instead of tracking newer releases. `sync-uv-lock` freezes new
 # bypasses at that date and prunes each entry once its held version ages past
 # `exclude-newer`, returning the package to the normal cooldown. click-extra
-# 8.6.0 is let through early: its CLI test-suite runner stops resolving venv
-# interpreter symlinks, which the `python -m` self-test step in tests.yaml
-# relies on.
-exclude-newer-package = { click-extra = "2026-07-25T00:00:00Z", extra-platforms = "2026-07-28T00:00:00Z" }
+# 8.7.0 is let through early: it ships the config machinery cli.py depends on
+# (detailed in the runtime dependency note above).
+exclude-newer-package = { click-extra = "2026-07-31T00:00:00Z", extra-platforms = "2026-07-28T00:00:00Z" }
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
 
