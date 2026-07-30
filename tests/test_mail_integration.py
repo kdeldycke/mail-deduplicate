@@ -37,6 +37,9 @@ invalid_windows_dates = skip_windows(
 # https://github.com/arrow-py/arrow/issues/675
 # https://github.com/arrow-py/arrow/pull/745
 
+# The `Thu, 13 Dec 101 15:30 WET` header comes from a real non-y2k-compliant mailer
+# that once made the tool crash with "ValueError: year out of range". See:
+# https://github.com/kdeldycke/mail-deduplicate/issues/54
 invalid_date_mail_1 = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 invalid_date_mail_2 = MailFactory(date_rfc2822="Thu, 13 Dec 102 15:30 WET")
 
@@ -120,9 +123,11 @@ undated_mail = MailFactory(date_rfc2822="invalid date")
 
 def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
     """Duplicate mails without any `Date` header, as saved into mbox files by some
-    clients, are skipped by time-based strategies instead of crashing.
+    clients, are skipped by time-based strategies instead of crashing. The run also
+    names the offending mail rather than failing the whole mailbox silently.
 
-    See: https://github.com/kdeldycke/mail-deduplicate/issues/600
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/600 and
+    https://github.com/kdeldycke/mail-deduplicate/issues/954
     """
     dateless_mail = dedent("""\
         X-Mozilla-Status: 0001
@@ -309,7 +314,10 @@ def test_ctime_time_source(invoke, make_box):
 
 def test_mail_rejected_when_too_few_headers(invoke, tmp_path):
     """A mail carrying fewer than the minimal hashable headers is rejected, not
-    hashed, and left untouched."""
+    hashed, and left untouched, instead of crashing the whole run.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/27
+    """
     box_path = str(tmp_path / "box")
     box = Maildir(box_path, create=True)
     # Subject is the only default hash header present, below the floor of 4.
@@ -321,4 +329,35 @@ def test_mail_rejected_when_too_few_headers(invoke, tmp_path):
     assert result.exit_code == 0
     assert "Rejecting" in result.stderr
     # Nothing was hashed, so nothing is removed.
+    assert len(Maildir(box_path, create=False)) == 1
+
+
+def test_crlf_and_lf_bodies_are_duplicates(invoke, tmp_path):
+    """Two mails identical but for LF vs CRLF line endings are recognized as
+    duplicates: line endings must not count toward size or content differences.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/844 (fixed by PR 845).
+    """
+    headers = (
+        b"Date: Mon, 15 Jan 2024 10:30:45 +0000\n"
+        b"From: foo@bar.com\n"
+        b"To: baz@qux.com\n"
+        b"Subject: Line endings\n"
+        b"Message-ID: <crlf@nohost.com>\n"
+        b"Content-Type: text/plain\n"
+        b"\n"
+    )
+    body = b"Line one\nLine two\nLine three\n"
+
+    box_path = str(tmp_path / "box")
+    box = Maildir(box_path, create=True)
+    box.add(headers + body)  # LF throughout.
+    box.add(headers.replace(b"\n", b"\r\n") + body.replace(b"\n", b"\r\n"))  # CRLF.
+    box.close()
+
+    result = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
+
+    assert result.exit_code == 0
+    assert "too dissimilar" not in result.stderr
+    # The CRLF and LF copies collapsed into a single duplicate set; one copy remains.
     assert len(Maildir(box_path, create=False)) == 1

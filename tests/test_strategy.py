@@ -451,6 +451,32 @@ def test_strategy_cascade_exhausted(invoke, make_box):
     check_box(box_path, box_type, content=[random_mail_1, random_mail_1])
 
 
+def test_time_strategy_alone_cannot_split_same_timestamp_set(invoke, make_box):
+    """A time-based strategy selects the whole set when every mail shares a timestamp,
+    which discriminates nothing, so the set is skipped and no mail is deleted. A
+    fallback strategy is the documented way to resolve such sets.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/270 and
+    https://github.com/kdeldycke/mail-deduplicate/issues/647
+    """
+    box_path, box_type, _ = make_box(
+        Maildir, [random_mail_1, random_mail_1, random_mail_1]
+    )
+
+    # discard-newer is an alias of select-oldest: on three same-timestamp copies it
+    # selects all of them, discriminating nothing.
+    result = invoke(
+        "--strategy=discard-newer",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "all 3 mails within were selected" in result.stderr
+    # Nothing was discriminated, so nothing was deleted.
+    check_box(box_path, box_type, content=[random_mail_1, random_mail_1, random_mail_1])
+
+
 def test_strategy_cascade_dedup_aliases(invoke, make_box):
     """Repeated strategies are collapsed into one, even under their aliases."""
     box_path, box_type, _ = make_box(Maildir, [oldest_mail, newest_mail])
@@ -596,6 +622,8 @@ def test_threshold_checks_disabled(
 
     The identical pair deduplicates whatever the thresholds; the flags only govern
     whether the size and content guards run at all.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/97
     """
     box_path, box_type, _ = make_box(Maildir, [random_mail_1, random_mail_1])
 

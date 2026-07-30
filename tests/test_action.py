@@ -128,3 +128,28 @@ def test_assert_stats_consistent_passes(config):
     dedup.stats[Stat.MAIL_RETAINED] = 3
 
     dedup.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_RETAINED)
+
+
+def test_unique_only_source_is_exported(invoke, make_box):
+    """A source made only of unique mails still exports all of them: a set of one mail
+    is auto-selected, not skipped as "all mails were selected".
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/843 and
+    https://github.com/kdeldycke/mail-deduplicate/issues/599
+    """
+    uniques = [
+        MailFactory(message_id=f"<uniq-{i}@nohost.com>", body=f"Body {i}\n")
+        for i in range(3)
+    ]
+    box_path, _, export_path = make_box(Maildir, uniques)
+
+    result = invoke(
+        "--strategy=select-one",
+        "--action=copy-selected",
+        f"--export={export_path}",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    # All three unique mails were copied to the export box, none skipped.
+    check_box(export_path, mbox, content=uniques)

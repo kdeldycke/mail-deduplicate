@@ -273,7 +273,11 @@ def test_verbatim_forced_maildir_format(invoke, tmp_path):
 
 def test_mixed_maildir_folder_conventions(invoke, tmp_path):
     """Maildir++ dot-folders and Verbatim plain folders coexist under the same
-    maildir root, each opened exactly once."""
+    maildir root, each opened exactly once. Guards against subfolders being skipped
+    so only the root INBOX is processed.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/123
+    """
     root = tmp_path / "backup"
     box = mailbox.Maildir(str(root), create=True)
     box.add(MailFactory(message_id="<root@example.com>").render())
