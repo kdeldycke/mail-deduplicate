@@ -123,11 +123,6 @@ docs = [
   "sphinx>=8",
   # sphinx-autodoc-typehints 2.4.0 is the first version that is aligned to our Python >= 3.10 requirement.
   "sphinx-autodoc-typehints>=2.4",
-  # docs/cli-parameters.md documents the mdedup CLI through sphinx-click's `.. click::`
-  # directive, which is long-stable. 6.0.0 is the current major of the maintained line
-  # (requires sphinx>=4, click>=8), compatible with our sphinx>=8 floor and installable
-  # on the Python 3.14 the docs group pins.
-  "sphinx-click>=6",
   # sphinx-copybutton 0.5.2 stabilized the copy button behavior for code blocks.
   "sphinx-copybutton>=0.5.2",
   # sphinx-design 0.6 introduced the current directive syntax for cards, grids, and tabs.

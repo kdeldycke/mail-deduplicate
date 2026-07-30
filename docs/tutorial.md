@@ -1,4 +1,4 @@
-# {octicon}`mortar-board` Tutorial
+# {octicon}`book` Tutorial
 
 This page walks through a complete deduplication run on two tiny mail boxes built for the occasion, so you can rehearse every command in a sandbox before pointing `mdedup` at your precious archives. Every `mdedup` output below is captured live while building this page, so what you read is exactly what the documented version does: the commands run from a scratch folder, whose absolute path shows up in the outputs.
 

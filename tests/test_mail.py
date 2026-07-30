@@ -37,9 +37,8 @@ def create_mail_with_headers(
 ) -> DedupMailMixin:
     """Helper to create a DedupMailMixin object with custom headers.
 
-    Args:
-        *headers: (name, value) tuples to set as mail headers.
-            Values can be strings, bytes, or email.header.Header objects.
+    :param headers: ``(name, value)`` tuples to set as mail headers. Values can be
+        strings, bytes, or ``email.header.Header`` objects.
     """
     # Create minimal valid email structure
     raw_mail = b"Subject: placeholder\n\nTest body"
@@ -459,11 +458,10 @@ def test_header_normalization(header_name, values, expected):
 invalid_windows_dates = skip_windows(
     reason="Invalid dates produce negative timestamps on Windows."
 )
-""" Some invalid dates are not supported on Windows as they produce negative
-timestamps. See:
-* https://github.com/arrow-py/arrow/issues/675
-* https://github.com/arrow-py/arrow/pull/745
-"""
+# Some invalid dates are not supported on Windows as they produce negative
+# timestamps. See:
+# https://github.com/arrow-py/arrow/issues/675
+# https://github.com/arrow-py/arrow/pull/745
 
 invalid_date_mail_1 = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 invalid_date_mail_2 = MailFactory(date_rfc2822="Thu, 13 Dec 102 15:30 WET")

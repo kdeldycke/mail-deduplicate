@@ -34,7 +34,6 @@ extensions = [
     "sphinxext.opengraph",
     "myst_parser",
     "sphinx.ext.autosectionlabel",
-    "sphinx_click",
     "sphinx_autodoc_typehints",
     "click_extra.sphinx",
     "sphinxcontrib.mermaid",
@@ -79,24 +78,41 @@ click_extra_manpages = [
 # use {click:run} to render live CLI output, so it must be turned on here.
 click_extra_enable_exec_directives = True
 
-master_doc = "index"
-
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 nitpicky = True
+
+# Only categories with no actionable source fix belong here. Re-audit on every
+# Sphinx or extension upgrade: build with each entry removed and drop the ones
+# whose warning no longer fires (see the sphinx-docs agent § suppress_warnings
+# governance).
+suppress_warnings = [
+    # `index.md` includes `readme.md`, which starts at `## ` because GitHub
+    # supplies the H1 from the repo name. The readme must render correctly on
+    # GitHub, so its top heading stays H2 by design.
+    "myst.header",
+    # `sphinx_autodoc_typehints` cannot resolve click's own forward reference
+    # `Context` when it documents the inherited `BadParameter` signature: the
+    # name is only defined under `TYPE_CHECKING` in `click.exceptions`. Third-
+    # party and cosmetic; our own annotations resolve.
+    "sphinx_autodoc_typehints.forward_reference",
+    # `click_extra.sphinx` renders the live command help (option groups and the
+    # excluded-headers reference) into reST for autodoc. Its definition lists and
+    # inline-literal spans trip docutils' strict inline parser even though the
+    # rendered HTML is correct. There is no source line to fix: the reST is
+    # synthesized by the extension, not written by us.
+    "docutils",
+]
 
 # Concatenates the docstrings of the class and the __init__ method.
 autoclass_content = "both"
 # Keep the same ordering as in original source code.
 autodoc_member_order = "bysource"
-autodoc_default_flags = ["members", "undoc-members", "show-inheritance"]
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-# GitHub pre-implemented shortcuts.
 github_user = "kdeldycke"
-issues_github_path = f"{github_user}/{project_id}"
 
 intersphinx_mapping = {
     "click_extra": ("https://kdeldycke.github.io/click-extra", None),
@@ -114,7 +130,7 @@ html_logo = "assets/mail-deduplicate-logo-square.png"
 html_theme_options = {
     "sidebar_hide_name": True,
     # Activates edit links.
-    "source_repository": f"https://github.com/{issues_github_path}",
+    "source_repository": f"https://github.com/{github_user}/{project_id}",
     "source_branch": "main",
     "source_directory": "docs/",
     "announcement": (
@@ -132,5 +148,4 @@ html_theme_options = {
 # Footer content.
 html_last_updated_fmt = "%Y-%m-%d"
 copyright = f"{author} and contributors"
-html_show_copyright = True
 html_show_sphinx = False

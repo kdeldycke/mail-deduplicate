@@ -11,7 +11,7 @@ hide-toc: true
 install
 tutorial
 design
-cli-parameters
+cli
 configuration
 ```
 

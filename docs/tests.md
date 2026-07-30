@@ -1,4 +1,4 @@
-# `tests` package
+# {octicon}`meter` `tests` package
 
 ```{eval-rst}
 .. automodule:: tests
