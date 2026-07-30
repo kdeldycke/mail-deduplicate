@@ -729,15 +729,6 @@ class Deduplicate:
                 passed = first_value >= second_value
             case "==":
                 passed = first_value == second_value
-            case "<=":
-                passed = first_value <= second_value
-            case "in":
-                valid_values = (
-                    [self.stats[s] for s in second]
-                    if isinstance(second, tuple)
-                    else [second_value]
-                )
-                passed = first_value in valid_values
             case _:
                 passed = False
 

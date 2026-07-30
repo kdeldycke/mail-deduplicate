@@ -19,16 +19,19 @@ from __future__ import annotations
 import inspect
 import mailbox
 from functools import cache
-from mailbox import Mailbox, Message
+from mailbox import Mailbox, Message, NoSuchMailboxError, mbox
+from pathlib import Path
 
 import pytest
 
 from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import (
+    EML,
     FILE_FORMATS,
     FOLDER_FORMATS,
     BoxFormat,
     BoxStructure,
+    create_box,
 )
 
 from .conftest import MailFactory, check_box
@@ -76,24 +79,24 @@ def test_box_format_definition():
     assert set(BoxFormat) == set(FOLDER_FORMATS) | set(FILE_FORMATS)
 
 
-@pytest.mark.parametrize(
-    ("box_format", "box_type"),
-    (
-        (BoxFormat.MAILDIR, mailbox.Maildir),
-        (BoxFormat.MBOX, mailbox.mbox),
-    ),
-)
-def test_box_instantiation(make_box, box_format, box_type):
+# Sweep every BoxFormat, so format-agnostic behavior is checked over the whole set
+# instead of the historical maildir/mbox pair.
+ALL_FORMATS = pytest.mark.parametrize("box_format", tuple(BoxFormat), ids=str)
+
+
+@ALL_FORMATS
+def test_box_instantiation(make_box, box_format):
+    """Each format opens through its own custom DedupMail factory."""
+    box_type = box_format.base_class
     mail = MailFactory(body="Single mail\n")
 
     box_path, created_type, _ = make_box(box_type, [mail])
 
-    assert created_type == box_type
+    assert created_type is box_type
     check_box(box_path, box_type, [mail])
 
     mail_box = box_format.constructor(box_path)
     assert isinstance(mail_box, box_format.base_class)
-    assert isinstance(mail_box, box_type)
     assert issubclass(mail_box._factory, box_format.message_class)
 
     assert len(mail_box) == 1
@@ -102,79 +105,104 @@ def test_box_instantiation(make_box, box_format, box_type):
     assert isinstance(message, DedupMailMixin)
     assert hasattr(message, "source_path")
     assert hasattr(message, "mail_id")
+    mail_box.close()
 
 
-@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
-def test_create_box(make_box, box_type):
-    """Test creating a box with mails."""
-    mail1 = MailFactory(body="First mail\n")
-    mail2 = MailFactory(body="Second mail\n", message_id="<msg2@test.com>")
+@ALL_FORMATS
+def test_box_roundtrip(make_box, box_format):
+    """A mix of unique and duplicate mails survives a build/read round-trip.
 
-    box_path, created_type, _ = make_box(box_type, [mail1, mail2])
-
-    assert created_type == box_type
-    check_box(box_path, box_type, [mail1, mail2])
-
-
-@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
-def test_create_empty_box(make_box, box_type):
-    """Test creating an empty box."""
-    box_path, created_type, _ = make_box(box_type)
-
-    assert created_type == box_type
-    check_box(box_path, box_type, [])
-
-
-@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
-def test_box_with_duplicate_mails(make_box, box_type):
-    """Test box containing duplicate mails."""
-    mail1 = MailFactory(body="Duplicate content\n", message_id="<dup@test.com>")
-    mail2 = MailFactory(body="Duplicate content\n", message_id="<dup@test.com>")
-    mail3 = MailFactory(body="Unique mail\n", message_id="<unique@test.com>")
-
-    box_path, created_type, _ = make_box(box_type, [mail1, mail2, mail3])
-
-    assert created_type == box_type
-    check_box(box_path, box_type, [mail1, mail2, mail3])
-
-
-@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
-def test_box_with_different_dates(make_box, box_type):
-    """Test box with mails having different dates."""
-    mail1 = MailFactory(date="2023-01-01", message_id="<jan@test.com>")
-    mail2 = MailFactory(date="2023-06-15", message_id="<jun@test.com>")
-    mail3 = MailFactory(date="2023-12-31", message_id="<dec@test.com>")
-
-    box_path, created_type, _ = make_box(box_type, [mail1, mail2, mail3])
-
-    assert created_type == box_type
-    check_box(box_path, created_type, [mail1, mail2, mail3])
-
-
-@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
-def test_box_with_single_mail(make_box, box_type):
-    """Test boxes with a single mail."""
-    mail = MailFactory(body="Single mail\n")
-
-    box_path, created_type, _ = make_box(box_type, [mail])
-
-    assert created_type == box_type
-    check_box(box_path, box_type, [mail])
-
-
-@pytest.mark.parametrize("box_type", (mailbox.Maildir, mailbox.mbox))
-def test_box_types_from_fixture(make_box, box_type):
-    """Test that make_box fixture works with different box types."""
+    Collapses several near-identical single-format round-trip tests into one sweep,
+    and is the first time MH, Babyl and MMDF are exercised at all.
+    """
+    box_type = box_format.base_class
     mails = [
-        MailFactory(body="Mail 1\n", message_id="<1@test.com>"),
-        MailFactory(body="Mail 2\n", message_id="<2@test.com>"),
-        MailFactory(body="Mail 3\n", message_id="<3@test.com>"),
+        MailFactory(body="First mail\n", message_id="<1@test.com>"),
+        MailFactory(body="Second mail\n", message_id="<2@test.com>"),
+        MailFactory(body="Duplicate content\n", message_id="<dup@test.com>"),
+        MailFactory(body="Duplicate content\n", message_id="<dup@test.com>"),
     ]
 
     box_path, created_type, _ = make_box(box_type, mails)
 
-    assert created_type == box_type
+    assert created_type is box_type
     check_box(box_path, box_type, mails)
+
+
+@ALL_FORMATS
+def test_box_empty(make_box, box_format):
+    """An empty box of any format reads back as empty."""
+    box_type = box_format.base_class
+    box_path, created_type, _ = make_box(box_type)
+
+    assert created_type is box_type
+    check_box(box_path, box_type, [])
+
+
+@ALL_FORMATS
+def test_dedup_across_formats(invoke, make_box, box_format):
+    """A full dedup run succeeds on every supported format.
+
+    MH, Babyl and MMDF are never autodetected, so the format is forced. Babyl also
+    guards a regression: its `get_file()` hands back a nameless in-memory buffer,
+    which used to crash the extraction of a mail's path metadata.
+    """
+    box_type = box_format.base_class
+    dup = MailFactory(body="Same body.\n", message_id="<dup@test.com>")
+    unique = MailFactory(body="Unique body.\n", message_id="<unique@test.com>")
+
+    box_path, _, _ = make_box(box_type, [dup, dup, unique])
+
+    result = invoke(
+        f"--input-format={box_format}",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    # One copy of the duplicate is discarded; its survivor and the unique mail remain.
+    check_box(box_path, box_type, content=[dup, unique])
+
+
+def test_force_unlock_recovers_stale_lock(invoke, make_box):
+    """--force-unlock clears a stale lock that would otherwise abort the run."""
+    dup = MailFactory(body="Same body.\n", message_id="<lock@test.com>")
+    box_path, box_type, _ = make_box(mbox, [dup, dup])
+
+    # Simulate a stale lock left behind by a crashed process.
+    Path(box_path + ".lock").touch()
+
+    # Without the flag, opening the locked box refuses to proceed and changes nothing.
+    refused = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
+    assert refused.exit_code == 1
+    assert "already locked" in refused.stderr.lower()
+    check_box(box_path, box_type, content=[dup, dup])
+
+    # With the flag, the stale lock is forced off and dedup runs to completion.
+    forced = invoke(
+        "--force-unlock",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+    )
+    assert forced.exit_code == 0
+    check_box(box_path, box_type, content=[dup])
+
+
+def test_create_box_refuses_to_clobber_existing(tmp_path):
+    """create_box refuses an existing path unless append is requested, guarding a
+    destination box even when reached directly."""
+    existing = tmp_path / "existing.mbox"
+    existing.touch()
+
+    with pytest.raises(FileExistsError):
+        create_box(existing, BoxFormat.MBOX, export_append=False)
+
+    # With append, the existing box is opened instead of refused.
+    box = create_box(existing, BoxFormat.MBOX, export_append=True)
+    box.unlock()
+    box.close()
 
 
 @pytest.mark.parametrize("source", ["./dummy_maildir/", "./__init__.py"])
@@ -286,8 +314,6 @@ def test_eml_autodetect_and_dedup(invoke, tmp_path):
     assert "3 mails found." in result.stderr
 
     # One copy of the duplicated mail was deleted, everything else was preserved.
-    from mail_deduplicate.mail_box import EML
-
     box = EML(str(root), create=False)
     assert len(box) == 2
     assert (root / "notes.txt").is_file()
@@ -325,10 +351,42 @@ def test_eml_export_format(invoke, tmp_path):
 
     assert result.exit_code == 0
 
-    from mail_deduplicate.mail_box import EML
-
     box = EML(str(dest), create=False)
     assert len(box) == 1
     assert [str(box.get_message(key)) for key in box.iterkeys()] == [
         str(dup_mail.as_message())
     ]
+
+
+def test_eml_nonexistent_box_raises(tmp_path):
+    """Opening a missing `eml` folder without creating it fails cleanly."""
+    with pytest.raises(NoSuchMailboxError):
+        EML(str(tmp_path / "absent"), create=False)
+
+
+def test_eml_membership(tmp_path):
+    """`in` matches existing `.eml` keys only, and short-circuits on other names."""
+    box = EML(str(tmp_path / "box"))
+    key = box.add(MailFactory().render())
+
+    assert key in box
+    # A well-formed but absent key is not a member.
+    assert "ghost.eml" not in box
+    # A non-.eml name is rejected before any filesystem lookup.
+    assert "notes.txt" not in box
+
+
+def test_eml_missing_key_raises_keyerror(tmp_path):
+    """Every accessor raises `KeyError` for an unknown key, like the stdlib boxes."""
+    box = EML(str(tmp_path / "box"))
+    for accessor in (box.get_file, box.get_bytes, box.remove):
+        with pytest.raises(KeyError):
+            accessor("ghost.eml")
+
+
+def test_eml_folders_unsupported(tmp_path):
+    """`eml` folders are walked recursively, so the subfolder API is inert."""
+    box = EML(str(tmp_path / "box"))
+    assert box.list_folders() == []
+    with pytest.raises(NotImplementedError):
+        box.get_folder("sub")

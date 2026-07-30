@@ -20,7 +20,7 @@ import random
 import string
 from email.utils import formatdate as maildate
 from functools import partial
-from mailbox import Mailbox, Maildir, Message, mbox
+from mailbox import MH, MMDF, Babyl, Mailbox, Maildir, Message, mbox
 from textwrap import dedent
 from uuid import uuid4
 
@@ -29,14 +29,58 @@ from boltons.iterutils import same
 from click_extra.pytest import runner  # noqa: F401
 from whenever import Date, Instant, Time
 
-from mail_deduplicate.cli import mdedup
+from mail_deduplicate.action import Action
+from mail_deduplicate.cli import (
+    DEFAULT_HASH_HEADERS,
+    DEFAULT_MINIMAL_HEADERS,
+    Config,
+    mdedup,
+)
+from mail_deduplicate.deduplicate import BodyHasher
+from mail_deduplicate.mail import TimeSource
+from mail_deduplicate.mail_box import EML, BoxFormat
 
 """ Fixtures, configuration and helpers for tests. """
+
+
+BOX_TYPES = (Maildir, mbox, MH, Babyl, MMDF, EML)
+"""All box classes the `make_box`/`check_box` helpers know how to build and read.
+
+Covers every format in `BoxFormat`, so tests can parametrize over the whole set.
+"""
 
 
 @pytest.fixture()
 def invoke(runner):  # noqa: F811
     return partial(runner.invoke, mdedup)
+
+
+@pytest.fixture()
+def config() -> Config:
+    """A fully-populated `Config` carrying the CLI defaults.
+
+    Lets unit tests instantiate `Deduplicate` and friends without going through the
+    Click command. Mutate the returned mapping to exercise a specific setting.
+    """
+    return Config(
+        input_format=None,
+        force_unlock=False,
+        hash_headers=DEFAULT_HASH_HEADERS,
+        minimal_headers=DEFAULT_MINIMAL_HEADERS,
+        hash_body=BodyHasher.SKIP,
+        hash_only=False,
+        size_threshold=512,
+        content_threshold=768,
+        show_diff=False,
+        strategies=(),
+        time_source=TimeSource.DATE_HEADER,
+        regexp=None,
+        action=Action.COPY_SELECTED,
+        export=None,
+        export_format=BoxFormat.MBOX,
+        export_append=False,
+        dry_run=False,
+    )
 
 
 class MailFactory:
@@ -117,15 +161,15 @@ class MailFactory:
 def make_box(tmp_path):
     """A generic fixture to produce a temporary box of mails.
 
-    The mail container can be created in any format supported by Python standard
-    library, by the way of the `box_type` parameter. Supported values: only
-    `Maildir` and `mbox` for the moment.
+    The mail container can be created in any format supported by Python's standard
+    library, plus the custom `eml` format, via the `box_type` parameter. Supported
+    values are listed in `BOX_TYPES`.
     """
 
     def _make_box(box_type, mails=None):
-        """Create a fake maildir and populate it with mails."""
+        """Create a fake box and populate it with mails."""
         # Check parameters.
-        assert box_type in (Maildir, mbox)
+        assert box_type in BOX_TYPES
         assert issubclass(box_type, Mailbox)
 
         if not mails:
@@ -146,7 +190,7 @@ def make_box(tmp_path):
 
 
 def check_box(box_path, box_type, content=None):
-    """Check the content of a mail box (in any of maildir of mbox format).
+    """Check the content of a mail box, in any of the `BOX_TYPES` formats.
 
     Does not use `set()` types internally to avoid silent deduplication. Translates
     all mails provided to `mailbox.Message` instances to provide fair comparison in a
@@ -154,7 +198,7 @@ def check_box(box_path, box_type, content=None):
     """
     # Check provided parameters.
     assert isinstance(box_path, str)
-    assert box_type in (Maildir, mbox)
+    assert box_type in BOX_TYPES
     assert not isinstance(content, set)
     if content is None:
         content = []

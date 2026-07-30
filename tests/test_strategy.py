@@ -72,6 +72,35 @@ random_mail_2 = MailFactory(message_id=MailFactory.random_string(30))
 random_mail_3 = MailFactory(message_id=MailFactory.random_string(30))
 
 
+# The full spread of time-, size- and quantity-based fixtures, each present twice so
+# every strategy has a duplicate set to act on. Reused as both the box input and, in
+# dry-run, the expected untouched content.
+ALL_FIXTURE_MAILS = [
+    newest_mail,
+    newest_mail,
+    newer_mail,
+    newer_mail,
+    older_mail,
+    older_mail,
+    oldest_mail,
+    oldest_mail,
+    smallest_mail,
+    smallest_mail,
+    smaller_mail,
+    smaller_mail,
+    bigger_mail,
+    bigger_mail,
+    biggest_mail,
+    biggest_mail,
+    random_mail_1,
+    random_mail_1,
+    random_mail_2,
+    random_mail_2,
+    random_mail_3,
+    random_mail_3,
+]
+
+
 # List of strategies and their required dummy parameters.
 strategy_options: dict[str, list[str]] = {key: [] for key in map(str, Strategy)}
 # Add dummy regexps.
@@ -88,33 +117,7 @@ strategy_options.update(
 @pytest.mark.parametrize(("strategy_id", "params"), strategy_options.items())
 def test_maildir_dry_run(invoke, make_box, strategy_id, params):
     """Check no mail is removed in dry-run mode."""
-    box_path, box_type, _ = make_box(
-        Maildir,
-        [
-            newest_mail,
-            newest_mail,
-            newer_mail,
-            newer_mail,
-            older_mail,
-            older_mail,
-            oldest_mail,
-            oldest_mail,
-            smallest_mail,
-            smallest_mail,
-            smaller_mail,
-            smaller_mail,
-            bigger_mail,
-            bigger_mail,
-            biggest_mail,
-            biggest_mail,
-            random_mail_1,
-            random_mail_1,
-            random_mail_2,
-            random_mail_2,
-            random_mail_3,
-            random_mail_3,
-        ],
-    )
+    box_path, box_type, _ = make_box(Maildir, ALL_FIXTURE_MAILS)
 
     result = invoke(
         f"--strategy={strategy_id}",
@@ -125,34 +128,7 @@ def test_maildir_dry_run(invoke, make_box, strategy_id, params):
     )
 
     assert result.exit_code == 0
-    check_box(
-        box_path,
-        box_type,
-        content=[
-            newest_mail,
-            newest_mail,
-            newer_mail,
-            newer_mail,
-            older_mail,
-            older_mail,
-            oldest_mail,
-            oldest_mail,
-            smallest_mail,
-            smallest_mail,
-            smaller_mail,
-            smaller_mail,
-            bigger_mail,
-            bigger_mail,
-            biggest_mail,
-            biggest_mail,
-            random_mail_1,
-            random_mail_1,
-            random_mail_2,
-            random_mail_2,
-            random_mail_3,
-            random_mail_3,
-        ],
-    )
+    check_box(box_path, box_type, content=ALL_FIXTURE_MAILS)
 
 
 # List of (case_id, strategies, mailbox_input, mailbox_results).
@@ -373,28 +349,6 @@ test_cases = [
     ),
 ]
 
-select_test_cases = [
-    # Whatever the time-based or size-based strategy, the duplicate set is not
-    # actionable if the selection criterion doesn't produce any match.
-    (
-        "one_selection",
-        [Strategy.SELECT_ONE, Strategy.DISCARD_ALL_BUT_ONE],
-        [
-            random_mail_1,
-            random_mail_2,
-            random_mail_2,
-            random_mail_1,
-            random_mail_3,
-            random_mail_2,
-        ],
-        [
-            random_mail_1,
-            random_mail_2,
-            random_mail_3,
-        ],
-    ),
-]
-
 
 @pytest.mark.parametrize(
     ("strategy", "mailbox_input", "mailbox_results"),
@@ -423,41 +377,6 @@ def test_maildir_strategy(
 
     assert result.exit_code == 0
     check_box(box_path, box_type, content=mailbox_results)
-
-
-@pytest.mark.parametrize(
-    ("strategy_id", "mailbox_input", "mailbox_results"),
-    [
-        pytest.param(
-            strategy_id,
-            mailbox_input,
-            mailbox_results,
-            id=f"{case_id}|{strategy_id}",
-        )
-        for case_id, strategy_ids, mailbox_input, mailbox_results in select_test_cases
-        for strategy_id in strategy_ids
-    ],
-)
-def test_maildir_strategy_selected(
-    invoke,
-    make_box,
-    strategy_id,
-    mailbox_input,
-    mailbox_results,
-):
-    """Generic test to check the result of a selection strategy."""
-    box_path, box_type, dest_box_path = make_box(Maildir, mailbox_input)
-
-    result = invoke(
-        f"--strategy={strategy_id}",
-        "--action=copy-selected",
-        box_path,
-        f"--export={dest_box_path}",
-        "--export-format=maildir",
-    )
-
-    assert result.exit_code == 0
-    check_box(dest_box_path, box_type, content=mailbox_results)
 
 
 undated_mail = MailFactory(date_rfc2822="Not a date")
@@ -655,3 +574,76 @@ def test_eviction_is_not_transitive(invoke, make_box):
 
     # The evicted endpoint remains, plus one survivor of the two-mail core.
     assert len(Maildir(box_path, create=False)) == 2
+
+
+@pytest.mark.parametrize(
+    ("extra_args", "size_skip_logged", "content_skip_logged"),
+    (
+        pytest.param(("--size-threshold=-1",), True, False, id="size-disabled"),
+        pytest.param(("--content-threshold=-1",), False, True, id="content-disabled"),
+        pytest.param(
+            ("--size-threshold=-1", "--content-threshold=-1"),
+            True,
+            True,
+            id="both-disabled",
+        ),
+    ),
+)
+def test_threshold_checks_disabled(
+    invoke, make_box, extra_args, size_skip_logged, content_skip_logged
+):
+    """A threshold set to -1 turns off its similarity check, and logs that it did.
+
+    The identical pair deduplicates whatever the thresholds; the flags only govern
+    whether the size and content guards run at all.
+    """
+    box_path, box_type, _ = make_box(Maildir, [random_mail_1, random_mail_1])
+
+    result = invoke(
+        *extra_args,
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert ("Skip checking for size differences." in result.stderr) is size_skip_logged
+    assert (
+        "Skip checking for content differences." in result.stderr
+    ) is content_skip_logged
+    # The identical pair is still deduplicated down to a single mail.
+    check_box(box_path, box_type, content=[random_mail_1])
+
+
+def test_no_strategy_skips_duplicate_sets(invoke, make_box):
+    """With no --strategy, duplicate sets are grouped and counted, then skipped whole,
+    so every mail stays in place."""
+    box_path, box_type, _ = make_box(Maildir, [random_mail_1, random_mail_1])
+
+    result = invoke("--action=delete-discarded", box_path)
+
+    assert result.exit_code == 0
+    assert "no strategy to apply" in result.stderr
+    check_box(box_path, box_type, content=[random_mail_1, random_mail_1])
+
+
+def test_content_dissimilar_pair_skipped_without_diff(invoke, make_box):
+    """A content-dissimilar set is skipped whole; without --show-diff, no unified diff
+    is printed for it."""
+    # Same headers group them; equal-length bodies keep the size check quiet so the
+    # content check is what trips.
+    a = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="aaaa bbbb\n")
+    b = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="cccc dddd\n")
+    box_path, box_type, _ = make_box(Maildir, [a, b])
+
+    result = invoke(
+        "--content-threshold=0",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "too dissimilar in content" in result.stderr
+    assert "@@" not in result.stderr  # no unified-diff hunk header without --show-diff
+    check_box(box_path, box_type, content=[a, b])

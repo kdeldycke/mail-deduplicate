@@ -16,20 +16,19 @@
 
 from __future__ import annotations
 
+import base64
 import email
 import email.header
-from mailbox import Maildir, mbox, mboxMessage
+from mailbox import Maildir, mbox
 from pathlib import Path
-from textwrap import dedent
 from typing import Any, cast
 
 import pytest
-from extra_platforms.pytest import skip_windows
 
 from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import MAILDIR_SUBDIRS, BoxFormat
 
-from .conftest import MailFactory, check_box
+from .conftest import MailFactory
 
 
 def create_mail_with_headers(
@@ -58,6 +57,91 @@ def create_mail_with_headers(
         cast(Any, mail)._headers = list(headers)
 
     return mail
+
+
+def create_mail_from_bytes(raw: bytes) -> DedupMailMixin:
+    """Parse raw bytes into a `DedupMailMixin`, body and all.
+
+    Unlike `create_mail_with_headers`, this keeps the parsed payload, so the
+    body-derived properties (`body_lines`, `size`, the body hashes) can be exercised.
+    """
+    mail = cast(DedupMailMixin, email.message_from_bytes(raw))
+    mail.__class__ = DedupMailMixin
+    # Swapping __class__ bypasses __init__, so mirror the box metadata defaults.
+    mail.source_path = None
+    mail.mail_id = None
+    return mail
+
+
+def test_body_hashes_distinguish_and_normalize():
+    """`hash_raw_body` reflects any byte difference; `hash_normalized_body` ignores
+    whitespace but still separates genuinely different bodies."""
+    base = create_mail_from_bytes(b"Subject: s\n\nHello world\n")
+    spaced = create_mail_from_bytes(b"Subject: s\n\nHello    world\n")
+    different = create_mail_from_bytes(b"Subject: s\n\nGoodbye world\n")
+
+    # Raw hashing: even a whitespace difference yields a different hash.
+    assert base.hash_raw_body != spaced.hash_raw_body
+    assert base.hash_raw_body != different.hash_raw_body
+
+    # Normalized hashing: whitespace is stripped, so the spaced variant collapses onto
+    # the base, but a real word change still differs.
+    assert base.hash_normalized_body == spaced.hash_normalized_body
+    assert base.hash_normalized_body != different.hash_normalized_body
+
+
+def test_body_lines_gathers_multipart_preamble_and_epilogue():
+    """`body_lines` collects the preamble, every leaf part and the epilogue, skipping
+    the multipart container itself."""
+    raw = (
+        b"Subject: multi\n"
+        b'Content-Type: multipart/mixed; boundary="BOUND"\n'
+        b"\n"
+        b"This is the preamble.\n"
+        b"--BOUND\n"
+        b"Content-Type: text/plain\n"
+        b"\n"
+        b"First part body.\n"
+        b"--BOUND\n"
+        b"Content-Type: text/plain\n"
+        b"\n"
+        b"Second part body.\n"
+        b"--BOUND--\n"
+        b"This is the epilogue.\n"
+    )
+    lines = create_mail_from_bytes(raw).body_lines
+
+    assert "This is the preamble." in lines
+    assert "First part body." in lines
+    assert "Second part body." in lines
+    assert "This is the epilogue." in lines
+
+
+def test_decode_part_returns_non_text_payload_as_is():
+    """A non-text part is passed through undecoded."""
+    raw = b"Subject: s\nContent-Type: application/octet-stream\n\nraw-binary-payload\n"
+    assert "raw-binary-payload" in create_mail_from_bytes(raw).body_lines
+
+
+def test_decode_part_falls_back_to_utf8_without_charset():
+    """A text part with no declared charset decodes via the utf-8 fallback once the
+    ascii attempt fails on non-ASCII bytes."""
+    raw = b"Subject: s\nContent-Type: text/plain\n\n" + "Café déjà vu\n".encode()
+    assert "Café déjà vu" in create_mail_from_bytes(raw).body_lines
+
+
+def test_decode_part_falls_back_to_raw_when_charset_fails():
+    """When the declared charset cannot decode the bytes, the raw payload is returned
+    instead of crashing."""
+    payload = base64.b64encode(b"\xff\xfe not valid utf-8").decode("ascii")
+    raw = (
+        b"Subject: s\n"
+        b'Content-Type: text/plain; charset="utf-8"\n'
+        b"Content-Transfer-Encoding: base64\n"
+        b"\n" + payload.encode("ascii") + b"\n"
+    )
+    # The undecodable payload does not raise and leaves a non-empty body.
+    assert create_mail_from_bytes(raw).body_lines
 
 
 @pytest.mark.parametrize(
@@ -455,95 +539,6 @@ def test_header_normalization(header_name, values, expected):
     assert result == expected
 
 
-invalid_windows_dates = skip_windows(
-    reason="Invalid dates produce negative timestamps on Windows."
-)
-# Some invalid dates are not supported on Windows as they produce negative
-# timestamps. See:
-# https://github.com/arrow-py/arrow/issues/675
-# https://github.com/arrow-py/arrow/pull/745
-
-invalid_date_mail_1 = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
-invalid_date_mail_2 = MailFactory(date_rfc2822="Thu, 13 Dec 102 15:30 WET")
-
-
-@invalid_windows_dates
-def test_invalid_date_parsing_noop(invoke, make_box):
-    """Mails with strange non-standard dates gets parsed anyway and grouped into
-    duplicate sets.
-
-    No deduplication happen: mails groups shares the same metadata.
-    """
-    box_path, box_type, _ = make_box(
-        Maildir,
-        [
-            invalid_date_mail_1,
-            invalid_date_mail_2,
-            invalid_date_mail_2,
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-        ],
-    )
-
-    result = invoke("--strategy=select-newest", "--action=delete-selected", box_path)
-
-    assert result.exit_code == 0
-
-    check_box(
-        box_path,
-        box_type,
-        content=[
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-            invalid_date_mail_2,
-            invalid_date_mail_2,
-        ],
-    )
-
-
-@invalid_windows_dates
-def test_invalid_date_parsing_dedup(invoke, make_box):
-    """Mails with strange non-standard dates gets parsed anyway and deduplicated if we
-    reduce the source of hashed headers."""
-    box_path, box_type, _ = make_box(
-        Maildir,
-        [
-            invalid_date_mail_1,
-            invalid_date_mail_2,
-            invalid_date_mail_2,
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-        ],
-    )
-
-    result = invoke(
-        "--hash-header=message-id",
-        "--hash-header=from",
-        "--hash-header=to",
-        "--hash-header=subject",
-        "--strategy=select-newest",
-        "--action=delete-selected",
-        box_path,
-    )
-
-    assert result.exit_code == 0
-
-    check_box(
-        box_path,
-        box_type,
-        content=[
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-        ],
-    )
-
-
-undated_mail = MailFactory(date_rfc2822="invalid date")
-""" A mail whose `Date` header cannot be parsed into a timestamp. """
-
-
 @pytest.mark.parametrize("date_value", ["invalid date", "", "Hello, World!"])
 def test_unparseable_date_returns_none(date_value):
     """An unparseable `Date` header produces no timestamp instead of crashing."""
@@ -555,107 +550,6 @@ def test_missing_date_header_returns_none():
     """A mail without any `Date` header produces no timestamp instead of crashing."""
     mail = create_mail_with_headers(("Subject", "No date around here"))
     assert mail.parsed_date is None
-
-
-def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
-    """Duplicate mails without any `Date` header, as saved into mbox files by some
-    clients, are skipped by time-based strategies instead of crashing.
-
-    See: https://github.com/kdeldycke/mail-deduplicate/issues/600
-    """
-    dateless_mail = dedent("""\
-        X-Mozilla-Status: 0001
-        X-Mozilla-Status2: 00000000
-        MIME-Version: 1.0
-        From: "Mailbox Support" <support@example.com>
-        To: "Joseph Turian" <joseph@example.com>
-        Subject: Tips for Using Mailbox in Gmail
-        Content-Type: text/plain; charset=utf-8
-
-        Hi Joseph,
-        """)
-    box_path = tmp_path / "dateless.mbox"
-    box = mbox(str(box_path))
-    for _ in range(2):
-        box.add(mboxMessage(dateless_mail))
-    box.flush()
-    box.close()
-
-    result = invoke("--strategy=select-oldest", "--action=delete-selected", str(box_path))
-
-    assert result.exit_code == 0
-    assert "cannot compare mails without a timestamp" in result.stderr
-    assert "No timestamp for <mboxDedupMail" in result.stderr
-
-    # No mail was removed.
-    box = mbox(str(box_path), create=False)
-    assert len(box) == 2
-    box.close()
-
-
-def test_unparseable_date_skips_time_strategy(invoke, make_box):
-    """Time-based strategies skip duplicate sets containing mails without a parseable
-    `Date` header, and name the offending mails instead of crashing.
-
-    See: https://github.com/kdeldycke/mail-deduplicate/issues/132
-    """
-    box_path, box_type, _ = make_box(Maildir, [undated_mail, undated_mail])
-
-    result = invoke("--strategy=select-oldest", "--action=delete-selected", box_path)
-
-    assert result.exit_code == 0
-    assert "cannot compare mails without a timestamp" in result.stderr
-    assert "No timestamp for <MaildirDedupMail" in result.stderr
-
-    # No mail was removed.
-    check_box(box_path, box_type, content=[undated_mail, undated_mail])
-
-
-def test_mixed_missing_date_skips_time_strategy(invoke, make_box):
-    """A single mail without a parseable `Date` header is enough to skip its whole
-    set when a time-based strategy is applied."""
-    dated_mail = MailFactory(date="2021-01-01")
-    box_path, box_type, _ = make_box(Maildir, [undated_mail, dated_mail])
-
-    result = invoke(
-        # Remove the date from the hashed headers so both mails are grouped in the
-        # same duplicate set.
-        "--hash-header=message-id",
-        "--hash-header=from",
-        "--hash-header=to",
-        "--hash-header=subject",
-        "--strategy=select-newest",
-        "--action=delete-selected",
-        box_path,
-    )
-
-    assert result.exit_code == 0
-    assert "cannot compare mails without a timestamp" in result.stderr
-    assert "No timestamp for <MaildirDedupMail" in result.stderr
-
-    # No mail was removed.
-    check_box(box_path, box_type, content=[undated_mail, dated_mail])
-
-
-def test_unparseable_date_show_diff(invoke, make_box):
-    """Rendering the diff of mails without a parseable `Date` header does not
-    crash."""
-    undated_variant = MailFactory(date_rfc2822="invalid date", body="A different body.")
-    box_path, box_type, _ = make_box(Maildir, [undated_mail, undated_variant])
-
-    result = invoke(
-        "--content-threshold=0",
-        "--show-diff",
-        "--strategy=select-oldest",
-        "--action=delete-selected",
-        box_path,
-    )
-
-    assert result.exit_code == 0
-    assert "mails are too dissimilar in content" in result.stderr
-
-    # No mail was removed.
-    check_box(box_path, box_type, content=[undated_mail, undated_variant])
 
 
 def test_maildir_repr_renders_mail_file_path(make_box):

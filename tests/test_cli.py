@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import sys
 from mailbox import Maildir, mbox
 from pathlib import Path
 
@@ -182,3 +183,64 @@ def test_single_hash_header_needs_no_minimal_flag(invoke, make_box):
     # The mail is hashed rather than rejected by the minimal-headers floor.
     assert "Hash:" in result.stdout
     assert "Rejecting" not in result.stderr
+
+
+def test_invalid_hash_header_rejected(invoke, make_box):
+    """A header ID with out-of-range characters is refused at parse time."""
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+
+    # The space (ASCII 32) falls below the RFC-5322 printable range.
+    result = invoke("--hash-header", "bad header", box_path)
+
+    assert result.exit_code == 2
+    assert "invalid header ID" in result.stderr
+
+
+def test_invalid_regexp_rejected(invoke, make_box):
+    """An un-compilable regular expression is refused at parse time."""
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+
+    result = invoke("--strategy=select-matching-path", "--regexp=[", box_path)
+
+    assert result.exit_code == 2
+    assert "invalid regular expression" in result.stderr
+
+
+def test_duplicate_source_rejected(invoke, make_box):
+    """The same mail source given twice is refused: the source path is the key used to
+    tie a mail back to its origin."""
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+
+    result = invoke(
+        "--strategy=select-one", "--action=delete-discarded", box_path, box_path
+    )
+
+    assert result.exit_code == 1
+    assert isinstance(result.exception, ValueError)
+    assert "already added" in str(result.exception)
+
+
+def test_hash_only_warns_about_ignored_options(invoke, make_box):
+    """--hash-only runs no selection or action, so options from those steps are
+    ignored, and any the user set are reported."""
+    box_path, _, _ = make_box(Maildir, [MailFactory(message_id="<h@nohost.com>")])
+
+    result = invoke("--hash-only", "--strategy=select-one", box_path)
+
+    assert result.exit_code == 0
+    assert "ignored in -H/--hash-only mode" in result.stderr
+    assert "--strategy" in result.stderr
+
+
+def test_main_entrypoint_reports_version(monkeypatch, capsys):
+    """The `main()` indirection runs the CLI end to end: `--version` exits cleanly
+    through it."""
+    from mail_deduplicate.__main__ import main
+
+    monkeypatch.setattr(sys, "argv", ["mdedup", "--version"])
+
+    with pytest.raises(SystemExit) as exc:
+        main()
+
+    assert exc.value.code == 0
+    assert "mdedup" in capsys.readouterr().out

@@ -138,10 +138,17 @@ class DedupMailMixin(Message):
         self.source_path = box._path
         self.mail_id = mail_id
 
-        # Extract file name and close it right away to reclaim memory.
+        # Extract file name and close it right away to reclaim memory. Folder-based
+        # boxes proxy the mail's own on-disk file, so its name is the real path.
+        # File-based boxes share the box's single file; Babyl even hands back a
+        # nameless in-memory buffer, so fall back to the box path there.
         mail_file = box.get_file(mail_id)
-        self.path = mail_file._file.name  # type: ignore[attr-defined]
-        mail_file.close()
+        try:
+            self.path = mail_file._file.name  # type: ignore[attr-defined]
+        except AttributeError:
+            self.path = box._path
+        finally:
+            mail_file.close()
 
     def __repr__(self) -> str:
         """Renders the fully-qualified path of the mail's own file, so it can be
@@ -155,11 +162,6 @@ class DedupMailMixin(Message):
         if path and path != self.source_path:
             return f"<{self.__class__.__name__} {path}>"
         return f"<{self.__class__.__name__} {self.source_path}:{self.mail_id}>"
-
-    @cached_property
-    def uid(self) -> tuple[str | None, str | None]:
-        """Unique ID of the mail."""
-        return self.source_path, self.mail_id
 
     @cached_property
     def parsed_date(self) -> float | None:
