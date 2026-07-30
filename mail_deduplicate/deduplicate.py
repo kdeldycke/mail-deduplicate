@@ -445,7 +445,7 @@ class DuplicateSet:
             self.pool = frozenset(self.pool.difference(evicted))
             self.__dict__.pop("size", None)
 
-        strategies = self.conf["strategy"]
+        strategies = self.conf["strategies"]
         if not strategies:
             return self.skip_set("no strategy to apply.", Stat.SET_SKIPPED_STRATEGY)
 
@@ -642,7 +642,7 @@ class Deduplicate:
         from .action import Action
 
         theme = get_current_theme()
-        strategies = self.conf["strategy"]
+        strategies = self.conf["strategies"]
         if strategies:
             logging.info(
                 f"{', '.join(theme.choice(str(s)) for s in strategies)} "

@@ -142,14 +142,14 @@ def test_hash_only_prints_headers(invoke, make_box, box_type):
     attribute, so `--hash-only` died with `AttributeError` on the first mail.
     See: https://github.com/kdeldycke/mail-deduplicate/issues/1004
     """
-    box_path, _, export_path = make_box(
+    box_path, _, _export_path = make_box(
         box_type,
         [MailFactory(message_id="<a@nohost.com>")],
     )
 
-    # --export satisfies the default copy-selected action's requirement; --hash-only
-    # exits before any action runs, so nothing is written there.
-    result = invoke("--hash-only", "--export", export_path, box_path)
+    # No --export: hash-only mode exits before any action runs, so the default
+    # copy-selected action's requirements must not be enforced.
+    result = invoke("--hash-only", box_path)
 
     assert result.exit_code == 0
     # The canonical-headers table and the computed hash are printed for the mail.
@@ -166,7 +166,7 @@ def test_single_hash_header_needs_no_minimal_flag(invoke, make_box):
     `min(4, number of --hash-header values)`, so a lone header is enough.
     See: https://github.com/kdeldycke/mail-deduplicate/issues/974
     """
-    box_path, _, export_path = make_box(
+    box_path, _, _export_path = make_box(
         Maildir,
         [MailFactory(message_id="<solo@nohost.com>")],
     )
@@ -175,8 +175,6 @@ def test_single_hash_header_needs_no_minimal_flag(invoke, make_box):
         "--hash-header",
         "message-id",
         "--hash-only",
-        "--export",
-        export_path,
         box_path,
     )
 

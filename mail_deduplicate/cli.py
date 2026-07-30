@@ -113,7 +113,7 @@ class Config(TypedDict):
     size_threshold: int
     content_threshold: int
     show_diff: bool
-    strategy: tuple[Strategy, ...]
+    strategies: tuple[Strategy, ...]
     time_source: TimeSource
     regexp: re.Pattern | None
     action: Action
@@ -201,6 +201,11 @@ class AnyValueIn(Predicate):
     Whatever `negate` says, the condition silently evaluates to false when no mail
     source is provided: the CLI then only prints its help screen and exits, so no
     parameter combination deserves a validation error.
+
+    The same applies in `-H`/`--hash-only` mode: selection and action steps
+    never run there, so options they require (like `--export` for the default
+    copy-selected action) must not be demanded. Options from those steps are
+    separately reported as ignored by the hash-only code path.
     """
 
     def __init__(
@@ -217,7 +222,7 @@ class AnyValueIn(Predicate):
         return f"{self.label} is {quantifier} {target_ids}"
 
     def __call__(self, ctx: click.Context) -> bool:
-        if not ctx.params.get("mail_sources"):
+        if not ctx.params.get("mail_sources") or ctx.params.get("hash_only"):
             return False
         value = ctx.params[self.param_name]
         if value is None:
@@ -260,6 +265,13 @@ class MdedupCommand(Command):
 @command(
     cls=MdedupCommand,
     short_help="Deduplicate mail boxes.",
+    # Refuse configuration files carrying keys that match no CLI option: a
+    # silently ignored typo can turn a destructive run into the wrong one.
+    config_strict=True,
+    # Mail sources must be provided on the command line, never from a
+    # configuration file: a stale entry would silently point a bare `mdedup`
+    # call at real mail boxes.
+    excluded_params=["mdedup.mail_sources"],
     # Force linear layout for definition lists. See:
     # https://cloup.readthedocs.io/en/stable/pages/formatting.html#the-linear-layout-for-definition-lists
     formatter_settings={"col2_min_width": 9999999999},
@@ -295,6 +307,7 @@ class MdedupCommand(Command):
     option(
         "-h",
         "--hash-header",
+        "hash_headers",
         multiple=True,
         type=str,
         callback=normalize_headers,
@@ -336,6 +349,7 @@ class MdedupCommand(Command):
     option(
         "-s",
         "--strategy",
+        "strategies",
         multiple=True,
         type=EnumChoice(Strategy),
         callback=unique_strategies,
@@ -456,12 +470,12 @@ class MdedupCommand(Command):
 # forbidding constraint so each side reports the condition that actually
 # triggered it, without dragging the other into the error message.
 @constraint(
-    If(AnyValueIn("strategy", PATH_STRATEGIES, "-s/--strategy"), then=require_all),
+    If(AnyValueIn("strategies", PATH_STRATEGIES, "-s/--strategy"), then=require_all),
     ["regexp"],
 )
 @constraint(
     If(
-        AnyValueIn("strategy", PATH_STRATEGIES, "-s/--strategy", negate=True),
+        AnyValueIn("strategies", PATH_STRATEGIES, "-s/--strategy", negate=True),
         then=accept_none,
     ),
     ["regexp"],
@@ -498,13 +512,13 @@ def mdedup(
     ctx,
     input_format,
     force_unlock,
-    hash_header,
+    hash_headers,
     hash_body,
     hash_only,
     size_threshold,
     content_threshold,
     show_diff,
-    strategy,
+    strategies,
     time_source,
     regexp,
     action,
@@ -539,14 +553,14 @@ def mdedup(
     conf = Config(
         input_format=input_format,
         force_unlock=force_unlock,
-        hash_headers=hash_header,
-        minimal_headers=min(DEFAULT_MINIMAL_HEADERS, len(hash_header)),
+        hash_headers=hash_headers,
+        minimal_headers=min(DEFAULT_MINIMAL_HEADERS, len(hash_headers)),
         hash_body=hash_body,
         hash_only=hash_only,
         size_threshold=size_threshold,
         content_threshold=content_threshold,
         show_diff=show_diff,
-        strategy=strategy,
+        strategies=strategies,
         time_source=time_source,
         regexp=regexp,
         action=action,

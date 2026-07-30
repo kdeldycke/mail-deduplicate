@@ -221,11 +221,16 @@ for _path, _count in (("archive-2024.mbox", 3), ("archive-2025.mbox", 4)):
 Two deletions planned, as expected: the two shared mails, in their `archive-2024.mbox` incarnation. Do not let the `5 mails selected` line worry you: it counts the mails that will survive, while the action itself only touches the 2 discarded copies. Drop `--dry-run` to proceed:
 
 ```{click:run}
+from boltons.strutils import strip_ansi
+
 from mail_deduplicate.cli import mdedup
 
 result = invoke(mdedup, args=["--strategy", "select-matching-path", "--regexp", "2025", "--action", "delete-discarded", "archive-2024.mbox", "archive-2025.mbox"])
 assert result.exit_code == 0
-assert result.output.count(" deleted.") == 2
+# The per-mail `✓` trail only renders on interactive terminals, so the piped
+# docs build asserts the action banner instead; the box-content checks below
+# verify the deletions for real.
+assert "Perform delete-discarded action" in strip_ansi(result.output)
 ```
 
 ```shell-session

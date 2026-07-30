@@ -12,6 +12,7 @@ exclude-newer-span = "P1W"
 
 [options.exclude-newer-package]
 click-extra = "2026-07-25T00:00:00Z"
+extra-platforms = "2026-07-28T00:00:00Z"
 
 [[package]]
 name = "accessible-pygments"
@@ -193,8 +194,8 @@ wheels = [
 
 [[package]]
 name = "click-extra"
-version = "8.6.0"
-source = { registry = "https://pypi.org/simple" }
+version = "8.6.4.dev0"
+source = { git = "https://github.com/kdeldycke/click-extra?branch=main#cb36f445ec05c089e37871692f4ad943e2ee26fb" }
 dependencies = [
     { name = "boltons" },
     { name = "click" },
@@ -206,10 +207,6 @@ dependencies = [
     { name = "wcmatch" },
     { name = "wcwidth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/60/2f/27d20ac136d08bc95a759fb7c503a2d4cb3391461b9fb33ff32f1ddd014a/click_extra-8.6.0.tar.gz", hash = "sha256:63f739447522a6aa2d64d656aeb0f967826f2dfba774fc76e117b84717853733", size = 384509, upload-time = "2026-07-24T10:03:36.116Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a7/69/2350e1fddb455939b6bc1f6c4a2a78b116c266363404512965659e5d5b34/click_extra-8.6.0-py3-none-any.whl", hash = "sha256:0f529ce5e54d09dddfc6ff96fa81389f0cea48e133ba96d15ba6daa7a1bf6711", size = 414537, upload-time = "2026-07-24T10:03:34.407Z" },
-]
 
 [package.optional-dependencies]
 pytest = [
@@ -219,6 +216,9 @@ sphinx = [
     { name = "docutils" },
     { name = "pygments" },
     { name = "sphinx" },
+]
+toml = [
+    { name = "tomlkit" },
 ]
 
 [[package]]
@@ -387,11 +387,11 @@ wheels = [
 
 [[package]]
 name = "extra-platforms"
-version = "13.3.1"
+version = "13.5.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/77/c5/fae67f4681a664ad855b0cc219b89459f2144e144966b56abc2c63af2921/extra_platforms-13.3.1.tar.gz", hash = "sha256:1efefa780f0b97dce5d352f7873065988f7f23938af70456182b20474849d1c2", size = 86205, upload-time = "2026-07-17T14:02:38.235Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/4d/85b286ccdffdb9c93f537428dbab9616f15f89ed40f9217ac21bc21e01b6/extra_platforms-13.5.1.tar.gz", hash = "sha256:89100acdf8aa28f8c589981b653e9f42a5bd68ce932c33cbd6faa7a81731c7c6", size = 465562, upload-time = "2026-07-27T19:28:20.5Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c9/77/aa1591668c391444dd4c30e29936cfaf42177ac9cc6073a681ca510bab02/extra_platforms-13.3.1-py3-none-any.whl", hash = "sha256:ffec89f6f5a983ea2be29970ee7144b2fa53a0fab381ce2b1ed447f4ad63d7a0", size = 89802, upload-time = "2026-07-17T14:02:36.684Z" },
+    { url = "https://files.pythonhosted.org/packages/a7/03/4d65c1bb5064cc895bac491ee34e50a23058dc5b80e718e9f4ad386c7eb4/extra_platforms-13.5.1-py3-none-any.whl", hash = "sha256:b6fd87f13933a19f073eb329848b0722c8037b657bc519befc19cdd56384a5bc", size = 91123, upload-time = "2026-07-27T19:28:18.606Z" },
 ]
 
 [package.optional-dependencies]
@@ -460,7 +460,7 @@ version = "9.1.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "backports-strenum", marker = "python_full_version < '3.11'" },
-    { name = "click-extra" },
+    { name = "click-extra", extra = ["toml"] },
 ]
 
 [package.dev-dependencies]
@@ -495,12 +495,12 @@ typing = [
 [package.metadata]
 requires-dist = [
     { name = "backports-strenum", marker = "python_full_version < '3.11'", specifier = ">=1" },
-    { name = "click-extra", specifier = ">=8.6" },
+    { name = "click-extra", extras = ["toml"], git = "https://github.com/kdeldycke/click-extra?branch=main" },
 ]
 
 [package.metadata.requires-dev]
 docs = [
-    { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", specifier = ">=8.6" },
+    { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", git = "https://github.com/kdeldycke/click-extra?branch=main" },
     { name = "furo", marker = "python_full_version >= '3.14'", specifier = ">=2025.9.25" },
     { name = "myst-parser", marker = "python_full_version >= '3.14'", specifier = ">=5.1" },
     { name = "sphinx", marker = "python_full_version >= '3.14'", specifier = ">=8" },
@@ -512,7 +512,7 @@ docs = [
 ]
 test = [
     { name = "boltons", specifier = ">=25" },
-    { name = "click-extra", extras = ["pytest"], specifier = ">=8.6" },
+    { name = "click-extra", extras = ["pytest"], git = "https://github.com/kdeldycke/click-extra?branch=main" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.11" },
     { name = "extra-platforms", extras = ["pytest"], specifier = ">=2" },
     { name = "pytest", specifier = ">=9" },
@@ -1119,6 +1119,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/12/64/da524626d3b9cc40c168a13da8335fe1c51be12c0a63685cc6db7308daae/tomli-2.4.1-cp314-cp314t-win_amd64.whl", hash = "sha256:2c1c351919aca02858f740c6d33adea0c5deea37f9ecca1cc1ef9e884a619d26", size = 121196, upload-time = "2026-03-25T20:22:01.169Z" },
     { url = "https://files.pythonhosted.org/packages/5a/cd/e80b62269fc78fc36c9af5a6b89c835baa8af28ff5ad28c7028d60860320/tomli-2.4.1-cp314-cp314t-win_arm64.whl", hash = "sha256:eab21f45c7f66c13f2a9e0e1535309cee140182a9cdae1e041d02e47291e8396", size = 100393, upload-time = "2026-03-25T20:22:02.137Z" },
     { url = "https://files.pythonhosted.org/packages/7b/61/cceae43728b7de99d9b847560c262873a1f6c98202171fd5ed62640b494b/tomli-2.4.1-py3-none-any.whl", hash = "sha256:0d85819802132122da43cb86656f8d1f8c6587d54ae7dcaf30e90533028b49fe", size = 14583, upload-time = "2026-03-25T20:22:03.012Z" },
+]
+
+[[package]]
+name = "tomlkit"
+version = "0.15.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/96/e07752635b98536177fa1f37671c8f3cdde2e724c6bcf6034b2cfb571565/tomlkit-0.15.1.tar.gz", hash = "sha256:e25bbf38843005246210a12982776f27f99cb9be67160e14434d0c0d21ee1e97", size = 180129, upload-time = "2026-07-17T01:48:04.562Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/bc/8c13eb66537dce1d2bd3a57132902f38d0e7f5bb46fa9f4daed9fe9d76ee/tomlkit-0.15.1-py3-none-any.whl", hash = "sha256:177a05aece5a8ca5266fd3c448abb47b8d352f09d477d3ca8332db4d89b24304", size = 49449, upload-time = "2026-07-17T01:48:05.728Z" },
 ]
 
 [[package]]

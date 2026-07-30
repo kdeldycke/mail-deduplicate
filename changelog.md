@@ -5,6 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- **Breaking:** pluralize the repeatable options' parameter IDs: configuration keys and environment variables become `hash_headers`/`MDEDUP_HASH_HEADERS` and `strategies`/`MDEDUP_STRATEGIES`. The `--hash-header` and `--strategy` flags are unchanged.
 - Skip duplicate sets containing mails with an unparseable or absent `Date` header instead of crashing on time-based strategies. The warning names the offending mails, and a new `Skipped - Timestamp` metric counts these sets. Closes [#132](https://github.com/kdeldycke/mail-deduplicate/issues/132) and [#600](https://github.com/kdeldycke/mail-deduplicate/issues/600).
 - Identify mails from folder-based boxes in logs by the fully-qualified path of their own file, so it can be copy-pasted for direct inspection. Closes [#157](https://github.com/kdeldycke/mail-deduplicate/issues/157).
 - Fix a spurious metrics-inconsistency exit (code `115`) for `*-discarded` actions and dry runs: the statistics self-check now compares each action counter to the subset of mails the action targets. Closes [#841](https://github.com/kdeldycke/mail-deduplicate/issues/841).
@@ -14,11 +15,16 @@
 - Allow repeating `--strategy` to chain fallback strategies: each duplicate set is handed over to the next strategy when one fails to discriminate its mails. Closes [#647](https://github.com/kdeldycke/mail-deduplicate/issues/647).
 - Report each copied, moved or deleted mail with a live `✓` trail line and a timed summary on interactive terminals.
 - Validate the `--regexp` and `--export` option requirements at parse time with `cloup` constraints, rewording their error messages.
-- Drop `boltons` and `whenever` from the runtime dependencies (both remain for tests) and require `click-extra` `8.6`.
+- Reject configuration files carrying keys that match no CLI option, and refuse mail sources from configuration files: boxes to deduplicate are always passed on the command line.
+- Accept kebab-case keys in configuration files, matching the spelling of the CLI flags.
+- Ship the TOML writer so `--export-config toml` works out of the box, and name every configurable option in generated templates, commented out when unset, under kebab-case keys.
+- Stop requiring `--export` in `-H`/`--hash-only` mode: constraints from the selection and action steps no longer apply there.
+- Drop `boltons` and `whenever` from the runtime dependencies (both remain for tests) and require `click-extra` `8.7`, whose `--params` and `--export-config` now reflect the loaded configuration file.
 - Fix an unhandled traceback on invalid `--regexp` values, now rejected with a proper parameter error.
 - Fix the payload memory purge of selected mails, which never triggered for the `move-discarded` action.
 - Add a hands-on tutorial page to the documentation and rework the README quickstart around use cases and example commands. Closes [#984](https://github.com/kdeldycke/mail-deduplicate/issues/984).
 - Execute the tutorial's commands at documentation build time with `click-extra`'s `click:run` directives, so the rendered outputs always match the current implementation. Closes [#23](https://github.com/kdeldycke/mail-deduplicate/issues/23).
+- Rewrite the configuration documentation: precedence, key spelling, `pyproject.toml` discovery, template export, validation and environment variables.
 
 ## [`9.0.0` (2026-07-27)](https://github.com/kdeldycke/mail-deduplicate/compare/v8.1.2...v9.0.0)
 
