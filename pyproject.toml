@@ -194,8 +194,8 @@ windows-icon-from-ico = "docs/assets/icon.ico"
 
 [tool.typos]
 default.extend-identifiers = { Github = "GitHub", IOS = "iOS", Javascript = "JavaScript", MacOS = "macOS", PyPi = "PyPI", Typescript = "TypeScript" }
-# False positives: "astroid" is a Python AST library (not "asteroid"); "oject" appears when "pyproject.toml" is split across line breaks in CLI help output.
-default.extend-words = { astroid = "astroid", oject = "oject" }
+# False positives: "astroid" is a Python AST library (not "asteroid"); "oject" appears when "pyproject.toml" is split across line breaks in CLI help output; "sur" is macOS Big Sur, mirroring the bundled repomatic typos config.
+default.extend-words = { astroid = "astroid", oject = "oject", sur = "sur" }
 # Skip content between <!-- typos:off --> and <!-- typos:on --> markers.
 default.extend-ignore-re = [ "(?s)<!-- typos:off -->.*?<!-- typos:on -->" ]
 default.extend-ignore-identifiers-re = [
@@ -338,6 +338,10 @@ exclude = [
   # VirusTotal analysis pages are a JS app that rate-limits bots, and the
   # binaries page links one per released binary.
   "^https://www\\.virustotal\\.com/gui/.*$",
+  # GitHub issue-comment fragments are loaded dynamically, so lychee cannot
+  # resolve the anchor and always reports them as broken. Mirrors the exclude
+  # added to the bundled repomatic lychee configuration.
+  "^https://github.com/.+/issues/[0-9]+#issuecomment-.*$",
   # Skip suggesting redirecting generic download links to their binary artefact.
   "^https://github.com/.+/releases/.+/download/.*$",
   # Allow redirects of generic DOI URLs to their specific Zenodo release page.
