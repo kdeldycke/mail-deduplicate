@@ -93,7 +93,9 @@ class EML(Mailbox):
             file = open(self._full_path(key), "rb")  # noqa: SIM115
         except FileNotFoundError:
             raise KeyError(key) from None
-        return mailbox._ProxyFile(file)
+        # A BufferedReader covers _ProxyFile's runtime needs; typeshed's stricter
+        # _GetFileReturn protocol (read1/readlines typed with int | None) rejects it.
+        return mailbox._ProxyFile(file)  # type: ignore[arg-type]
 
     def get_bytes(self, key) -> bytes:
         try:
@@ -116,6 +118,16 @@ class EML(Mailbox):
             os.remove(self._full_path(key))
         except FileNotFoundError:
             raise KeyError(key) from None
+
+    def __setitem__(self, key, message) -> None:
+        """Replacing a mail in place is not supported.
+
+        `EML` keys are content paths and new mails get a fresh UUID filename from
+        `add()`, so there is no meaningful in-place replacement by key. Overriding
+        the abstract `mailbox.Mailbox.__setitem__` (which already raises) keeps the
+        class concrete and instantiable, matching `get_folder` below.
+        """
+        raise NotImplementedError("EML mails are added and removed, not replaced.")
 
     def list_folders(self) -> list[str]:
         """No dedicated subfolder objects: the recursive walk covers nested

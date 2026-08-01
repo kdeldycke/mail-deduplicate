@@ -589,7 +589,7 @@ def mdedup(
     if hash_only:
         # List options attached to the sections specifics to later steps, that were
         # provided by the user.
-        ignored_user_options = []
+        ignored_user_options: list[str] = []
         for group in ctx.command.option_groups:
             step_number = re.search(r"step #(\d+)", group.title)
             if not step_number:

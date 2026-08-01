@@ -46,7 +46,7 @@ else:
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from mailbox import Mailbox, Message
+    from mailbox import Mailbox
 
     from .cli import Config
     from .mail import DedupMailMixin
@@ -203,10 +203,10 @@ class DuplicateSet:
         """
         self.hash_key: str = hash_key
 
-        self.selection: set[Message] = set()
+        self.selection: set[DedupMailMixin] = set()
         """Mails selected after application of selection strategy."""
 
-        self.discard: set[Message] = set()
+        self.discard: set[DedupMailMixin] = set()
         """Mails discarded after application of selection strategy."""
 
         self.conf = conf
@@ -498,7 +498,7 @@ class DuplicateSet:
         self.stats[Stat.MAIL_DISCARDED] += self.size - candidate_count
         self.stats[Stat.SET_DEDUPLICATED] += 1
         self.selection = selected
-        self.discard = self.pool.difference(selected)
+        self.discard = set(self.pool.difference(selected))
 
 
 class Deduplicate:
@@ -518,13 +518,13 @@ class Deduplicate:
         deduplication of sources themselves.
         """
 
-        self.mails: dict[str, set[Message]] = {}
+        self.mails: dict[str, set[DedupMailMixin]] = {}
         """All mails grouped by hashes."""
 
-        self.selection: set[Message] = set()
+        self.selection: set[DedupMailMixin] = set()
         """Mails selected after application of selection strategy."""
 
-        self.discard: set[Message] = set()
+        self.discard: set[DedupMailMixin] = set()
         """Mails discarded after application of selection strategy."""
 
         self.conf = conf
@@ -627,7 +627,7 @@ class Deduplicate:
         self.stats[Stat.MAIL_HASHES] += len(self.mails)
 
     @staticmethod
-    def cleanup_mail_attrs(mail: Message, attrs: list[str]) -> None:
+    def cleanup_mail_attrs(mail: DedupMailMixin, attrs: tuple[str, ...]) -> None:
         """Remove cached attributes from mail to free memory."""
         for name in attrs:
             mail.__dict__.pop(name, None)
@@ -685,7 +685,7 @@ class Deduplicate:
     def report(self):
         """Returns a text report of user-friendly statistics and metrics."""
         ctx = get_current_context()
-        render_table = ctx.find_root().render_table
+        render_table = ctx.find_root().render_table  # type: ignore[attr-defined]
 
         output = ""
         for category, title in (("mail", "Mails"), ("set", "Duplicate sets")):

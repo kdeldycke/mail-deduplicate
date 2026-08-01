@@ -44,7 +44,8 @@ def test_strategy_definitions():
         assert set(str(strategy)).issubset(ascii_lowercase + "-")
         assert callable(strategy.strategy_function)
         assert strategy.strategy_function.__name__ in all_strategy_ids
-        assert strategy.strategy_function.__doc__.strip()
+        docstring = strategy.strategy_function.__doc__
+        assert docstring and docstring.strip()
 
 
 # Time-based collection of pre-defined fixtures.

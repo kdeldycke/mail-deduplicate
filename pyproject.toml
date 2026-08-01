@@ -216,6 +216,8 @@ default.extend-ignore-identifiers-re = [
 ]
 
 [tool.mypy]
+# Type-check the bodies of unannotated functions too (matches upstream repomatic).
+check_untyped_defs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_return_any = true
