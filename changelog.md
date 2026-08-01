@@ -1,5 +1,10 @@
 # Changelog
 
+## [`9.1.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.1.0...main)
+
+> [!WARNING]
+> This version is **not released yet** and is under active development.
+
 ## [`9.1.0` (2026-08-01)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.0.0...v9.1.0)
 
 - **Breaking:** pluralize the repeatable options' parameter IDs: configuration keys and environment variables become `hash_headers`/`MDEDUP_HASH_HEADERS` and `strategies`/`MDEDUP_STRATEGIES`. The `--hash-header` and `--strategy` flags are unchanged.
