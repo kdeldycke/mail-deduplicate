@@ -88,9 +88,11 @@ def test_config_unknown_key_rejected(invoke, make_box, make_config):
 def test_config_mail_sources_blocked(invoke, make_box, make_config):
     """Mail sources are command-line only: a config file cannot point at boxes."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])
-    conf_path = make_config(f"""\
+    # The value is irrelevant: mail sources are refused by key, whatever they point
+    # at. A static string sidesteps interpolating a Windows box path into TOML.
+    conf_path = make_config("""\
         [mdedup]
-        mail_sources = ["{box_path}"]
+        mail_sources = ["some-box"]
     """)
 
     result = invoke("--config", conf_path, box_path)

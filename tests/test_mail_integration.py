@@ -349,10 +349,14 @@ def test_crlf_and_lf_bodies_are_duplicates(invoke, tmp_path):
     body = b"Line one\nLine two\nLine three\n"
 
     box_path = str(tmp_path / "box")
-    box = Maildir(box_path, create=True)
-    box.add(headers + body)  # LF throughout.
-    box.add(headers.replace(b"\n", b"\r\n") + body.replace(b"\n", b"\r\n"))  # CRLF.
-    box.close()
+    Maildir(box_path, create=True).close()  # Lay down the new/cur/tmp structure.
+    # Write both copies straight into new/ in binary, so their LF and CRLF line
+    # endings survive verbatim: Maildir.add rewrites `\n` to os.linesep (CRLF on
+    # Windows), which would collapse the very distinction under test.
+    (tmp_path / "box" / "new" / "lf").write_bytes(headers + body)
+    (tmp_path / "box" / "new" / "crlf").write_bytes(
+        headers.replace(b"\n", b"\r\n") + body.replace(b"\n", b"\r\n")
+    )
 
     result = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
 

@@ -107,8 +107,14 @@ class EML(Mailbox):
 
     def add(self, message) -> str:
         key = f"{uuid4().hex}.eml"
+        # Write the raw message bytes with LF line endings. The stdlib
+        # `_dump_message` rewrites `\n` to `os.linesep`, which emits CRLF on Windows
+        # and makes the same mail serialize (and hash) differently across platforms.
         with open(self._full_path(key), "wb") as file:
-            self._dump_message(message, file)
+            if isinstance(message, (bytes, bytearray)):
+                file.write(message)
+            else:
+                file.write(message.as_bytes())
         return key
 
     def remove(self, key) -> None:
@@ -347,6 +353,10 @@ def lock_box(box: Mailbox, force_unlock: bool) -> Mailbox:
     except ExternalClashError:
         if not force_unlock:
             logging.error("Box already locked!")
+            # Release the file handle before aborting. On Windows a lingering open
+            # handle keeps the box file locked, so a later `--force-unlock` run in the
+            # same process cannot rewrite it (WinError 32).
+            box.close()
             raise
         logging.warning("Box already locked! Forcing removal of lock...")
         box._locked = True  # type: ignore[attr-defined]
