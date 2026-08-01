@@ -60,4 +60,5 @@ $ uv run -- mdedup --help
 ### Non-obvious rules
 
 - `DedupMailMixin` is mixed into each `mailbox.Message` subclass at runtime by `make_dedup_mail()`, so every box format shares one dedup implementation. Keep format-specific code in `mail_box.py`; keep format-agnostic dedup logic on the mixin.
+- After the hashing step every retained mail is dehydrated: it keeps only its box reference, identity and memoized scalars (timestamp, size), not its parsed message. The content-dependent properties (`body_lines`, `canonical_headers`, `parsed_date`) transparently re-read the message from its source box. Any new post-hashing consumer of mail content must go through them (or call `hydrate()`), and dehydrate afterwards to keep memory flat.
 - Three safeguards make destructive runs safer: an automatic minimal-headers floor (derived as `min(4, number of --hash-header values)`, no option) plus two opt-in thresholds on size and content. They are described in `docs/design.md`; run `mdedup --help` for the threshold option names. When changing selection or hashing, re-read those safeguards: they exist to avoid deleting mails that only look like duplicates.

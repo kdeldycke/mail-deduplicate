@@ -23,7 +23,7 @@ from collections import Counter
 from difflib import unified_diff
 from enum import Enum
 from functools import cached_property
-from itertools import combinations
+from itertools import combinations, islice
 from operator import attrgetter
 from pathlib import Path
 from typing import NamedTuple
@@ -508,8 +508,14 @@ class Deduplicate:
     Similar messages sharing the same hash are grouped together in a `DuplicateSet`.
     """
 
-    CLEANUP_ATTRS: tuple[str, ...] = ("canonical_headers", "body_lines", "subject")
-    """Attributes to remove from mails after categorization to free memory."""
+    PARALLEL_BATCH_FACTOR: int = 8
+    """Number of mails, per job, materialized at once by the parallel hashing path.
+
+    Parsed mails are only held for the batch in flight, instead of the whole corpus,
+    keeping the memory footprint of `--jobs` runs bounded. The factor is large
+    enough to amortize the per-batch synchronization, small enough to keep memory
+    flat.
+    """
 
     def __init__(self, conf: Config) -> None:
         self.sources: dict[str, Mailbox] = {}
@@ -561,11 +567,16 @@ class Deduplicate:
 
         Displays a progress bar as the operation might be slow.
 
-        Hashing fans out across worker threads when `--jobs` resolves above 1; at the
-        default of a single job, mails stream through one at a time for the lowest
-        memory footprint. Mail reading always stays single-threaded because `mailbox`
-        box objects are not safe for concurrent access: only the CPU-bound hashing is
-        parallelized, so the speedup is largest with `--hash-body raw`/`normalized`.
+        Each mail is dehydrated as soon as it is hashed, so whatever the size of the
+        corpus, only a lightweight stub of every mail is retained. See:
+        https://github.com/kdeldycke/mail-deduplicate/issues/761
+
+        Hashing fans out across worker threads when `--jobs` resolves above 1; at
+        the default of a single job, mails stream through one at a time. Mail reading
+        always stays single-threaded because `mailbox` box objects are not safe for
+        concurrent access: only the CPU-bound hashing is parallelized, in batches
+        bounding the number of parsed mails in flight, so the speedup is largest with
+        `--hash-body raw`/`normalized`.
         """
         theme = get_current_theme()
         logging.info(
@@ -577,7 +588,9 @@ class Deduplicate:
 
         def compute(item):
             """Hash a single mail. Pure per-mail work, safe in a worker thread: it only
-            touches its own mail and the read-only shared config."""
+            touches its own mail and the read-only shared config. The mail is
+            dehydrated on the way out, so only its identity and memoized scalars
+            survive the hashing step."""
             box, mail_id, mail = item
             mail.add_box_metadata(box, mail_id)
             mail.conf = self.conf
@@ -585,6 +598,8 @@ class Deduplicate:
                 return mail, mail.hash_key() + body_hasher(mail), None
             except TooFewHeaders as expt:
                 return mail, None, expt
+            finally:
+                mail.dehydrate()
 
         def absorb(result):
             """Merge one hashed mail into the shared groups and stats. Called only from
@@ -613,24 +628,23 @@ class Deduplicate:
                         progress.update(1)
             else:
                 # Read single-threaded (box objects are not concurrency-safe), then
-                # parallel-hash. run_jobs yields in submission order, so grouping and
-                # stats stay deterministic regardless of the job count.
-                mails = [
+                # parallel-hash in bounded batches: only one batch of parsed mails is
+                # materialized at a time, and each mail shrinks to its dehydrated
+                # form as soon as it is hashed. run_jobs yields in submission order,
+                # so grouping and stats stay deterministic regardless of the job
+                # count.
+                stream = (
                     (box, mail_id, mail)
                     for box in self.sources.values()
                     for mail_id, mail in box.iteritems()
-                ]
-                for result in run_jobs(compute, mails, jobs=jobs):
-                    absorb(result)
-                    progress.update(1)
+                )
+                batch_size = jobs * self.PARALLEL_BATCH_FACTOR
+                while batch := list(islice(stream, batch_size)):
+                    for result in run_jobs(compute, batch, jobs=jobs):
+                        absorb(result)
+                        progress.update(1)
 
         self.stats[Stat.MAIL_HASHES] += len(self.mails)
-
-    @staticmethod
-    def cleanup_mail_attrs(mail: DedupMailMixin, attrs: tuple[str, ...]) -> None:
-        """Remove cached attributes from mail to free memory."""
-        for name in attrs:
-            mail.__dict__.pop(name, None)
 
     def build_sets(self):
         """Build the selected and discarded sets from each duplicate set.
@@ -638,9 +652,6 @@ class Deduplicate:
         We apply the selection strategy one duplicate set at a time to keep memory
         footprint low and make the log easier to read.
         """
-        # Imported here because action.py imports this module at load time.
-        from .action import Action
-
         theme = get_current_theme()
         strategies = self.conf["strategies"]
         if strategies:
@@ -668,13 +679,13 @@ class Deduplicate:
             self.selection.update(duplicates.selection)
             self.discard.update(duplicates.discard)
 
-            # Remove from mail objects all attributes we no longer need.
+            # Dehydrate the whole set to release the content re-read from the
+            # source boxes by the thresholds and strategies. Iterating on the
+            # original set covers skipped sets and set-aside mails too, which land
+            # in neither selection nor discard.
             # See: https://github.com/kdeldycke/mail-deduplicate/issues/362
-            for mail in duplicates.discard | duplicates.selection:
-                self.cleanup_mail_attrs(mail, self.CLEANUP_ATTRS)
-            if self.conf["action"] is Action.MOVE_DISCARDED:
-                for mail in duplicates.selection:
-                    mail.__dict__.pop("_payload", None)
+            for mail in mail_set:
+                mail.dehydrate()
 
     def close_all(self):
         """Close all open boxes."""

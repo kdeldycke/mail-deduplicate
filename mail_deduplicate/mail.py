@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import copy
 import email.utils
 import hashlib
 import logging
@@ -107,8 +108,38 @@ class DedupMailMixin(Message):
     and shouldn't be used directly, but composed with `mailbox.Message` sub-classes.
     """
 
+    CONTENT_CACHES: tuple[str, ...] = (
+        "body_lines",
+        "canonical_headers",
+        "hash_raw_body",
+        "hash_normalized_body",
+    )
+    """Memoized properties holding copies of the message content.
+
+    They are only needed while computing hashes, and are dropped by `dehydrate()`
+    alongside the parsed message itself.
+    """
+
+    PARSED_MESSAGE_ATTRS: tuple[str, ...] = (
+        "_headers",
+        "_payload",
+        "_unixfrom",
+        "preamble",
+        "epilogue",
+        "defects",
+    )
+    """Attributes carrying the parsed message, as populated by `email.parser`.
+
+    They hold the bulk of a mail's memory footprint, and are the ones dropped by
+    `dehydrate()` and restored by `hydrate()`.
+    """
+
     def __init__(self, message: _ProxyFile | None = None) -> None:
         super().__init__(message)
+
+        self.box: Mailbox | None = None
+        """The box this message was read from, kept to re-fetch its content on
+        demand after dehydration."""
 
         self.source_path: str | None = None
         """Normalized path to the mailbox this message originates from."""
@@ -135,6 +166,7 @@ class DedupMailMixin(Message):
 
         This allows the mail to carry its own information on its origin box and index.
         """
+        self.box = box
         self.source_path = box._path
         self.mail_id = mail_id
 
@@ -149,6 +181,79 @@ class DedupMailMixin(Message):
             self.path = box._path
         finally:
             mail_file.close()
+
+    def __deepcopy__(self, memo: dict) -> DedupMailMixin:
+        """Deep-copy the mail while sharing its box and configuration references.
+
+        `email.generator` deep-copies a message to flatten 8-bit payloads without
+        mutating the original, which `str(mail)` triggers. The parent box can
+        carry open file handles that cannot be copied, and both the box and the
+        configuration are shared references by design, so they are passed through
+        as-is.
+        """
+        clone = copy.copy(self)
+        memo[id(self)] = clone
+        for name, value in vars(self).items():
+            if name not in ("box", "conf"):
+                setattr(clone, name, copy.deepcopy(value, memo))
+        return clone
+
+    @property
+    def is_hydrated(self) -> bool:
+        """Whether the mail still carries its parsed message."""
+        return hasattr(self, "_payload")
+
+    def dehydrate(self) -> None:
+        """Reduce the mail to the lightweight metadata needed by the next steps.
+
+        Memoizes the scalar properties consumed by selection strategies (timestamp,
+        and size when the decoded body is at hand), then drops the parsed message and
+        every cached copy of its content. This cuts the resident footprint of a
+        retained mail from the full size of its message to a few hundred bytes,
+        whatever the number of mails processed. See:
+        https://github.com/kdeldycke/mail-deduplicate/issues/761
+
+        No-op if the mail is already dehydrated. The dropped content is re-read from
+        the source box by `hydrate()` when a later step needs it again.
+        """
+        if not self.is_hydrated:
+            return
+
+        # Memoize the cheap scalars while the parsed message is still available.
+        _ = self.timestamp
+        if "body_lines" in self.__dict__:
+            _ = self.size
+
+        for name in self.CONTENT_CACHES:
+            self.__dict__.pop(name, None)
+
+        # Drop the parsed message. The two core attributes are deleted rather than
+        # emptied, so any unforeseen direct access fails loudly instead of silently
+        # misreading the mail as empty.
+        del self._headers  # type: ignore[attr-defined]
+        del self._payload  # type: ignore[attr-defined]
+        self._unixfrom = None
+        self.preamble = None
+        self.epilogue = None
+        self.defects = []
+
+    def hydrate(self) -> None:
+        """Restore the full parsed message dropped by `dehydrate()`.
+
+        Re-reads the mail from its source box, through the same parsing path that
+        produced it in the first place, so the restored content is identical.
+        No-op if the mail still carries its parsed message.
+        """
+        if self.is_hydrated:
+            return
+
+        # Asserts to please the type checker.
+        assert self.box is not None
+        assert self.mail_id is not None
+
+        fresh = self.box[self.mail_id]
+        for name in self.PARSED_MESSAGE_ATTRS:
+            setattr(self, name, getattr(fresh, name))
 
     def __repr__(self) -> str:
         """Renders the fully-qualified path of the mail's own file, so it can be
@@ -168,7 +273,10 @@ class DedupMailMixin(Message):
         """Parse the mail's date header into float timestamp.
 
         Returns `None` if the mail has no valid date header.
+
+        Self-hydrating: re-reads the message from its box if it was dehydrated.
         """
+        self.hydrate()
         value = self.get("Date")
         parsed = email.utils.parsedate_tz(value)
 
@@ -217,7 +325,11 @@ class DedupMailMixin(Message):
 
     @cached_property
     def body_lines(self) -> list[str]:
-        """Return a normalized list of lines from message's body."""
+        """Return a normalized list of lines from message's body.
+
+        Self-hydrating: re-reads the message from its box if it was dehydrated.
+        """
+        self.hydrate()
         body: list[str] = []
         if self.preamble is not None:
             body.extend(self.preamble.splitlines())
@@ -291,7 +403,11 @@ class DedupMailMixin(Message):
     @cached_property
     def canonical_headers(self) -> tuple[tuple[str, str], ...]:
         """Returns the full list of all canonical headers names and values in
-        preparation for hashing."""
+        preparation for hashing.
+
+        Self-hydrating: re-reads the message from its box if it was dehydrated.
+        """
+        self.hydrate()
         return tuple(
             (header_id, "\n".join(self.normalized_header_values(header_id)))
             for header_id in self.conf["hash_headers"]

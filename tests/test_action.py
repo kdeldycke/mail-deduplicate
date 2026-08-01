@@ -76,8 +76,9 @@ def test_action_matrix(
     stays consistent, in real and dry-run mode alike.
 
     Copy actions leave the source intact; move and delete actions strip it down to
-    whichever subset they did not act on. Export actions also cover the payload purge
-    that move-discarded performs on the selected mails.
+    whichever subset they did not act on. Export actions also cover the re-reading of
+    full messages from the source boxes, as mails are dehydrated to lightweight stubs
+    once hashed: a regression there would export empty or truncated mails.
     """
     box_path, box_type, export_path = make_box(Maildir, FULL_BOX)
 

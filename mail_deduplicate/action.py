@@ -66,7 +66,11 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
             if dedup.conf["dry_run"]:
                 logging.warning("DRY RUN: Skip action.")
             else:
+                # Restore the full message dropped after hashing, and release it
+                # right away to keep memory flat across the loop.
+                mail.hydrate()
                 box.add(mail)
+                mail.dehydrate()
                 trail.mark(True, f"{mail!r} copied")
     if not dedup.conf["dry_run"]:
         trail.finish(
@@ -87,7 +91,11 @@ def move_mails(dedup: Deduplicate, mails) -> None:
             if dedup.conf["dry_run"]:
                 logging.warning("DRY RUN: Skip action.")
             else:
+                # Restore the full message dropped after hashing, and release it
+                # right away to keep memory flat across the loop.
+                mail.hydrate()
                 box.add(mail)
+                mail.dehydrate()
                 dedup.sources[mail.source_path].remove(mail.mail_id)
                 trail.mark(True, f"{mail!r} moved")
     if not dedup.conf["dry_run"]:

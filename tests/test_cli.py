@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import sys
+import tracemalloc
 from mailbox import Maildir, mbox
 from pathlib import Path
 
@@ -133,6 +134,39 @@ def test_parallel_hashing_matches_sequential(invoke, make_box):
     assert sequential.exit_code == 0
     assert parallel.exit_code == 0
     assert parallel.stdout == sequential.stdout
+
+
+@pytest.mark.parametrize("jobs", ("1", "2"))
+def test_memory_stays_bounded_while_hashing(invoke, make_box, jobs):
+    """Peak memory must track the few mails in flight, not the whole corpus.
+
+    Regression test for the out-of-memory conditions reported on big boxes: mails
+    used to be retained fully parsed for the whole run, so memory grew linearly with
+    the corpus. They are now dehydrated as soon as they are hashed, and the parallel
+    path materializes mails in bounded batches instead of the whole corpus.
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/761
+    """
+    body = "x" * 100_000
+    mails = [
+        MailFactory(body=body, message_id=f"<big-{index}@nohost.com>")
+        for index in range(300)
+    ]
+    box_path, _, _ = make_box(Maildir, mails)
+    corpus_bytes = sum(len(mail.render()) for mail in mails)
+
+    tracemalloc.start()
+    result = invoke(
+        f"--jobs={jobs}",
+        "--strategy=select-newest",
+        "--action=delete-discarded",
+        "--dry-run",
+        box_path,
+    )
+    peak = tracemalloc.get_traced_memory()[1]
+    tracemalloc.stop()
+
+    assert result.exit_code == 0
+    assert peak < corpus_bytes / 2
 
 
 @pytest.mark.parametrize("box_type", (Maildir, mbox))

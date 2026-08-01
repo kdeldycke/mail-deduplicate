@@ -607,11 +607,13 @@ def mdedup(
                 + ", ".join(ignored_user_options)
             )
 
-        # Print all computed hashes.
+        # Print all computed hashes. Rendering the canonical headers re-reads each
+        # mail from its box, so dehydrate them on the way to keep memory flat.
         for all_mails in dedup.mails.values():
             for mail in all_mails:
                 echo(mail.pretty_canonical_headers())
                 echo(f"Hash: {mail.hash_key()}")
+                mail.dehydrate()
 
         # Exit right away.
         ctx.exit()
