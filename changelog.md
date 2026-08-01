@@ -20,6 +20,7 @@
 - Ship the TOML writer so `--export-config toml` works out of the box, and name every configurable option in generated templates, commented out when unset, under kebab-case keys.
 - Stop requiring `--export` in `-H`/`--hash-only` mode: constraints from the selection and action steps no longer apply there.
 - Drop `boltons` and `whenever` from the runtime dependencies (both remain for tests) and require `click-extra` `8.7`, whose `--params` and `--export-config` now reflect the loaded configuration file.
+- Build the prebuilt Linux executables inside a `manylinux_2_28` container so they link against a glibc `2.28` floor instead of the CI runner's newer glibc, letting them run on older enterprise distributions such as RHEL 8+, Debian 10, Ubuntu 20.04 and openSUSE Leap 15.3+. Closes [#759](https://github.com/kdeldycke/mail-deduplicate/issues/759).
 - Fix an unhandled traceback on invalid `--regexp` values, now rejected with a proper parameter error.
 - Fix the payload memory purge of selected mails, which never triggered for the `move-discarded` action.
 - Add a hands-on tutorial page to the documentation and rework the README quickstart around use cases and example commands. Closes [#984](https://github.com/kdeldycke/mail-deduplicate/issues/984).
