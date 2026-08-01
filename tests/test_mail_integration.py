@@ -19,9 +19,8 @@
 
 from __future__ import annotations
 
-import os
+import time
 from mailbox import Maildir, mbox, mboxMessage
-from pathlib import Path
 from textwrap import dedent
 
 import pytest
@@ -118,7 +117,7 @@ def test_invalid_date_parsing_dedup(invoke, make_box):
 
 
 undated_mail = MailFactory(date_rfc2822="invalid date")
-""" A mail whose `Date` header cannot be parsed into a timestamp. """
+"""A mail whose `Date` header cannot be parsed into a timestamp."""
 
 
 def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
@@ -161,7 +160,7 @@ def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
     box.close()
 
 
-def test_unparseable_date_skips_time_strategy(invoke, make_box):
+def test_unparsable_date_skips_time_strategy(invoke, make_box):
     """Time-based strategies skip duplicate sets containing mails without a parseable
     `Date` header, and name the offending mails instead of crashing.
 
@@ -205,7 +204,7 @@ def test_mixed_missing_date_skips_time_strategy(invoke, make_box):
     check_box(box_path, box_type, content=[undated_mail, dated_mail])
 
 
-def test_unparseable_date_show_diff(invoke, make_box):
+def test_unparsable_date_show_diff(invoke, make_box):
     """Rendering the diff of mails without a parseable `Date` header does not
     crash."""
     undated_variant = MailFactory(date_rfc2822="invalid date", body="A different body.")
@@ -287,18 +286,18 @@ def test_ctime_time_source(invoke, make_box):
     """--time-source=ctime derives each mail's timestamp from its file's inode change
     time, so a maildir with distinct file ctimes deduplicates by them."""
     dup = MailFactory(body="Same body.\n", message_id="<ctime@nohost.com>")
-    box_path, _, _ = make_box(Maildir, [dup, dup])
 
-    # Maildir stores each mail in its own file. chmod touches the inode, bumping one
-    # file's ctime so the newest is unambiguous whatever the filesystem's resolution.
-    files = sorted(
-        f
-        for sub in ("new", "cur")
-        for f in (Path(box_path) / sub).iterdir()
-        if f.is_file()
-    )
-    assert len(files) == 2
-    os.chmod(files[0], 0o600)
+    # Deliver the two identical copies more than a second apart, so the second file is
+    # unambiguously the newest by ctime at any filesystem timestamp resolution. A
+    # sub-second gap ties on coarse-grained filesystems (e.g. overlayfs, 1 s), and on
+    # Windows getctime reads the immutable creation time, so touching a file's metadata
+    # in place (chmod) cannot reorder the copies there.
+    box_path, _, _ = make_box(Maildir, [dup])
+    time.sleep(1.1)
+    box = Maildir(box_path, create=False)
+    box.lock()
+    box.add(dup.render())
+    box.close()
 
     result = invoke(
         "--time-source=ctime",
@@ -308,7 +307,7 @@ def test_ctime_time_source(invoke, make_box):
     )
 
     assert result.exit_code == 0
-    # A single newest file was selected and deleted; one copy remains.
+    # The newest copy (delivered last) was selected and deleted; one copy remains.
     assert len(Maildir(box_path, create=False)) == 1
 
 

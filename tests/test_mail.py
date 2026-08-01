@@ -540,8 +540,8 @@ def test_header_normalization(header_name, values, expected):
 
 
 @pytest.mark.parametrize("date_value", ["invalid date", "", "Hello, World!"])
-def test_unparseable_date_returns_none(date_value):
-    """An unparseable `Date` header produces no timestamp instead of crashing."""
+def test_unparsable_date_returns_none(date_value):
+    """An unparsable `Date` header produces no timestamp instead of crashing."""
     mail = create_mail_with_headers(("Date", date_value))
     assert mail.parsed_date is None
 

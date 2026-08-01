@@ -78,9 +78,7 @@ class EML(Mailbox):
             dirnames[:] = sorted(d for d in dirnames if not d.startswith("."))
             for filename in sorted(filenames):
                 if not filename.startswith(".") and filename.lower().endswith(".eml"):
-                    yield os.path.relpath(
-                        os.path.join(dirpath, filename), self._path
-                    )
+                    yield os.path.relpath(os.path.join(dirpath, filename), self._path)
 
     def __contains__(self, key) -> bool:
         return key.lower().endswith(".eml") and os.path.isfile(self._full_path(key))
@@ -259,9 +257,7 @@ def contains_eml(path: Path) -> bool:
     """
     for dirpath, dirnames, filenames in os.walk(path):
         dirnames[:] = [d for d in dirnames if not d.startswith(".")]
-        if any(
-            not f.startswith(".") and f.lower().endswith(".eml") for f in filenames
-        ):
+        if any(not f.startswith(".") and f.lower().endswith(".eml") for f in filenames):
             return True
     return False
 

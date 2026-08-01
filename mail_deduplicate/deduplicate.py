@@ -153,11 +153,11 @@ class Stat(Enum):
 
 
 class SizeDiffAboveThreshold(Exception):
-    """Difference in mail size is greater than [threshold](https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-S)_."""
+    """Difference in mail size is greater than [threshold](https://kdeldycke.github.io/mail-deduplicate/cli.html)."""
 
 
 class ContentDiffAboveThreshold(Exception):
-    """Difference in mail content is greater than [threshold](https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html#cmdoption-mdedup-C)_."""
+    """Difference in mail content is greater than [threshold](https://kdeldycke.github.io/mail-deduplicate/cli.html)."""
 
 
 class MissingTimestamps(Exception):

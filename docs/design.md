@@ -14,7 +14,7 @@ For added protection against accidentally removing mails due to false positives,
 
 ## Step 1: Loading mails
 
-Mails are loaded from a variety of mailbox formats (`maildir`, `mbox`, `babyl`, `mh` and `mmdf`).
+Mails are loaded from a variety of mailbox formats (`maildir`, `mbox`, `babyl`, `mh`, `mmdf` and `eml`).
 
 ## Step 2: Hashing
 

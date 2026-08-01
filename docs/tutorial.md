@@ -153,7 +153,7 @@ A strategy decides, within each set of copies, which mails are *selected* and wh
 - Path-based: `select-matching-path` and friends, testing mail locations against `--regexp`.
 - Random: `select-one` and `select-all-but-one`, for when copies are indistinguishable.
 
-The full list, with the exact semantics of each, sits at the bottom of `mdedup --help` and in the [CLI parameters page](https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html).
+The full list, with the exact semantics of each, sits at the bottom of `mdedup --help` and in the [CLI parameters page](https://kdeldycke.github.io/mail-deduplicate/cli.html).
 
 Backup copies of the same mail are usually byte-identical: same `Date` header, same size. Time-based and size-based strategies cannot tell such copies apart, and skip the set as a whole rather than acting on it. That makes `select-one`, which keeps an arbitrary copy of each mail, the right strategy for merging identical copies.
 
@@ -253,7 +253,7 @@ for _path, _count in (("archive-2024.mbox", 1), ("archive-2025.mbox", 4)):
 `archive-2024.mbox` is down to its single unique mail, and `archive-2025.mbox` was not touched. Mails without duplicates are never deleted, whatever the strategy: only discarded members of a duplicate set are.
 
 ```{caution}
-For folder-based boxes (`maildir`, `mh`), `--regexp` is tested against the path of each individual mail file. For file-based boxes (`mbox`, `babyl`, `mmdf`), all mails share the path of the box itself.
+For folder-based boxes (`maildir`, `mh`, `eml`), `--regexp` is tested against the path of each individual mail file. For file-based boxes (`mbox`, `babyl`, `mmdf`), all mails share the path of the box itself.
 ```
 
 ## Safety nets
@@ -271,11 +271,12 @@ A run ending with `Duplicates: 0` or `Deduplicated: 0` is the number one source 
 
 - `Duplicates: 0`: no two mails shared a hash. A single box that was never merged or re-synced typically holds no duplicates: `mdedup` shines on piles of overlapping boxes. If you are certain copies are in there, they may differ in the hashed headers: mails re-delivered or forwarded can get a new `Message-ID` for instance. Narrow the matching down with repeated `--hash-header` options, or inspect what each mail hashes to with `--hash-only`.
 - `Duplicates` above zero but `Skipped - Strategy` counting sets: either no `--strategy` was given, or the chosen criterion cannot split the copies apart (identical copies share the same date and size). Switch to `select-one` or a path-based strategy, or chain one as a fallback with a repeated `--strategy` option.
+- `Skipped - Timestamp` counting sets: a time-based strategy could not compare some mails because they lack a parseable `Date` header. Chain a fallback with a repeated `--strategy` option so another criterion takes over, or pick a strategy that does not depend on time, like `select-one`.
 - `Skipped - Size` or `Skipped - Content` counting sets, or `Set aside ... mails too dissimilar` warnings in the logs: mails grouped under the same hash differ more than the thresholds allow. Inspect with `--show-diff`, and raise `--size-threshold` or `--content-threshold` deliberately if the differences are legitimate.
 
 ## Going further
 
-- Every option demonstrated here is described in the [CLI parameters page](https://kdeldycke.github.io/mail-deduplicate/cli-parameters.html).
+- Every option demonstrated here is described in the [CLI parameters page](https://kdeldycke.github.io/mail-deduplicate/cli.html).
 - Recurring options can be saved in a [configuration file](https://kdeldycke.github.io/mail-deduplicate/configuration.html).
 - The [design page](https://kdeldycke.github.io/mail-deduplicate/design.html) details hashing, header normalization and the safeguards.
 - Header-based hashing can be complemented by body hashing for stricter matching: see `--hash-body`, and `--jobs` to parallelize it on big boxes.

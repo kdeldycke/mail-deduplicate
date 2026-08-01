@@ -6,9 +6,8 @@
 > This version is **not released yet** and is under active development.
 
 - **Breaking:** pluralize the repeatable options' parameter IDs: configuration keys and environment variables become `hash_headers`/`MDEDUP_HASH_HEADERS` and `strategies`/`MDEDUP_STRATEGIES`. The `--hash-header` and `--strategy` flags are unchanged.
-- Skip duplicate sets containing mails with an unparseable or absent `Date` header instead of crashing on time-based strategies. The warning names the offending mails, and a new `Skipped - Timestamp` metric counts these sets. Closes [#132](https://github.com/kdeldycke/mail-deduplicate/issues/132) and [#600](https://github.com/kdeldycke/mail-deduplicate/issues/600).
+- Skip duplicate sets containing mails with an unparsable or absent `Date` header instead of crashing on time-based strategies. The warning names the offending mails, and a new `Skipped - Timestamp` metric counts these sets. Closes [#132](https://github.com/kdeldycke/mail-deduplicate/issues/132) and [#600](https://github.com/kdeldycke/mail-deduplicate/issues/600).
 - Identify mails from folder-based boxes in logs by the fully-qualified path of their own file, so it can be copy-pasted for direct inspection. Closes [#157](https://github.com/kdeldycke/mail-deduplicate/issues/157).
-- Fix a spurious metrics-inconsistency exit (code `115`) for `*-discarded` actions and dry runs: the statistics self-check now compares each action counter to the subset of mails the action targets. Closes [#841](https://github.com/kdeldycke/mail-deduplicate/issues/841).
 - Set aside mails exceeding the size or content thresholds against the rest of their set instead of skipping the whole set, so an outlier no longer prevents the deduplication of the true copies sharing its hash. Closes [#851](https://github.com/kdeldycke/mail-deduplicate/issues/851).
 - Discover nested maildir folders stored as plain directories at any depth, as produced by `isync`/`mbsync`'s Verbatim naming style, even when the root directory holds no mail itself. Closes [#973](https://github.com/kdeldycke/mail-deduplicate/issues/973).
 - Add a new `eml` source and export format, reading and writing loose `.eml` files from a folder, walked recursively. Autodetected, and the unrecognized-folder error now points at `--input-format`. Closes [#760](https://github.com/kdeldycke/mail-deduplicate/issues/760).
@@ -21,6 +20,7 @@
 - Stop requiring `--export` in `-H`/`--hash-only` mode: constraints from the selection and action steps no longer apply there.
 - Drop `boltons` and `whenever` from the runtime dependencies (both remain for tests) and require `click-extra` `8.7`, whose `--params` and `--export-config` now reflect the loaded configuration file.
 - Build the prebuilt Linux executables inside a `manylinux_2_28` container so they link against a glibc `2.28` floor instead of the CI runner's newer glibc, letting them run on older enterprise distributions such as RHEL 8+, Debian 10, Ubuntu 20.04 and openSUSE Leap 15.3+. Closes [#759](https://github.com/kdeldycke/mail-deduplicate/issues/759).
+- Fix a spurious metrics-inconsistency exit (code `115`) for `*-discarded` actions and dry runs: the statistics self-check now compares each action counter to the subset of mails the action targets. Closes [#841](https://github.com/kdeldycke/mail-deduplicate/issues/841).
 - Fix an unhandled traceback on invalid `--regexp` values, now rejected with a proper parameter error.
 - Fix the payload memory purge of selected mails, which never triggered for the `move-discarded` action.
 - Add a hands-on tutorial page to the documentation and rework the README quickstart around use cases and example commands. Closes [#984](https://github.com/kdeldycke/mail-deduplicate/issues/984).
