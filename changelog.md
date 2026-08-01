@@ -1,6 +1,6 @@
 # Changelog
 
-## [`9.1.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.1.0...main)
+## [`9.2.0.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.1.0...main)
 
 > [!WARNING]
 > This version is **not released yet** and is under active development.

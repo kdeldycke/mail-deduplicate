@@ -460,7 +460,7 @@ wheels = [
 
 [[package]]
 name = "mail-deduplicate"
-version = "9.1.1.dev0"
+version = "9.2.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "backports-strenum", marker = "python_full_version < '3.11'" },
