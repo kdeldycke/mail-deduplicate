@@ -9,6 +9,9 @@
 
 ## [`9.1.0` (2026-08-01)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.0.0...v9.1.0)
 
+> [!NOTE]
+> `9.1.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/9.1.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.1.0).
+
 - **Breaking:** pluralize the repeatable options' parameter IDs: configuration keys and environment variables become `hash_headers`/`MDEDUP_HASH_HEADERS` and `strategies`/`MDEDUP_STRATEGIES`. The `--hash-header` and `--strategy` flags are unchanged.
 - Skip duplicate sets containing mails with an unparsable or absent `Date` header instead of crashing on time-based strategies. The warning names the offending mails, and a new `Skipped - Timestamp` metric counts these sets. Closes [#132](https://github.com/kdeldycke/mail-deduplicate/issues/132) and [#600](https://github.com/kdeldycke/mail-deduplicate/issues/600).
 - Identify mails from folder-based boxes in logs by the fully-qualified path of their own file, so it can be copy-pasted for direct inspection. Closes [#157](https://github.com/kdeldycke/mail-deduplicate/issues/157).
