@@ -381,7 +381,7 @@ def test_maildir_strategy(
 
 
 undated_mail = MailFactory(date_rfc2822="Not a date")
-"""A mail with an unparseable `Date` header, from which no timestamp can be
+"""A mail with an unparsable `Date` header, from which no timestamp can be
 derived."""
 
 

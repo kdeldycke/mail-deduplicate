@@ -161,7 +161,7 @@ def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
     box.close()
 
 
-def test_unparseable_date_skips_time_strategy(invoke, make_box):
+def test_unparsable_date_skips_time_strategy(invoke, make_box):
     """Time-based strategies skip duplicate sets containing mails without a parseable
     `Date` header, and name the offending mails instead of crashing.
 
@@ -205,7 +205,7 @@ def test_mixed_missing_date_skips_time_strategy(invoke, make_box):
     check_box(box_path, box_type, content=[undated_mail, dated_mail])
 
 
-def test_unparseable_date_show_diff(invoke, make_box):
+def test_unparsable_date_show_diff(invoke, make_box):
     """Rendering the diff of mails without a parseable `Date` header does not
     crash."""
     undated_variant = MailFactory(date_rfc2822="invalid date", body="A different body.")
