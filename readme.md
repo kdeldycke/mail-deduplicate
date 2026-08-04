@@ -92,6 +92,6 @@ The [hands-on tutorial](https://kdeldycke.github.io/mail-deduplicate/tutorial.ht
 > [!WARNING]
 > Performance and memory usage: `mdedup` implementation is quite naive and everything resides in memory.
 >
-> If this is good enough for a volume of a couple of gigabytes, the more emails `mdedup` try to parse, the closer you'll reach the memory limits of your machine. In which case [`mdedup` will exit abruptly](https://github.com/kdeldycke/mail-deduplicate/issues/362#issuecomment-1266743045), zapped by the [OOM killer](https://en.wikipedia.org/wiki/Out_of_memory) of your OS. Of course your mileage may vary depending on your hardware.
+> This is good enough for a volume of a couple of gigabytes. The more emails `mdedup` try to parse, the closer you'll go towards the memory limits of your machine. In which case [`mdedup` will exit abruptly](https://github.com/kdeldycke/mail-deduplicate/issues/362#issuecomment-1266743045), zapped by the [OOM killer](https://en.wikipedia.org/wiki/Out_of_memory) of your OS. Of course your mileage may vary depending on your hardware.
 >
 > You can influence implementation of this feature with pull requests, [purchasing business support 🤝](https://github.com/sponsors/kdeldycke) and [sponsorship 🫶](https://github.com/sponsors/kdeldycke).
