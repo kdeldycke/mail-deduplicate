@@ -2,20 +2,44 @@
 
 How long a run takes, how much memory it holds, and how to make the next run faster.
 
-All the figures below were measured on an Apple silicon SSD, over a synthetic maildir of 20,000 mails of about 4 KB each, one fifth of them exact duplicates. Yours will differ with your hardware, the size of your mails and how many of them are duplicates, but the shape of the costs holds.
+Every timing below comes from one batch of runs on an Apple silicon SSD, over a synthetic maildir of 20,000 mails of about 4 KB each, one fifth of them exact duplicates. They are only meaningful against each other: absolute seconds move by a factor of two with nothing but machine load, so read the proportions and the ratios, which held steady across every batch, rather than the seconds themselves. Counts of mails read are exact, and depend on your corpus alone.
 
 ## Where a run spends its time
 
-Hashing dominates. On the corpus above it is around 60% of the run, and it is the only step the [hash cache](#reusing-hashes-between-runs) can skip.
+Hashing dominates a first run, and the [hash cache](#reusing-hashes-between-runs) is the only thing that skips it. What is left over then becomes the bulk of the work:
 
-| Step                    | Cost                                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------------ |
-| 1. Loading mails        | Listing each box. Cheap, but grows with the number of subfolders.                                |
-| 2. Hashing              | Reads and parses every mail. The bulk of the run.                                                |
-| 3. Selecting duplicates | Re-reads the body of every mail in a set of two or more, to compare them against the thresholds. |
-| 4. Performing actions   | Writes, for every action but `delete-*` on the source box.                                       |
+| Step                    | First run  | With a warm cache | What it does                                                    |
+| ----------------------- | ---------- | ----------------- | --------------------------------------------------------------- |
+| 1. Loading mails        | 0.1s ( 2%) | 0.1s ( 4%)        | Lists each box. Cheap, but grows with the number of subfolders. |
+| 2. Hashing              | 3.9s (60%) | 0.7s (22%)        | Reads and parses every mail.                                    |
+| 3. Selecting duplicates | 2.1s (33%) | 2.1s (63%)        | Re-reads the body of every mail sharing its hash with another.  |
+| 4. Performing actions   | 0.4s ( 5%) | 0.4s (11%)        | Writes, for every action but `delete-*` on the source box.      |
+| **Total**               | **6.5s**   | **3.3s**          |                                                                 |
 
-Step 3 is worth understanding: a mail is [dehydrated](design.md) once hashed, so comparing bodies against `--size-threshold` and `--content-threshold` pulls each one back from disk. Mails that end up alone in their hash group are never re-read, so the cost tracks how many duplicates you actually have. Setting both thresholds to `-1` skips those comparisons entirely, at the price of the safeguards they provide.
+The cache cuts hashing by a factor of five, yet the run as a whole only gets twice as fast, because step 3 is left untouched and grows from a third of the run to nearly two thirds of it.
+
+Step 3 is worth understanding: a mail is [dehydrated](design.md) once hashed, so comparing it against `--size-threshold` and `--content-threshold` pulls its body back from disk. Only mails sharing their hash with another are compared, so the cost tracks how many duplicates you actually have. On this corpus that is **8,000 of the 20,000 mails read a second time**, a count that does not depend on your hardware and is the number to reason about.
+
+### Skipping the threshold comparisons
+
+Both thresholds exist to catch mails that hash alike without being copies, so turning them off means acting on a set that was never checked. When you trust your hash, `-1` disables either one, and the re-reads go with them:
+
+| Warm run, `--hash-body skip`   | Total | Mails re-read |
+| ------------------------------ | ----- | ------------- |
+| Default thresholds             | 3.3s  | 8,000         |
+| `--content-threshold=-1` alone | 3.3s  | 8,000         |
+| Both set to `-1`               | 2.0s  | 0             |
+
+That middle row is the surprise: dropping the content check alone changes nothing under the default `--hash-body skip`. A mail's size is the length of its body, and skip mode never reads bodies while hashing, so the *size* check drags them back on its own.
+
+Hash the body and that stops being true. `raw` and `normalized` compute each mail's size while hashing, so the cache stores it and the size check is served from the database:
+
+| Warm run, `--hash-body raw`    | Total | Mails re-read |
+| ------------------------------ | ----- | ------------- |
+| Default thresholds             | 3.3s  | 8,000         |
+| `--content-threshold=-1` alone | 2.0s  | 0             |
+
+A body-hashing run therefore keeps its size safeguard for free, and only has to give up the content comparison to avoid the second pass entirely.
 
 ## Memory
 
@@ -49,7 +73,7 @@ The same mail, hashed with the same options, always produces the same result. `-
 $ mdedup --cache --strategy select-newest --action delete-discarded ~/Maildir
 ```
 
-On the 20,000-mail corpus, a second run drops from `4.3s` to `2.5s`. The first run costs about 16% more than an uncached one, which is the price of filling the database.
+On the 20,000-mail corpus, a second run takes roughly half the time of an uncached one, `3.3s` against `6.5s`, and its hashing step alone is five times faster. The first run costs about 15% more than an uncached one, which is the price of filling the database.
 
 It is off by default. `--cache-path` points at another database and enables it on its own.
 
@@ -119,8 +143,8 @@ Several runs can point at the same database. They only contend on the single wri
 
 | Mode         | 20,000 mails | Notes                                                                                |
 | ------------ | ------------ | ------------------------------------------------------------------------------------ |
-| `skip`       | `4.3s`       | The default. Headers alone are usually enough to identify duplicates.                |
-| `raw`        | `5.4s`       | Hashes the body as it is.                                                            |
-| `normalized` | `6.9s`       | Strips line breaks and spaces first, catching copies that differ only in whitespace. |
+| `skip`       | `6.5s`       | The default. Headers alone are usually enough to identify duplicates.                |
+| `raw`        | `7.2s`       | Hashes the body as it is.                                                            |
+| `normalized` | `9.5s`       | Strips line breaks and spaces first, catching copies that differ only in whitespace. |
 
 Reach for `raw` or `normalized` when header-based hashing groups mails you do not consider duplicates, rather than as a default.
