@@ -17,13 +17,15 @@
 from __future__ import annotations
 
 import re
+import shutil
 import sqlite3
 from mailbox import Maildir, mbox
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
-from mail_deduplicate.cache import default_cache_dir, default_cache_path
+from mail_deduplicate.cache import HashCache, default_cache_dir, default_cache_path
 from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import BoxFormat
 
@@ -304,6 +306,111 @@ def test_rejected_mails_are_not_cached(invoke, make_box, tmp_path):
     with sqlite3.connect(cache_db) as connection:
         rows = connection.execute("SELECT COUNT(*) FROM hashes").fetchone()[0]
     assert rows == 0
+
+
+def cached_rows(cache_db) -> int:
+    """Number of mail entries held by a cache database."""
+    with sqlite3.connect(cache_db) as connection:
+        count = connection.execute("SELECT COUNT(*) FROM hashes").fetchone()[0]
+    return int(count)
+
+
+def test_deleted_mails_are_pruned(invoke, make_box, tmp_path):
+    """Mails removed from a box must not keep their entry forever.
+
+    A cache nobody prunes only grows, holding hashes for mails that no longer exist.
+    """
+    mails = [MailFactory(message_id=f"<d{i}@nohost.com>") for i in range(5)]
+    box_path, _, _ = make_box(Maildir, mails)
+    cache_db = tmp_path.joinpath("hashes.db")
+
+    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
+    assert cached_rows(cache_db) == 5
+
+    for doomed in mail_files(box_path)[:3]:
+        doomed.unlink()
+
+    result = invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path)
+
+    assert result.exit_code == 0
+    assert cached_rows(cache_db) == 2
+    assert "3 stale entries dropped" in result.stderr
+
+
+def test_vanished_box_is_pruned(invoke, make_box, tmp_path):
+    """A box that was deleted or moved takes all of its entries with it."""
+    kept_path, _, _ = make_box(Maildir, [MailFactory(message_id="<k@nohost.com>")])
+    gone_path, _, _ = make_box(
+        Maildir, [MailFactory(message_id=f"<g{i}@nohost.com>") for i in range(4)]
+    )
+    cache_db = tmp_path.joinpath("hashes.db")
+
+    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, kept_path).exit_code == 0
+    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, gone_path).exit_code == 0
+    assert cached_rows(cache_db) == 5
+
+    shutil.rmtree(gone_path)
+
+    # A run over the surviving box alone is enough to notice the other one is gone.
+    result = invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, kept_path)
+
+    assert result.exit_code == 0
+    assert cached_rows(cache_db) == 1
+    assert "4 stale entries dropped" in result.stderr
+
+
+def test_unvisited_boxes_are_left_alone(invoke, make_box, tmp_path):
+    """Only the boxes a run opens are pruned mail by mail.
+
+    Every mail of a box nobody opened is absent from the run's sightings for the
+    plain reason that nobody looked, which is no evidence that it is gone. Pruning
+    on that basis would empty the cache of every box not passed on the command line.
+    """
+    first_path, _, _ = make_box(Maildir, [MailFactory(message_id="<x@nohost.com>")])
+    second_path, _, _ = make_box(
+        Maildir, [MailFactory(message_id=f"<y{i}@nohost.com>") for i in range(3)]
+    )
+    cache_db = tmp_path.joinpath("hashes.db")
+
+    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, first_path).exit_code == 0
+    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, second_path).exit_code == 0
+    assert cached_rows(cache_db) == 4
+
+    # Re-run over the first box only: the second one still exists, untouched.
+    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, first_path).exit_code == 0
+
+    assert cached_rows(cache_db) == 4
+
+
+def test_run_survives_a_database_held_by_another_run(invoke, make_box, tmp_path):
+    """A database another run is writing must not take this one down.
+
+    Runs sharing a cache contend on the write burst each performs at the end. By
+    then the deduplication is done, so losing that race may only cost the next run
+    its head start. Simulated by holding the write lock for longer than the loser is
+    willing to wait.
+    """
+    box_path, _, _ = make_box(
+        Maildir, [MailFactory(message_id=f"<h{i}@nohost.com>") for i in range(3)]
+    )
+    cache_db = tmp_path.joinpath("hashes.db")
+
+    # Seed the database, then grab and hold its write lock.
+    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
+    holder = sqlite3.connect(cache_db, timeout=0, isolation_level="EXCLUSIVE")
+    holder.execute("BEGIN EXCLUSIVE")
+    try:
+        # Waiting the full lock timeout would stall the suite, so cut it short.
+        with mock.patch.object(HashCache, "LOCK_TIMEOUT", 0.1):
+            result = invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path)
+    finally:
+        holder.rollback()
+        holder.close()
+
+    # The deduplication still reported its results, only the cache write was lost.
+    assert result.exit_code == 0
+    assert metrics(result.stdout)["Retained"] == "3"
+    assert "Cannot" in result.stderr and "hash cache" in result.stderr
 
 
 def test_cache_survives_a_corpus_growing_between_runs(invoke, make_box, tmp_path):

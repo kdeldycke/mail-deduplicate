@@ -93,13 +93,25 @@ The database sits in your platform's cache directory:
 
 Run `mdedup --help` to see the resolved path on your machine. It holds about 135 bytes per mail, so 20,000 mails cost around 2.7 MB.
 
-Nothing prunes it: entries for boxes you no longer have will accumulate. Deleting the file is always safe, and the next run rebuilds whatever it needs:
+It prunes itself as it goes, so it tracks your mails rather than growing forever. Every run drops the entries of mails that disappeared from the boxes it opened, and the entries of every box that is no longer on disk at all. The count is reported at the end of the hashing step:
+
+```text
+Hash cache: 19,982 mails restored, 18 hashed and recorded, 143 stale entries dropped.
+```
+
+Boxes you did not pass on the command line are left alone: their mails are missing from a run's sightings because nobody looked, which is no evidence that they are gone.
+
+Pruning frees space inside the database for later entries, but does not hand it back to your filesystem, so the file never shrinks on its own. Deleting it is always safe, and the next run rebuilds whatever it needs:
 
 ```shell-session
 $ rm ~/.cache/mdedup/hashes.db
 ```
 
-A database that cannot be opened, on a read-only or full filesystem for instance, is reported as a warning and skipped. The run carries on hashing every mail, as it would without `--cache`.
+Nothing about the cache can take a run down. A database that cannot be opened, on a read-only or full filesystem for instance, is reported as a warning and skipped, and the run hashes every mail as it would without `--cache`. One that cannot be written at the end, because another run holds it or the disk filled up, costs only the next run its head start: by then the deduplication has already produced its results.
+
+### Runs sharing a database
+
+Several runs can point at the same database. They only contend on the single write burst each performs when its hashing step ends, which SQLite serializes: a run that finds the database busy waits up to 30 seconds for it, then gives up on writing and carries on. Reads never block.
 
 ## Body hashing
 

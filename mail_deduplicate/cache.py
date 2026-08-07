@@ -144,13 +144,22 @@ class HashCache:
     Inserting one row at a time costs more in statement overhead than in storage.
     """
 
+    LOCK_TIMEOUT: float = 30.0
+    """Seconds a run waits for another one to release the database.
+
+    Runs sharing a database only ever contend on the single write burst each of them
+    performs at the end, so waiting it out beats failing. See `commit()` for what
+    happens when the wait is not enough.
+    """
+
     def __init__(self, path: Path, fingerprint: str) -> None:
         self.path = path
         self.hits = 0
         self.misses = 0
+        self.pruned = 0
 
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.connection = sqlite3.connect(self.path)
+        self.connection = sqlite3.connect(self.path, timeout=self.LOCK_TIMEOUT)
         self.connection.executescript(
             """
             PRAGMA journal_mode = WAL;
@@ -173,6 +182,10 @@ class HashCache:
                 mail_size INTEGER,
                 PRIMARY KEY (source_id, mail_id)
             ) WITHOUT ROWID;
+            CREATE TEMPORARY TABLE seen (
+                source_id INTEGER NOT NULL,
+                mail_id   TEXT    NOT NULL
+            );
             """,
         )
         self._enforce_fingerprint(fingerprint)
@@ -187,6 +200,14 @@ class HashCache:
 
         self._writes: list[tuple] = []
         """Rows waiting to be flushed."""
+
+        self._seen: list[tuple[int, str]] = []
+        """Mails looked up this run, waiting to be recorded in the `seen` table.
+
+        Buffered like the writes, and handed to SQLite rather than kept in a Python
+        set, so knowing which mails are still around costs no memory of its own,
+        whatever the size of the corpus. `prune()` turns it into a set difference.
+        """
 
     def _source_id(self, source_path: str) -> int:
         """Interns a box path, inserting it on first sight."""
@@ -252,11 +273,18 @@ class HashCache:
         if stale_key is None:
             return None
 
+        source_id = self._source_id(box._path)
+        # Whatever the outcome, this mail still exists, which is what `prune()` needs
+        # to tell apart from the entries left behind by mails that are gone.
+        self._seen.append((source_id, mail_id))
+        if len(self._seen) >= self.WRITE_BATCH:
+            self._flush_seen()
+
         self._pending[(box._path, mail_id)] = stale_key
         row = self.connection.execute(
             "SELECT mail_hash, timestamp, mail_size FROM hashes "
             "WHERE source_id = ? AND mail_id = ? AND size = ? AND mtime_ns = ?",
-            (self._source_id(box._path), mail_id, stale_key.size, stale_key.mtime_ns),
+            (source_id, mail_id, stale_key.size, stale_key.mtime_ns),
         ).fetchone()
 
         if row is None:
@@ -300,14 +328,96 @@ class HashCache:
         )
         self._writes.clear()
 
+    def _flush_seen(self) -> None:
+        """Hand the buffered sightings to the temporary `seen` table.
+
+        Deliberately an unindexed table: a sighting is recorded for every single
+        mail, so the insert has to be a plain append. Indexing it here, one B-tree
+        descent per mail, cost more than the hashing the cache exists to skip. The
+        one index it needs is built in `prune()`, in bulk, and only when it is about
+        to be read.
+        """
+        if not self._seen:
+            return
+        self.connection.executemany(
+            "INSERT INTO seen (source_id, mail_id) VALUES (?, ?)",
+            self._seen,
+        )
+        self._seen.clear()
+
+    def prune(self) -> int:
+        """Drops the entries of mails and boxes that are no longer there.
+
+        Two kinds of leftovers accumulate. A box that was deleted or moved keeps
+        every one of its entries, and a mail deleted from a box that is still around
+        keeps its own. Both are dropped here, and the number of entries removed is
+        returned.
+
+        Only the boxes visited by this run are considered for their individual mails:
+        every mail of a box that was not opened is missing from `seen` for the plain
+        reason that nobody looked, which is not evidence that it is gone.
+        """
+        self._flush_seen()
+        # Built in one pass now that the table is complete, rather than maintained
+        # across every insert, and only paid for when there is something to prune.
+        self.connection.execute(
+            "CREATE INDEX IF NOT EXISTS seen_lookup ON seen (source_id, mail_id)",
+        )
+        pruned = 0
+
+        # Boxes that are no longer on disk, with everything they held.
+        gone = [
+            (source_id, path)
+            for source_id, path in self.connection.execute(
+                "SELECT id, path FROM sources"
+            ).fetchall()
+            if not os.path.exists(path)
+        ]
+        for source_id, path in gone:
+            cursor = self.connection.execute(
+                "DELETE FROM hashes WHERE source_id = ?", (source_id,)
+            )
+            pruned += cursor.rowcount
+            self.connection.execute("DELETE FROM sources WHERE id = ?", (source_id,))
+            logging.debug(f"Drop the cached hashes of the vanished box {path}.")
+
+        # Mails that vanished from the boxes this run did open.
+        for source_id in self._source_ids.values():
+            cursor = self.connection.execute(
+                "DELETE FROM hashes WHERE source_id = ? AND mail_id NOT IN "
+                "(SELECT mail_id FROM seen WHERE source_id = ?)",
+                (source_id, source_id),
+            )
+            pruned += cursor.rowcount
+
+        self.pruned = pruned
+        return pruned
+
     def forget(self, source_path: str, mail_id: str) -> None:
         """Drop the staleness key of a mail that will not be recorded."""
         self._pending.pop((source_path, mail_id), None)
 
-    def commit(self) -> None:
-        """Flush everything recorded during the run, in one transaction."""
-        self._flush()
-        self.connection.commit()
+    def commit(self) -> bool:
+        """Flush everything recorded during the run, in one transaction.
+
+        Returns whether it went through. By this point the deduplication itself is
+        done, so a database another run is holding, or a disk that filled up while
+        we worked, costs the next run its head start and nothing more: it must not
+        take down a run that has already produced its results.
+        """
+        try:
+            self.prune()
+            self._flush()
+            self.connection.commit()
+        except sqlite3.Error as expt:
+            logging.warning(f"Cannot write the hash cache at {self.path}: {expt}")
+            logging.warning("This run is unaffected, the next one starts cold.")
+            self.connection.rollback()
+            return False
+        return True
 
     def close(self) -> None:
-        self.connection.close()
+        try:
+            self.connection.close()
+        except sqlite3.Error as expt:
+            logging.debug(f"Cannot close the hash cache at {self.path}: {expt}")

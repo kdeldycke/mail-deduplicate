@@ -713,10 +713,13 @@ class Deduplicate:
             # One transaction for the whole step, so an interrupted run leaves the
             # database as it found it.
             self.cache.commit()
-            logging.info(
+            summary = (
                 f"Hash cache: {self.cache.hits} mails restored, "
-                f"{self.cache.misses} hashed and recorded.",
+                f"{self.cache.misses} hashed and recorded"
             )
+            if self.cache.pruned:
+                summary += f", {self.cache.pruned} stale entries dropped"
+            logging.info(f"{summary}.")
 
         self.stats[Stat.MAIL_HASHES] += len(self.mails)
 
