@@ -4,19 +4,18 @@ flowchart LR
     subgraph primary-deps [Primary dependencies]
         click_extra{{"`click-extra`"}}
         extra_platforms{{"`extra-platforms`"}}
-        whenever{{"`whenever`"}}
         boltons{{"`boltons`"}}
         backports_strenum{{"`backports-strenum`"}}
     end
 
     pygments(["`pygments`"])
     requests(["`requests`"])
-    click_0(["`click`"])
-    docutils(["`docutils`"])
     jinja2(["`jinja2`"])
     beautifulsoup4(["`beautifulsoup4`"])
+    click_0(["`click`"])
     cloup(["`cloup`"])
     colorama(["`colorama`"])
+    docutils(["`docutils`"])
     markdown_it_py(["`markdown-it-py`"])
     tomli(["`tomli`"])
     typing_extensions(["`typing-extensions`"])
@@ -54,13 +53,13 @@ flowchart LR
     sphinxcontrib_jsmath(["`sphinxcontrib-jsmath`"])
     sphinxcontrib_qthelp(["`sphinxcontrib-qthelp`"])
     sphinxcontrib_serializinghtml(["`sphinxcontrib-serializinghtml`"])
+    tomlkit(["`tomlkit`"])
     urllib3(["`urllib3`"])
 
     subgraph grp_docs [--group docs]
         sphinx{{"`sphinx >=8`"}}
         myst_parser{{"`myst-parser >=5.1`"}}
         furo{{"`furo >=2025.9.25`"}}
-        sphinx_click{{"`sphinx-click >=6.1`"}}
         sphinxcontrib_mermaid{{"`sphinxcontrib-mermaid >=1.2.3`"}}
         sphinx_autodoc_typehints{{"`sphinx-autodoc-typehints >=2.4`"}}
         sphinx_copybutton{{"`sphinx-copybutton >=0.5.2`"}}
@@ -73,6 +72,7 @@ flowchart LR
         pytest_cov{{"`pytest-cov >=4`"}}
         pytest_xdist{{"`pytest-xdist >=3.7`"}}
         coverage{{"`coverage >=7.11`"}}
+        whenever{{"`whenever >=0.10`"}}
         pytest_github_actions_annotate_failures{{"`pytest-github-actions-annotate-failures >=0.2`"}}
         pytest_randomly{{"`pytest-randomly >=3`"}}
     end
@@ -81,16 +81,15 @@ flowchart LR
         types_boltons{{"`types-boltons >=25.0.0.20250822`"}}
     end
 
-    mail_deduplicate ==>|" >=8.1 "| click_extra
-    mail_deduplicate ==>|" >=13 "| extra_platforms
-    mail_deduplicate ==>|" >=0.10 "| whenever
+    mail_deduplicate ==>|" >=8.7 "| click_extra
+    mail_deduplicate ==>|" >=2 "| extra_platforms
     mail_deduplicate ==>|" >=25 "| boltons
     mail_deduplicate ==>|" >=1 "| backports_strenum
     sphinx --> pygments
     sphinx --> requests
-    sphinx --> docutils
     sphinx --> jinja2
     sphinx --> colorama
+    sphinx --> docutils
     sphinx --> packaging
     sphinx --> alabaster
     sphinx --> babel
@@ -107,8 +106,8 @@ flowchart LR
     click_extra --> pytest
     click_extra --> pygments
     click_extra --> click_0
-    click_extra --> docutils
     click_extra --> cloup
+    click_extra --> docutils
     click_extra --> extra_platforms
     click_extra --> tomli
     click_extra --> boltons
@@ -116,6 +115,7 @@ flowchart LR
     click_extra --> wcmatch
     click_extra --> wcwidth
     click_extra --> deepmerge
+    click_extra --> tomlkit
     pytest --> pygments
     pytest --> colorama
     pytest --> tomli
@@ -124,8 +124,8 @@ flowchart LR
     pytest --> pluggy
     pytest --> iniconfig
     myst_parser --> sphinx
-    myst_parser --> docutils
     myst_parser --> jinja2
+    myst_parser --> docutils
     myst_parser --> markdown_it_py
     myst_parser --> mdit_py_plugins
     myst_parser --> pyyaml
@@ -140,9 +140,6 @@ flowchart LR
     pytest_xdist --> pytest
     pytest_xdist --> execnet
     pytest_xdist --> psutil
-    sphinx_click --> sphinx
-    sphinx_click --> click_0
-    sphinx_click --> docutils
     sphinxcontrib_mermaid --> sphinx
     sphinxcontrib_mermaid --> jinja2
     sphinxcontrib_mermaid --> pyyaml
@@ -160,10 +157,10 @@ flowchart LR
     requests --> charset_normalizer
     requests --> idna
     requests --> urllib3
-    click_0 --> colorama
     jinja2 --> markupsafe
     beautifulsoup4 --> typing_extensions
     beautifulsoup4 --> soupsieve
+    click_0 --> colorama
     cloup --> click_0
     cloup --> typing_extensions
     markdown_it_py --> mdurl
@@ -225,7 +222,6 @@ flowchart LR
     click sphinx "https://pypi.org/project/sphinx/" _blank
     click sphinx_autodoc_typehints "https://pypi.org/project/sphinx-autodoc-typehints/" _blank
     click sphinx_basic_ng "https://pypi.org/project/sphinx-basic-ng/" _blank
-    click sphinx_click "https://pypi.org/project/sphinx-click/" _blank
     click sphinx_copybutton "https://pypi.org/project/sphinx-copybutton/" _blank
     click sphinx_design "https://pypi.org/project/sphinx-design/" _blank
     click sphinxcontrib_applehelp "https://pypi.org/project/sphinxcontrib-applehelp/" _blank
@@ -238,6 +234,7 @@ flowchart LR
     click sphinxext_opengraph "https://pypi.org/project/sphinxext-opengraph/" _blank
     click tabulate "https://pypi.org/project/tabulate/" _blank
     click tomli "https://pypi.org/project/tomli/" _blank
+    click tomlkit "https://pypi.org/project/tomlkit/" _blank
     click types_boltons "https://pypi.org/project/types-boltons/" _blank
     click typing_extensions "https://pypi.org/project/typing-extensions/" _blank
     click tzdata "https://pypi.org/project/tzdata/" _blank
@@ -262,7 +259,6 @@ flowchart LR
     style pytest_xdist stroke-width:3px
     style sphinx stroke-width:3px
     style sphinx_autodoc_typehints stroke-width:3px
-    style sphinx_click stroke-width:3px
     style sphinx_copybutton stroke-width:3px
     style sphinx_design stroke-width:3px
     style sphinxcontrib_mermaid stroke-width:3px
