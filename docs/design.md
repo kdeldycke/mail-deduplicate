@@ -32,6 +32,8 @@ The list of headers to consider can be set with the `-h`/`--hash-header` option.
 You can use `Message-ID` as the sole reference header by passing `--hash-header Message-ID` to the CLI.
 ```
 
+Once a mail is hashed it is dehydrated: its parsed message is dropped, and only its identity, its source box and a few memoized scalars are retained. The steps below re-read from the source box whatever content they need, so the memory held for the rest of the run amounts to a few hundred bytes per mail, whatever the size of the boxes.
+
 ### Default headers and mailing lists
 
 The [default headers](https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.cli.DEFAULT_HASH_HEADERS) used for hashing are currently set to:

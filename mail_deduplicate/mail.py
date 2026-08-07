@@ -23,6 +23,7 @@ import logging
 import os
 import re
 import sys
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from email.header import Header
 from functools import cached_property
@@ -114,7 +115,7 @@ class DedupMailMixin(Message):
         "hash_raw_body",
         "hash_normalized_body",
     )
-    """Memoized properties holding copies of the message content.
+    """Memoized properties derived from the message content.
 
     They are only needed while computing hashes, and are dropped by `dehydrate()`
     alongside the parsed message itself.
@@ -254,6 +255,20 @@ class DedupMailMixin(Message):
         fresh = self.box[self.mail_id]
         for name in self.PARSED_MESSAGE_ATTRS:
             setattr(self, name, getattr(fresh, name))
+
+    @contextmanager
+    def hydrated(self) -> Iterator[DedupMailMixin]:
+        """Borrow the full parsed message for the duration of the block.
+
+        Restores the message on the way in and releases it on the way out, so a step
+        needing the whole mail after the hashing one keeps its content resident only
+        while it uses it, and memory stays flat across a loop of mails.
+        """
+        self.hydrate()
+        try:
+            yield self
+        finally:
+            self.dehydrate()
 
     def __repr__(self) -> str:
         """Renders the fully-qualified path of the mail's own file, so it can be

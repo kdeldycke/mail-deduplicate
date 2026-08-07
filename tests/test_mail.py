@@ -25,7 +25,7 @@ from typing import Any, cast
 
 import pytest
 
-from mail_deduplicate.mail import DedupMailMixin, TimeSource
+from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import MAILDIR_SUBDIRS, BoxFormat
 
 from .conftest import MailFactory
@@ -69,6 +69,7 @@ def create_mail_from_bytes(raw: bytes) -> DedupMailMixin:
     mail = cast(DedupMailMixin, email.message_from_bytes(raw))
     mail.__class__ = DedupMailMixin
     # Swapping __class__ bypasses __init__, so mirror the box metadata defaults.
+    mail.box = None
     mail.source_path = None
     mail.mail_id = None
     return mail
@@ -590,26 +591,26 @@ def test_mbox_repr_appends_mail_id(make_box):
     assert Path(box_path).is_file()
 
 
-def load_single_mail(make_box, box_type):
+def load_single_mail(make_box, config, box_type):
     """Helper returning the single mail of a fresh test box, ready for dedup work."""
-    box_format = {Maildir: BoxFormat.MAILDIR, mbox: BoxFormat.MBOX}[box_type]
+    box_format = next(fmt for fmt in BoxFormat if fmt.base_class is box_type)
     box_path, _, _ = make_box(box_type, [MailFactory()])
     box = box_format.constructor(box_path, create=False)
     mail_id, mail = next(iter(box.iteritems()))
     mail.add_box_metadata(box, mail_id)
-    cast(Any, mail).conf = {"time_source": TimeSource.DATE_HEADER}
+    mail.conf = config
     return box, mail_id, mail
 
 
 @pytest.mark.parametrize("box_type", (Maildir, mbox))
-def test_dehydrate_hydrate_roundtrip(make_box, box_type):
+def test_dehydrate_hydrate_roundtrip(make_box, config, box_type):
     """Dehydration must drop the parsed message but keep the scalars used by the
     selection strategies, and content-dependent properties must transparently
     restore the exact same content from the source box.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/761
     """
-    box, _, mail = load_single_mail(make_box, box_type)
+    box, _, mail = load_single_mail(make_box, config, box_type)
 
     original_text = str(mail)
     original_body = mail.body_lines
@@ -638,12 +639,12 @@ def test_dehydrate_hydrate_roundtrip(make_box, box_type):
 
 
 @pytest.mark.parametrize("box_type", (Maildir, mbox))
-def test_dehydrated_mail_defers_body_reads(make_box, box_type):
+def test_dehydrated_mail_defers_body_reads(make_box, config, box_type):
     """A mail dehydrated before its body was ever decoded must re-read its message
     from the source box on the first body-dependent access."""
-    box, mail_id, mail = load_single_mail(make_box, box_type)
+    box, mail_id, mail = load_single_mail(make_box, config, box_type)
     twin = box[mail_id]
-    cast(Any, twin).conf = cast(Any, mail).conf
+    twin.conf = config
 
     mail.dehydrate()
 

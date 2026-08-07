@@ -5,7 +5,9 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
-- Keep memory usage flat whatever the size of the mail sources: each mail is dehydrated down to its identity and a few memoized scalars as soon as it is hashed, and its full content is transparently re-read from its source box when the safeguard thresholds, the selection strategies, the `--hash-only` display or the final action need it. The `--jobs` parallel path now hashes mails in bounded batches instead of materializing the whole corpus up front. Deduplicating a 215 MB maildir of 1,500 mails peaks at 48 MB of resident memory instead of 283 MB (608 MB with `--hash-body=raw`), and the peak no longer grows with the box size. Closes [#761](https://github.com/kdeldycke/mail-deduplicate/issues/761), and removes the memory pressure motivating [#87](https://github.com/kdeldycke/mail-deduplicate/issues/87), whose remaining scope is a persistent hash cache across runs.
+- Keep memory usage flat whatever the size of the mail sources: a 215 MB maildir of 1,500 mails peaks at 48 MB of resident memory instead of 283 MB. Closes [#761](https://github.com/kdeldycke/mail-deduplicate/issues/761), and removes the memory pressure motivating [#87](https://github.com/kdeldycke/mail-deduplicate/issues/87).
+- Fix the threshold options' help, which still claimed a breach skips the whole duplicate set instead of setting the offending mails aside.
+- Drop the non-existent content-based strategy from the README's feature list.
 
 ## [`9.1.0` (2026-08-01)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.0.0...v9.1.0)
 

@@ -342,8 +342,9 @@ class MdedupCommand(Command):
     (
         "Process each set of mails sharing the same hash and apply the "
         "selection --strategy. Fine-grained checks on size and content are performed "
-        "beforehand. If differences are above safety "
-        "levels, the whole duplicate set will be skipped. Limits can be set via "
+        "beforehand. Mails differing above safety levels are set aside so the rest "
+        "can still be deduplicated, and the set is skipped if fewer than 2 remain. "
+        "Limits can be set via "
         "the --size-threshold and --content-threshold options."
     ),
     option(
@@ -391,8 +392,9 @@ class MdedupCommand(Command):
         metavar="BYTES",
         default=512,
         help="Maximum difference allowed in size between mails sharing the same hash. "
-        "The whole subset of duplicates will be skipped if at least one pair of mail "
-        "exceeds the threshold. Set to 0 to enforce strictness and apply selection "
+        "Mails in an offending pair are set aside until the rest all pass. The "
+        "subset is skipped if fewer than 2 remain. "
+        "Set to 0 to enforce strictness and apply selection "
         "strategy on the subset only if all mails are exactly the same. Set to -1 to "
         "allow any difference and apply the strategy whatever the differences.",
     ),
@@ -403,8 +405,9 @@ class MdedupCommand(Command):
         metavar="BYTES",
         default=768,
         help="Maximum difference allowed in content between mails sharing the same "
-        "hash. The whole subset of duplicates will be skipped if at least one pair of "
-        "mail exceeds the threshold. Set to 0 to enforce strictness and apply "
+        "hash. Mails in an offending pair are set aside until the rest all pass. The "
+        "subset is skipped if fewer than 2 remain. "
+        "Set to 0 to enforce strictness and apply "
         "selection strategy on the subset only if all mails are exactly the same. Set "
         "to -1 to allow any difference and apply the strategy whatever the "
         "differences.",
@@ -607,13 +610,13 @@ def mdedup(
                 + ", ".join(ignored_user_options)
             )
 
-        # Print all computed hashes. Rendering the canonical headers re-reads each
-        # mail from its box, so dehydrate them on the way to keep memory flat.
+        # Print all computed hashes. Rendering the canonical headers needs the full
+        # message back, so borrow it one mail at a time to keep memory flat.
         for all_mails in dedup.mails.values():
             for mail in all_mails:
-                echo(mail.pretty_canonical_headers())
-                echo(f"Hash: {mail.hash_key()}")
-                mail.dehydrate()
+                with mail.hydrated():
+                    echo(mail.pretty_canonical_headers())
+                    echo(f"Hash: {mail.hash_key()}")
 
         # Exit right away.
         ctx.exit()

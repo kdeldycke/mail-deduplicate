@@ -25,7 +25,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 - Duplicate detection based on cherry-picked and normalized mail headers.
 - Fetch mails from multiple sources.
 - Reads and writes to `mbox`, `maildir`, `babyl`, `mh`, `mmdf` and `eml` formats.
-- Deduplication strategies based on size, content, timestamp, file path or random choice, chainable as fallbacks.
+- Deduplication strategies based on size, timestamp, file path or random choice, chainable as fallbacks.
 - Copy, move or delete the resulting set of duplicates.
 - Dry-run mode.
 - Protection against false-positives with safety checks on size and content differences.
@@ -89,9 +89,9 @@ $ mdedup --strategy select-one --action delete-discarded --dry-run ~/Maildir
 
 The [hands-on tutorial](https://kdeldycke.github.io/mail-deduplicate/tutorial.html) builds a small playground of duplicated mails, then walks through strategies, actions and safeguards on it. The [design page](https://kdeldycke.github.io/mail-deduplicate/design.html) explains how duplicates are detected.
 
-> [!WARNING]
-> Performance and memory usage: `mdedup` implementation is quite naive and everything resides in memory.
+> [!NOTE]
+> Performance and memory usage: each mail is reduced to a lightweight stub as soon as it is hashed, and its content is re-read from its source box whenever a later step needs it again. The memory footprint no longer grows with the size of the boxes: deduplicating a 215 MB maildir of 1,500 mails peaks at 48 MB of resident memory.
 >
-> This is good enough for a volume of a couple of gigabytes. The more emails `mdedup` try to parse, the closer you'll go towards the memory limits of your machine. In which case [`mdedup` will exit abruptly](https://github.com/kdeldycke/mail-deduplicate/issues/362#issuecomment-1266743045), zapped by the [OOM killer](https://en.wikipedia.org/wiki/Out_of_memory) of your OS. Of course your mileage may vary depending on your hardware.
+> It still scales with the number of mails, at a few hundred bytes each, so a large enough collection can reach the memory limits of your machine. In which case [`mdedup` will exit abruptly](https://github.com/kdeldycke/mail-deduplicate/issues/362#issuecomment-1266743045), zapped by the [OOM killer](https://en.wikipedia.org/wiki/Out_of_memory) of your OS. Re-reading mail content also costs extra disk I/O. Of course your mileage may vary depending on your hardware.
 >
 > You can influence implementation of this feature with pull requests, [purchasing business support 🤝](https://github.com/sponsors/kdeldycke) and [sponsorship 🫶](https://github.com/sponsors/kdeldycke).

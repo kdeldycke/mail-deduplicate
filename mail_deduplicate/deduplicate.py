@@ -620,24 +620,24 @@ class Deduplicate:
             label="Hashed mails",
             show_pos=True,
         ) as progress:
+            # Lazy, single-threaded read: box objects are not concurrency-safe, and
+            # only the mails in flight are ever parsed.
+            stream = (
+                (box, mail_id, mail)
+                for box in self.sources.values()
+                for mail_id, mail in box.iteritems()
+            )
             if jobs <= 1:
                 # Stream one mail at a time: lowest memory, progress tracks each read.
-                for box in self.sources.values():
-                    for mail_id, mail in box.iteritems():
-                        absorb(compute((box, mail_id, mail)))
-                        progress.update(1)
+                for item in stream:
+                    absorb(compute(item))
+                    progress.update(1)
             else:
-                # Read single-threaded (box objects are not concurrency-safe), then
-                # parallel-hash in bounded batches: only one batch of parsed mails is
-                # materialized at a time, and each mail shrinks to its dehydrated
-                # form as soon as it is hashed. run_jobs yields in submission order,
-                # so grouping and stats stay deterministic regardless of the job
-                # count.
-                stream = (
-                    (box, mail_id, mail)
-                    for box in self.sources.values()
-                    for mail_id, mail in box.iteritems()
-                )
+                # Parallel-hash in bounded batches: `run_jobs` materializes whatever
+                # it is handed, so only one batch of parsed mails exists at a time,
+                # and each mail shrinks to its dehydrated form as soon as it is
+                # hashed. `run_jobs` yields in submission order, so grouping and
+                # stats stay deterministic regardless of the job count.
                 batch_size = jobs * self.PARALLEL_BATCH_FACTOR
                 while batch := list(islice(stream, batch_size)):
                     for result in run_jobs(compute, batch, jobs=jobs):

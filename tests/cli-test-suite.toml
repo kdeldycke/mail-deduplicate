@@ -24,7 +24,13 @@ stdout_contains = [
     "  -e, --export-format [maildir|mbox|mh|babyl|mmdf|eml]",
     "  [default: mbox]",
 
-    # Numeric ranges are properly rendered in help.
+    # Numeric ranges are properly rendered in help. The second needle below also
+    # depends on the length of the --size-threshold help string in cli.py:
+    # click-extra flows the default record as ordinary words, so a help text of
+    # the wrong length wraps "[default:" onto one line and "512; x>=-1]" onto the
+    # next. The needle then stops matching, and the failure points here rather
+    # than at the help string that caused it. Re-run this suite
+    # (tests/test_cli.py::test_cli_test_suite) after editing that help string.
     "  -S, --size-threshold BYTES",
     "  [default: 512; x>=-1]",
 
