@@ -118,5 +118,65 @@
 		"suspicious": 0,
 		"tag": "v9.1.0",
 		"undetected": 58
+	},
+	{
+		"filename": "mdedup-9.2.0-linux-arm64.bin",
+		"harmless": 0,
+		"malicious": 1,
+		"scanned": "2026-08-07",
+		"sha256": "6c6a982af640af659d057d0e2d1e582820a33675b2bdbef1f793750f1b5843de",
+		"suspicious": 0,
+		"tag": "v9.2.0",
+		"undetected": 61
+	},
+	{
+		"filename": "mdedup-9.2.0-linux-x64.bin",
+		"harmless": 0,
+		"malicious": 1,
+		"scanned": "2026-08-07",
+		"sha256": "7dc51a0d7bc06bcbd4cd7733b5448006191026d933520c7a3d625ebd5acd6e41",
+		"suspicious": 0,
+		"tag": "v9.2.0",
+		"undetected": 61
+	},
+	{
+		"filename": "mdedup-9.2.0-macos-arm64.bin",
+		"harmless": 0,
+		"malicious": 1,
+		"scanned": "2026-08-07",
+		"sha256": "48a6c14980851557cee41c542f6d9b8cc0f9c2f6cba7459cc1656ba00fbb1a80",
+		"suspicious": 0,
+		"tag": "v9.2.0",
+		"undetected": 60
+	},
+	{
+		"filename": "mdedup-9.2.0-macos-x64.bin",
+		"harmless": 0,
+		"malicious": 0,
+		"scanned": "2026-08-07",
+		"sha256": "71d85214144fd2916532ab63be78af3693c1a432d80695dde4bec2d0d8ddcda6",
+		"suspicious": 0,
+		"tag": "v9.2.0",
+		"undetected": 61
+	},
+	{
+		"filename": "mdedup-9.2.0-windows-arm64.exe",
+		"harmless": 0,
+		"malicious": 2,
+		"scanned": "2026-08-07",
+		"sha256": "21f19456739385a7f55e6a4b537c53e7c8bc7869156889da3e100c8cf0d6731d",
+		"suspicious": 0,
+		"tag": "v9.2.0",
+		"undetected": 66
+	},
+	{
+		"filename": "mdedup-9.2.0-windows-x64.exe",
+		"harmless": 0,
+		"malicious": 13,
+		"scanned": "2026-08-07",
+		"sha256": "9ec0d8949fb0fb1a6619d29659435db8d8753642c9c80299ab8d60004bdddaca",
+		"suspicious": 0,
+		"tag": "v9.2.0",
+		"undetected": 57
 	}
 ]
