@@ -25,6 +25,8 @@ import pytest
 from click_extra import BUILTIN_THEMES
 from click_extra.test_suite import load_test_suite, run_test_suite
 
+from mail_deduplicate.mail import DedupMailMixin
+
 from .conftest import MailFactory
 
 
@@ -217,6 +219,57 @@ def test_single_hash_header_needs_no_minimal_flag(invoke, make_box):
     # The mail is hashed rather than rejected by the minimal-headers floor.
     assert "Hash:" in result.stdout
     assert "Rejecting" not in result.stderr
+
+
+def test_too_few_headers_rejects_mail(invoke, make_box):
+    """A mail carrying fewer hash headers than the floor is rejected, and the warning
+    renders the headers that were found so the mail can be inspected.
+
+    The floor is derived as `min(4, number of --hash-header values)`, so asking for
+    four headers the mail does not carry leaves it one below the floor.
+    """
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+
+    result = invoke(
+        "--hash-header=x-absent-one",
+        "--hash-header=x-absent-two",
+        "--hash-header=x-absent-three",
+        "--hash-header=subject",
+        "--hash-only",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "Rejecting" in result.stderr
+    assert "1 headers found out of 4" in result.stderr
+    # The table of the headers that were found is rendered alongside the warning.
+    assert "Header ID" in result.stderr
+    # Being rejected, the mail never reaches the hashing step.
+    assert "Hash:" not in result.stdout
+
+
+def test_headers_table_rendered_only_when_logged(invoke, make_box, monkeypatch):
+    """Rendering the canonical-headers table goes through `tabulate` and costs more
+    than the hash itself, yet it is discarded at any level above debug. It must not
+    be built at all at the default verbosity."""
+    renders: list[str] = []
+    original = DedupMailMixin.pretty_canonical_headers
+
+    def spy(self) -> str:
+        rendered = original(self)
+        renders.append(rendered)
+        return rendered
+
+    monkeypatch.setattr(DedupMailMixin, "pretty_canonical_headers", spy)
+    box_path, _, _ = make_box(Maildir, [MailFactory(), MailFactory()])
+    args = ("--strategy=select-newest", "--action=delete-selected", "--dry-run")
+
+    assert invoke(*args, box_path).exit_code == 0
+    assert renders == []
+
+    assert invoke("--verbosity=DEBUG", *args, box_path).exit_code == 0
+    # Both mails have enough headers, so each one renders its table exactly once.
+    assert len(renders) == 2
 
 
 def test_invalid_hash_header_rejected(invoke, make_box):

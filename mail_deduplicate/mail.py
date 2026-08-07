@@ -39,7 +39,7 @@ else:
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
     from mailbox import Mailbox, _ProxyFile
 
     from .cli import Config
@@ -121,6 +121,21 @@ class DedupMailMixin(Message):
     alongside the parsed message itself.
     """
 
+    resolve_path: Callable[[Mailbox, str], str]
+    """Derives the real filesystem location of a mail from its box.
+
+    Set per box format by `make_dedup_mail()`, as folder-based boxes give each mail
+    its own file while file-based ones pack them all into the box's single file.
+    """
+
+    defects: list = ()  # type: ignore[assignment]
+    """Fallback for the parsing defects dropped by `dehydrate()`.
+
+    An empty tuple rather than a list, so it can be shared by every dehydrated mail
+    instead of costing one throw-away empty list each: reads still work, and the
+    appends only the parser performs fail loudly on a mail that has no message.
+    """
+
     PARSED_MESSAGE_ATTRS: tuple[str, ...] = (
         "_headers",
         "_payload",
@@ -148,16 +163,25 @@ class DedupMailMixin(Message):
         self.mail_id: str | None = None
         """Mail ID used to uniquely refers to it in the context of its source."""
 
-        self.path: str
+        self.conf: Config
+        """Global configuration"""
+
+    @property
+    def path(self) -> str:
         """Real filesystem location of the mail.
 
         Returns the individual mail's file for folder-based box types (`maildir` &
         co.), but returns the whole box path for file-based boxes (`mbox` & co.).
         Used by regexp-based selection strategies and to render the mail's repr.
-        """
 
-        self.conf: Config
-        """Global configuration"""
+        Derived on access from the box rather than stored, so a retained mail does
+        not carry a copy of its own absolute path for the whole run. Raises
+        `AttributeError` before the box metadata is attached, so `getattr(mail,
+        "path", None)` still reads as absent.
+        """
+        if self.box is None or self.mail_id is None:
+            raise AttributeError("No box metadata attached to this mail yet.")
+        return self.resolve_path(self.box, self.mail_id)
 
     def add_box_metadata(self, box: Mailbox, mail_id: str) -> None:
         """Post-instantiation utility to attach to mail some metadata derived from its
@@ -170,18 +194,6 @@ class DedupMailMixin(Message):
         self.box = box
         self.source_path = box._path
         self.mail_id = mail_id
-
-        # Extract file name and close it right away to reclaim memory. Folder-based
-        # boxes proxy the mail's own on-disk file, so its name is the real path.
-        # File-based boxes share the box's single file; Babyl even hands back a
-        # nameless in-memory buffer, so fall back to the box path there.
-        mail_file = box.get_file(mail_id)
-        try:
-            self.path = mail_file._file.name  # type: ignore[attr-defined]
-        except AttributeError:
-            self.path = box._path
-        finally:
-            mail_file.close()
 
     def __deepcopy__(self, memo: dict) -> DedupMailMixin:
         """Deep-copy the mail while sharing its box and configuration references.
@@ -236,7 +248,9 @@ class DedupMailMixin(Message):
         self._unixfrom = None
         self.preamble = None
         self.epilogue = None
-        self.defects = []
+        # Fall back to the shared empty tuple on the class instead of holding a
+        # per-mail empty list.
+        del self.defects
 
     def hydrate(self) -> None:
         """Restore the full parsed message dropped by `dehydrate()`.
@@ -466,14 +480,15 @@ class DedupMailMixin(Message):
         """
         headers_count = len(self.canonical_headers)
         minimal_headers = self.conf["minimal_headers"]
-        msg = self.pretty_canonical_headers()
         if headers_count < minimal_headers:
-            logging.warning(msg)
+            logging.warning(self.pretty_canonical_headers())
             raise TooFewHeaders(
                 f"{headers_count} headers found out of {minimal_headers}."
             )
-        else:
-            logging.debug(msg)
+        # Rendering the table costs more than the hash itself, and its result is
+        # discarded at any level above debug, so only pay for it when it is logged.
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug(self.pretty_canonical_headers())
 
         return "\n".join(
             [f"{h_id}: {h_value}" for h_id, h_value in self.canonical_headers],

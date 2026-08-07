@@ -32,7 +32,7 @@ The list of headers to consider can be set with the `-h`/`--hash-header` option.
 You can use `Message-ID` as the sole reference header by passing `--hash-header Message-ID` to the CLI.
 ```
 
-Once a mail is hashed it is dehydrated: its parsed message is dropped, and only its identity, its source box and a few memoized scalars are retained. The steps below re-read from the source box whatever content they need, so the memory held for the rest of the run amounts to a few hundred bytes per mail, whatever the size of the boxes.
+Once a mail is hashed it is dehydrated: its parsed message is dropped, and only its identity, its source box and a few memoized scalars are retained. Even its own location is derived from its box on demand rather than stored. The steps below re-read from the source box whatever content they need, so the memory held for the rest of the run amounts to about 600 bytes per mail, whatever the size of the boxes.
 
 ### Default headers and mailing lists
 
@@ -62,6 +62,21 @@ This set was crafted to limit the effects of mailing-lists on both the mail head
 To avoid hashing mails with too few headers (like corrupted mails), a minimal number of the selected headers must be present in a mail before its hash is trusted.
 
 This floor is derived automatically as the smaller of **4** and the number of headers selected via `--hash-header`. The default ten-header set therefore requires at least four to be present, while narrowing the selection down to a single header relaxes the floor to match, so no dedicated option is needed.
+
+### Reusing hashes between runs
+
+Hashing dominates a run, and it is pure work: the same mail, hashed with the same options, always produces the same result. The `--cache` option keeps those results in a local SQLite database, so a later run skips opening and parsing the mails it has already seen. On a 20,000-mail maildir a second run drops from `7.3s` to `2.5s`. It is off by default, and `--cache-path` both points at another database and enables it.
+
+Two independent guards decide whether an entry can be trusted:
+
+- A fingerprint of every option feeding a cached value: `--hash-header`, `--hash-body` and `--time-source`. Changing any of them discards the whole database, since no entry produced under different options can be told apart from a valid one.
+- A per-mail staleness key made of the size and modification time of the file backing the mail, taken *before* the mail is read, so a mail modified during a run is re-hashed by the next one rather than trusted.
+
+What that key covers depends on the box structure. Folder-based boxes (`maildir`, `MH`, `eml`) give each mail its own file, so the key tracks that mail alone. Mails of file-based boxes (`mbox`, `babyl`, `mmdf`) all live inside the box's single file and are keyed by byte offsets that shift as soon as a mail is added or removed, so any edit to the box invalidates every one of its mails at once.
+
+```{caution}
+The cache only ever spares the hashing step. The selection step still re-reads the body of every mail belonging to a set of two or more, to compare them against the [size](#-safeguard-size-threshold) and [content](#-safeguard-content-threshold) thresholds.
+```
 
 ## Step 3: Selecting duplicates
 

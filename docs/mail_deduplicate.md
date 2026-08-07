@@ -18,6 +18,15 @@
    :undoc-members:
 ```
 
+## `mail_deduplicate.cache` module
+
+```{eval-rst}
+.. automodule:: mail_deduplicate.cache
+   :members:
+   :show-inheritance:
+   :undoc-members:
+```
+
 ## `mail_deduplicate.cli` module
 
 ```{eval-rst}

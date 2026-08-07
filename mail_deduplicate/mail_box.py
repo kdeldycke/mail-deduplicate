@@ -23,10 +23,12 @@ from __future__ import annotations
 import logging
 import mailbox
 import os
+from collections.abc import Callable
 from enum import Enum, auto
 from functools import partial
 from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
 from pathlib import Path
+from typing import cast
 from uuid import uuid4
 
 from click_extra import get_current_theme
@@ -34,17 +36,70 @@ from click_extra import get_current_theme
 from .mail import DedupMailMixin
 
 
-def make_dedup_mail(name: str, base: type) -> type:
-    """Create a DedupMail class for a mailbox message type."""
-    return type(name, (DedupMailMixin, base), {})
+def maildir_mail_path(box: Mailbox, key: str) -> str:
+    """Location of a `maildir` mail, read from the box's table of contents.
+
+    A maildir key drops the `:2,<flags>` suffix the file name carries, so the name
+    cannot be rebuilt from the key alone. The box refreshed its table of contents to
+    hand out the mail in the first place, so it is only re-validated on a miss.
+    """
+    try:
+        subpath = box._toc[key]  # type: ignore[attr-defined]
+    except KeyError:
+        subpath = box._lookup(key)  # type: ignore[attr-defined]
+    return os.path.join(box._path, subpath)
 
 
-MaildirDedupMail = make_dedup_mail("MaildirDedupMail", mailbox.MaildirMessage)
-mboxDedupMail = make_dedup_mail("mboxDedupMail", mailbox.mboxMessage)
-MHDedupMail = make_dedup_mail("MHDedupMail", mailbox.MHMessage)
-BabylDedupMail = make_dedup_mail("BabylDedupMail", mailbox.BabylMessage)
-MMDFDedupMail = make_dedup_mail("MMDFDedupMail", mailbox.MMDFMessage)
-EMLDedupMail = make_dedup_mail("EMLDedupMail", mailbox.Message)
+def keyed_mail_path(box: Mailbox, key: str) -> str:
+    """Location of an `MH` or `eml` mail, whose file is named after its key."""
+    return os.path.join(box._path, str(key))
+
+
+def box_file_path(box: Mailbox, key: str) -> str:
+    """Location of a mail from a file-based box: the box's own single file.
+
+    Every mail of an `mbox`, `babyl` or `mmdf` box is packed into it, so they all
+    share this path and are told apart by their mail ID.
+    """
+    return box._path
+
+
+def resolve_mail_path(box: Mailbox, key: str) -> str:
+    """Location of a mail in its box, without instantiating the mail.
+
+    Lets a caller reach a mail's file before deciding to read it, which is how the
+    hash cache checks whether a mail changed without paying for its parsing.
+    """
+    factory = box._factory
+    assert factory is not None, "Box opened without a DedupMail factory."
+    return cast("str", factory.resolve_path(box, key))  # type: ignore[attr-defined]
+
+
+def make_dedup_mail(
+    name: str,
+    base: type,
+    path_resolver: Callable[[Mailbox, str], str],
+) -> type:
+    """Create a DedupMail class for a mailbox message type.
+
+    Deriving a mail's own location from its box is format-specific, so the resolver
+    is baked into the class here instead of being branched on at runtime.
+    """
+    return type(
+        name,
+        (DedupMailMixin, base),
+        {"resolve_path": staticmethod(path_resolver)},
+    )
+
+
+MaildirDedupMail = make_dedup_mail(
+    "MaildirDedupMail", mailbox.MaildirMessage, maildir_mail_path
+)
+mboxDedupMail = make_dedup_mail("mboxDedupMail", mailbox.mboxMessage, box_file_path)
+MHDedupMail = make_dedup_mail("MHDedupMail", mailbox.MHMessage, keyed_mail_path)
+BabylDedupMail = make_dedup_mail("BabylDedupMail", mailbox.BabylMessage, box_file_path)
+MMDFDedupMail = make_dedup_mail("MMDFDedupMail", mailbox.MMDFMessage, box_file_path)
+EMLDedupMail = make_dedup_mail("EMLDedupMail", mailbox.Message, keyed_mail_path)
 
 
 class EML(Mailbox):

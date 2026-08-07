@@ -69,6 +69,8 @@ def config() -> Config:
         minimal_headers=DEFAULT_MINIMAL_HEADERS,
         hash_body=BodyHasher.SKIP,
         hash_only=False,
+        cache=False,
+        cache_path=None,
         size_threshold=512,
         content_threshold=768,
         show_diff=False,

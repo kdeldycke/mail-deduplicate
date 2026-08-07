@@ -42,6 +42,7 @@ from cloup.constraints import If, accept_none, require_all
 from cloup.constraints.conditions import Predicate
 
 from .action import Action
+from .cache import default_cache_path
 from .deduplicate import BodyHasher, Deduplicate
 from .mail import TimeSource
 from .mail_box import FILE_FORMATS, FOLDER_FORMATS, BoxFormat
@@ -110,6 +111,8 @@ class Config(TypedDict):
     minimal_headers: int
     hash_body: BodyHasher
     hash_only: bool
+    cache: bool
+    cache_path: Path | None
     size_threshold: int
     content_threshold: int
     show_diff: bool
@@ -336,6 +339,24 @@ class MdedupCommand(Command):
         help="Compute and display the internal hashes used to identify duplicates. Do "
         "not performs any selection or action.",
     ),
+    option(
+        "--cache/--no-cache",
+        default=False,
+        help="Reuse the hashes computed by previous runs, so unchanged mails are not "
+        "read nor parsed again. An entry is only trusted while the size and "
+        "modification time of the file backing its mail are unchanged, and the whole "
+        "cache is discarded as soon as any option feeding the hashes changes. Mails "
+        "of a file-based box (mbox, babyl, mmdf) all share the box's file, so editing "
+        "it invalidates every one of them at once. Off by default.",
+    ),
+    option(
+        "--cache-path",
+        metavar="CACHE_DB_PATH",
+        type=path(dir_okay=False, resolve_path=True),
+        default=None,
+        help="Location of the hash cache database. Implies --cache. Defaults to "
+        f"{default_cache_path()}",
+    ),
 )
 @option_group(
     "Deduplication (step #3)",
@@ -518,6 +539,8 @@ def mdedup(
     hash_headers,
     hash_body,
     hash_only,
+    cache,
+    cache_path,
     size_threshold,
     content_threshold,
     show_diff,
@@ -560,6 +583,9 @@ def mdedup(
         minimal_headers=min(DEFAULT_MINIMAL_HEADERS, len(hash_headers)),
         hash_body=hash_body,
         hash_only=hash_only,
+        # An explicit database location is a request to use it.
+        cache=cache or cache_path is not None,
+        cache_path=cache_path,
         size_threshold=size_threshold,
         content_threshold=content_threshold,
         show_diff=show_diff,
@@ -618,7 +644,8 @@ def mdedup(
                     echo(mail.pretty_canonical_headers())
                     echo(f"Hash: {mail.hash_key()}")
 
-        # Exit right away.
+        # Exit right away, releasing the boxes and the cache on the way out.
+        dedup.close_all()
         ctx.exit()
 
     echo(theme.heading("\n● Step #3 - Select mails in each group"))

@@ -26,7 +26,7 @@ from functools import cached_property
 from itertools import combinations, islice
 from operator import attrgetter
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, cast
 
 from click_extra import (
     context,
@@ -36,7 +36,8 @@ from click_extra import (
     run_jobs,
 )
 
-from .mail import TooFewHeaders
+from .cache import CacheEntry, HashCache, open_cache
+from .mail import TimeSource, TooFewHeaders
 from .mail_box import open_box
 
 if sys.version_info >= (3, 11):
@@ -46,6 +47,7 @@ else:
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
     from mailbox import Mailbox
 
     from .cli import Config
@@ -193,7 +195,7 @@ class DuplicateSet:
     """
 
     def __init__(
-        self, hash_key: str, mail_set: set[DedupMailMixin], conf: Config
+        self, hash_key: str, mail_set: Iterable[DedupMailMixin], conf: Config
     ) -> None:
         """Load-up the duplicate set of mail and freeze pool.
 
@@ -524,8 +526,14 @@ class Deduplicate:
         deduplication of sources themselves.
         """
 
-        self.mails: dict[str, set[DedupMailMixin]] = {}
-        """All mails grouped by hashes."""
+        self.mails: dict[str, list[DedupMailMixin]] = {}
+        """All mails grouped by hashes.
+
+        Grouped in lists rather than sets: mails carry no value equality, so a set
+        only ever deduplicated by object identity, which the single pass over each
+        box already rules out. A one-element list also costs 64 bytes where a set
+        costs 216, and most hashes group a single mail.
+        """
 
         self.selection: set[DedupMailMixin] = set()
         """Mails selected after application of selection strategy."""
@@ -538,6 +546,32 @@ class Deduplicate:
 
         self.stats: Counter[Stat] = Counter()
         """Deduplication statistics. Unset statistics naturally read as zero."""
+
+        self.cache: HashCache | None = open_cache(conf)
+        """Cross-run cache of mail hashes, when the user opted in with `--cache` and
+        the database could be opened."""
+
+    def restore_cached(
+        self, box: Mailbox, mail_id: str, entry: CacheEntry
+    ) -> tuple[DedupMailMixin, str, None]:
+        """Rebuild a hashed mail from its cache entry, without opening its file.
+
+        Produces the same dehydrated stub the hashing step would have left behind,
+        with the scalars the later steps rely on already memoized. Anything else
+        those steps need is re-read from the box on demand, as for any other mail.
+        """
+        factory = cast("Callable[[], DedupMailMixin]", box._factory)
+        mail = factory()
+        mail.add_box_metadata(box, mail_id)
+        mail.conf = self.conf
+        # A ctime timestamp is a stat away and would not be caught by the cache's
+        # staleness key, so it is left to be derived rather than restored.
+        if self.conf["time_source"] != TimeSource.CTIME:
+            mail.__dict__["timestamp"] = entry.timestamp
+        if entry.mail_size is not None:
+            mail.__dict__["size"] = entry.mail_size
+        mail.dehydrate()
+        return mail, entry.mail_hash, None
 
     def add_source(self, source_path: Path | str) -> None:
         """Registers a source of mails, validates and opens it.
@@ -603,15 +637,27 @@ class Deduplicate:
 
         def absorb(result):
             """Merge one hashed mail into the shared groups and stats. Called only from
-            the main thread, keeping the parallel path race-free."""
+            the main thread, keeping the parallel path and the cache race-free."""
             mail, mail_hash, expt = result
             if expt is not None:
                 logging.warning(f"Rejecting {mail!r}: {expt.args[0]}")
                 self.stats[Stat.MAIL_REJECTED] += 1
+                if self.cache:
+                    # A rejection depends on more than the hash, so it is not cached.
+                    self.cache.forget(mail.source_path, mail.mail_id)
             else:
-                # Use a set to deduplicate entries pointing to the same file.
-                self.mails.setdefault(mail_hash, set()).add(mail)
+                self.mails.setdefault(mail_hash, []).append(mail)
                 self.stats[Stat.MAIL_RETAINED] += 1
+                if self.cache:
+                    self.cache.store(
+                        mail.source_path,
+                        mail.mail_id,
+                        CacheEntry(
+                            mail_hash,
+                            mail.__dict__.get("timestamp"),
+                            mail.__dict__.get("size"),
+                        ),
+                    )
 
         jobs = context.get(get_current_context(), context.JOBS, 1)
 
@@ -620,13 +666,31 @@ class Deduplicate:
             label="Hashed mails",
             show_pos=True,
         ) as progress:
-            # Lazy, single-threaded read: box objects are not concurrency-safe, and
-            # only the mails in flight are ever parsed.
-            stream = (
-                (box, mail_id, mail)
-                for box in self.sources.values()
-                for mail_id, mail in box.iteritems()
-            )
+            def to_hash():
+                """Yields the mails still needing to be hashed.
+
+                Lazy and single-threaded: neither box objects nor the cache are
+                concurrency-safe, and only the mails in flight are ever parsed. A
+                mail the cache can restore is absorbed here and never even opened,
+                which is the whole point of keeping the cache.
+                """
+                for box in self.sources.values():
+                    for mail_id in box.iterkeys():
+                        entry = self.cache.lookup(box, mail_id) if self.cache else None
+                        if entry is not None:
+                            absorb(self.restore_cached(box, mail_id, entry))
+                            progress.update(1)
+                            continue
+                        try:
+                            mail = box[mail_id]
+                        except KeyError:
+                            # The mail went away between the box listing it and us
+                            # reading it, which `iteritems()` also skips over.
+                            logging.debug(f"Mail {mail_id} vanished from {box._path}.")
+                            continue
+                        yield box, mail_id, mail
+
+            stream = to_hash()
             if jobs <= 1:
                 # Stream one mail at a time: lowest memory, progress tracks each read.
                 for item in stream:
@@ -643,6 +707,15 @@ class Deduplicate:
                     for result in run_jobs(compute, batch, jobs=jobs):
                         absorb(result)
                         progress.update(1)
+
+        if self.cache:
+            # One transaction for the whole step, so an interrupted run leaves the
+            # database as it found it.
+            self.cache.commit()
+            logging.info(
+                f"Hash cache: {self.cache.hits} mails restored, "
+                f"{self.cache.misses} hashed and recorded.",
+            )
 
         self.stats[Stat.MAIL_HASHES] += len(self.mails)
 
@@ -688,10 +761,12 @@ class Deduplicate:
                 mail.dehydrate()
 
     def close_all(self):
-        """Close all open boxes."""
+        """Close all open boxes, and the hash cache if one was opened."""
         for source_path, box in self.sources.items():
             logging.debug(f"Close {source_path}")
             box.close()
+        if self.cache:
+            self.cache.close()
 
     def report(self):
         """Returns a text report of user-friendly statistics and metrics."""

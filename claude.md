@@ -50,6 +50,7 @@ $ uv run -- mdedup --help
 
 | Module           | Responsibility                                                                      |
 | ---------------- | ----------------------------------------------------------------------------------- |
+| `cache.py`       | Cross-run SQLite cache of mail hashes, its invalidation and its default location.   |
 | `cli.py`         | The `mdedup` Click command, its `Config`, and option groups.                        |
 | `deduplicate.py` | `Deduplicate` orchestrator, `DuplicateSet`, hashing, statistics (`Stats`).          |
 | `mail.py`        | `DedupMailMixin`: a mail wrapped with dedup-relevant properties (hash, date, size). |

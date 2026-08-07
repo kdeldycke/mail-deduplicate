@@ -78,6 +78,10 @@ dependencies = [
   # The [toml] extra pulls the TOML writer (tomlkit) so --export-config toml
   # works out of the box, TOML being the format the documentation showcases.
   "click-extra[toml]>=8.7",
+  # Resolves the per-platform cache directory holding the hash cache database
+  # (cache.py). 4.5.0 is the first release requiring Python 3.10, aligning its
+  # minimal Python version to ours.
+  "platformdirs>=4.5",
 ]
 urls.Changelog = "https://github.com/kdeldycke/mail-deduplicate/blob/main/changelog.md"
 urls.Documentation = "https://kdeldycke.github.io/mail-deduplicate"

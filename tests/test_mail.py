@@ -26,9 +26,9 @@ from typing import Any, cast
 import pytest
 
 from mail_deduplicate.mail import DedupMailMixin
-from mail_deduplicate.mail_box import MAILDIR_SUBDIRS, BoxFormat
+from mail_deduplicate.mail_box import MAILDIR_SUBDIRS, BoxFormat, BoxStructure
 
-from .conftest import MailFactory
+from .conftest import BOX_TYPES, MailFactory
 
 
 def create_mail_with_headers(
@@ -589,6 +589,37 @@ def test_mbox_repr_appends_mail_id(make_box):
 
     assert len(reprs) == 2
     assert Path(box_path).is_file()
+
+
+@pytest.mark.parametrize("box_type", BOX_TYPES)
+def test_mail_path_derived_from_box(make_box, box_type):
+    """A mail's location comes from its box's own index, not from opening its file.
+
+    Folder-based boxes give every mail its own file, so their mails carry distinct
+    paths below the box's directory. File-based boxes pack every mail into the box's
+    single file, so their mails all share its path and are told apart by their ID.
+    """
+    box_format = next(fmt for fmt in BoxFormat if fmt.base_class is box_type)
+    box_path, _, _ = make_box(box_type, [MailFactory(), MailFactory()])
+    box = box_format.constructor(box_path, create=False)
+
+    paths = []
+    for mail_id, mail in box.iteritems():
+        mail.add_box_metadata(box, mail_id)
+        paths.append(mail.path)
+    box.close()
+
+    assert len(paths) == 2
+    # Whatever the layout, the path points at something readable on disk.
+    assert all(Path(path).is_file() for path in paths)
+
+    if box_format.structure is BoxStructure.FOLDER:
+        assert len(set(paths)) == 2
+        for path in paths:
+            assert Path(path) != Path(box_path)
+            assert Path(box_path) in Path(path).parents
+    else:
+        assert set(paths) == {box_path}
 
 
 def load_single_mail(make_box, config, box_type):
