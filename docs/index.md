@@ -13,6 +13,7 @@ tutorial
 design
 cli
 configuration
+performance
 ```
 
 ```{toctree}

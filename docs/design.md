@@ -65,18 +65,7 @@ This floor is derived automatically as the smaller of **4** and the number of he
 
 ### Reusing hashes between runs
 
-Hashing dominates a run, and it is pure work: the same mail, hashed with the same options, always produces the same result. The `--cache` option keeps those results in a local SQLite database, so a later run skips opening and parsing the mails it has already seen. On a 20,000-mail maildir a second run drops from `7.3s` to `2.5s`. It is off by default, and `--cache-path` both points at another database and enables it.
-
-Two independent guards decide whether an entry can be trusted:
-
-- A fingerprint of every option feeding a cached value: `--hash-header`, `--hash-body` and `--time-source`. Changing any of them discards the whole database, since no entry produced under different options can be told apart from a valid one.
-- A per-mail staleness key made of the size and modification time of the file backing the mail, taken *before* the mail is read, so a mail modified during a run is re-hashed by the next one rather than trusted.
-
-What that key covers depends on the box structure. Folder-based boxes (`maildir`, `MH`, `eml`) give each mail its own file, so the key tracks that mail alone. Mails of file-based boxes (`mbox`, `babyl`, `mmdf`) all live inside the box's single file and are keyed by byte offsets that shift as soon as a mail is added or removed, so any edit to the box invalidates every one of its mails at once.
-
-```{caution}
-The cache only ever spares the hashing step. The selection step still re-reads the body of every mail belonging to a set of two or more, to compare them against the [size](#-safeguard-size-threshold) and [content](#-safeguard-content-threshold) thresholds.
-```
+Hashing the same mail with the same options always produces the same result, so `--cache` keeps those results in a local database and lets a later run skip reading and parsing the mails it has already seen. Its invalidation rules and the cost of each hashing option are covered in [](performance.md).
 
 ## Step 3: Selecting duplicates
 
