@@ -1,5 +1,10 @@
 # Changelog
 
+## [`9.2.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.2.0...main)
+
+> [!WARNING]
+> This version is **not released yet** and is under active development.
+
 ## [`9.2.0` (2026-08-07)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.1.0...v9.2.0)
 
 - Keep memory usage flat whatever the size of the mail sources: a 215 MB maildir of 1,500 mails peaks at 48 MB of resident memory instead of 283 MB. Closes [#761](https://github.com/kdeldycke/mail-deduplicate/issues/761), and removes the memory pressure motivating [#87](https://github.com/kdeldycke/mail-deduplicate/issues/87).
