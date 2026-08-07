@@ -1,4 +1,4 @@
-# {octicon}`meter` Performance
+# {octicon}`zap` Performance
 
 How long a run takes, how much memory it holds, and how to make the next run faster.
 
