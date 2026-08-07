@@ -31,7 +31,7 @@ That figure assumes Python 3.11 or later. A stub is mostly its instance dictiona
 | 20,000 | 79 MB    | 65 MB                |
 | 60,000 | 235 MB   | 109 MB               |
 
-The fixed baseline is around 43 MB of interpreter and imports, so a collection of 300,000 mails lands near 375 MB. Large enough collections can still reach the limits of your machine, in which case the OS will kill the process.
+The fixed baseline is around 43 MB of interpreter and imports, so a collection of 300,000 mails lands near 375 MB. Large enough collections can still reach the limits of your machine, in which case [`mdedup` exits abruptly](https://github.com/kdeldycke/mail-deduplicate/issues/362#issuecomment-1266743045), zapped by your OS's [OOM killer](https://en.wikipedia.org/wiki/Out_of_memory). Re-reading mail content also costs extra disk I/O, so your mileage varies with your hardware.
 
 ```{tip}
 Deduplicating one box at a time keeps the peak lower than passing every box in a single run, since mails are only grouped across the sources of the same run.

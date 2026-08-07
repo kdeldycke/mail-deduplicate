@@ -90,10 +90,8 @@ $ mdedup --strategy select-one --action delete-discarded --dry-run ~/Maildir
 The [hands-on tutorial](https://kdeldycke.github.io/mail-deduplicate/tutorial.html) builds a small playground of duplicated mails, then walks through strategies, actions and safeguards on it. The [design page](https://kdeldycke.github.io/mail-deduplicate/design.html) explains how duplicates are detected.
 
 > [!NOTE]
-> Performance and memory usage: each mail is reduced to a lightweight stub as soon as it is hashed, and its content is re-read from its source box whenever a later step needs it again. The memory footprint no longer grows with the size of the boxes: deduplicating a 215 MB maildir of 1,500 mails peaks at 46 MB of resident memory.
+> Memory does not grow with the size of your boxes: each mail is reduced to a lightweight stub as soon as it is hashed, so a 215 MB maildir of 1,500 mails peaks at 46 MB. It does grow with their number, at roughly 1 KB of resident memory each, so a large enough collection can still exhaust your machine.
 >
-> Hashing is where a run spends most of its time. Pass `--cache` to keep its results in a local database, so a later run skips reading and parsing the mails it has already seen: on a 20,000-mail maildir a second run drops from `4.3s` to `2.5s`. Entries are only trusted while the file backing their mail is unchanged, and the whole cache is discarded as soon as any option feeding the hashes changes. The [performance page](https://kdeldycke.github.io/mail-deduplicate/performance.html) covers the cost of each option and how to manage the cache.
->
-> It still scales with the number of mails, at about 600 bytes of retained state each on Python 3.11+ (close to twice that on 3.10), which a run's transient allocations round up to roughly 1 KB of resident memory: a collection of 300,000 mails lands around 375 MB. A large enough collection can still reach the memory limits of your machine, in which case [`mdedup` will exit abruptly](https://github.com/kdeldycke/mail-deduplicate/issues/362#issuecomment-1266743045), zapped by the [OOM killer](https://en.wikipedia.org/wiki/Out_of_memory) of your OS. Re-reading mail content also costs extra disk I/O. Of course your mileage may vary depending on your hardware.
->
-> You can influence implementation of this feature with pull requests, [purchasing business support 🤝](https://github.com/sponsors/kdeldycke) and [sponsorship 🫶](https://github.com/sponsors/kdeldycke).
+> Hashing is where a run spends most of its time, and `--cache` reuses it between runs. The [performance page](https://kdeldycke.github.io/mail-deduplicate/performance.html) covers both, and how to manage that cache.
+
+You can support this project with pull requests, [business support 🤝](https://github.com/sponsors/kdeldycke) and [sponsorship 🫶](https://github.com/sponsors/kdeldycke).
