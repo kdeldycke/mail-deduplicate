@@ -666,6 +666,7 @@ class Deduplicate:
             label="Hashed mails",
             show_pos=True,
         ) as progress:
+
             def to_hash():
                 """Yields the mails still needing to be hashed.
 

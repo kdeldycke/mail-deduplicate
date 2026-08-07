@@ -162,7 +162,10 @@ def test_retained_memory_does_not_track_mail_size(invoke, make_box, index_footpr
     kept fully parsed for the whole run.
     See: https://github.com/kdeldycke/mail-deduplicate/issues/761
     """
-    fat = [MailFactory(body="x" * 50_000, message_id=f"<f{i}@nohost.com>") for i in range(20)]
+    fat = [
+        MailFactory(body="x" * 50_000, message_id=f"<f{i}@nohost.com>")
+        for i in range(20)
+    ]
     box_path, _, _ = make_box(Maildir, fat)
 
     assert invoke(*DEDUP_ARGS, box_path).exit_code == 0
