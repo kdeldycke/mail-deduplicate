@@ -8,12 +8,12 @@ All the figures below were measured on an Apple silicon SSD, over a synthetic ma
 
 Hashing dominates. On the corpus above it is around 60% of the run, and it is the only step the [hash cache](#reusing-hashes-between-runs) can skip.
 
-| Step | Cost |
-| --- | --- |
-| 1. Loading mails | Listing each box. Cheap, but grows with the number of subfolders. |
-| 2. Hashing | Reads and parses every mail. The bulk of the run. |
+| Step                    | Cost                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| 1. Loading mails        | Listing each box. Cheap, but grows with the number of subfolders.                                |
+| 2. Hashing              | Reads and parses every mail. The bulk of the run.                                                |
 | 3. Selecting duplicates | Re-reads the body of every mail in a set of two or more, to compare them against the thresholds. |
-| 4. Performing actions | Writes, for every action but `delete-*` on the source box. |
+| 4. Performing actions   | Writes, for every action but `delete-*` on the source box.                                       |
 
 Step 3 is worth understanding: a mail is [dehydrated](design.md) once hashed, so comparing bodies against `--size-threshold` and `--content-threshold` pulls each one back from disk. Mails that end up alone in their hash group are never re-read, so the cost tracks how many duplicates you actually have. Setting both thresholds to `-1` skips those comparisons entirely, at the price of the safeguards they provide.
 
@@ -25,11 +25,11 @@ A mail is reduced to a lightweight stub as soon as it is hashed, so memory track
 That figure assumes Python 3.11 or later. A stub is mostly its instance dictionary, and 3.11 made those share their keys between instances, so the same corpus retains close to twice as much on Python 3.10: about 1.1 KB per mail. Upgrading the interpreter is the cheapest way to halve the memory of a large run.
 ```
 
-| Mails | Box size | Peak resident memory |
-| --- | --- | --- |
-| 1,500 | 215 MB | 46 MB |
-| 20,000 | 79 MB | 65 MB |
-| 60,000 | 235 MB | 109 MB |
+| Mails  | Box size | Peak resident memory |
+| ------ | -------- | -------------------- |
+| 1,500  | 215 MB   | 46 MB                |
+| 20,000 | 79 MB    | 65 MB                |
+| 60,000 | 235 MB   | 109 MB               |
 
 The fixed baseline is around 43 MB of interpreter and imports, so a collection of 300,000 mails lands near 375 MB. Large enough collections can still reach the limits of your machine, in which case the OS will kill the process.
 
@@ -85,11 +85,11 @@ The cache only ever spares the hashing step. It does not reduce memory, and it d
 
 The database sits in your platform's cache directory:
 
-| Platform | Location |
-| --- | --- |
-| macOS | `~/Library/Caches/mdedup/hashes.db` |
+| Platform              | Location                                                                      |
+| --------------------- | ----------------------------------------------------------------------------- |
+| macOS                 | `~/Library/Caches/mdedup/hashes.db`                                           |
 | Linux and other POSIX | `$XDG_CACHE_HOME/mdedup/hashes.db`, defaulting to `~/.cache/mdedup/hashes.db` |
-| Windows | `%LOCALAPPDATA%\mdedup\Cache\hashes.db` |
+| Windows               | `%LOCALAPPDATA%\mdedup\Cache\hashes.db`                                       |
 
 Run `mdedup --help` to see the resolved path on your machine. It holds about 135 bytes per mail, so 20,000 mails cost around 2.7 MB.
 
@@ -105,10 +105,10 @@ A database that cannot be opened, on a read-only or full filesystem for instance
 
 `--hash-body` decides whether mail bodies take part in the hash, and it is the single biggest lever on hashing cost after the cache.
 
-| Mode | 20,000 mails | Notes |
-| --- | --- | --- |
-| `skip` | `4.3s` | The default. Headers alone are usually enough to identify duplicates. |
-| `raw` | `5.4s` | Hashes the body as it is. |
-| `normalized` | `6.9s` | Strips line breaks and spaces first, catching copies that differ only in whitespace. |
+| Mode         | 20,000 mails | Notes                                                                                |
+| ------------ | ------------ | ------------------------------------------------------------------------------------ |
+| `skip`       | `4.3s`       | The default. Headers alone are usually enough to identify duplicates.                |
+| `raw`        | `5.4s`       | Hashes the body as it is.                                                            |
+| `normalized` | `6.9s`       | Strips line breaks and spaces first, catching copies that differ only in whitespace. |
 
 Reach for `raw` or `normalized` when header-based hashing groups mails you do not consider duplicates, rather than as a default.
