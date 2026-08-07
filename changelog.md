@@ -7,6 +7,9 @@
 
 ## [`9.2.0` (2026-08-07)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.1.0...v9.2.0)
 
+> [!NOTE]
+> `9.2.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/9.2.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.2.0).
+
 - Keep memory usage flat whatever the size of the mail sources: a 215 MB maildir of 1,500 mails peaks at 48 MB of resident memory instead of 283 MB. Closes [#761](https://github.com/kdeldycke/mail-deduplicate/issues/761), and removes the memory pressure motivating [#87](https://github.com/kdeldycke/mail-deduplicate/issues/87).
 - Fix the threshold options' help, which still claimed a breach skips the whole duplicate set instead of setting the offending mails aside.
 - Drop the non-existent content-based strategy from the README's feature list.
