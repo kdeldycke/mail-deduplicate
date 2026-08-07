@@ -34,14 +34,17 @@ from .conftest import MailFactory
 
 DEDUP_ARGS = ("--strategy=select-newest", "--action=delete-discarded", "--dry-run")
 
-RETAINED_BYTES_CEILING = 800
+RETAINED_BYTES_CEILING = 800 if sys.version_info >= (3, 11) else 1300
 """Upper bound on the bytes the hash index keeps per mail, once hashing is done.
 
-Measured between 630 and 675 bytes on the corpora below, and around 580 on a large
-one, where the fixed costs amortize better. The ceiling leaves room for object layouts
-to differ between interpreters, while staying under the ~1,000 bytes these same
-corpora retained before mails stopped storing their own path, started being grouped in
-lists, and began sharing one empty tuple of parsing defects.
+A mail stub is mostly its instance dictionary, and Python 3.11 made those share their
+keys between instances. The same corpus therefore retains 630 to 675 bytes per mail on
+3.11 and later, against 1,095 to 1,134 on 3.10, hence the split ceiling. On a large
+corpus the figure settles near 580 bytes, as the fixed costs amortize.
+
+Both ceilings sit above what is measured and below what these corpora retained before
+mails stopped storing their own path, started being grouped in lists, and began
+sharing one empty tuple of parsing defects, which cost about 340 bytes each.
 See: https://github.com/kdeldycke/mail-deduplicate/issues/87
 """
 
