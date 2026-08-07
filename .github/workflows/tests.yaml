@@ -296,7 +296,11 @@ jobs:
         run: |
           uv --no-progress tool install pipx
           for script in $CLI_SCRIPTS; do
-            pipx run "$script" --version
+            # `pipx run <script>` resolves the script name as a PyPI package, just
+            # like a bare `uvx <script>` above; skip it when the two differ.
+            if [ "$script" = "$PACKAGE" ]; then
+              pipx run "$script" --version
+            fi
             pipx run --spec "$PACKAGE" "$script" --version
             pipx run --spec "$GIT_URL" "$script" --version
           done
