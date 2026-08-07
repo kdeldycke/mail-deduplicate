@@ -30,7 +30,7 @@ invoke(mdedup, args=["--help"])
 
 ````{tab-item} Specific version
 ```shell-session
-$ uvx --from mail-deduplicate@9.1.0 -- mdedup
+$ uvx --from mail-deduplicate@9.2.0 -- mdedup
 ```
 ````
 
