@@ -17,10 +17,12 @@
 from __future__ import annotations
 
 import random
+import re
 import string
 from email.utils import formatdate as maildate
 from functools import partial
 from mailbox import MH, MMDF, Babyl, Mailbox, Maildir, Message, mbox
+from pathlib import Path
 from textwrap import dedent
 from uuid import uuid4
 
@@ -48,6 +50,10 @@ BOX_TYPES = (Maildir, mbox, MH, Babyl, MMDF, EML)
 
 Covers every format in `BoxFormat`, so tests can parametrize over the whole set.
 """
+
+
+DEDUP_ARGS = ("--strategy=select-newest", "--action=delete-discarded", "--dry-run")
+"""A run that exercises every step without touching the mails on disk."""
 
 
 @pytest.fixture()
@@ -190,6 +196,30 @@ def make_box(tmp_path):
         return box._path, box_type, str(dest_box_path)
 
     return _make_box
+
+
+def metrics(output: str) -> dict[str, str]:
+    """Extracts the name and value of every metric of a run's report tables."""
+    parsed = {}
+    for line in output.splitlines():
+        cells = [cell.strip() for cell in line.split("│") if cell.strip()]
+        if len(cells) >= 2 and re.fullmatch(r"\d+", cells[1]):
+            parsed[cells[0]] = cells[1]
+    return parsed
+
+
+def mail_files(box_path: str) -> list[Path]:
+    """Every mail file of a folder-based box, in a stable order.
+
+    Dot-prefixed files are left out, as every folder-based format skips them when
+    listing its mails: the temporary link the hardlinking action goes through is one
+    of them.
+    """
+    return sorted(
+        path
+        for path in Path(box_path).rglob("*")
+        if path.is_file() and not path.name.startswith(".")
+    )
 
 
 def check_box(box_path, box_type, content=None):

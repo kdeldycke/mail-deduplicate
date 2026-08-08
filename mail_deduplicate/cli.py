@@ -178,22 +178,33 @@ def compile_regexp(
     return None
 
 
-PATH_STRATEGIES = frozenset((
+PATH_STRATEGIES = (
     Strategy.DISCARD_MATCHING_PATH,
     Strategy.DISCARD_NON_MATCHING_PATH,
     Strategy.SELECT_MATCHING_PATH,
     Strategy.SELECT_NON_MATCHING_PATH,
-))
+)
 """Strategies relying on the `-r`/`--regexp` parameter."""
 
 
-EXPORT_ACTIONS = frozenset((
+EXPORT_ACTIONS = (
     Action.COPY_SELECTED,
     Action.COPY_DISCARDED,
     Action.MOVE_SELECTED,
     Action.MOVE_DISCARDED,
-))
+)
 """Actions relying on the `-E`/`--export` parameter."""
+
+
+def human_join(items: Iterable) -> str:
+    """Renders IDs as an English enumeration, for the help screen.
+
+    Both tuples above are the single source of truth of which strategies and actions
+    take an extra parameter, so the options mentioning them read the list from there
+    instead of spelling it out again and drifting from it.
+    """
+    ids = [str(item) for item in items]
+    return " and ".join((", ".join(ids[:-1]), ids[-1])) if len(ids) > 1 else ids[0]
 
 
 class AnyValueIn(Predicate):
@@ -422,9 +433,7 @@ def ignored_step_options(ctx) -> list[str]:
         f"{', '.join(map(str, FOLDER_FORMATS))}). But for file-based boxes ("
         f"{', '.join(map(str, FILE_FORMATS))}), applies to the whole box's "
         "path, as all mails are packed into one single file. Required in "
-        f"{Strategy.DISCARD_MATCHING_PATH}, {Strategy.DISCARD_NON_MATCHING_PATH}, "
-        f"{Strategy.SELECT_MATCHING_PATH} and {Strategy.SELECT_NON_MATCHING_PATH} "
-        "strategies.",
+        f"{human_join(PATH_STRATEGIES)} strategies.",
     ),
     option(
         "-S",
@@ -478,9 +487,7 @@ def ignored_step_options(ctx) -> list[str]:
         metavar="MAIL_BOX_PATH",
         type=path(resolve_path=True),
         help="Location of the destination mail box to where to copy or move "
-        f"deduplicated mails. Required in {Action.COPY_SELECTED}, "
-        f"{Action.COPY_DISCARDED}, {Action.MOVE_SELECTED} and {Action.MOVE_DISCARDED} "
-        "actions.",
+        f"deduplicated mails. Required in {human_join(EXPORT_ACTIONS)} actions.",
     ),
     option(
         "-e",
@@ -488,8 +495,7 @@ def ignored_step_options(ctx) -> list[str]:
         default=BoxFormat.MBOX,
         type=EnumChoice(BoxFormat),
         help="Format of the mail box to which deduplication mails will be exported to. "
-        f"Only affects {Action.COPY_SELECTED}, {Action.COPY_DISCARDED}, "
-        f"{Action.MOVE_SELECTED} and {Action.MOVE_DISCARDED} actions.",
+        f"Only affects {human_join(EXPORT_ACTIONS)} actions.",
     ),
     option(
         "--export-append",
@@ -497,8 +503,7 @@ def ignored_step_options(ctx) -> list[str]:
         default=False,
         help="If destination mail box already exists, add mails into it "
         "instead of interrupting (default behavior). "
-        f"Affect {Action.COPY_SELECTED}, {Action.COPY_DISCARDED}, "
-        f"{Action.MOVE_SELECTED} and {Action.MOVE_DISCARDED} actions.",
+        f"Affect {human_join(EXPORT_ACTIONS)} actions.",
     ),
     option(
         "--hardlink-differing",

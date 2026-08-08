@@ -265,7 +265,7 @@ def hardlink_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> Non
         logging.warning(f"{count} mails left untouched: {reason}.")
 
 
-OPERATIONS: dict[str, Callable] = {
+OPERATIONS: dict[str, Callable[[Deduplicate, Collection[DedupMailMixin]], None]] = {
     "copy": copy_mails,
     "move": move_mails,
     "delete": delete_mails,
@@ -332,7 +332,7 @@ class Action(StrEnum):
         # Check the selection is consistent with the statistics gathered during
         # the selection phase.
         assert (
-            len(dedup.selection)
+            selection_count
             == dedup.stats[Stat.MAIL_SELECTED] + dedup.stats[Stat.MAIL_UNIQUE]
         )
 

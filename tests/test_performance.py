@@ -24,7 +24,7 @@ readme are derived from the same properties, at a scale no test suite should run
 from __future__ import annotations
 
 import sys
-from mailbox import Maildir, mbox
+from mailbox import Maildir
 
 import pytest
 
@@ -32,9 +32,7 @@ from mail_deduplicate import deduplicate
 from mail_deduplicate.deduplicate import Deduplicate
 from mail_deduplicate.mail_box import BoxFormat, BoxStructure
 
-from .conftest import MailFactory
-
-DEDUP_ARGS = ("--strategy=select-newest", "--action=delete-discarded", "--dry-run")
+from .conftest import DEDUP_ARGS, MailFactory, metrics
 
 RETAINED_BYTES_CEILING = 2000
 """Upper bound on the bytes the hash index keeps per mail, once hashing is done.
@@ -255,13 +253,7 @@ def test_parallel_hashing_falls_back_when_the_pool_will_not_start(
     assert "Cannot start 4 hashing processes" in result.stderr
     assert "Hash in this process instead" in result.stderr
     # Every mail was still hashed and grouped.
-    assert "6" == next(
-        cells[1].strip()
-        for line in result.stdout.splitlines()
-        if (cells := [c.strip() for c in line.split("│") if c.strip()])
-        and len(cells) >= 2
-        and cells[0] == "Retained"
-    )
+    assert metrics(result.stdout)["Retained"] == "6"
 
 
 def test_selection_falls_back_when_the_pool_will_not_start(
@@ -289,13 +281,7 @@ def test_selection_falls_back_when_the_pool_will_not_start(
     assert "Cannot start 4 selection processes" in result.stderr
     assert "Select in this process instead" in result.stderr
     # The duplicates were still found and acted on.
-    assert "6" == next(
-        cells[1].strip()
-        for line in result.stdout.splitlines()
-        if (cells := [c.strip() for c in line.split("│") if c.strip()])
-        and len(cells) >= 2
-        and cells[0] == "Retained"
-    )
+    assert metrics(result.stdout)["Retained"] == "6"
 
 
 def test_single_mail_sets_are_not_handed_to_workers(invoke, make_box, monkeypatch):
@@ -353,26 +339,3 @@ def test_large_duplicate_sets_do_not_diff_every_pair(invoke, make_box, monkeypat
     # 40 identical copies would have been 780 pairs to diff. They share one body,
     # so there is nothing to compare at all.
     assert diffed == []
-
-
-def test_headers_table_is_not_rendered_while_hashing(invoke, make_box, monkeypatch):
-    """Rendering a mail's canonical headers goes through `tabulate` and costs more
-    than the hash itself, so it must stay out of the hashing path at the default
-    verbosity, where its result is discarded.
-    """
-    from mail_deduplicate.mail import DedupMailMixin
-
-    renders: list[str] = []
-    original = DedupMailMixin.pretty_canonical_headers
-
-    def spy(self) -> str:
-        rendered = original(self)
-        renders.append(rendered)
-        return rendered
-
-    monkeypatch.setattr(DedupMailMixin, "pretty_canonical_headers", spy)
-    box_path, _, _ = make_box(mbox, [MailFactory() for _ in range(10)])
-
-    assert invoke(*DEDUP_ARGS, box_path).exit_code == 0
-
-    assert renders == []

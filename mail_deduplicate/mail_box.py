@@ -23,7 +23,6 @@ from __future__ import annotations
 import logging
 import mailbox
 import os
-from collections.abc import Callable, Iterator
 from enum import Enum, auto
 from functools import partial
 from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
@@ -34,6 +33,10 @@ from uuid import uuid4
 from click_extra import get_current_theme
 
 from .mail import DedupMailMixin
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
 
 
 def maildir_mail_path(box: Mailbox, key: str) -> str:

@@ -465,8 +465,8 @@ class DedupMailMixin(Message):
         table_data = list(self.canonical_headers)
         headers = ("Header ID", "Header value")
         # get_current_context() is silent here so hashing can run in a --jobs worker
-        # thread, where Click's thread-local context is not available. With a context
-        # the table honors --table-format; without one it falls back to the default.
+        # process, which does not inherit Click's context. With a context the table
+        # honors --table-format; without one it falls back to the default.
         ctx = get_current_context(silent=True)
         if ctx is not None:
             rendered: str = ctx.find_root().render_table(  # type: ignore[attr-defined]

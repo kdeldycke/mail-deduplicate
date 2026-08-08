@@ -77,9 +77,9 @@ Output is not free. Even reduced to what is worth reading, it accounts for rough
 
 | Step                    | `--jobs=1` | `--jobs=4` |
 | ----------------------- | ---------- | ---------- |
-| 2. Hashing              | 4.6s       | 0.9s       |
+| 2. Hashing              | 2.0s       | 0.9s       |
 | 3. Selecting duplicates | 1.1s       | 0.7s       |
-| **A first run**         | **6.0s**   | **1.8s**   |
+| **A first run**         | **3.4s**   | **1.8s**   |
 | **A cached second run** | **1.7s**   | **1.3s**   |
 
 A first run gains most, since hashing is the bulk of it and parallelizes best: `2.6x` on that step with the default `--hash-body skip`, `3.0x` with `raw` and `4.0x` with `normalized`. Once the [cache](#reusing-hashes-between-runs) has removed the hashing, what remains is the selection, which gains about twice over.
@@ -155,7 +155,7 @@ Run `mdedup --help` to see the resolved path on your machine. It holds about 135
 It prunes itself as it goes, so it tracks your mails rather than growing forever. Every run drops the entries of mails that disappeared from the boxes it opened, and the entries of every box that is no longer on disk at all. The count is reported at the end of the hashing step:
 
 ```text
-Hash cache: 19,982 mails restored, 18 hashed and recorded, 143 stale entries dropped.
+Hash cache: 19982 mails restored, 18 hashed and recorded, 143 stale entries dropped.
 ```
 
 Boxes you did not pass on the command line are left alone: their mails are missing from a run's sightings because nobody looked, which is no evidence that they are gone.

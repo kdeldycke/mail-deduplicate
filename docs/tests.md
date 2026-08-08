@@ -27,10 +27,28 @@
    :undoc-members:
 ```
 
+## `tests.test_cache` module
+
+```{eval-rst}
+.. automodule:: tests.test_cache
+   :members:
+   :show-inheritance:
+   :undoc-members:
+```
+
 ## `tests.test_cli` module
 
 ```{eval-rst}
 .. automodule:: tests.test_cli
+   :members:
+   :show-inheritance:
+   :undoc-members:
+```
+
+## `tests.test_config` module
+
+```{eval-rst}
+.. automodule:: tests.test_config
    :members:
    :show-inheritance:
    :undoc-members:
@@ -49,6 +67,24 @@
 
 ```{eval-rst}
 .. automodule:: tests.test_mail_box
+   :members:
+   :show-inheritance:
+   :undoc-members:
+```
+
+## `tests.test_mail_integration` module
+
+```{eval-rst}
+.. automodule:: tests.test_mail_integration
+   :members:
+   :show-inheritance:
+   :undoc-members:
+```
+
+## `tests.test_performance` module
+
+```{eval-rst}
+.. automodule:: tests.test_performance
    :members:
    :show-inheritance:
    :undoc-members:

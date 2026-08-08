@@ -75,7 +75,7 @@ Several strategies can be chained into a fallback cascade by repeating the `--st
 
 ### ❎ Safeguard: size threshold
 
-Sets of duplicates are verified by comparing the body sizes of every pair of mails they contain, and pairs differing by more than a threshold are not considered copies of each other.
+Sets of duplicates are verified by comparing the body sizes of the mails they contain, and two mails differing by more than a threshold are not considered copies of each other.
 
 Since we're ignoring the `Content-Length` header by default [because of mailing-list effects](https://kdeldycke.github.io/mail-deduplicate/design.html#default-headers-and-mailing-lists), we introduced a limit on the allowed difference between the sizes of the message payloads.
 

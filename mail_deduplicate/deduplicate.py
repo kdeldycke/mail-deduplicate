@@ -28,6 +28,7 @@ import sys
 import textwrap
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
+from contextlib import contextmanager
 from difflib import unified_diff
 from enum import Enum, unique
 from functools import cached_property
@@ -511,13 +512,14 @@ class DuplicateSet:
 class HashedMail(NamedTuple):
     """What a hashing worker sends back for one mail.
 
-    Deliberately nothing but identity and scalars: the parsed message stays in the
-    worker and dies with the task, so a few dozen bytes cross the process boundary
-    instead of the whole mail. The parent rebuilds the same dehydrated stub it would
-    have produced itself, exactly as it does for a mail restored from the cache.
+    Deliberately nothing but scalars: the parsed message stays in the worker and dies
+    with the task, so a few dozen bytes cross the process boundary instead of the
+    whole mail. Which mail an answer belongs to is not carried either, as `fan_out()`
+    hands every answer back alongside the task it came from. The parent rebuilds the
+    same dehydrated stub it would have produced itself, exactly as it does for a mail
+    restored from the cache.
     """
 
-    mail_id: str
     mail_hash: str | None
     timestamp: float | None
     mail_size: int | None
@@ -566,16 +568,15 @@ def _hash_in_worker(task: tuple[str, str, str]) -> HashedMail:
     try:
         mail = _load_worker_mail(source_path, mail_id, path)
     except OSError as expt:
-        return HashedMail(mail_id, None, None, None, f"unreadable file: {expt}")
+        return HashedMail(None, None, None, f"unreadable file: {expt}")
 
     try:
         mail_hash = mail.hash_key() + _WORKER["body_hasher"](mail)
     except TooFewHeaders as expt:
-        return HashedMail(mail_id, None, None, None, expt.args[0])
+        return HashedMail(None, None, None, expt.args[0])
 
     mail.dehydrate()
     return HashedMail(
-        mail_id,
         mail_hash,
         mail.__dict__.get("timestamp"),
         mail.__dict__.get("size"),
@@ -798,21 +799,24 @@ class Deduplicate:
         """Worker processes the `--jobs` option resolved to, read off the context."""
         return cast("int", context.get(get_current_context(), context.JOBS, 1))
 
-    def start_pool(
+    @contextmanager
+    def worker_pool(
         self,
         jobs: int,
         initializer: Callable,
         initargs: tuple,
         verb: str,
         doing: str,
-    ) -> ProcessPoolExecutor | None:
-        """Start a pool of worker processes prepared by the initializer.
+    ) -> Iterator[ProcessPoolExecutor | None]:
+        """Hand out a pool of worker processes prepared by the initializer, and shut
+        it down however the block it wraps ends.
 
-        Falls back to this very process when the pool cannot be started, which is
-        the case in some frozen or sandboxed environments: the initializer is then
-        run right here, so the worker functions find the state they expect, and the
-        caller degrades to sequential calls instead of dying.
+        Yields `None` instead when the pool cannot be started, which is the case in
+        some frozen or sandboxed environments: the initializer is then run right
+        here, so the worker functions find the state they expect, and the caller
+        degrades to sequential calls instead of dying.
         """
+        pool: ProcessPoolExecutor | None = None
         try:
             pool = ProcessPoolExecutor(
                 max_workers=jobs,
@@ -823,9 +827,14 @@ class Deduplicate:
             logging.warning(f"Cannot start {jobs} {doing} processes: {expt}")
             logging.warning(f"{verb} in this process instead.")
             initializer(*initargs)
-            return None
-        logging.info(f"{verb} mails across {jobs} processes.")
-        return pool
+        else:
+            logging.info(f"{verb} mails across {jobs} processes.")
+
+        try:
+            yield pool
+        finally:
+            if pool is not None:
+                pool.shutdown()
 
     def fan_out(
         self,
@@ -888,9 +897,6 @@ class Deduplicate:
         # Every source shares one structure, checked by parallel_boxes(), so a single
         # worker setup serves them all.
         factory = cast("type", boxes[0]._factory)
-        pool = self.start_pool(
-            jobs, _init_hash_worker, (self.conf, factory), "Hash", "hashing"
-        )
 
         def tasks():
             """Pairs each pending mail with the task handed to its worker."""
@@ -900,7 +906,9 @@ class Deduplicate:
                     (box._path, mail_id, resolve_mail_path(box, mail_id)),
                 )
 
-        try:
+        with self.worker_pool(
+            jobs, _init_hash_worker, (self.conf, factory), "Hash", "hashing"
+        ) as pool:
             for (box, mail_id), result in self.fan_out(
                 pool,
                 _hash_in_worker,
@@ -910,9 +918,6 @@ class Deduplicate:
             ):
                 absorb(self.adopt_hashed(box, mail_id, result))
                 progress.update(1)
-        finally:
-            if pool is not None:
-                pool.shutdown()
 
     def adopt_hashed(
         self, box: Mailbox, mail_id: str, result: HashedMail
@@ -1174,13 +1179,6 @@ class Deduplicate:
         boxes = self.parallel_boxes()
         factory = cast("type", boxes[0]._factory)
         level = logging.getLogger().getEffectiveLevel()
-        pool = self.start_pool(
-            jobs,
-            _init_select_worker,
-            (self.conf, factory, level),
-            "Select",
-            "selection",
-        )
 
         def tasks():
             """Pairs each set worth handing out with its payload, settling the rest
@@ -1195,7 +1193,13 @@ class Deduplicate:
                     (hash_key, tuple(self.describe(mail) for mail in mail_set)),
                 )
 
-        try:
+        with self.worker_pool(
+            jobs,
+            _init_select_worker,
+            (self.conf, factory, level),
+            "Select",
+            "selection",
+        ) as pool:
             for (hash_key, mail_set), result in self.fan_out(
                 pool,
                 _select_in_worker,
@@ -1205,9 +1209,6 @@ class Deduplicate:
             ):
                 self.adopt_selection(hash_key, mail_set, result)
                 progress.update(1)
-        finally:
-            if pool is not None:
-                pool.shutdown()
 
     def describe(self, mail: DedupMailMixin) -> MailMeta:
         """Everything a worker needs to rebuild a mail, and nothing more."""

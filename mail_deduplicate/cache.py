@@ -345,13 +345,13 @@ class HashCache:
         )
         self._seen.clear()
 
-    def prune(self) -> int:
+    def prune(self) -> None:
         """Drops the entries of mails and boxes that are no longer there.
 
         Two kinds of leftovers accumulate. A box that was deleted or moved keeps
         every one of its entries, and a mail deleted from a box that is still around
-        keeps its own. Both are dropped here, and the number of entries removed is
-        returned.
+        keeps its own. Both are dropped here, and how many were removed is recorded
+        as `pruned` for the run to report.
 
         Only the boxes visited by this run are considered for their individual mails:
         every mail of a box that was not opened is missing from `seen` for the plain
@@ -391,7 +391,6 @@ class HashCache:
             pruned += cursor.rowcount
 
         self.pruned = pruned
-        return pruned
 
     def forget(self, source_path: str, mail_id: str) -> None:
         """Drop the staleness key of a mail that will not be recorded."""
@@ -417,6 +416,7 @@ class HashCache:
         return True
 
     def close(self) -> None:
+        """Release the database handle, without ever failing the run over it."""
         try:
             self.connection.close()
         except sqlite3.Error as expt:

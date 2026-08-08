@@ -362,7 +362,8 @@ A run ending with `Duplicates: 0` or `Deduplicated: 0` is the number one source 
 - Every option demonstrated here is described in the [CLI parameters page](https://kdeldycke.github.io/mail-deduplicate/cli.html).
 - Recurring options can be saved in a [configuration file](https://kdeldycke.github.io/mail-deduplicate/configuration.html).
 - The [design page](https://kdeldycke.github.io/mail-deduplicate/design.html) details hashing, header normalization and the safeguards.
-- Header-based hashing can be complemented by body hashing for stricter matching: see `--hash-body`, and `--jobs` to parallelize it on big boxes.
+- Header-based hashing can be complemented by body hashing for stricter matching: see `--hash-body`.
+- The [performance page](https://kdeldycke.github.io/mail-deduplicate/performance.html) covers `--cache`, which reuses the hashes of previous runs, and `--jobs`, which spreads both the hashing and the selection over several processes.
 
 ```{click:source}
 :hide-source:

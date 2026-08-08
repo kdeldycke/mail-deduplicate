@@ -25,7 +25,7 @@ import pytest
 from mail_deduplicate.action import OPERATIONS, Action
 from mail_deduplicate.deduplicate import Deduplicate, Stat
 
-from .conftest import MailFactory, check_box
+from .conftest import MailFactory, check_box, mail_files
 
 
 def test_action_definitions():
@@ -139,15 +139,6 @@ def test_assert_stats_consistent_passes(config):
     dedup.stats[Stat.MAIL_RETAINED] = 3
 
     dedup.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_RETAINED)
-
-
-def mail_files(box_path) -> list[Path]:
-    """Every mail file of a folder-based box, whatever sub-directory it landed in."""
-    return sorted(
-        path
-        for path in Path(box_path).rglob("*")
-        if path.is_file() and not path.name.startswith(".")
-    )
 
 
 def inodes(box_path) -> set[int]:

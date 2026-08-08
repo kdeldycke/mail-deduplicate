@@ -16,11 +16,9 @@
 
 from __future__ import annotations
 
-import re
 import shutil
 import sqlite3
 from mailbox import Maildir, mbox
-from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -30,10 +28,7 @@ from mail_deduplicate.cache import HashCache, default_cache_dir, default_cache_p
 from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import BoxFormat
 
-from .conftest import MailFactory
-
-DEDUP_ARGS = ("--strategy=select-newest", "--action=delete-discarded", "--dry-run")
-"""A run that exercises every step without touching the mails on disk."""
+from .conftest import DEDUP_ARGS, MailFactory, mail_files, metrics
 
 
 @pytest.fixture()
@@ -52,21 +47,6 @@ def count_hashes(monkeypatch):
 
     monkeypatch.setattr(DedupMailMixin, "hash_key", spy)
     return hashed
-
-
-def metrics(output: str) -> dict[str, str]:
-    """Extracts the name and value of every metric of a run's report tables."""
-    parsed = {}
-    for line in output.splitlines():
-        cells = [cell.strip() for cell in line.split("│") if cell.strip()]
-        if len(cells) >= 2 and re.fullmatch(r"\d+", cells[1]):
-            parsed[cells[0]] = cells[1]
-    return parsed
-
-
-def mail_files(box_path: str) -> list[Path]:
-    """Every mail file of a folder-based box, in a stable order."""
-    return sorted(p for p in Path(box_path).rglob("*") if p.is_file())
 
 
 def test_cache_is_off_by_default(invoke, make_box, tmp_path, monkeypatch):
