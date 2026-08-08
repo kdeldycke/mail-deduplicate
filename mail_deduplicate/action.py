@@ -56,6 +56,15 @@ def export_box(dedup: Deduplicate) -> Iterator:
             box.close()
 
 
+def dry_run_prefix(dedup: Deduplicate) -> str:
+    """Marks a summary as describing what a run would have done.
+
+    A dry run reports through the same trail as a real one, so what it did not do is
+    said once at the end rather than warned about for every single mail.
+    """
+    return "DRY RUN: would have " if dedup.conf["dry_run"] else ""
+
+
 def copy_mails(dedup: Deduplicate, mails) -> None:
     """Copy provided `mails` to a brand new box or an existing one."""
     trail = OperationTrail(label="Copying", unit="mails", total=len(mails))
@@ -63,17 +72,14 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
         for mail in mails:
             logging.debug(f"Copying {mail!r} to {dedup.conf['export']}...")
             dedup.stats[Stat.MAIL_COPIED] += 1
-            if dedup.conf["dry_run"]:
-                logging.warning("DRY RUN: Skip action.")
-            else:
+            if not dedup.conf["dry_run"]:
                 with mail.hydrated():
                     box.add(mail)
-                trail.mark(True, f"{mail!r} copied")
-    if not dedup.conf["dry_run"]:
-        trail.finish(
-            trail.ok_count == len(mails),
-            f"Copied {trail.ok_count}/{len(mails)} mails",
-        )
+            trail.mark(True, f"{mail!r} copied")
+    trail.finish(
+        trail.ok_count == len(mails),
+        f"{dry_run_prefix(dedup)}Copied {trail.ok_count}/{len(mails)} mails",
+    )
 
 
 def move_mails(dedup: Deduplicate, mails) -> None:
@@ -85,18 +91,15 @@ def move_mails(dedup: Deduplicate, mails) -> None:
                 f"Move {mail!r} from {mail.source_path} to {dedup.conf['export']}..."
             )
             dedup.stats[Stat.MAIL_MOVED] += 1
-            if dedup.conf["dry_run"]:
-                logging.warning("DRY RUN: Skip action.")
-            else:
+            if not dedup.conf["dry_run"]:
                 with mail.hydrated():
                     box.add(mail)
                 dedup.sources[mail.source_path].remove(mail.mail_id)
-                trail.mark(True, f"{mail!r} moved")
-    if not dedup.conf["dry_run"]:
-        trail.finish(
-            trail.ok_count == len(mails),
-            f"Moved {trail.ok_count}/{len(mails)} mails",
-        )
+            trail.mark(True, f"{mail!r} moved")
+    trail.finish(
+        trail.ok_count == len(mails),
+        f"{dry_run_prefix(dedup)}Moved {trail.ok_count}/{len(mails)} mails",
+    )
 
 
 def delete_mails(dedup: Deduplicate, mails) -> None:
@@ -105,16 +108,13 @@ def delete_mails(dedup: Deduplicate, mails) -> None:
     for mail in mails:
         logging.debug(f"Deleting {mail!r} in-place...")
         dedup.stats[Stat.MAIL_DELETED] += 1
-        if dedup.conf["dry_run"]:
-            logging.warning("DRY RUN: Skip action.")
-        else:
+        if not dedup.conf["dry_run"]:
             dedup.sources[mail.source_path].remove(mail.mail_id)
-            trail.mark(True, f"{mail!r} deleted")
-    if not dedup.conf["dry_run"]:
-        trail.finish(
-            trail.ok_count == len(mails),
-            f"Deleted {trail.ok_count}/{len(mails)} mails",
-        )
+        trail.mark(True, f"{mail!r} deleted")
+    trail.finish(
+        trail.ok_count == len(mails),
+        f"{dry_run_prefix(dedup)}Deleted {trail.ok_count}/{len(mails)} mails",
+    )
 
 
 def copy_selected(dedup: Deduplicate) -> None:
@@ -172,6 +172,22 @@ class Action(StrEnum):
             logging.warning("No mail selected to perform action on.")
             return
         logging.info(f"{selection_count} mails selected for action.")
+
+        if dedup.conf["dry_run"]:
+            # Said once, and loudly. The statistics below count what the action
+            # would have touched, so without this line a dry run reads exactly like
+            # a real one. The trail's own summary cannot carry the warning alone:
+            # it only shows on an interactive terminal.
+            #
+            # Counted off the subset this action targets, which is the discarded
+            # mails for the *-discarded half of them, not the selected ones.
+            targets = (
+                dedup.discard if str(self).endswith("-discarded") else dedup.selection
+            )
+            logging.warning(
+                f"DRY RUN: {len(targets)} mails would be acted upon, "
+                "but none will be altered.",
+            )
 
         # Check the selection is consistent with the statistics gathered during
         # the selection phase.

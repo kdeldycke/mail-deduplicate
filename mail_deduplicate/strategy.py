@@ -42,7 +42,10 @@ def log_selection(message_template: str):
     def decorator(func: SelectionFunc) -> SelectionFunc:
         @wraps(func)
         def wrapper(duplicates: DuplicateSet) -> set[DedupMailMixin]:
-            logging.info(message_template.format(d=duplicates))
+            # Debug, not info: this fires once per duplicate set, and a corpus has
+            # as many of those as it has distinct mails.
+            if logging.getLogger().isEnabledFor(logging.DEBUG):
+                logging.debug(message_template.format(d=duplicates))
             return func(duplicates)
 
         return wrapper
@@ -252,5 +255,9 @@ class Strategy(enum.Enum):
 
         Returns a set of selected mails objects.
         """
-        logging.info(f"Apply {get_current_theme().choice(str(self))} strategy...")
+        # Debug, not info: applied once per duplicate set, and which strategies are
+        # in play is already announced once when the selection step opens. Styling
+        # the name is not free either, so it waits until it is going to be said.
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug(f"Apply {get_current_theme().choice(str(self))} strategy...")
         return set(self.strategy_function(duplicates))

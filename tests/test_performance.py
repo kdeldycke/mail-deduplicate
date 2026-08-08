@@ -327,6 +327,34 @@ def test_single_mail_sets_are_not_handed_to_workers(invoke, make_box, monkeypatc
     assert handed == [2]
 
 
+def test_large_duplicate_sets_do_not_diff_every_pair(invoke, make_box, monkeypatch):
+    """The cost of a duplicate set must not grow with the square of its size.
+
+    Regression test: the thresholds were confirmed pair by pair, diffing bodies each
+    time, so a set of 200 copies of one mail ran 19,900 diffs and took longer than
+    20,000 mails arranged in pairs. Mails carrying the same body are now compared
+    once between them, and the thresholds are settled over the whole set first.
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/87
+    """
+    diffed: list[int] = []
+    original = deduplicate.DuplicateSet.diff
+
+    def spy(self, mail_a, mail_b):
+        diffed.append(1)
+        return original(self, mail_a, mail_b)
+
+    monkeypatch.setattr(deduplicate.DuplicateSet, "diff", spy)
+    # One set of identical copies, the shape that used to blow up.
+    copies = [MailFactory(message_id="<swarm@nohost.com>") for _ in range(40)]
+    box_path, _, _ = make_box(Maildir, copies)
+
+    assert invoke(*DEDUP_ARGS, box_path).exit_code == 0
+
+    # 40 identical copies would have been 780 pairs to diff. They share one body,
+    # so there is nothing to compare at all.
+    assert diffed == []
+
+
 def test_headers_table_is_not_rendered_while_hashing(invoke, make_box, monkeypatch):
     """Rendering a mail's canonical headers goes through `tabulate` and costs more
     than the hash itself, so it must stay out of the hashing path at the default

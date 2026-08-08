@@ -204,7 +204,7 @@ from mail_deduplicate.cli import mdedup
 
 result = invoke(mdedup, args=["--strategy", "select-matching-path", "--regexp", "2025", "--action", "delete-discarded", "--dry-run", "archive-2024.mbox", "archive-2025.mbox"])
 assert result.exit_code == 0
-assert result.output.count("DRY RUN: Skip action.") == 2
+assert "DRY RUN: 2 mails would be acted upon, but none will be altered." in result.output
 ```
 
 ```{click:source}

@@ -20,6 +20,8 @@ The cache cuts hashing by a factor of five, yet the run as a whole only gets twi
 
 Step 3 is worth understanding: a mail is [dehydrated](design.md) once hashed, so comparing it against `--size-threshold` and `--content-threshold` pulls its body back from disk. Only mails sharing their hash with another are compared, so the cost tracks how many duplicates you actually have. On this corpus that is **8,000 of the 20,000 mails read a second time**, a count that does not depend on your hardware and is the number to reason about.
 
+How many *copies* land in one set matters less than it looks. The thresholds are settled over the whole set before any pair is examined, and two mails carrying the same body are compared once however many of them there are, so a set of 200 identical copies costs about what a set of two does.
+
 ### Skipping the threshold comparisons
 
 Both thresholds exist to catch mails that hash alike without being copies, so turning them off means acting on a set that was never checked. When you trust your hash, `-1` disables either one, and the re-reads go with them:
@@ -59,6 +61,14 @@ The fixed baseline is around 43 MB of interpreter and imports, so a collection o
 
 ```{tip}
 Deduplicating one box at a time keeps the peak lower than passing every box in a single run, since mails are only grouped across the sources of the same run.
+```
+
+## What a run says
+
+At its default verbosity a run reports its steps, the strategies in play, and anything it had to skip, then closes with the statistics tables. Individual mails and duplicate sets are named at `--verbosity DEBUG` only: a corpus has as many sets as it has distinct mails, and narrating each one costs more than deciding it.
+
+```{tip}
+Output is not free. Even reduced to what is worth reading, it accounts for roughly `8%` of a run whose hashes all come from the cache. `--verbosity WARNING` trims it to what went wrong, and a run whose output you are piping anywhere costs less again.
 ```
 
 ## Running in parallel

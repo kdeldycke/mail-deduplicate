@@ -295,17 +295,28 @@ class DuplicateSet:
         size_threshold = self.conf["size_threshold"]
         content_threshold = self.conf["content_threshold"]
 
-        logging.info("Check mail differences are below the thresholds.")
-        if size_threshold < 0:
-            logging.info("Skip checking for size differences.")
-        if content_threshold < 0:
-            logging.info("Skip checking for content differences.")
+        logging.debug("Check mail differences are below the thresholds.")
         if size_threshold < 0 and content_threshold < 0:
+            return set()
+
+        # Every pair is within the size threshold as soon as the extremes are, and
+        # mails sharing a body cannot differ in content. Deciding both of those over
+        # the whole set is linear, where confirming them pair by pair is not, and a
+        # set of true copies satisfies them: the usual case never walks the pairs.
+        spread_ok = size_threshold < 0 or (
+            self.biggest_size - self.smallest_size <= size_threshold
+        )
+        bodies = {mail.hash_raw_body for mail in self.pool}
+        if spread_ok and (content_threshold < 0 or len(bodies) == 1):
             return set()
 
         # Adjacency of mails linked by a pair exceeding a threshold.
         offending_peers: dict[DedupMailMixin, set[DedupMailMixin]] = {}
         size_offense = False
+        # How far two mails differ in content is a property of their two bodies, not
+        # of the mails carrying them, so each distinct pair of bodies is diffed once
+        # however many mails share them. Diffing is the expensive part of this walk.
+        diffs: dict[frozenset[str], int] = {}
         for mail_a, mail_b in combinations(self.pool, 2):
             offense = False
             if size_threshold >= 0:
@@ -318,7 +329,11 @@ class DuplicateSet:
                     offense = size_offense = True
 
             if not offense and content_threshold >= 0:
-                content_difference = self.diff(mail_a, mail_b)
+                pair = frozenset((mail_a.hash_raw_body, mail_b.hash_raw_body))
+                if pair not in diffs:
+                    # A single body means both mails carry it: nothing to diff.
+                    diffs[pair] = 0 if len(pair) == 1 else self.diff(mail_a, mail_b)
+                content_difference = diffs[pair]
                 logging.debug(
                     f"{mail_a!r} and {mail_b!r} differs by {content_difference} bytes "
                     "in content.",
@@ -495,7 +510,7 @@ class DuplicateSet:
             return self.skip_set(skip_reason, skip_stat)
 
         candidate_count = len(selected)
-        logging.info(f"{candidate_count} mail candidates selected for action.")
+        logging.debug(f"{candidate_count} mail candidates selected for action.")
         self.stats[Stat.MAIL_SELECTED] += candidate_count
         self.stats[Stat.MAIL_DISCARDED] += self.size - candidate_count
         self.stats[Stat.SET_DEDUPLICATED] += 1
@@ -1016,23 +1031,40 @@ class Deduplicate:
         else:
             logging.warning("No strategy configured, skip selection.")
 
+        # Said once here rather than per set: which thresholds are in force is a
+        # property of the run, and repeating it for every duplicate set buried the
+        # log under thousands of copies of the same two sentences.
+        if self.conf["size_threshold"] < 0:
+            logging.info("Skip checking for size differences.")
+        if self.conf["content_threshold"] < 0:
+            logging.info("Skip checking for content differences.")
+
         self.stats[Stat.SET_TOTAL] = len(self.mails)
 
         jobs = context.get(get_current_context(), context.JOBS, 1)
-        if jobs > 1 and self.parallel_boxes():
-            self.select_in_parallel(jobs, theme)
-            return
+        # Sets are announced individually at debug level only, so a plain run needs
+        # something to watch: this step re-reads mails and is the longest one left
+        # once the hashes come from the cache.
+        with progressbar(
+            length=len(self.mails),
+            label="Deduplicated sets",
+            show_pos=True,
+        ) as progress:
+            if jobs > 1 and self.parallel_boxes():
+                self.select_in_parallel(jobs, theme, progress)
+                return
 
-        for hash_key, mail_set in self.mails.items():
-            self.log_set_heading(hash_key, len(mail_set), theme)
-            # Apply the selection strategy to discriminate mails within the set.
-            duplicates = DuplicateSet(hash_key, mail_set, self.conf)
-            duplicates.categorize_candidates()
-            # Merge duplicate set's stats to global stats.
-            self.stats += duplicates.stats
-            self.selection.update(duplicates.selection)
-            self.discard.update(duplicates.discard)
-            self.release(mail_set)
+            for hash_key, mail_set in self.mails.items():
+                self.log_set_heading(hash_key, len(mail_set), theme)
+                # Apply the selection strategy to discriminate mails within the set.
+                duplicates = DuplicateSet(hash_key, mail_set, self.conf)
+                duplicates.categorize_candidates()
+                # Merge duplicate set's stats to global stats.
+                self.stats += duplicates.stats
+                self.selection.update(duplicates.selection)
+                self.discard.update(duplicates.discard)
+                self.release(mail_set)
+                progress.update(1)
 
     def log_set_heading(self, hash_key: str, mail_count: int, theme) -> None:
         """Announce a duplicate set, at a level reflecting whether it holds copies.
@@ -1041,11 +1073,9 @@ class Deduplicate:
         report at debug level, where the result is thrown away: only pay for it when
         it is actually logged.
         """
-        level = logging.DEBUG if mail_count == 1 else logging.INFO
-        if logging.getLogger().isEnabledFor(level):
-            logging.log(
-                level,
-                theme.subheading(f"◼ {mail_count} mails sharing hash {hash_key}"),
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug(
+                theme.subheading(f"◼ {mail_count} mails sharing hash {hash_key}")
             )
 
     def release(self, mail_set: list[DedupMailMixin]) -> None:
@@ -1058,7 +1088,7 @@ class Deduplicate:
         for mail in mail_set:
             mail.dehydrate()
 
-    def select_in_parallel(self, jobs: int, theme) -> None:
+    def select_in_parallel(self, jobs: int, theme, progress) -> None:
         """Apply the selection to every duplicate set across a pool of processes.
 
         Duplicate sets share nothing with one another, so a set is the natural unit
@@ -1093,6 +1123,7 @@ class Deduplicate:
                     duplicates.categorize_candidates()
                     self.stats += duplicates.stats
                     self.selection.update(duplicates.selection)
+                    progress.update(1)
                     continue
                 yield hash_key, mail_set
 
@@ -1114,6 +1145,7 @@ class Deduplicate:
                     )
                 for (hash_key, mail_set), result in zip(batch, results):
                     self.adopt_selection(hash_key, mail_set, result, theme)
+                    progress.update(1)
         finally:
             if pool is not None:
                 pool.shutdown()

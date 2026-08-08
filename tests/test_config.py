@@ -54,7 +54,8 @@ def test_config_file_drives_run(invoke, make_box, make_config):
     assert result.exit_code == 0
     assert "select-one strategy will be applied" in result.stderr
     assert "Perform delete-discarded action" in result.stderr
-    assert "DRY RUN: Skip action." in result.stderr
+    assert "DRY RUN:" in result.stderr
+    assert "none will be altered" in result.stderr
 
 
 def test_config_kebab_case_keys(invoke, make_box, make_config):
