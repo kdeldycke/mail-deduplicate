@@ -36,17 +36,20 @@ from .conftest import MailFactory
 
 DEDUP_ARGS = ("--strategy=select-newest", "--action=delete-discarded", "--dry-run")
 
-RETAINED_BYTES_CEILING = 800 if sys.version_info >= (3, 11) else 1300
+RETAINED_BYTES_CEILING = 2000
 """Upper bound on the bytes the hash index keeps per mail, once hashing is done.
 
-A mail stub is mostly its instance dictionary, and Python 3.11 made those share their
-keys between instances. The same corpus therefore retains 630 to 675 bytes per mail on
-3.11 and later, against 1,095 to 1,134 on 3.10, hence the split ceiling. On a large
-corpus the figure settles near 580 bytes, as the fixed costs amortize.
+Deliberately loose. A mail stub is mostly its instance dictionary, whose size depends
+on the interpreter: the same corpus measures 630 to 675 bytes per mail here on Python
+3.14, around 1,100 on 3.10, and has been seen at 1,343 on a CI runner of the very
+version that gives 675 locally. A ceiling tight enough to pin any of those is a
+ceiling that fails somewhere else.
 
-Both ceilings sit above what is measured and below what these corpora retained before
-mails stopped storing their own path, started being grouped in lists, and began
-sharing one empty tuple of parsing defects, which cost about 340 bytes each.
+So this only catches a stub that grew by an order of magnitude, which is what
+retaining parsed messages would do. The exact guards on what a stub may carry are
+`test_retained_mails_carry_neither_path_nor_payload`, which names the attributes, and
+`test_retained_memory_stays_flat_as_the_corpus_grows`, which compares the same
+interpreter against itself.
 See: https://github.com/kdeldycke/mail-deduplicate/issues/87
 """
 
@@ -142,21 +145,28 @@ def test_hashing_reads_each_mail_once(invoke, make_box, count_hashing_reads):
     assert len(set(count_hashing_reads)) == mail_count
 
 
-@pytest.mark.parametrize("mail_count", (20, 60))
-def test_retained_memory_per_mail_stays_flat(
-    invoke, make_box, index_footprint, mail_count
+def test_retained_memory_stays_flat_as_the_corpus_grows(
+    invoke, make_box, index_footprint
 ):
-    """The hash index must keep a small, constant amount per mail.
+    """What the index keeps per mail must not grow with the number of mails.
 
-    Swept over two corpus sizes: a per-mail figure that grows with the corpus would
-    mean something is being retained that should not be.
+    Measured against itself on one interpreter, so it holds wherever it runs: a
+    per-mail figure that climbs with the corpus means something is accumulating that
+    should not be. The fixed costs amortize as the corpus grows, so the larger one is
+    allowed to come out slightly lower, never higher.
     """
-    mails = [MailFactory(message_id=f"<m{i}@nohost.com>") for i in range(mail_count)]
-    box_path, _, _ = make_box(Maildir, mails)
+    measured = {}
+    for mail_count in (20, 60):
+        mails = [
+            MailFactory(message_id=f"<m{mail_count}-{i}@nohost.com>")
+            for i in range(mail_count)
+        ]
+        box_path, _, _ = make_box(Maildir, mails)
+        assert invoke(*DEDUP_ARGS, box_path).exit_code == 0
+        measured[mail_count] = index_footprint["per_mail"]
 
-    assert invoke(*DEDUP_ARGS, box_path).exit_code == 0
-
-    assert index_footprint["per_mail"] < RETAINED_BYTES_CEILING
+    assert measured[60] <= measured[20] * 1.05
+    assert measured[20] < RETAINED_BYTES_CEILING
 
 
 def test_retained_memory_does_not_track_mail_size(invoke, make_box, index_footprint):
