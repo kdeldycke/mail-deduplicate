@@ -333,7 +333,7 @@ class DedupMailMixin(Message):
 
         ```{warning}
         `ctime` does not refer to creation time on POSIX systems, but
-        rather [the last time the inode data changed](https://userprimary.net/posts/2007/11/18/ctime-in-unix-means-last-change-time-not-create-time/).
+        rather [the time of the last metadata change](https://docs.python.org/3/library/os.path.html#os.path.getctime).
         ```
 
         ```{todo}

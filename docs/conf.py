@@ -84,7 +84,7 @@ click_extra_manpages = [
 # use {click:run} to render live CLI output, so it must be turned on here.
 click_extra_enable_exec_directives = True
 
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "_linkcheck", "Thumbs.db", ".DS_Store"]
 
 nitpicky = True
 
@@ -122,6 +122,29 @@ intersphinx_mapping = {
 # Prefix document path to section labels, to use:
 # `path/to/file:heading` instead of just `heading`
 autosectionlabel_prefix_document = True
+
+# Linkcheck configuration, mirroring the reference one from repomatic.
+# GitHub renders issue comments, readme tab anchors and blob line anchors with
+# JavaScript, so the linkcheck builder cannot find them in the static HTML.
+linkcheck_anchors_ignore = [
+    r"issuecomment-\d+",
+    r"readme",
+    r"L\d+",
+]
+
+linkcheck_anchors_ignore_for_url = [
+    r"https://github\.com/",
+]
+
+# Some links time out the linkcheck bot intermittently; retry before reporting
+# them as broken.
+linkcheck_retries = 3
+
+linkcheck_ignore = [
+    # These sites return 403 to bots but are valid.
+    r"https://claude\.ai/code",
+    r"https://isync\.sourceforge\.io",
+]
 
 # Theme config.
 html_theme = "furo"
