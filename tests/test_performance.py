@@ -28,6 +28,7 @@ from mailbox import Maildir, mbox
 
 import pytest
 
+from mail_deduplicate import deduplicate
 from mail_deduplicate.deduplicate import Deduplicate
 from mail_deduplicate.mail_box import BoxFormat, BoxStructure
 
@@ -251,6 +252,66 @@ def test_parallel_hashing_falls_back_when_the_pool_will_not_start(
         and len(cells) >= 2
         and cells[0] == "Retained"
     )
+
+
+def test_selection_falls_back_when_the_pool_will_not_start(
+    invoke, make_box, monkeypatch
+):
+    """Selecting across processes must degrade the same way hashing does."""
+    started: list[str] = []
+    real_pool = deduplicate.ProcessPoolExecutor
+
+    def refuse_selection(*args, **kwargs):
+        # Let the hashing pool through, so only the selection one is denied.
+        if kwargs.get("initializer") is deduplicate._init_select_worker:
+            started.append("refused")
+            raise OSError("no processes for you")
+        return real_pool(*args, **kwargs)
+
+    monkeypatch.setattr(deduplicate, "ProcessPoolExecutor", refuse_selection)
+    pairs = [MailFactory(message_id=f"<s{i}@nohost.com>") for i in range(3)]
+    box_path, _, _ = make_box(Maildir, [mail for mail in pairs for _ in range(2)])
+
+    result = invoke("--jobs=4", *DEDUP_ARGS, box_path)
+
+    assert started == ["refused"]
+    assert result.exit_code == 0
+    assert "Cannot start 4 selection processes" in result.stderr
+    assert "Select in this process instead" in result.stderr
+    # The duplicates were still found and acted on.
+    assert "6" == next(
+        cells[1].strip()
+        for line in result.stdout.splitlines()
+        if (cells := [c.strip() for c in line.split("│") if c.strip()])
+        and len(cells) >= 2
+        and cells[0] == "Retained"
+    )
+
+
+def test_single_mail_sets_are_not_handed_to_workers(invoke, make_box, monkeypatch):
+    """A set of one is settled without reading anything, so shipping it to a worker
+    would cost more than deciding it here."""
+    handed: list[int] = []
+    original = deduplicate._select_in_worker
+
+    def spy(task):
+        handed.append(len(task[1]))
+        return original(task)
+
+    monkeypatch.setattr(deduplicate, "_select_in_worker", spy)
+    # Two lone mails and one duplicate pair.
+    mails = [
+        MailFactory(message_id="<lonely-one@nohost.com>"),
+        MailFactory(message_id="<lonely-two@nohost.com>"),
+        MailFactory(message_id="<paired@nohost.com>"),
+        MailFactory(message_id="<paired@nohost.com>"),
+    ]
+    box_path, _, _ = make_box(Maildir, mails)
+
+    assert invoke("--jobs=2", *DEDUP_ARGS, box_path).exit_code == 0
+
+    # Only the pair travelled; neither lone mail did.
+    assert handed == [2]
 
 
 def test_headers_table_is_not_rendered_while_hashing(invoke, make_box, monkeypatch):

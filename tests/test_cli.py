@@ -109,10 +109,27 @@ def test_cli_test_suite():
     assert result["failed"] == 0
 
 
-def test_parallel_hashing_matches_sequential(invoke, make_box):
-    """Hashing with --jobs > 1 must yield the same dedup result as the sequential
-    default. Reading stays single-threaded and run_jobs preserves submission order,
-    so the grouping, stats, and report must be identical at any job count.
+@pytest.mark.parametrize(
+    "strategy",
+    (
+        # Time-based, and the one that fails to discriminate identical copies.
+        "select-newest",
+        # Size-based, which pulls each mail's body back to measure it.
+        "select-smallest",
+        # Path-based, which needs a mail's location: a worker has no box to derive
+        # that from, and reads it off the file it opened instead.
+        "select-matching-path",
+        # Arbitrary pick. Which copy it lands on differs between processes, since
+        # each seeds its own randomness, but how many it picks does not.
+        "select-one",
+    ),
+)
+def test_parallel_run_matches_sequential(invoke, make_box, strategy):
+    """A run with --jobs > 1 must decide what the sequential default decides.
+
+    Both the hashing and the selection are handed to worker processes, and both
+    yield their results in submission order, so the grouping, the statistics and the
+    report must come out identical at any job count.
     """
     # Three duplicate pairs (distinct Message-IDs give three hash groups; each mail
     # repeated makes each group a genuine duplicate set).
@@ -124,8 +141,10 @@ def test_parallel_hashing_matches_sequential(invoke, make_box):
     box_path, _, _ = make_box(Maildir, [mail for mail in pairs for _ in range(2)])
 
     # --dry-run leaves the box untouched, so both invocations see identical input.
+    # --regexp is only accepted by the path-matching strategies.
     args = (
-        "--strategy=select-newest",
+        f"--strategy={strategy}",
+        *(("--regexp=.*",) if "matching-path" in strategy else ()),
         "--action=delete-selected",
         "--dry-run",
         box_path,

@@ -570,6 +570,108 @@ def _hash_in_worker(task: tuple[str, str, str]) -> HashedMail:
     )
 
 
+class MailMeta(NamedTuple):
+    """All a worker needs to rebuild one mail of a duplicate set from its own file."""
+
+    source_path: str
+    mail_id: str
+    path: str
+    timestamp: float | None
+    mail_size: int | None
+
+
+class SelectedSet(NamedTuple):
+    """What a selection worker sends back for one duplicate set.
+
+    Mails are named rather than returned: the parent already holds them, and shipping
+    them back would mean pickling every message it worked so hard not to keep.
+    """
+
+    selected: tuple[tuple[str, str], ...]
+    discarded: tuple[tuple[str, str], ...]
+    stats: dict[Stat, int]
+    records: tuple[tuple[int, str], ...]
+
+
+class _RecordCollector(logging.Handler):
+    """Holds onto what a worker logs, for the parent to say in its place.
+
+    A worker's own stream goes nowhere the user can see, and several of them writing
+    at once would interleave regardless. Collecting instead lets the parent replay
+    each set's messages under its own heading, in the order a sequential run
+    would have printed them.
+    """
+
+    def __init__(self, sink: list[tuple[int, str]]) -> None:
+        super().__init__()
+        self.sink = sink
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.sink.append((record.levelno, record.getMessage()))
+
+
+def _init_select_worker(conf: Config, message_class: type, log_level: int) -> None:
+    """Prepare a worker process to apply the selection strategies.
+
+    The parent's log level is handed over so a worker neither collects messages that
+    would be dropped on arrival, nor spends anything building them.
+    """
+    _WORKER["conf"] = conf
+    _WORKER["message_class"] = message_class
+    logging.getLogger().setLevel(log_level)
+
+
+def _select_in_worker(task: tuple[str, tuple[MailMeta, ...]]) -> SelectedSet:
+    """Run one duplicate set through the thresholds and the selection strategies.
+
+    Sets share nothing with each other, which is what makes this worth handing out:
+    a worker re-reads only the mails of its own set, from their own files.
+    """
+    hash_key, metas = task
+    conf = _WORKER["conf"]
+    factory = _WORKER["message_class"]
+
+    mails = []
+    for meta in metas:
+        with open(meta.path, "rb") as handle:
+            mail = factory(handle)
+        mail.source_path = meta.source_path
+        mail.mail_id = meta.mail_id
+        # No box out here, so hand it the location it was opened from.
+        mail._path_override = meta.path
+        mail.conf = conf
+        # Already settled by the hashing step: recomputing risks disagreeing with it.
+        mail.__dict__["timestamp"] = meta.timestamp
+        if meta.mail_size is not None:
+            mail.__dict__["size"] = meta.mail_size
+        mails.append(mail)
+
+    captured: list[tuple[int, str]] = []
+    handler = _RecordCollector(captured)
+    root = logging.getLogger()
+    root.addHandler(handler)
+    try:
+        duplicates = DuplicateSet(hash_key, mails, conf)
+        duplicates.categorize_candidates()
+    finally:
+        root.removeHandler(handler)
+
+    return SelectedSet(
+        # Both are set the moment a mail is read from its box, which every mail
+        # here has been, but the attributes stay optional on the class.
+        selected=tuple(
+            (cast("str", m.source_path), cast("str", m.mail_id))
+            for m in duplicates.selection
+        ),
+        discarded=tuple(
+            (cast("str", m.source_path), cast("str", m.mail_id))
+            for m in duplicates.discard
+        ),
+        stats=dict(duplicates.stats),
+        records=tuple(captured),
+    )
+
+
 class Deduplicate:
     """Load-up messages, search for duplicates, apply selection strategy and perform the
     action.
@@ -583,6 +685,13 @@ class Deduplicate:
     Each queue round-trip costs far more than hashing a single mail, so tasks travel
     in chunks. Large enough to make that cost disappear, small enough that the last
     worker to finish does not hold up the others.
+    """
+
+    SET_CHUNK_SIZE: int = 32
+    """Duplicate sets handed to a selection worker in one go.
+
+    Smaller than the hashing chunk because a set is several mails' worth of work, so
+    fewer of them already amortize the same round-trip.
     """
 
     def __init__(self, conf: Config) -> None:
@@ -909,12 +1018,13 @@ class Deduplicate:
 
         self.stats[Stat.SET_TOTAL] = len(self.mails)
 
-        for hash_key, mail_set in self.mails.items():
-            # Alter log level depending on set length.
-            mail_count = len(mail_set)
-            log_level = logging.debug if mail_count == 1 else logging.info
-            log_level(theme.subheading(f"◼ {mail_count} mails sharing hash {hash_key}"))
+        jobs = context.get(get_current_context(), context.JOBS, 1)
+        if jobs > 1 and self.parallel_boxes():
+            self.select_in_parallel(jobs, theme)
+            return
 
+        for hash_key, mail_set in self.mails.items():
+            self.log_set_heading(hash_key, len(mail_set), theme)
             # Apply the selection strategy to discriminate mails within the set.
             duplicates = DuplicateSet(hash_key, mail_set, self.conf)
             duplicates.categorize_candidates()
@@ -922,14 +1032,126 @@ class Deduplicate:
             self.stats += duplicates.stats
             self.selection.update(duplicates.selection)
             self.discard.update(duplicates.discard)
+            self.release(mail_set)
 
-            # Dehydrate the whole set to release the content re-read from the
-            # source boxes by the thresholds and strategies. Iterating on the
-            # original set covers skipped sets and set-aside mails too, which land
-            # in neither selection nor discard.
-            # See: https://github.com/kdeldycke/mail-deduplicate/issues/362
-            for mail in mail_set:
-                mail.dehydrate()
+    def log_set_heading(self, hash_key: str, mail_count: int, theme) -> None:
+        """Announce a duplicate set, at a level reflecting whether it holds copies.
+
+        Styling the heading is not free, and most sets hold a single mail and so
+        report at debug level, where the result is thrown away: only pay for it when
+        it is actually logged.
+        """
+        level = logging.DEBUG if mail_count == 1 else logging.INFO
+        if logging.getLogger().isEnabledFor(level):
+            logging.log(
+                level,
+                theme.subheading(f"◼ {mail_count} mails sharing hash {hash_key}"),
+            )
+
+    def release(self, mail_set: list[DedupMailMixin]) -> None:
+        """Drop the content the thresholds and strategies pulled back from the boxes.
+
+        Iterating on the original set covers skipped sets and set-aside mails too,
+        which land in neither selection nor discard.
+        See: https://github.com/kdeldycke/mail-deduplicate/issues/362
+        """
+        for mail in mail_set:
+            mail.dehydrate()
+
+    def select_in_parallel(self, jobs: int, theme) -> None:
+        """Apply the selection to every duplicate set across a pool of processes.
+
+        Duplicate sets share nothing with one another, so a set is the natural unit
+        of work. Only sets holding copies are handed out: a set of one is settled
+        without reading anything, and would cost more to ship than to decide.
+
+        Falls back to deciding in this process if the pool cannot be started.
+        """
+        boxes = self.parallel_boxes()
+        factory = cast("type", boxes[0]._factory)
+        level = logging.getLogger().getEffectiveLevel()
+
+        pool = None
+        try:
+            pool = ProcessPoolExecutor(
+                max_workers=jobs,
+                initializer=_init_select_worker,
+                initargs=(self.conf, factory, level),
+            )
+            logging.info(f"Select mails across {jobs} processes.")
+        except (OSError, ValueError, ImportError, NotImplementedError) as expt:
+            logging.warning(f"Cannot start {jobs} selection processes: {expt}")
+            logging.warning("Select in this process instead.")
+            _init_select_worker(self.conf, factory, level)
+
+        def pending():
+            """Yields the sets worth handing out, settling the rest on the way."""
+            for hash_key, mail_set in self.mails.items():
+                if len(mail_set) < 2:
+                    self.log_set_heading(hash_key, len(mail_set), theme)
+                    duplicates = DuplicateSet(hash_key, mail_set, self.conf)
+                    duplicates.categorize_candidates()
+                    self.stats += duplicates.stats
+                    self.selection.update(duplicates.selection)
+                    continue
+                yield hash_key, mail_set
+
+        # A window of sets at a time, for the same reason the hashing step uses one:
+        # `map()` consumes whatever it is given at once.
+        window = jobs * 64
+        stream = pending()
+        try:
+            while batch := list(islice(stream, window)):
+                payload = [
+                    (hash_key, tuple(self.describe(mail) for mail in mail_set))
+                    for hash_key, mail_set in batch
+                ]
+                if pool is None:
+                    results: Iterable[SelectedSet] = map(_select_in_worker, payload)
+                else:
+                    results = pool.map(
+                        _select_in_worker, payload, chunksize=self.SET_CHUNK_SIZE
+                    )
+                for (hash_key, mail_set), result in zip(batch, results):
+                    self.adopt_selection(hash_key, mail_set, result, theme)
+        finally:
+            if pool is not None:
+                pool.shutdown()
+
+    def describe(self, mail: DedupMailMixin) -> MailMeta:
+        """Everything a worker needs to rebuild a mail, and nothing more."""
+        return MailMeta(
+            cast("str", mail.source_path),
+            cast("str", mail.mail_id),
+            mail.path,
+            mail.__dict__.get("timestamp"),
+            mail.__dict__.get("size"),
+        )
+
+    def adopt_selection(
+        self,
+        hash_key: str,
+        mail_set: list[DedupMailMixin],
+        result: SelectedSet,
+        theme,
+    ) -> None:
+        """Merge a worker's verdict on one set back into this process.
+
+        The heading and the worker's own messages are said here, in that order, so
+        the log reads as it would have from a sequential run however the sets were
+        spread out.
+        """
+        self.log_set_heading(hash_key, len(mail_set), theme)
+        for levelno, message in result.records:
+            logging.log(levelno, message)
+
+        # Mail IDs only identify a mail within its own box, and a duplicate set can
+        # span several.
+        by_id = {(mail.source_path, mail.mail_id): mail for mail in mail_set}
+        self.selection.update(by_id[key] for key in result.selected)
+        self.discard.update(by_id[key] for key in result.discarded)
+        self.stats += Counter(result.stats)
+        self.release(mail_set)
 
     def close_all(self):
         """Close all open boxes, and the hash cache if one was opened."""

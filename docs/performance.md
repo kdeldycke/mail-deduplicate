@@ -61,27 +61,34 @@ The fixed baseline is around 43 MB of interpreter and imports, so a collection o
 Deduplicating one box at a time keeps the peak lower than passing every box in a single run, since mails are only grouped across the sources of the same run.
 ```
 
-## Hashing in parallel
+## Running in parallel
 
-`--jobs` hands the hashing to worker processes, each reading, parsing and hashing whole mails on its own. Only a hash and two small numbers travel back, so the mail itself never crosses between processes.
+`--jobs` hands both of the expensive steps to worker processes. Hashing goes out a mail at a time, and selection a duplicate set at a time, since sets share nothing with one another. Workers open the files themselves and send back only what was decided, so no mail ever crosses between processes.
 
-| `--hash-body` | `--jobs=2` | `--jobs=4` | `--jobs=8` | Whole run at 8 |
-| ------------- | ---------- | ---------- | ---------- | -------------- |
-| `skip`        | 1.5x       | 2.3x       | 2.6x       | 1.5x           |
-| `raw`         | 1.8x       | 2.4x       | 3.0x       | 1.7x           |
-| `normalized`  | 1.8x       | 2.8x       | 4.0x       | 2.2x           |
+| Step                    | `--jobs=1` | `--jobs=4` |
+| ----------------------- | ---------- | ---------- |
+| 2. Hashing              | 4.6s       | 0.9s       |
+| 3. Selecting duplicates | 1.1s       | 0.7s       |
+| **A first run**         | **6.0s**   | **1.8s**   |
+| **A cached second run** | **1.7s**   | **1.3s**   |
 
-The gain is largest where hashing does the most work, and the whole run gains less than the step does, because the hashing is only part of it. Above four jobs the returns flatten: reading the mails becomes the limit.
+A first run gains most, since hashing is the bulk of it and parallelizes best: `2.6x` on that step with the default `--hash-body skip`, `3.0x` with `raw` and `4.0x` with `normalized`. Once the [cache](#reusing-hashes-between-runs) has removed the hashing, what remains is the selection, which gains about twice over.
 
-Mails are handed out a window at a time rather than all at once, so a parallel run holds no more per-mail state than a sequential one.
+Returns flatten past four jobs, where reading the mails becomes the limit rather than deciding about them.
 
 ```{important}
-Processes, not threads. Hashing a mail is Python-level work, which the interpreter lock serializes, so spreading it over threads only adds contention: it measured at `0.88x` to `0.97x`, an outright loss, before this became a process pool.
+Processes, not threads. Both steps are Python-level work, which the interpreter lock serializes, so spreading them over threads only adds contention: hashing measured at `0.88x` to `0.97x`, an outright loss, before this became a process pool.
+```
+
+Work is handed out a window at a time rather than all at once, so a parallel run holds no more per-mail state than a sequential one. Sets of a single mail are settled without leaving the main process: there is nothing to compare, and shipping one would cost more than deciding it.
+
+```{note}
+`select-one` and `discard-one` pick arbitrarily among equal copies, and each worker seeds its own randomness. A parallel run therefore keeps the same *number* of mails as a sequential one, but not necessarily the same ones. Every other strategy is fully determined by the mails themselves and decides identically.
 ```
 
 Two limits are worth knowing. Only folder-based boxes (`maildir`, `MH`, `eml`) can be shared out, because their mails each own a file; the mails of an `mbox` and its kin are byte ranges of a single file that one handle seeks through, so a run over them stays sequential whatever `--jobs` says. And starting workers costs around 50 ms, which a small box never earns back: below a thousand mails or so, leave `--jobs` at `1`.
 
-If a pool cannot be started at all, which happens in some sandboxed environments, the run says so and hashes everything in-process instead.
+If a pool cannot be started at all, which happens in some sandboxed environments, the run says so and does the work in-process instead.
 
 ## Reusing hashes between runs
 
