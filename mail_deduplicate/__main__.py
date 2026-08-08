@@ -40,6 +40,14 @@ def main():
     `Command.main()` already defaults `prog_name` to the command's name, so even
     `python -m mail_deduplicate --version` reports itself as `mdedup`.
     """
+    from multiprocessing import freeze_support
+
+    # `--jobs` hashes in worker processes, which re-launch this executable to start.
+    # In a frozen binary that re-launch lands here instead of in the worker bootstrap,
+    # so without this call each worker would run the whole CLI again. A no-op
+    # everywhere else.
+    freeze_support()
+
     from mail_deduplicate.cli import mdedup
 
     mdedup()

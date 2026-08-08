@@ -29,6 +29,7 @@ from mailbox import Maildir, mbox
 import pytest
 
 from mail_deduplicate.deduplicate import Deduplicate
+from mail_deduplicate.mail_box import BoxFormat, BoxStructure
 
 from .conftest import MailFactory
 
@@ -198,6 +199,58 @@ def test_retained_mails_carry_neither_path_nor_payload(
     assert "_headers" not in attrs
     # What the later steps do rely on survives.
     assert {"box", "mail_id", "source_path", "timestamp"} <= attrs
+
+
+@pytest.mark.parametrize("box_format", tuple(BoxFormat), ids=str)
+def test_parallel_hashing_only_claims_folder_boxes(make_box, config, box_format):
+    """Only boxes whose mails own a file can be handed to worker processes.
+
+    Mails of a file-based box are byte ranges of one file that a single handle seeks
+    through, so several processes would be seeking the same descriptor.
+    """
+    box_path, _, _ = make_box(box_format.base_class, [MailFactory()])
+    dedup = Deduplicate(config)
+    dedup.conf["input_format"] = box_format
+    dedup.add_source(box_path)
+
+    claimed = dedup.parallel_boxes()
+
+    if box_format.structure is BoxStructure.FOLDER:
+        assert claimed == list(dedup.sources.values())
+    else:
+        assert claimed == []
+    dedup.close_all()
+
+
+def test_parallel_hashing_falls_back_when_the_pool_will_not_start(
+    invoke, make_box, monkeypatch
+):
+    """A pool that cannot be started must not cost the run its results.
+
+    Frozen and sandboxed environments can refuse to spawn processes. Hashing then
+    happens in this one, which is slower and entirely correct.
+    """
+
+    def refuse(*args, **kwargs):
+        raise OSError("no processes for you")
+
+    monkeypatch.setattr("mail_deduplicate.deduplicate.ProcessPoolExecutor", refuse)
+    mails = [MailFactory(message_id=f"<f{i}@nohost.com>") for i in range(6)]
+    box_path, _, _ = make_box(Maildir, mails)
+
+    result = invoke("--jobs=4", *DEDUP_ARGS, box_path)
+
+    assert result.exit_code == 0
+    assert "Cannot start 4 hashing processes" in result.stderr
+    assert "Hash in this process instead" in result.stderr
+    # Every mail was still hashed and grouped.
+    assert "6" == next(
+        cells[1].strip()
+        for line in result.stdout.splitlines()
+        if (cells := [c.strip() for c in line.split("│") if c.strip()])
+        and len(cells) >= 2
+        and cells[0] == "Retained"
+    )
 
 
 def test_headers_table_is_not_rendered_while_hashing(invoke, make_box, monkeypatch):

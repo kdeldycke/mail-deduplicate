@@ -166,6 +166,14 @@ class DedupMailMixin(Message):
         self.conf: Config
         """Global configuration"""
 
+    _path_override: str | None = None
+    """Location of a mail read straight from its file, outside of any box.
+
+    A class attribute, so it costs nothing on the mails that do not need it. Only the
+    parallel hashing workers set it: they open a mail by path, and so have no box to
+    derive that path back from.
+    """
+
     @property
     def path(self) -> str:
         """Real filesystem location of the mail.
@@ -179,6 +187,8 @@ class DedupMailMixin(Message):
         `AttributeError` before the box metadata is attached, so `getattr(mail,
         "path", None)` still reads as absent.
         """
+        if self._path_override is not None:
+            return self._path_override
         if self.box is None or self.mail_id is None:
             raise AttributeError("No box metadata attached to this mail yet.")
         return self.resolve_path(self.box, self.mail_id)

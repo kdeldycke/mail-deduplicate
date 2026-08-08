@@ -20,10 +20,11 @@ import logging
 import sys
 import textwrap
 from collections import Counter
+from concurrent.futures import ProcessPoolExecutor
 from difflib import unified_diff
 from enum import Enum
 from functools import cached_property
-from itertools import combinations, islice
+from itertools import combinations
 from operator import attrgetter
 from pathlib import Path
 from typing import NamedTuple, cast
@@ -33,12 +34,11 @@ from click_extra import (
     get_current_context,
     get_current_theme,
     progressbar,
-    run_jobs,
 )
 
 from .cache import CacheEntry, HashCache, open_cache
 from .mail import TimeSource, TooFewHeaders
-from .mail_box import open_box
+from .mail_box import FOLDER_FORMAT_CLASSES, open_box, resolve_mail_path
 
 if sys.version_info >= (3, 11):
     from enum import StrEnum
@@ -336,10 +336,10 @@ class DuplicateSet:
         # on the mail's repr for determinism, until no offending pair remains.
         evicted = set()
         while any(offending_peers.values()):
-            outlier = sorted(
+            outlier = min(
                 (mail for mail, peers in offending_peers.items() if peers),
                 key=lambda mail: (-len(offending_peers[mail]), repr(mail)),
-            )[0]
+            )
             evicted.add(outlier)
             offending_peers.pop(outlier)
             for peers in offending_peers.values():
@@ -503,6 +503,73 @@ class DuplicateSet:
         self.discard = set(self.pool.difference(selected))
 
 
+class HashedMail(NamedTuple):
+    """What a hashing worker sends back for one mail.
+
+    Deliberately nothing but identity and scalars: the parsed message stays in the
+    worker and dies with the task, so a few dozen bytes cross the process boundary
+    instead of the whole mail. The parent rebuilds the same dehydrated stub it would
+    have produced itself, exactly as it does for a mail restored from the cache.
+    """
+
+    mail_id: str
+    mail_hash: str | None
+    timestamp: float | None
+    mail_size: int | None
+    rejection: str | None
+
+
+_WORKER: dict = {}
+"""Per-process state, populated once by `_init_hash_worker()`.
+
+Handed over at pool startup rather than with every task, so the configuration is
+pickled once per worker instead of once per mail.
+"""
+
+
+def _init_hash_worker(conf: Config, message_class: type) -> None:
+    """Prepare a worker process to hash mails of one box format."""
+    _WORKER["conf"] = conf
+    _WORKER["message_class"] = message_class
+    _WORKER["body_hasher"] = conf["hash_body"].hash_function()
+
+
+def _hash_in_worker(task: tuple[str, str, str]) -> HashedMail:
+    """Read, parse and hash one mail from its own file, in a worker process.
+
+    Only ever handed mails of folder-based boxes, which own their file, so nothing
+    is shared with the other workers or with the parent. Failures come back as a
+    rejection rather than an exception, so one unreadable mail cannot take the pool
+    down with it.
+    """
+    source_path, mail_id, path = task
+    try:
+        with open(path, "rb") as handle:
+            mail = _WORKER["message_class"](handle)
+    except OSError as expt:
+        return HashedMail(mail_id, None, None, None, f"unreadable file: {expt}")
+
+    mail.source_path = source_path
+    mail.mail_id = mail_id
+    # No box to derive the location from, so hand it the one we opened.
+    mail._path_override = path
+    mail.conf = _WORKER["conf"]
+
+    try:
+        mail_hash = mail.hash_key() + _WORKER["body_hasher"](mail)
+    except TooFewHeaders as expt:
+        return HashedMail(mail_id, None, None, None, expt.args[0])
+
+    mail.dehydrate()
+    return HashedMail(
+        mail_id,
+        mail_hash,
+        mail.__dict__.get("timestamp"),
+        mail.__dict__.get("size"),
+        None,
+    )
+
+
 class Deduplicate:
     """Load-up messages, search for duplicates, apply selection strategy and perform the
     action.
@@ -510,13 +577,12 @@ class Deduplicate:
     Similar messages sharing the same hash are grouped together in a `DuplicateSet`.
     """
 
-    PARALLEL_BATCH_FACTOR: int = 8
-    """Number of mails, per job, materialized at once by the parallel hashing path.
+    CHUNK_SIZE: int = 200
+    """Mails handed to a hashing worker in one go.
 
-    Parsed mails are only held for the batch in flight, instead of the whole corpus,
-    keeping the memory footprint of `--jobs` runs bounded. The factor is large
-    enough to amortize the per-batch synchronization, small enough to keep memory
-    flat.
+    Each queue round-trip costs far more than hashing a single mail, so tasks travel
+    in chunks. Large enough to make that cost disappear, small enough that the last
+    worker to finish does not hold up the others.
     """
 
     def __init__(self, conf: Config) -> None:
@@ -560,10 +626,7 @@ class Deduplicate:
         with the scalars the later steps rely on already memoized. Anything else
         those steps need is re-read from the box on demand, as for any other mail.
         """
-        factory = cast("Callable[[], DedupMailMixin]", box._factory)
-        mail = factory()
-        mail.add_box_metadata(box, mail_id)
-        mail.conf = self.conf
+        mail = self.blank_stub(box, mail_id)
         # A ctime timestamp is a stat away and would not be caught by the cache's
         # staleness key, so it is left to be derived rather than restored.
         if self.conf["time_source"] != TimeSource.CTIME:
@@ -572,6 +635,105 @@ class Deduplicate:
             mail.__dict__["size"] = entry.mail_size
         mail.dehydrate()
         return mail, entry.mail_hash, None
+
+    def blank_stub(self, box: Mailbox, mail_id: str) -> DedupMailMixin:
+        """An empty mail carrying only its identity, ready to be filled in.
+
+        Stands in for a mail this process never parsed, because its content came
+        from the cache or from a worker that has already thrown it away.
+        """
+        factory = cast("Callable[[], DedupMailMixin]", box._factory)
+        mail = factory()
+        mail.add_box_metadata(box, mail_id)
+        mail.conf = self.conf
+        return mail
+
+    def parallel_boxes(self) -> list[Mailbox]:
+        """The sources whose mails a worker process could hash on its own.
+
+        Only folder-based boxes qualify. Their mails each own a file, which a worker
+        opens by path, sharing nothing. Mails of a file-based box are byte ranges of
+        one file that a single handle seeks through, so handing them out would mean
+        several processes seeking the same descriptor.
+
+        Returns an empty list unless *every* source qualifies, so a run is either
+        wholly parallel or wholly sequential rather than silently half of each.
+        """
+        boxes = list(self.sources.values())
+        if boxes and all(
+            isinstance(box, tuple(FOLDER_FORMAT_CLASSES)) for box in boxes
+        ):
+            return boxes
+        return []
+
+    def hash_in_parallel(self, jobs: int, absorb, progress) -> None:
+        """Hash every uncached mail across a pool of worker processes.
+
+        Threads cannot do this job: what hashing spends itself on is Python-level
+        work that the interpreter lock serializes, so fanning it out across threads
+        only adds contention. Processes sidestep the lock, and the mail never has to
+        travel: a worker opens its own file and sends back a hash and two scalars.
+
+        Falls back to hashing in this process if the pool cannot be started, which
+        is the case in some frozen or sandboxed environments.
+        """
+        tasks = []
+        for box in self.parallel_boxes():
+            for mail_id in box.iterkeys():
+                entry = self.cache.lookup(box, mail_id) if self.cache else None
+                if entry is not None:
+                    absorb(self.restore_cached(box, mail_id, entry))
+                    progress.update(1)
+                    continue
+                tasks.append((box, mail_id, resolve_mail_path(box, mail_id)))
+
+        if not tasks:
+            return
+
+        # Every source shares one structure, checked by parallel_boxes(), so a single
+        # worker setup serves them all.
+        factory = cast("type", tasks[0][0]._factory)
+        payload = [(box._path, mail_id, path) for box, mail_id, path in tasks]
+
+        pool = None
+        try:
+            pool = ProcessPoolExecutor(
+                max_workers=jobs,
+                initializer=_init_hash_worker,
+                initargs=(self.conf, factory),
+            )
+        except (OSError, ValueError, ImportError, NotImplementedError) as expt:
+            logging.warning(f"Cannot start {jobs} hashing processes: {expt}")
+            logging.warning("Hash in this process instead.")
+            _init_hash_worker(self.conf, factory)
+            results: Iterable[HashedMail] = map(_hash_in_worker, payload)
+        else:
+            # Chunked so a queue round-trip is amortized over many mails. `map()`
+            # yields in submission order, so the grouping and the statistics come out
+            # identical to a sequential run whatever the number of workers.
+            results = pool.map(_hash_in_worker, payload, chunksize=self.CHUNK_SIZE)
+
+        try:
+            for (box, mail_id, _), result in zip(tasks, results):
+                absorb(self.adopt_hashed(box, mail_id, result))
+                progress.update(1)
+        finally:
+            if pool is not None:
+                pool.shutdown()
+
+    def adopt_hashed(
+        self, box: Mailbox, mail_id: str, result: HashedMail
+    ) -> tuple[DedupMailMixin, str | None, TooFewHeaders | None]:
+        """Turn a worker's answer back into the mail stub this process works with."""
+        if result.rejection is not None:
+            return self.blank_stub(box, mail_id), None, TooFewHeaders(result.rejection)
+        return self.restore_cached(
+            box,
+            mail_id,
+            CacheEntry(
+                cast("str", result.mail_hash), result.timestamp, result.mail_size
+            ),
+        )
 
     def add_source(self, source_path: Path | str) -> None:
         """Registers a source of mails, validates and opens it.
@@ -691,23 +853,13 @@ class Deduplicate:
                             continue
                         yield box, mail_id, mail
 
-            stream = to_hash()
-            if jobs <= 1:
+            if jobs > 1 and self.parallel_boxes():
+                self.hash_in_parallel(jobs, absorb, progress)
+            else:
                 # Stream one mail at a time: lowest memory, progress tracks each read.
-                for item in stream:
+                for item in to_hash():
                     absorb(compute(item))
                     progress.update(1)
-            else:
-                # Parallel-hash in bounded batches: `run_jobs` materializes whatever
-                # it is handed, so only one batch of parsed mails exists at a time,
-                # and each mail shrinks to its dehydrated form as soon as it is
-                # hashed. `run_jobs` yields in submission order, so grouping and
-                # stats stay deterministic regardless of the job count.
-                batch_size = jobs * self.PARALLEL_BATCH_FACTOR
-                while batch := list(islice(stream, batch_size)):
-                    for result in run_jobs(compute, batch, jobs=jobs):
-                        absorb(result)
-                        progress.update(1)
 
         if self.cache:
             # One transaction for the whole step, so an interrupted run leaves the

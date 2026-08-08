@@ -63,15 +63,23 @@ Deduplicating one box at a time keeps the peak lower than passing every box in a
 
 ## Hashing in parallel
 
-`--jobs` fans the hashing out across worker threads. Reading stays single-threaded, because the box objects of Python's `mailbox` module are not safe for concurrent access, so only the hashing itself is parallelized.
+`--jobs` hands the hashing to worker processes, each reading, parsing and hashing whole mails on its own. Only a hash and two small numbers travel back, so the mail itself never crosses between processes.
 
-```{warning}
-On a stock interpreter, raising `--jobs` does not currently pay. Measured on the corpus above, the hashing step comes out at `0.88x` to `0.97x` of its single-job time whatever the `--hash-body` mode: a small net loss to thread contention and batching.
+| `--hash-body` | `--jobs=2` | `--jobs=4` | `--jobs=8` | Whole run at 8 |
+| ------------- | ---------- | ---------- | ---------- | -------------- |
+| `skip`        | 1.67x      | 2.36x      | 2.77x      | 1.6x           |
+| `raw`         | 1.76x      | 2.49x      | 3.30x      | 1.8x           |
+| `normalized`  | 1.85x      | 2.68x      | 3.69x      | 2.2x           |
 
-The reason is that what gets handed to the threads is Python-level work, which the global interpreter lock serializes anyway, while the reading and parsing that dominate the step stay on the main thread. A free-threaded interpreter lifts the lock but not the serial reading, and only reaches `1.37x` at eight jobs with `--hash-body normalized`.
+The gain is largest where hashing does the most work, and the whole run gains less than the step does, because the hashing is only part of it. Above four jobs the returns flatten: reading the mails becomes the limit.
 
-Leave it at its default of `1` unless you have measured a gain on your own corpus. See [issue #87](https://github.com/kdeldycke/mail-deduplicate/issues/87) for the measurements and what would have to change.
+```{important}
+Processes, not threads. Hashing a mail is Python-level work, which the interpreter lock serializes, so spreading it over threads only adds contention: it measured at `0.88x` to `0.97x`, an outright loss, before this became a process pool.
 ```
+
+Two limits are worth knowing. Only folder-based boxes (`maildir`, `MH`, `eml`) can be shared out, because their mails each own a file; the mails of an `mbox` and its kin are byte ranges of a single file that one handle seeks through, so a run over them stays sequential whatever `--jobs` says. And starting workers costs around 50 ms, which a small box never earns back: below a thousand mails or so, leave `--jobs` at `1`.
+
+If a pool cannot be started at all, which happens in some sandboxed environments, the run says so and hashes everything in-process instead.
 
 ## Reusing hashes between runs
 
