@@ -13,37 +13,39 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+"""Actions performed once the selection is settled: copy, move, delete or hardlink.
+
+Each action ID pairs an operation verb with the subset of mails it applies to, and
+`Action.perform()` routes one to the other.
+"""
 
 from __future__ import annotations
 
 import filecmp
 import logging
 import os
-import sys
 from collections import Counter
 from contextlib import contextmanager
+from typing import cast
 from uuid import uuid4
 
 from click_extra import OperationTrail, format_size, get_current_theme
 
+from . import StrEnum
 from .deduplicate import Stat
 from .mail_box import FOLDER_FORMAT_CLASSES, create_box
-
-if sys.version_info >= (3, 11):
-    from enum import StrEnum
-else:
-    from backports.strenum import StrEnum
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable, Collection, Iterator
+    from mailbox import Mailbox
 
     from .deduplicate import Deduplicate
     from .mail import DedupMailMixin
 
 
 @contextmanager
-def export_box(dedup: Deduplicate) -> Iterator:
+def export_box(dedup: Deduplicate) -> Iterator[Mailbox | None]:
     """Context manager for export box operations."""
     if dedup.conf["dry_run"]:
         yield None
@@ -70,7 +72,7 @@ def dry_run_prefix(dedup: Deduplicate) -> str:
     return "DRY RUN: would have " if dedup.conf["dry_run"] else ""
 
 
-def copy_mails(dedup: Deduplicate, mails) -> None:
+def copy_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
     """Copy provided `mails` to a brand new box or an existing one."""
     trail = OperationTrail(label="Copying", unit="mails", total=len(mails))
     with export_box(dedup) as box:
@@ -78,6 +80,8 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
             logging.debug(f"Copying {mail!r} to {dedup.conf['export']}...")
             dedup.stats[Stat.MAIL_COPIED] += 1
             if not dedup.conf["dry_run"]:
+                # The box is only left closed on a dry run, ruled out just above.
+                assert box is not None
                 with mail.hydrated():
                     box.add(mail)
             trail.mark(True, f"{mail!r} copied")
@@ -87,7 +91,7 @@ def copy_mails(dedup: Deduplicate, mails) -> None:
     )
 
 
-def move_mails(dedup: Deduplicate, mails) -> None:
+def move_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
     """Move provided `mails` to a brand new box or an existing one."""
     trail = OperationTrail(label="Moving", unit="mails", total=len(mails))
     with export_box(dedup) as box:
@@ -97,9 +101,15 @@ def move_mails(dedup: Deduplicate, mails) -> None:
             )
             dedup.stats[Stat.MAIL_MOVED] += 1
             if not dedup.conf["dry_run"]:
+                # The box is only left closed on a dry run, ruled out just above.
+                assert box is not None
                 with mail.hydrated():
                     box.add(mail)
-                dedup.sources[mail.source_path].remove(mail.mail_id)
+                # Identity attributes are set the moment a mail is read from its
+                # box, which every mail reaching an action has been.
+                dedup.sources[cast("str", mail.source_path)].remove(
+                    cast("str", mail.mail_id)
+                )
             trail.mark(True, f"{mail!r} moved")
     trail.finish(
         trail.ok_count == len(mails),
@@ -107,14 +117,18 @@ def move_mails(dedup: Deduplicate, mails) -> None:
     )
 
 
-def delete_mails(dedup: Deduplicate, mails) -> None:
+def delete_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
     """Remove provided `mails` in-place, from their original boxes."""
     trail = OperationTrail(label="Deleting", unit="mails", total=len(mails))
     for mail in mails:
         logging.debug(f"Deleting {mail!r} in-place...")
         dedup.stats[Stat.MAIL_DELETED] += 1
         if not dedup.conf["dry_run"]:
-            dedup.sources[mail.source_path].remove(mail.mail_id)
+            # Identity attributes are set the moment a mail is read from its box,
+            # which every mail reaching an action has been.
+            dedup.sources[cast("str", mail.source_path)].remove(
+                cast("str", mail.mail_id)
+            )
         trail.mark(True, f"{mail!r} deleted")
     trail.finish(
         trail.ok_count == len(mails),
@@ -130,17 +144,13 @@ temporary left behind by an interrupted run is never read back as one.
 """
 
 
-FOLDER_BOX_CLASSES = tuple(FOLDER_FORMAT_CLASSES)
-"""Box classes giving each of their mails a file of its own, ready for `isinstance`."""
-
-
 def has_own_file(mail: DedupMailMixin) -> bool:
     """Whether the mail is backed by a file holding it alone.
 
     File-based boxes pack all their mails into the box's single file, which is what
     `path` returns for each of them: there would be nothing to link but the whole box.
     """
-    return isinstance(mail.box, FOLDER_BOX_CLASSES)
+    return isinstance(mail.box, FOLDER_FORMAT_CLASSES)
 
 
 def hardlink_blocker(
@@ -255,43 +265,26 @@ def hardlink_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> Non
         logging.warning(f"{count} mails left untouched: {reason}.")
 
 
-def copy_selected(dedup: Deduplicate) -> None:
-    """Copy all selected mails to a brand new box."""
-    copy_mails(dedup, dedup.selection)
+OPERATIONS: dict[str, Callable] = {
+    "copy": copy_mails,
+    "move": move_mails,
+    "delete": delete_mails,
+    "hardlink": hardlink_mails,
+}
+"""The operation functions above, keyed by the verb half of an action ID.
 
-
-def copy_discarded(dedup: Deduplicate) -> None:
-    """Copy all discarded mails to a brand new box."""
-    copy_mails(dedup, dedup.discard)
-
-
-def move_selected(dedup: Deduplicate) -> None:
-    """Move all selected mails to a brand new box."""
-    move_mails(dedup, dedup.selection)
-
-
-def move_discarded(dedup: Deduplicate) -> None:
-    """Move all discarded mails to a brand new box."""
-    move_mails(dedup, dedup.discard)
-
-
-def delete_selected(dedup: Deduplicate) -> None:
-    """Remove in-place all selected mails, from their original boxes."""
-    delete_mails(dedup, dedup.selection)
-
-
-def delete_discarded(dedup: Deduplicate) -> None:
-    """Remove in-place all discarded mails, from their original boxes."""
-    delete_mails(dedup, dedup.discard)
-
-
-def hardlink_discarded(dedup: Deduplicate) -> None:
-    """Replace in-place all discarded mails by a hardlink to the copy kept."""
-    hardlink_mails(dedup, dedup.discard)
+All share the same signature: the deduplication they report to, and the mails they
+apply to.
+"""
 
 
 class Action(StrEnum):
-    """Define all available action IDs."""
+    """Define all available action IDs.
+
+    An action ID joins an operation verb to the subset of mails it applies to: the
+    `*-selected` actions act on the mails kept by the selection, the `*-discarded`
+    ones on the mails it discarded.
+    """
 
     COPY_SELECTED = "copy-selected"
     COPY_DISCARDED = "copy-discarded"
@@ -302,13 +295,22 @@ class Action(StrEnum):
     HARDLINK_DISCARDED = "hardlink-discarded"
 
     @property
-    def action_function(self) -> Callable:
-        """Return the action function associated with this action."""
-        func_name = self.name.lower()
-        return globals()[func_name]  # type: ignore[no-any-return]
+    def verb(self) -> str:
+        """The operation half of the action ID, keying into `OPERATIONS`."""
+        return self.value.partition("-")[0]
 
-    def perform_action(self, dedup: Deduplicate) -> None:
-        """Performs the action on selected mail candidates."""
+    @property
+    def acts_on_discarded(self) -> bool:
+        """Whether the action applies to the discarded mails rather than the selected
+        ones."""
+        return self.value.endswith("-discarded")
+
+    def targets(self, dedup: Deduplicate) -> set[DedupMailMixin]:
+        """The subset of mails this action applies to."""
+        return dedup.discard if self.acts_on_discarded else dedup.selection
+
+    def perform(self, dedup: Deduplicate) -> None:
+        """Perform the action on the subset of mails it targets."""
         logging.info(f"Perform {get_current_theme().choice(str(self))} action...")
 
         selection_count = len(dedup.selection)
@@ -322,14 +324,8 @@ class Action(StrEnum):
             # would have touched, so without this line a dry run reads exactly like
             # a real one. The trail's own summary cannot carry the warning alone:
             # it only shows on an interactive terminal.
-            #
-            # Counted off the subset this action targets, which is the discarded
-            # mails for the *-discarded half of them, not the selected ones.
-            targets = (
-                dedup.discard if str(self).endswith("-discarded") else dedup.selection
-            )
             logging.warning(
-                f"DRY RUN: {len(targets)} mails would be acted upon, "
+                f"DRY RUN: {len(self.targets(dedup))} mails would be acted upon, "
                 "but none will be altered.",
             )
 
@@ -340,4 +336,4 @@ class Action(StrEnum):
             == dedup.stats[Stat.MAIL_SELECTED] + dedup.stats[Stat.MAIL_UNIQUE]
         )
 
-        self.action_function(dedup)
+        OPERATIONS[self.verb](dedup, self.targets(dedup))

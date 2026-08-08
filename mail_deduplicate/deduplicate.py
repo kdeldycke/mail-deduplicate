@@ -13,6 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+"""The deduplication pipeline: group mails by hash, settle each duplicate set, keep
+score.
+
+The `Deduplicate` orchestrator drives the whole run. Both of its expensive steps,
+hashing and selection, can fan out across worker processes: the module-level
+`_`-prefixed functions are the halves that run inside a worker.
+"""
 
 from __future__ import annotations
 
@@ -22,10 +29,9 @@ import textwrap
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from difflib import unified_diff
-from enum import Enum
+from enum import Enum, unique
 from functools import cached_property
 from itertools import combinations, islice
-from operator import attrgetter
 from pathlib import Path
 from typing import NamedTuple, cast
 
@@ -36,6 +42,7 @@ from click_extra import (
     progressbar,
 )
 
+from . import StrEnum
 from .cache import CacheEntry, HashCache, open_cache
 from .mail import TimeSource, TooFewHeaders
 from .mail_box import (
@@ -45,128 +52,95 @@ from .mail_box import (
     resolve_mail_path,
 )
 
-if sys.version_info >= (3, 11):
-    from enum import StrEnum
-else:
-    from backports.strenum import StrEnum
-
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Callable, Iterable, Iterator
     from mailbox import Mailbox
 
     from .cli import Config
     from .mail import DedupMailMixin
 
 
-class StatDef(NamedTuple):
-    """Definition of a statistic with its description and category."""
-
-    description: str
-    category: str  # "mail" or "set"
-
-
+@unique
 class Stat(Enum):
-    """All tracked statistics and their definition."""
+    """All tracked statistics.
 
-    MAIL_FOUND = StatDef(
-        "Total number of mails encountered from all mail sources.", "mail"
-    )
-    MAIL_REJECTED = StatDef(
+    The member's name carries the category as its `MAIL_`/`SET_` prefix, and its
+    value the description shown in the final report.
+    """
+
+    MAIL_FOUND = "Total number of mails encountered from all mail sources."
+    MAIL_REJECTED = (
         "Number of mails rejected individually because they were unparsable or "
-        "did not have enough metadata to compute hashes.",
-        "mail",
+        "did not have enough metadata to compute hashes."
     )
-    MAIL_RETAINED = StatDef(
-        "Number of valid mails parsed and retained for deduplication.", "mail"
+    MAIL_RETAINED = "Number of valid mails parsed and retained for deduplication."
+    MAIL_HASHES = "Number of unique hashes."
+    MAIL_UNIQUE = (
+        "Number of unique mails (which were automatically added to selection)."
     )
-    MAIL_HASHES = StatDef("Number of unique hashes.", "mail")
-    MAIL_UNIQUE = StatDef(
-        "Number of unique mails (which were automatically added to selection).", "mail"
-    )
-    MAIL_DUPLICATES = StatDef(
+    MAIL_DUPLICATES = (
         "Number of duplicate mails (sum of mails in all duplicate sets with at "
-        "least 2 mails).",
-        "mail",
+        "least 2 mails)."
     )
-    MAIL_SKIPPED = StatDef(
+    MAIL_SKIPPED = (
         "Number of mails ignored in the selection step because the whole set "
-        "they belong to was skipped.",
-        "mail",
+        "they belong to was skipped."
     )
-    MAIL_DISCARDED = StatDef(
-        "Number of mails discarded from the final selection.", "mail"
-    )
-    MAIL_SELECTED = StatDef(
+    MAIL_DISCARDED = "Number of mails discarded from the final selection."
+    MAIL_SELECTED = (
         "Number of mails kept in the final selection on which the "
-        "action will be performed.",
-        "mail",
+        "action will be performed."
     )
-    MAIL_COPIED = StatDef(
-        "Number of mails copied from their original mailbox to another.", "mail"
-    )
-    MAIL_MOVED = StatDef(
-        "Number of mails moved from their original mailbox to another.", "mail"
-    )
-    MAIL_DELETED = StatDef(
-        "Number of mails deleted from their mailbox in-place.", "mail"
-    )
-    MAIL_HARDLINKED = StatDef(
+    MAIL_COPIED = "Number of mails copied from their original mailbox to another."
+    MAIL_MOVED = "Number of mails moved from their original mailbox to another."
+    MAIL_DELETED = "Number of mails deleted from their mailbox in-place."
+    MAIL_HARDLINKED = (
         "Number of mails replaced in-place by a hardlink to the copy kept in their "
-        "duplicate set.",
-        "mail",
+        "duplicate set."
     )
-    MAIL_HARDLINK_SKIPPED = StatDef(
+    MAIL_HARDLINK_SKIPPED = (
         "Number of mails left untouched by the hardlinking action, because they "
-        "could not be linked to their copy or already were.",
-        "mail",
+        "could not be linked to their copy or already were."
     )
-    SET_TOTAL = StatDef("Total number of duplicate sets.", "set")
-    SET_SINGLE = StatDef(
+    SET_TOTAL = "Total number of duplicate sets."
+    SET_SINGLE = (
         "Total number of sets containing only a single mail with no applicable "
-        "strategy. They were automatically kept in the final selection.",
-        "set",
+        "strategy. They were automatically kept in the final selection."
     )
-    SET_SKIPPED_ENCODING = StatDef(
+    SET_SKIPPED_ENCODING = (
         "Number of sets skipped from the selection process because they had "
-        "encoding issues.",
-        "set",
+        "encoding issues."
     )
-    SET_SKIPPED_SIZE = StatDef(
+    SET_SKIPPED_SIZE = (
         "Number of sets skipped from the selection process because they were "
-        "too dissimilar in size.",
-        "set",
+        "too dissimilar in size."
     )
-    SET_SKIPPED_CONTENT = StatDef(
+    SET_SKIPPED_CONTENT = (
         "Number of sets skipped from the selection process because they were "
-        "too dissimilar in content.",
-        "set",
+        "too dissimilar in content."
     )
-    SET_SKIPPED_TIMESTAMP = StatDef(
+    SET_SKIPPED_TIMESTAMP = (
         "Number of sets skipped from the selection process because a timestamp "
-        "could not be derived for some of their mails.",
-        "set",
+        "could not be derived for some of their mails."
     )
-    SET_SKIPPED_STRATEGY = StatDef(
+    SET_SKIPPED_STRATEGY = (
         "Number of sets skipped from the selection process because the strategy "
-        "could not be applied.",
-        "set",
+        "could not be applied."
     )
-    SET_DEDUPLICATED = StatDef(
-        "Number of valid sets on which the selection strategy was successfully "
-        "applied.",
-        "set",
+    SET_DEDUPLICATED = (
+        "Number of valid sets on which the selection strategy was successfully applied."
     )
 
     @property
     def description(self) -> str:
-        """Returns the description of the statistic."""
-        return self.value.description
+        """The description of the statistic, shown in the final report."""
+        return self.value
 
     @property
     def category(self) -> str:
-        """Returns the category of the statistic ('mail' or 'set')."""
-        return self.value.category
+        """Whether the statistic counts mails or sets, read off the member's name."""
+        return self.name.partition("_")[0].lower()
 
 
 class SizeDiffAboveThreshold(Exception):
@@ -193,12 +167,13 @@ class BodyHasher(StrEnum):
     RAW = "raw"
     NORMALIZED = "normalized"
 
-    def hash_function(self):
-        """Returns the hashing function corresponding to the body hasher."""
+    @property
+    def function(self) -> Callable[[DedupMailMixin], str]:
+        """The callable producing this member's body hash for one mail."""
         return {
             BodyHasher.SKIP: lambda _: "",
-            BodyHasher.RAW: lambda m: m.hash_raw_body,
-            BodyHasher.NORMALIZED: lambda m: m.hash_normalized_body,
+            BodyHasher.RAW: lambda mail: mail.hash_raw_body,
+            BodyHasher.NORMALIZED: lambda mail: mail.hash_normalized_body,
         }[self]
 
 
@@ -272,24 +247,24 @@ class DuplicateSet:
         return tuple(timestamps)
 
     @cached_property
-    def newest_timestamp(self):
+    def newest_timestamp(self) -> float:
         """Returns the newest timestamp among all mails in the set."""
         return max(self.timestamps)
 
     @cached_property
-    def oldest_timestamp(self):
+    def oldest_timestamp(self) -> float:
         """Returns the oldest timestamp among all mails in the set."""
         return min(self.timestamps)
 
     @cached_property
-    def biggest_size(self):
+    def biggest_size(self) -> int:
         """Returns the biggest size among all mails in the set."""
-        return max(map(attrgetter("size"), self.pool))
+        return max(mail.size for mail in self.pool)
 
     @cached_property
-    def smallest_size(self):
+    def smallest_size(self) -> int:
         """Returns the smallest size among all mails in the set."""
-        return min(map(attrgetter("size"), self.pool))
+        return min(mail.size for mail in self.pool)
 
     def check_differences(self) -> set[DedupMailMixin]:
         """Checks all mails of the set against each other, for size and content
@@ -382,7 +357,7 @@ class DuplicateSet:
 
         return evicted
 
-    def diff(self, mail_a, mail_b):
+    def diff(self, mail_a: DedupMailMixin, mail_b: DedupMailMixin) -> int:
         """Return difference in bytes between two mails' normalized body.
 
         ```{todo}
@@ -405,7 +380,7 @@ class DuplicateSet:
             ),
         )
 
-    def pretty_diff(self, mail_a, mail_b):
+    def pretty_diff(self, mail_a: DedupMailMixin, mail_b: DedupMailMixin) -> str:
         """Returns a verbose unified diff between two mails' normalized body."""
         return "".join(
             unified_diff(
@@ -430,8 +405,8 @@ class DuplicateSet:
         self.stats[Stat.MAIL_SKIPPED] += self.size
         self.stats[stat] += 1
 
-    def categorize_candidates(self):
-        """Process the list of duplicates for action.
+    def select(self) -> None:
+        """Settle which mails of the set are selected and which are discarded.
 
         Run preliminary checks, then apply the strategies to the pool of mails, each
         in turn until one produces a proper selection.
@@ -492,7 +467,7 @@ class DuplicateSet:
         for strategy_counter, strategy in enumerate(strategies, 1):
             skip_stat = Stat.SET_SKIPPED_STRATEGY
             try:
-                selected = strategy.apply_strategy(self)
+                selected = strategy.apply(self)
             except MissingTimestamps as expt:
                 selected = set()
                 skip_reason = (
@@ -561,7 +536,22 @@ def _init_hash_worker(conf: Config, message_class: type) -> None:
     """Prepare a worker process to hash mails of one box format."""
     _WORKER["conf"] = conf
     _WORKER["message_class"] = message_class
-    _WORKER["body_hasher"] = conf["hash_body"].hash_function()
+    _WORKER["body_hasher"] = conf["hash_body"].function
+
+
+def _load_worker_mail(source_path: str, mail_id: str, path: str) -> DedupMailMixin:
+    """Read and parse one mail from its own file, in a worker process.
+
+    The mail is stamped with the identity the parent knows it by, and with the
+    location it was opened from: out here there is no box to derive either from.
+    """
+    with open(path, "rb") as handle:
+        mail = _WORKER["message_class"](handle)
+    mail.source_path = source_path
+    mail.mail_id = mail_id
+    mail._path_override = path
+    mail.conf = _WORKER["conf"]
+    return mail  # type: ignore[no-any-return]
 
 
 def _hash_in_worker(task: tuple[str, str, str]) -> HashedMail:
@@ -574,16 +564,9 @@ def _hash_in_worker(task: tuple[str, str, str]) -> HashedMail:
     """
     source_path, mail_id, path = task
     try:
-        with open(path, "rb") as handle:
-            mail = _WORKER["message_class"](handle)
+        mail = _load_worker_mail(source_path, mail_id, path)
     except OSError as expt:
         return HashedMail(mail_id, None, None, None, f"unreadable file: {expt}")
-
-    mail.source_path = source_path
-    mail.mail_id = mail_id
-    # No box to derive the location from, so hand it the one we opened.
-    mail._path_override = path
-    mail.conf = _WORKER["conf"]
 
     try:
         mail_hash = mail.hash_key() + _WORKER["body_hasher"](mail)
@@ -658,18 +641,10 @@ def _select_in_worker(task: tuple[str, tuple[MailMeta, ...]]) -> SelectedSet:
     a worker re-reads only the mails of its own set, from their own files.
     """
     hash_key, metas = task
-    conf = _WORKER["conf"]
-    factory = _WORKER["message_class"]
 
     mails = []
     for meta in metas:
-        with open(meta.path, "rb") as handle:
-            mail = factory(handle)
-        mail.source_path = meta.source_path
-        mail.mail_id = meta.mail_id
-        # No box out here, so hand it the location it was opened from.
-        mail._path_override = meta.path
-        mail.conf = conf
+        mail = _load_worker_mail(meta.source_path, meta.mail_id, meta.path)
         # Already settled by the hashing step: recomputing risks disagreeing with it.
         mail.__dict__["timestamp"] = meta.timestamp
         if meta.mail_size is not None:
@@ -681,8 +656,8 @@ def _select_in_worker(task: tuple[str, tuple[MailMeta, ...]]) -> SelectedSet:
     root = logging.getLogger()
     root.addHandler(handler)
     try:
-        duplicates = DuplicateSet(hash_key, mails, conf)
-        duplicates.categorize_candidates()
+        duplicates = DuplicateSet(hash_key, mails, _WORKER["conf"])
+        duplicates.select()
     finally:
         root.removeHandler(handler)
 
@@ -756,13 +731,12 @@ class Deduplicate:
         self.conf = conf
         """Configuration shared across the deduplication process."""
 
-        self.track_link_targets: bool = str(conf["action"]).startswith("hardlink")
+        self.track_link_targets: bool = conf["action"].verb == "hardlink"
         """Whether each discarded mail has to be paired with a selected one.
 
         Only the hardlinking action needs that pairing, and it costs one dictionary
-        entry per discarded mail, so it is only recorded when something reads it.
-        Settled once here rather than per set, and derived from the action's ID
-        rather than by importing `Action`, which imports this module in turn.
+        entry per discarded mail, so it is settled once here and only recorded when
+        something reads it.
         """
 
         self.stats: Counter[Stat] = Counter()
@@ -815,78 +789,127 @@ class Deduplicate:
         wholly parallel or wholly sequential rather than silently half of each.
         """
         boxes = list(self.sources.values())
-        if boxes and all(
-            isinstance(box, tuple(FOLDER_FORMAT_CLASSES)) for box in boxes
-        ):
+        if boxes and all(isinstance(box, FOLDER_FORMAT_CLASSES) for box in boxes):
             return boxes
         return []
 
-    def hash_in_parallel(self, jobs: int, absorb, progress) -> None:
+    @property
+    def jobs(self) -> int:
+        """Worker processes the `--jobs` option resolved to, read off the context."""
+        return cast("int", context.get(get_current_context(), context.JOBS, 1))
+
+    def start_pool(
+        self,
+        jobs: int,
+        initializer: Callable,
+        initargs: tuple,
+        verb: str,
+        doing: str,
+    ) -> ProcessPoolExecutor | None:
+        """Start a pool of worker processes prepared by the initializer.
+
+        Falls back to this very process when the pool cannot be started, which is
+        the case in some frozen or sandboxed environments: the initializer is then
+        run right here, so the worker functions find the state they expect, and the
+        caller degrades to sequential calls instead of dying.
+        """
+        try:
+            pool = ProcessPoolExecutor(
+                max_workers=jobs,
+                initializer=initializer,
+                initargs=initargs,
+            )
+        except (OSError, ValueError, ImportError, NotImplementedError) as expt:
+            logging.warning(f"Cannot start {jobs} {doing} processes: {expt}")
+            logging.warning(f"{verb} in this process instead.")
+            initializer(*initargs)
+            return None
+        logging.info(f"{verb} mails across {jobs} processes.")
+        return pool
+
+    def fan_out(
+        self,
+        pool: ProcessPoolExecutor | None,
+        worker: Callable,
+        tasks: Iterable[tuple],
+        window: int,
+        chunksize: int,
+    ) -> Iterator[tuple]:
+        """Yields each task back alongside its worker's answer.
+
+        Tasks pair what the parent keeps with the payload its worker receives, and
+        are handed out a window at a time rather than all at once: `map()` consumes
+        whatever it is given immediately, so passing the whole corpus would hold a
+        task per mail, undoing the flat memory the rest of the run maintains. The
+        window is wide enough that every worker always has chunks queued behind it.
+
+        With or without a pool, answers come back in submission order, so whatever
+        the caller aggregates comes out identical to a sequential run at any number
+        of workers.
+        """
+        stream = iter(tasks)
+        while batch := list(islice(stream, window)):
+            payloads = [payload for _, payload in batch]
+            if pool is None:
+                results: Iterable = map(worker, payloads)
+            else:
+                # Chunked so a queue round-trip is amortized over many payloads.
+                results = pool.map(worker, payloads, chunksize=chunksize)
+            yield from zip((kept for kept, _ in batch), results)
+
+    def uncached(
+        self, boxes: Iterable[Mailbox], absorb: Callable, progress
+    ) -> Iterator[tuple[Mailbox, str]]:
+        """Yields the identity of every mail the cache cannot answer for.
+
+        A mail the cache can restore is absorbed here and never even opened, which
+        is the whole point of keeping the cache. Lazy, and driven from the main
+        process alone: neither box objects nor the cache are safe for concurrent
+        access.
+        """
+        for box in boxes:
+            for mail_id in iter_mail_ids(box):
+                entry = self.cache.lookup(box, mail_id) if self.cache else None
+                if entry is not None:
+                    absorb(self.restore_cached(box, mail_id, entry))
+                    progress.update(1)
+                    continue
+                yield box, mail_id
+
+    def hash_in_parallel(self, jobs: int, absorb: Callable, progress) -> None:
         """Hash every uncached mail across a pool of worker processes.
 
         Threads cannot do this job: what hashing spends itself on is Python-level
         work that the interpreter lock serializes, so fanning it out across threads
         only adds contention. Processes sidestep the lock, and the mail never has to
         travel: a worker opens its own file and sends back a hash and two scalars.
-
-        Falls back to hashing in this process if the pool cannot be started, which
-        is the case in some frozen or sandboxed environments.
         """
         boxes = self.parallel_boxes()
         # Every source shares one structure, checked by parallel_boxes(), so a single
         # worker setup serves them all.
         factory = cast("type", boxes[0]._factory)
+        pool = self.start_pool(
+            jobs, _init_hash_worker, (self.conf, factory), "Hash", "hashing"
+        )
 
-        def pending():
-            """Yields the mails the cache could not answer for, as work to hand out.
+        def tasks():
+            """Pairs each pending mail with the task handed to its worker."""
+            for box, mail_id in self.uncached(boxes, absorb, progress):
+                yield (
+                    (box, mail_id),
+                    (box._path, mail_id, resolve_mail_path(box, mail_id)),
+                )
 
-            Lazy, and driven from this process: the boxes and the cache are consulted
-            here alone, so neither is ever touched concurrently.
-            """
-            for box in boxes:
-                for mail_id in iter_mail_ids(box):
-                    entry = self.cache.lookup(box, mail_id) if self.cache else None
-                    if entry is not None:
-                        absorb(self.restore_cached(box, mail_id, entry))
-                        progress.update(1)
-                        continue
-                    yield box, mail_id, resolve_mail_path(box, mail_id)
-
-        pool = None
         try:
-            pool = ProcessPoolExecutor(
-                max_workers=jobs,
-                initializer=_init_hash_worker,
-                initargs=(self.conf, factory),
-            )
-            logging.info(f"Hash mails across {jobs} processes.")
-        except (OSError, ValueError, ImportError, NotImplementedError) as expt:
-            logging.warning(f"Cannot start {jobs} hashing processes: {expt}")
-            logging.warning("Hash in this process instead.")
-            _init_hash_worker(self.conf, factory)
-
-        # Handed out a window at a time rather than all at once: `map()` consumes
-        # whatever it is given immediately, so passing the whole corpus would hold a
-        # task per mail, undoing the flat memory the rest of the run maintains. The
-        # window is wide enough that every worker always has chunks queued behind it.
-        window = jobs * self.CHUNK_SIZE * 4
-        stream = pending()
-        try:
-            while batch := list(islice(stream, window)):
-                payload = [(box._path, mail_id, path) for box, mail_id, path in batch]
-                if pool is None:
-                    results: Iterable[HashedMail] = map(_hash_in_worker, payload)
-                else:
-                    # Chunked so a queue round-trip is amortized over many mails.
-                    # `map()` yields in submission order, so the grouping and the
-                    # statistics come out identical to a sequential run whatever the
-                    # number of workers.
-                    results = pool.map(
-                        _hash_in_worker, payload, chunksize=self.CHUNK_SIZE
-                    )
-                for (box, mail_id, _), result in zip(batch, results):
-                    absorb(self.adopt_hashed(box, mail_id, result))
-                    progress.update(1)
+            for (box, mail_id), result in self.fan_out(
+                pool,
+                _hash_in_worker,
+                tasks(),
+                jobs * self.CHUNK_SIZE * 4,
+                self.CHUNK_SIZE,
+            ):
+                absorb(self.adopt_hashed(box, mail_id, result))
+                progress.update(1)
         finally:
             if pool is not None:
                 pool.shutdown()
@@ -927,7 +950,7 @@ class Deduplicate:
             logging.info(f"{mail_found} mails found.")
             self.stats[Stat.MAIL_FOUND] += mail_found
 
-    def hash_all(self):
+    def hash_all(self) -> None:
         """Browse all mails from all registered sources, compute hashes and group mails
         by hash.
 
@@ -937,12 +960,12 @@ class Deduplicate:
         corpus, only a lightweight stub of every mail is retained. See:
         https://github.com/kdeldycke/mail-deduplicate/issues/761
 
-        Hashing fans out across worker threads when `--jobs` resolves above 1; at
-        the default of a single job, mails stream through one at a time. Mail reading
-        always stays single-threaded because `mailbox` box objects are not safe for
-        concurrent access: only the CPU-bound hashing is parallelized, in batches
-        bounding the number of parsed mails in flight, so the speedup is largest with
-        `--hash-body raw`/`normalized`.
+        Hashing fans out across worker processes when `--jobs` resolves above 1 and
+        every source is a folder-based box; otherwise mails stream through this
+        process one at a time, which is also the lowest-memory path. Box listing and
+        the hash cache always stay in this process, as neither is safe for
+        concurrent access, so the speedup is largest where the hashing itself is the
+        cost, with `--hash-body raw`/`normalized`.
         """
         theme = get_current_theme()
         logging.info(
@@ -950,14 +973,14 @@ class Deduplicate:
             "compute hashes.",
         )
 
-        body_hasher = self.conf["hash_body"].hash_function()
+        body_hasher = self.conf["hash_body"].function
 
-        def compute(item):
-            """Hash a single mail. Pure per-mail work, safe in a worker thread: it only
-            touches its own mail and the read-only shared config. The mail is
-            dehydrated on the way out, so only its identity and memoized scalars
-            survive the hashing step."""
-            box, mail_id, mail = item
+        def compute(box, mail_id, mail):
+            """Hash a single parsed mail, in this very process.
+
+            The mail is dehydrated on the way out, so only its identity and memoized
+            scalars survive the hashing step.
+            """
             mail.add_box_metadata(box, mail_id)
             mail.conf = self.conf
             try:
@@ -969,7 +992,7 @@ class Deduplicate:
 
         def absorb(result):
             """Merge one hashed mail into the shared groups and stats. Called only from
-            the main thread, keeping the parallel path and the cache race-free."""
+            the main process, keeping the parallel path and the cache race-free."""
             mail, mail_hash, expt = result
             if expt is not None:
                 logging.warning(f"Rejecting {mail!r}: {expt.args[0]}")
@@ -991,44 +1014,28 @@ class Deduplicate:
                         ),
                     )
 
-        jobs = context.get(get_current_context(), context.JOBS, 1)
+        jobs = self.jobs
 
         with progressbar(
             length=self.stats[Stat.MAIL_FOUND],
             label="Hashed mails",
             show_pos=True,
         ) as progress:
-
-            def to_hash():
-                """Yields the mails still needing to be hashed.
-
-                Lazy and single-threaded: neither box objects nor the cache are
-                concurrency-safe, and only the mails in flight are ever parsed. A
-                mail the cache can restore is absorbed here and never even opened,
-                which is the whole point of keeping the cache.
-                """
-                for box in self.sources.values():
-                    for mail_id in iter_mail_ids(box):
-                        entry = self.cache.lookup(box, mail_id) if self.cache else None
-                        if entry is not None:
-                            absorb(self.restore_cached(box, mail_id, entry))
-                            progress.update(1)
-                            continue
-                        try:
-                            mail = box[mail_id]
-                        except KeyError:
-                            # The mail went away between the box listing it and us
-                            # reading it, which `iteritems()` also skips over.
-                            logging.debug(f"Mail {mail_id} vanished from {box._path}.")
-                            continue
-                        yield box, mail_id, mail
-
             if jobs > 1 and self.parallel_boxes():
                 self.hash_in_parallel(jobs, absorb, progress)
             else:
-                # Stream one mail at a time: lowest memory, progress tracks each read.
-                for item in to_hash():
-                    absorb(compute(item))
+                # Stream one mail at a time: only the mail in flight is ever parsed.
+                for box, mail_id in self.uncached(
+                    self.sources.values(), absorb, progress
+                ):
+                    try:
+                        mail = box[mail_id]
+                    except KeyError:
+                        # The mail went away between the box listing it and us
+                        # reading it, which `iteritems()` also skips over.
+                        logging.debug(f"Mail {mail_id} vanished from {box._path}.")
+                        continue
+                    absorb(compute(box, mail_id, mail))
                     progress.update(1)
 
         if self.cache:
@@ -1045,10 +1052,10 @@ class Deduplicate:
 
         self.stats[Stat.MAIL_HASHES] += len(self.mails)
 
-    def build_sets(self):
+    def build_sets(self) -> None:
         """Build the selected and discarded sets from each duplicate set.
 
-        We apply the selection strategy one duplicate set at a time to keep memory
+        The selection is settled one duplicate set at a time, to keep the memory
         footprint low and make the log easier to read.
         """
         theme = get_current_theme()
@@ -1072,7 +1079,7 @@ class Deduplicate:
 
         self.stats[Stat.SET_TOTAL] = len(self.mails)
 
-        jobs = context.get(get_current_context(), context.JOBS, 1)
+        jobs = self.jobs
         # Sets are announced individually at debug level only, so a plain run needs
         # something to watch: this step re-reads mails and is the longest one left
         # once the hashes come from the cache.
@@ -1082,23 +1089,26 @@ class Deduplicate:
             show_pos=True,
         ) as progress:
             if jobs > 1 and self.parallel_boxes():
-                self.select_in_parallel(jobs, theme, progress)
+                self.select_in_parallel(jobs, progress)
                 return
 
             for hash_key, mail_set in self.mails.items():
-                self.log_set_heading(hash_key, len(mail_set), theme)
-                # Apply the selection strategy to discriminate mails within the set.
-                duplicates = DuplicateSet(hash_key, mail_set, self.conf)
-                duplicates.categorize_candidates()
-                # Merge duplicate set's stats to global stats.
-                self.stats += duplicates.stats
-                self.selection.update(duplicates.selection)
-                self.discard.update(duplicates.discard)
-                self.record_link_targets(duplicates.selection, duplicates.discard)
-                self.release(mail_set)
+                self.settle(hash_key, mail_set)
                 progress.update(1)
 
-    def log_set_heading(self, hash_key: str, mail_count: int, theme) -> None:
+    def settle(self, hash_key: str, mail_set: list[DedupMailMixin]) -> None:
+        """Run one duplicate set through the thresholds and the strategies, right in
+        this process, and merge its verdict into the run."""
+        self.log_set_heading(hash_key, len(mail_set))
+        duplicates = DuplicateSet(hash_key, mail_set, self.conf)
+        duplicates.select()
+        self.stats += duplicates.stats
+        self.selection.update(duplicates.selection)
+        self.discard.update(duplicates.discard)
+        self.record_link_targets(duplicates.selection, duplicates.discard)
+        self.release(mail_set)
+
+    def log_set_heading(self, hash_key: str, mail_count: int) -> None:
         """Announce a duplicate set, at a level reflecting whether it holds copies.
 
         Styling the heading is not free, and most sets hold a single mail and so
@@ -1107,7 +1117,9 @@ class Deduplicate:
         """
         if logging.getLogger().isEnabledFor(logging.DEBUG):
             logging.debug(
-                theme.subheading(f"◼ {mail_count} mails sharing hash {hash_key}")
+                get_current_theme().subheading(
+                    f"◼ {mail_count} mails sharing hash {hash_key}"
+                )
             )
 
     def release(self, mail_set: list[DedupMailMixin]) -> None:
@@ -1152,64 +1164,47 @@ class Deduplicate:
         for mail in discarded:
             self.link_targets[mail] = target
 
-    def select_in_parallel(self, jobs: int, theme, progress) -> None:
+    def select_in_parallel(self, jobs: int, progress) -> None:
         """Apply the selection to every duplicate set across a pool of processes.
 
         Duplicate sets share nothing with one another, so a set is the natural unit
         of work. Only sets holding copies are handed out: a set of one is settled
         without reading anything, and would cost more to ship than to decide.
-
-        Falls back to deciding in this process if the pool cannot be started.
         """
         boxes = self.parallel_boxes()
         factory = cast("type", boxes[0]._factory)
         level = logging.getLogger().getEffectiveLevel()
+        pool = self.start_pool(
+            jobs,
+            _init_select_worker,
+            (self.conf, factory, level),
+            "Select",
+            "selection",
+        )
 
-        pool = None
-        try:
-            pool = ProcessPoolExecutor(
-                max_workers=jobs,
-                initializer=_init_select_worker,
-                initargs=(self.conf, factory, level),
-            )
-            logging.info(f"Select mails across {jobs} processes.")
-        except (OSError, ValueError, ImportError, NotImplementedError) as expt:
-            logging.warning(f"Cannot start {jobs} selection processes: {expt}")
-            logging.warning("Select in this process instead.")
-            _init_select_worker(self.conf, factory, level)
-
-        def pending():
-            """Yields the sets worth handing out, settling the rest on the way."""
+        def tasks():
+            """Pairs each set worth handing out with its payload, settling the rest
+            on the way."""
             for hash_key, mail_set in self.mails.items():
                 if len(mail_set) < 2:
-                    self.log_set_heading(hash_key, len(mail_set), theme)
-                    duplicates = DuplicateSet(hash_key, mail_set, self.conf)
-                    duplicates.categorize_candidates()
-                    self.stats += duplicates.stats
-                    self.selection.update(duplicates.selection)
+                    self.settle(hash_key, mail_set)
                     progress.update(1)
                     continue
-                yield hash_key, mail_set
+                yield (
+                    (hash_key, mail_set),
+                    (hash_key, tuple(self.describe(mail) for mail in mail_set)),
+                )
 
-        # A window of sets at a time, for the same reason the hashing step uses one:
-        # `map()` consumes whatever it is given at once.
-        window = jobs * 64
-        stream = pending()
         try:
-            while batch := list(islice(stream, window)):
-                payload = [
-                    (hash_key, tuple(self.describe(mail) for mail in mail_set))
-                    for hash_key, mail_set in batch
-                ]
-                if pool is None:
-                    results: Iterable[SelectedSet] = map(_select_in_worker, payload)
-                else:
-                    results = pool.map(
-                        _select_in_worker, payload, chunksize=self.SET_CHUNK_SIZE
-                    )
-                for (hash_key, mail_set), result in zip(batch, results):
-                    self.adopt_selection(hash_key, mail_set, result, theme)
-                    progress.update(1)
+            for (hash_key, mail_set), result in self.fan_out(
+                pool,
+                _select_in_worker,
+                tasks(),
+                jobs * self.SET_CHUNK_SIZE * 2,
+                self.SET_CHUNK_SIZE,
+            ):
+                self.adopt_selection(hash_key, mail_set, result)
+                progress.update(1)
         finally:
             if pool is not None:
                 pool.shutdown()
@@ -1229,7 +1224,6 @@ class Deduplicate:
         hash_key: str,
         mail_set: list[DedupMailMixin],
         result: SelectedSet,
-        theme,
     ) -> None:
         """Merge a worker's verdict on one set back into this process.
 
@@ -1237,7 +1231,7 @@ class Deduplicate:
         the log reads as it would have from a sequential run however the sets were
         spread out.
         """
-        self.log_set_heading(hash_key, len(mail_set), theme)
+        self.log_set_heading(hash_key, len(mail_set))
         for levelno, message in result.records:
             logging.log(levelno, message)
 
@@ -1253,7 +1247,7 @@ class Deduplicate:
         self.stats += Counter(result.stats)
         self.release(mail_set)
 
-    def close_all(self):
+    def close_all(self) -> None:
         """Close all open boxes, and the hash cache if one was opened."""
         for source_path, box in self.sources.items():
             logging.debug(f"Close {source_path}")
@@ -1261,7 +1255,7 @@ class Deduplicate:
         if self.cache:
             self.cache.close()
 
-    def report(self):
+    def report(self) -> str:
         """Returns a text report of user-friendly statistics and metrics."""
         ctx = get_current_context()
         render_table = ctx.find_root().render_table  # type: ignore[attr-defined]
@@ -1360,8 +1354,8 @@ class Deduplicate:
         # unique and selected mails for *-selected actions, the discarded mails for
         # *-discarded ones. The counters the action reports on are expected to
         # account for its target exactly, as they are incremented in dry-run mode too.
-        action_id = str(self.conf["action"])
-        if action_id.startswith("hardlink"):
+        action = self.conf["action"]
+        if action.verb == "hardlink":
             # Hardlinking is the one action that cannot always go through: a mail
             # packed into a file-based box, one already sharing its copy's inode and
             # one sitting on another filesystem are all left alone. So the discarded
@@ -1377,8 +1371,8 @@ class Deduplicate:
                 "copy": Stat.MAIL_COPIED,
                 "move": Stat.MAIL_MOVED,
                 "delete": Stat.MAIL_DELETED,
-            }[action_id.split("-")[0]]
-            if action_id.endswith("-discarded"):
+            }[action.verb]
+            if action.acts_on_discarded:
                 self.assert_stats(Stat.MAIL_DISCARDED, "==", action_counter)
             else:
                 self.assert_stats(

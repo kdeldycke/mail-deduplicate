@@ -307,9 +307,9 @@ def test_single_mail_sets_are_not_handed_to_workers(invoke, make_box, monkeypatc
     # Spied on this side of the pool on purpose: the worker function itself has to
     # survive pickling to reach a process, which a test's local closure cannot.
     # Only sets that were handed out come back through here.
-    def spy(self, hash_key, mail_set, result, theme):
+    def spy(self, hash_key, mail_set, result):
         handed.append(len(mail_set))
-        return original(self, hash_key, mail_set, result, theme)
+        return original(self, hash_key, mail_set, result)
 
     monkeypatch.setattr(Deduplicate, "adopt_selection", spy)
     # Two lone mails and one duplicate pair.

@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+"""The `mdedup` command: its options, their validation, and the `Config` mapping
+carried through the whole run."""
 
 from __future__ import annotations
 
@@ -160,7 +162,7 @@ def unique_strategies(
     """
     deduplicated: dict[Callable, Strategy] = {}
     for strategy in value:
-        deduplicated.setdefault(strategy.strategy_function, strategy)
+        deduplicated.setdefault(strategy.function, strategy)
     return tuple(deduplicated.values())
 
 
@@ -249,10 +251,7 @@ class MdedupCommand(Command):
         # Produce the strategy reference table, with grouped aliases.
         method_to_ids: dict[Callable, list[str]] = {}
         for strategy in Strategy:
-            method = strategy.strategy_function
-            if method not in method_to_ids:
-                method_to_ids[method] = []
-            method_to_ids[method].append(str(strategy))
+            method_to_ids.setdefault(strategy.function, []).append(str(strategy))
 
         strategy_table: list[tuple[str, str]] = []
         for method, strategy_ids in method_to_ids.items():
@@ -264,6 +263,26 @@ class MdedupCommand(Command):
 
         with formatter.section("Available strategies"):
             formatter.write_dl(sorted(strategy_table))
+
+
+def ignored_step_options(ctx) -> list[str]:
+    """User-provided options from the steps `-H`/`--hash-only` never runs.
+
+    Collects the options attached to the sections of steps after #2 whose value does
+    not come from a default, so the run can report them as ignored.
+    """
+    ignored: list[str] = []
+    for group in ctx.command.option_groups:
+        step_number = re.search(r"step #(\d+)", group.title)
+        if not step_number:
+            raise RuntimeError("Option group not associated to a step number.")
+        if int(step_number.group(1)) > 2:
+            ignored.extend(
+                "/".join(opt.opts + opt.secondary_opts)
+                for opt in group.options
+                if ctx.get_parameter_source(opt.name) != ParameterSource.DEFAULT
+            )
+    return ignored
 
 
 @command(
@@ -536,10 +555,11 @@ class MdedupCommand(Command):
 @jobs_option(
     default=1,
     help=(
-        "Number of parallel jobs used to hash mails (step #2). Accepts an integer, "
-        "'auto' (one fewer than the host's logical CPUs) or 'max'. Defaults to 1 "
-        "(sequential); higher values speed up --hash-body raw/normalized on large "
-        "boxes."
+        "Number of parallel jobs used to hash mails (step #2) and settle duplicate "
+        "sets (step #3). Accepts an integer, 'auto' (one fewer than the host's "
+        "logical CPUs) or 'max'. Defaults to 1 (sequential). Only folder-based "
+        "boxes fan out; higher values speed up --hash-body raw/normalized and "
+        "boxes holding many duplicate sets."
     ),
 )
 @pass_context
@@ -629,20 +649,7 @@ def mdedup(
     dedup.hash_all()
 
     if hash_only:
-        # List options attached to the sections specifics to later steps, that were
-        # provided by the user.
-        ignored_user_options: list[str] = []
-        for group in ctx.command.option_groups:
-            step_number = re.search(r"step #(\d+)", group.title)
-            if not step_number:
-                raise RuntimeError("Option group not associated to a step number.")
-            # Only collect options from steps after #2.
-            if int(step_number.group(1)) > 2:
-                ignored_user_options.extend(
-                    "/".join(opt.opts + opt.secondary_opts)
-                    for opt in group.options
-                    if ctx.get_parameter_source(opt.name) != ParameterSource.DEFAULT
-                )
+        ignored_user_options = ignored_step_options(ctx)
         if ignored_user_options:
             logging.warning(
                 "Options provided by user, but ignored in -H/--hash-only mode: "
@@ -665,7 +672,7 @@ def mdedup(
     dedup.build_sets()
 
     echo(theme.heading("\n● Step #4 - Perform action on selected mails"))
-    action.perform_action(dedup)
+    action.perform(dedup)
     dedup.close_all()
 
     echo(theme.heading("\n● Step #5 - Report and statistics"))

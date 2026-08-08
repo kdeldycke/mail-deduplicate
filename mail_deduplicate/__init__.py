@@ -17,4 +17,15 @@
 
 from __future__ import annotations
 
+import sys
+
+if sys.version_info >= (3, 11):
+    from enum import StrEnum
+else:
+    from backports.strenum import StrEnum
+
 __version__ = "9.3.0.dev0"
+
+__all__ = ["StrEnum", "__version__"]
+"""Also re-exports the `StrEnum` shim, so a single import site covers the Python
+versions predating `enum.StrEnum`."""

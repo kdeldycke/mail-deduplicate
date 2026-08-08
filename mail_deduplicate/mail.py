@@ -13,6 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+"""A mail wrapped with the deduplication-specific properties: canonical hash,
+normalized headers, timestamp, size, and the dehydration machinery keeping memory
+flat."""
 
 from __future__ import annotations
 
@@ -22,7 +25,6 @@ import hashlib
 import logging
 import os
 import re
-import sys
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from email.header import Header
@@ -32,10 +34,7 @@ from typing import cast
 
 from click_extra import get_current_context, render_table
 
-if sys.version_info >= (3, 11):
-    from enum import StrEnum
-else:
-    from backports.strenum import StrEnum
+from . import StrEnum
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -95,9 +94,9 @@ to the same thing as `Bob <bob@example.com>`.
 ```
 
 ```{attention}
-These IDs should be kept lower-case, because they are compared to the one provided
-to those provided to the `-h`/`--hash-header` option, that is carried by the
-`hash_headers` property of the configuration.
+These IDs should be kept lower-case, because they are compared to the IDs provided
+to the `-h`/`--hash-header` option, carried by the `hash_headers` entry of the
+configuration.
 ```
 """
 

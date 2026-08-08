@@ -61,8 +61,11 @@ def select_older(duplicates: DuplicateSet) -> set[DedupMailMixin]:
 
     Discards the newests, i.e. the subset sharing the most recent timestamp.
     """
+    # No mail here is undated: resolving `newest_timestamp` raised otherwise.
     return {
-        mail for mail in duplicates.pool if mail.timestamp < duplicates.newest_timestamp
+        mail
+        for mail in duplicates.pool
+        if mail.timestamp < duplicates.newest_timestamp  # type: ignore[operator]
     }
 
 
@@ -88,8 +91,11 @@ def select_newer(duplicates: DuplicateSet) -> set[DedupMailMixin]:
 
     Discards the oldest, i.e. the subset sharing the most ancient timestamp.
     """
+    # No mail here is undated: resolving `oldest_timestamp` raised otherwise.
     return {
-        mail for mail in duplicates.pool if mail.timestamp > duplicates.oldest_timestamp
+        mail
+        for mail in duplicates.pool
+        if mail.timestamp > duplicates.oldest_timestamp  # type: ignore[operator]
     }
 
 
@@ -189,20 +195,20 @@ def select_all_but_one(duplicates: DuplicateSet) -> set[DedupMailMixin]:
 
 @enum.unique
 class Strategy(enum.Enum):
-    """Selection strategies to apply on a sets of duplicate mails.
+    """Selection strategies to apply on a set of duplicate mails.
 
     Each strategy in the `Enum` points to the function implementing the selection
-    logic, by the way of the `strategy_function()` method.
+    logic, by way of the `function` property.
 
     Strategies whose member value is a string are simply aliases to other strategies,
-    pointing to the name of the function implementing the logic. The other members have
-    integer values, to indicate their function ID is to be derived from the member name.
-    This arrangement allow for each member to have its own existence without being
+    pointing to the name of the function implementing the logic. The other members
+    have integer values, to indicate their function ID is to be derived from the
+    member name. This arrangement lets each member exist on its own instead of being
     hidden by the aliasing mechanism of `Enum`.
 
-    Aliases are great usability features to represent inverse operations. They helps
-    users to better reason about the selection operators depending on their mental
-    models.
+    Aliases are great usability features to represent inverse operations. They help
+    users reason about the selection operators in whichever direction matches their
+    mental model.
     """
 
     # Time-based strategies.
@@ -242,22 +248,26 @@ class Strategy(enum.Enum):
         return self.name.lower().replace("_", "-")
 
     @property
-    def strategy_function(self) -> Callable:
-        """Return the function's ID is the value of the `Enum` member."""
+    def function(self) -> SelectionFunc:
+        """The selection function this member stands for.
+
+        Alias members carry the function's name as their value; canonical members
+        derive it from their own name.
+        """
         if isinstance(self.value, str):
             func_id = self.value
         else:
             func_id = self.name.lower()
         return globals()[func_id]  # type: ignore[no-any-return]
 
-    def apply_strategy(self, duplicates: DuplicateSet) -> set[DedupMailMixin]:
+    def apply(self, duplicates: DuplicateSet) -> set[DedupMailMixin]:
         """Perform the selection strategy on the provided duplicate set.
 
-        Returns a set of selected mails objects.
+        Returns the set of selected mail objects.
         """
         # Debug, not info: applied once per duplicate set, and which strategies are
         # in play is already announced once when the selection step opens. Styling
         # the name is not free either, so it waits until it is going to be said.
         if logging.getLogger().isEnabledFor(logging.DEBUG):
             logging.debug(f"Apply {get_current_theme().choice(str(self))} strategy...")
-        return set(self.strategy_function(duplicates))
+        return set(self.function(duplicates))

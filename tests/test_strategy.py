@@ -42,9 +42,9 @@ def test_strategy_definitions():
         assert strategy.name.lower().replace("_", "-") == str(strategy)
 
         assert set(str(strategy)).issubset(ascii_lowercase + "-")
-        assert callable(strategy.strategy_function)
-        assert strategy.strategy_function.__name__ in all_strategy_ids
-        docstring = strategy.strategy_function.__doc__
+        assert callable(strategy.function)
+        assert strategy.function.__name__ in all_strategy_ids
+        docstring = strategy.function.__doc__
         assert docstring and docstring.strip()
 
 

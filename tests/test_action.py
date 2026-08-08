@@ -22,7 +22,7 @@ from string import ascii_lowercase
 
 import pytest
 
-from mail_deduplicate.action import Action
+from mail_deduplicate.action import OPERATIONS, Action
 from mail_deduplicate.deduplicate import Deduplicate, Stat
 
 from .conftest import MailFactory, check_box
@@ -36,10 +36,15 @@ def test_action_definitions():
         assert str(action) == action.value
         assert action.name.lower().replace("_", "-") == action.value
 
-        action_func = action.action_function
-        assert action_func is not None
-        assert callable(action_func)
-        assert action_func.__name__ == action.name.lower()
+        # Every action decomposes into a registered operation and a target subset.
+        operation = OPERATIONS[action.verb]
+        assert callable(operation)
+        assert operation.__name__ == f"{action.verb}_mails"
+        assert action.value == (
+            f"{action.verb}-discarded"
+            if action.acts_on_discarded
+            else f"{action.verb}-selected"
+        )
 
 
 duplicate_mail = MailFactory(body="Shared duplicate body.\n")

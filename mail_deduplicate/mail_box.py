@@ -298,6 +298,10 @@ Is a tuple to keep natural order defined by `BoxFormat`.
 """
 
 
+FOLDER_FORMAT_CLASSES = tuple(box.base_class for box in FOLDER_FORMATS)
+"""Base classes of folder-based box formats, as a tuple ready for `isinstance`."""
+
+
 MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 """List of required sub-folders defining a properly structured maildir."""
 
@@ -346,11 +350,8 @@ def contains_eml(path: Path) -> bool:
 def autodetect_box_type(path: Path) -> BoxFormat:
     """Auto-detect the format of the mailbox located at the provided path.
 
-    Returns a box type as indexed in the [BOX_TYPES](https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.BOX_TYPES)
-    dictionary above.
-
     If the path is a file, then it is considered as an `mbox`. Else, if the
-    provided path is a folder and feature the [expecteed sub-directories](https://kdeldycke.github.io/mail-deduplicate/mail_deduplicate.html#mail_deduplicate.mailbox.MAILDIR_SUBDIRS),
+    provided path is a folder and features the `MAILDIR_SUBDIRS` sub-directories,
     or holds nested maildir folders at any depth, it is parsed as a `maildir`.
     A folder holding loose `.eml` files instead is parsed as an `eml` source.
 
@@ -382,7 +383,7 @@ def autodetect_box_type(path: Path) -> BoxFormat:
                 "found. Force a format with --input-format."
             )
 
-    # Validates folder as an mbox.
+    # A single file is read as an mbox.
     elif path.is_file():
         box_format = BoxFormat.MBOX
 
@@ -441,10 +442,6 @@ def lock_box(box: Mailbox, force_unlock: bool) -> Mailbox:
     return box
 
 
-FOLDER_FORMAT_CLASSES = frozenset(b.base_class for b in FOLDER_FORMATS)
-"""Base classes of folder-based box formats."""
-
-
 def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     """Browse recursively the subfolder tree of a box.
 
@@ -463,7 +460,7 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     else:
         folder_list.append(lock_box(box, force_unlock))
 
-    if isinstance(box, tuple(FOLDER_FORMAT_CLASSES)):
+    if isinstance(box, FOLDER_FORMAT_CLASSES):
         # Asserts to please the type checker.
         assert hasattr(box, "list_folders")
         assert hasattr(box, "get_folder")
