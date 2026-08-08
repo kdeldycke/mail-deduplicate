@@ -25,6 +25,7 @@ from unittest import mock
 
 import pytest
 
+from mail_deduplicate import deduplicate
 from mail_deduplicate.cache import HashCache, default_cache_dir, default_cache_path
 from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import BoxFormat
@@ -247,15 +248,17 @@ def test_mail_vanishing_mid_run_is_skipped(
     args = [f"{arg}={tmp_path / 'hashes.db'}" for arg in cache_args]
 
     doomed = mail_files(box_path)[0]
-    original_keys = Maildir.iterkeys
+    original_ids = deduplicate.iter_mail_ids
 
-    def drop_one(self):
+    def drop_one(box):
         """List every mail, then delete one before the caller gets to read it."""
-        keys = list(original_keys(self))
+        ids = list(original_ids(box))
         doomed.unlink(missing_ok=True)
-        return iter(keys)
+        return iter(ids)
 
-    monkeypatch.setattr(Maildir, "iterkeys", drop_one)
+    # Patched where the hashing step reads it, which is no longer the box's own
+    # iterator: that one re-checks each key, at the cost of a stat per mail.
+    monkeypatch.setattr(deduplicate, "iter_mail_ids", drop_one)
     result = invoke(*args, *DEDUP_ARGS, box_path)
 
     # The mail is skipped instead of blowing up on the key it no longer answers to.

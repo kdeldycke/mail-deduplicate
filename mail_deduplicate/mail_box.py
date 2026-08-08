@@ -23,7 +23,7 @@ from __future__ import annotations
 import logging
 import mailbox
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from enum import Enum, auto
 from functools import partial
 from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
@@ -62,6 +62,26 @@ def box_file_path(box: Mailbox, key: str) -> str:
     share this path and are told apart by their mail ID.
     """
     return box._path
+
+
+def iter_mail_ids(box: Mailbox) -> Iterator[str]:
+    """Yields the key of every mail held by a box.
+
+    `Maildir.iterkeys()` confirms that each key still resolves to a file, one `stat`
+    per mail, on top of the directory listing it has just built. Every caller here
+    goes on to stat or open that same file anyway, and copes with its disappearance,
+    so the check is paid for twice and needed once: reading the refreshed table of
+    contents directly skips it.
+
+    The other formats list their mails without that extra round, and are left to
+    their own iterator.
+    """
+    if isinstance(box, Maildir):
+        box._refresh()  # type: ignore[attr-defined]
+        # Iterate a copy: any later refresh rebuilds the table in place.
+        yield from list(box._toc)  # type: ignore[attr-defined]
+    else:
+        yield from box.iterkeys()
 
 
 def resolve_mail_path(box: Mailbox, key: str) -> str:

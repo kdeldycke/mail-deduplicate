@@ -38,7 +38,12 @@ from click_extra import (
 
 from .cache import CacheEntry, HashCache, open_cache
 from .mail import TimeSource, TooFewHeaders
-from .mail_box import FOLDER_FORMAT_CLASSES, open_box, resolve_mail_path
+from .mail_box import (
+    FOLDER_FORMAT_CLASSES,
+    iter_mail_ids,
+    open_box,
+    resolve_mail_path,
+)
 
 if sys.version_info >= (3, 11):
     from enum import StrEnum
@@ -813,7 +818,7 @@ class Deduplicate:
             here alone, so neither is ever touched concurrently.
             """
             for box in boxes:
-                for mail_id in box.iterkeys():
+                for mail_id in iter_mail_ids(box):
                     entry = self.cache.lookup(box, mail_id) if self.cache else None
                     if entry is not None:
                         absorb(self.restore_cached(box, mail_id, entry))
@@ -977,7 +982,7 @@ class Deduplicate:
                 which is the whole point of keeping the cache.
                 """
                 for box in self.sources.values():
-                    for mail_id in box.iterkeys():
+                    for mail_id in iter_mail_ids(box):
                         entry = self.cache.lookup(box, mail_id) if self.cache else None
                         if entry is not None:
                             absorb(self.restore_cached(box, mail_id, entry))
