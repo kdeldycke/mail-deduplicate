@@ -1,5 +1,10 @@
 # Changelog
 
+## [`9.3.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.0...main)
+
+> [!WARNING]
+> This version is **not released yet** and is under active development.
+
 ## [`9.3.0` (2026-08-08)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.2.0...v9.3.0)
 
 - **Breaking:** a dry run now says `DRY RUN: N mails would be acted upon, but none will be altered.` once, in place of a `DRY RUN: Skip action.` line per mail. Scripts matching the old wording need updating.
