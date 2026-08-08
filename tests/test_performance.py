@@ -292,13 +292,16 @@ def test_single_mail_sets_are_not_handed_to_workers(invoke, make_box, monkeypatc
     """A set of one is settled without reading anything, so shipping it to a worker
     would cost more than deciding it here."""
     handed: list[int] = []
-    original = deduplicate._select_in_worker
+    original = Deduplicate.adopt_selection
 
-    def spy(task):
-        handed.append(len(task[1]))
-        return original(task)
+    # Spied on this side of the pool on purpose: the worker function itself has to
+    # survive pickling to reach a process, which a test's local closure cannot.
+    # Only sets that were handed out come back through here.
+    def spy(self, hash_key, mail_set, result, theme):
+        handed.append(len(mail_set))
+        return original(self, hash_key, mail_set, result, theme)
 
-    monkeypatch.setattr(deduplicate, "_select_in_worker", spy)
+    monkeypatch.setattr(Deduplicate, "adopt_selection", spy)
     # Two lone mails and one duplicate pair.
     mails = [
         MailFactory(message_id="<lonely-one@nohost.com>"),
