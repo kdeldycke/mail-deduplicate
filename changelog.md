@@ -7,6 +7,9 @@
 
 ## [`9.3.0` (2026-08-08)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.2.0...v9.3.0)
 
+> [!NOTE]
+> `9.3.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/9.3.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.3.0).
+
 - **Breaking:** a dry run now says `DRY RUN: N mails would be acted upon, but none will be altered.` once, in place of a `DRY RUN: Skip action.` line per mail. Scripts matching the old wording need updating.
 - **Breaking:** Python importers must switch to `Strategy.function`/`Strategy.apply()`, `Action.perform()` and `DuplicateSet.select()`, which replace `strategy_function`/`apply_strategy()`, `perform_action()` and `categorize_candidates()`. The CLI is unchanged.
 - Add a `hardlink-discarded` action: each discarded mail becomes a hardlink to the copy kept in its set, reclaiming its space while staying in its own folder. Only byte-identical copies are linked, unless `--hardlink-differing` is passed. Closes [#164](https://github.com/kdeldycke/mail-deduplicate/issues/164).
