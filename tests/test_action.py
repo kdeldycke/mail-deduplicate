@@ -67,6 +67,11 @@ DISCARD = [duplicate_mail, duplicate_mail]
         pytest.param("move-discarded", True, SELECTION, DISCARD, id="move-discarded"),
         pytest.param("delete-selected", False, DISCARD, None, id="delete-selected"),
         pytest.param("delete-discarded", False, SELECTION, None, id="delete-discarded"),
+        # Hardlinking keeps every mail in place: the copies are identical here, so
+        # the box reads exactly as it did before, whatever backs its mails.
+        pytest.param(
+            "hardlink-discarded", False, FULL_BOX, None, id="hardlink-discarded"
+        ),
     ),
 )
 def test_action_matrix(
@@ -129,6 +134,142 @@ def test_assert_stats_consistent_passes(config):
     dedup.stats[Stat.MAIL_RETAINED] = 3
 
     dedup.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_RETAINED)
+
+
+def mail_files(box_path) -> list[Path]:
+    """Every mail file of a folder-based box, whatever sub-directory it landed in."""
+    return sorted(
+        path
+        for path in Path(box_path).rglob("*")
+        if path.is_file() and not path.name.startswith(".")
+    )
+
+
+def inodes(box_path) -> set[int]:
+    """The distinct files backing the mails of a folder-based box.
+
+    One inode per mail before any linking, one per group of linked copies after.
+    """
+    return {path.stat().st_ino for path in mail_files(box_path)}
+
+
+@pytest.mark.parametrize("jobs", [1, 2], ids=["sequential", "parallel"])
+def test_hardlink_discarded_collapses_copies_onto_one_file(invoke, make_box, jobs):
+    """Discarded copies keep their own name and place, but end up backed by the file
+    of the copy kept in their set, while the unique mail keeps a file to itself.
+
+    Runs over both selection paths: pairing each discarded mail with the copy it is
+    linked to is recorded per duplicate set, which a parallel run settles in worker
+    processes and merges back afterwards.
+    """
+    box_path, box_type, _ = make_box(Maildir, FULL_BOX)
+    before = mail_files(box_path)
+    assert len(inodes(box_path)) == len(FULL_BOX)
+
+    result = invoke(
+        f"--jobs={jobs}",
+        "--strategy=select-one",
+        "--action=hardlink-discarded",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "Metrics appear inconsistent" not in result.stderr
+    # The three copies share a single file, the unique mail keeps its own.
+    assert len(inodes(box_path)) == 2
+    # No mail was added, removed or renamed: only what backs them changed.
+    assert mail_files(box_path) == before
+    check_box(box_path, box_type, content=FULL_BOX)
+
+
+def test_hardlink_discarded_dry_run_leaves_files_alone(invoke, make_box):
+    """A dry run reports on the links it would create without creating any."""
+    box_path, box_type, _ = make_box(Maildir, FULL_BOX)
+    before = {path: path.stat().st_ino for path in mail_files(box_path)}
+
+    result = invoke(
+        "--dry-run", "--strategy=select-one", "--action=hardlink-discarded", box_path
+    )
+
+    assert result.exit_code == 0
+    assert {path: path.stat().st_ino for path in mail_files(box_path)} == before
+    check_box(box_path, box_type, content=FULL_BOX)
+
+
+DIFFERING_COPIES = [
+    MailFactory(body="Slightly different body.\n"),
+    MailFactory(body="Slightly different bodies.\n"),
+]
+"""Two mails sharing a hash, as the body is left out of it by default, but backed by
+files differing byte for byte."""
+
+
+@pytest.mark.parametrize(
+    ("extra_args", "distinct_files"),
+    (
+        pytest.param((), 2, id="left-alone-by-default"),
+        pytest.param(("--hardlink-differing",), 1, id="linked-on-demand"),
+    ),
+)
+def test_hardlink_discarded_gates_on_byte_equality(
+    invoke, make_box, extra_args, distinct_files
+):
+    """Copies that are not byte-for-byte identical are only linked when asked for,
+    as linking swaps the discarded mail's own content for the kept copy's."""
+    box_path, _, _ = make_box(Maildir, DIFFERING_COPIES)
+
+    result = invoke(
+        "--strategy=select-one",
+        "--action=hardlink-discarded",
+        *extra_args,
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "Metrics appear inconsistent" not in result.stderr
+    assert len(inodes(box_path)) == distinct_files
+
+    box = Maildir(box_path, create=False)
+    found = {str(mail) for mail in box}
+    box.close()
+    originals = {str(mail.as_message()) for mail in DIFFERING_COPIES}
+    if extra_args:
+        # Both mails now read as whichever copy the selection kept.
+        assert found < originals
+    else:
+        assert found == originals
+
+
+def test_hardlink_discarded_is_idempotent(invoke, make_box):
+    """A second run finds the copies already sharing a file and leaves them be."""
+    box_path, box_type, _ = make_box(Maildir, FULL_BOX)
+    args = ("--strategy=select-one", "--action=hardlink-discarded", box_path)
+
+    assert invoke(*args).exit_code == 0
+    linked = {path: path.stat().st_ino for path in mail_files(box_path)}
+
+    result = invoke(*args)
+
+    assert result.exit_code == 0
+    assert "Metrics appear inconsistent" not in result.stderr
+    assert "already shares the file of the copy kept" in result.stderr
+    assert {path: path.stat().st_ino for path in mail_files(box_path)} == linked
+    check_box(box_path, box_type, content=FULL_BOX)
+
+
+def test_hardlink_discarded_leaves_file_based_box_alone(invoke, make_box):
+    """A mail packed into the box's own file has nothing of its own to link, so the
+    box comes out byte for byte as it went in."""
+    box_path, box_type, _ = make_box(mbox, FULL_BOX)
+    before = Path(box_path).read_bytes()
+
+    result = invoke("--strategy=select-one", "--action=hardlink-discarded", box_path)
+
+    assert result.exit_code == 0
+    assert "Metrics appear inconsistent" not in result.stderr
+    assert "have no file of their own to link" in result.stderr
+    assert Path(box_path).read_bytes() == before
+    check_box(box_path, box_type, content=FULL_BOX)
 
 
 def test_unique_only_source_is_exported(invoke, make_box):

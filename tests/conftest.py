@@ -81,6 +81,7 @@ def config() -> Config:
         export=None,
         export_format=BoxFormat.MBOX,
         export_append=False,
+        hardlink_differing=False,
         dry_run=False,
     )
 

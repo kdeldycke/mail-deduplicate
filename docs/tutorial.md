@@ -256,6 +256,89 @@ for _path, _count in (("archive-2024.mbox", 1), ("archive-2025.mbox", 4)):
 For folder-based boxes (`maildir`, `mh`, `eml`), `--regexp` is tested against the path of each individual mail file. For file-based boxes (`mbox`, `babyl`, `mmdf`), all mails share the path of the box itself.
 ```
 
+## Link duplicates instead of deleting them
+
+Deleting a discarded copy frees its space, but the mail also leaves the folder it was in. Sometimes every copy has a reason to stay: the same message delivered to two accounts you sync side by side, or a mail filed under several labels. The `hardlink-discarded` action covers that case. Each discarded mail keeps its name and its folder, and only the file behind it changes: it becomes a hardlink to the copy that was selected, so the copies share a single file and the space the others took is given back.
+
+This needs boxes where each mail owns a file, so `maildir` rather than `mbox`. Reusing the playground's mails, in the same folder:
+
+```{click:source}
+import mailbox
+
+# The two shared mails delivered to two accounts synced side by side, each
+# account also holding a mail of its own.
+for account, mails in (
+    ("account-a", shared + only_2024),
+    ("account-b", shared + only_2025),
+):
+    box = mailbox.Maildir(account)
+    for mail in mails:
+        box.add(mail)
+    box.close()
+```
+
+That is 7 mails, each stored in a file of its own:
+
+```shell-session
+$ find account-a account-b -type f | wc --lines
+7
+$ find account-a account-b -type f -printf '%i\n' | sort --unique | wc --lines
+7
+```
+
+```{click:source}
+:hide-source:
+from pathlib import Path
+
+
+def _census():
+    """Mails on disk, and the distinct files actually backing them."""
+    _files = [
+        _path
+        for _account in ("account-a", "account-b")
+        for _path in Path(_account).rglob("*")
+        if _path.is_file()
+    ]
+    return len(_files), len({_path.stat().st_ino for _path in _files})
+
+
+assert _census() == (7, 7)
+```
+
+The path-based strategy from the previous section applies here too: `--regexp account-a` keeps the copies stored under `account-a`, so the `account-b` copies are the ones linked back to them. Rehearse with `--dry-run` as before, then run it for real:
+
+```{click:run}
+from boltons.strutils import strip_ansi
+
+from mail_deduplicate.cli import mdedup
+
+result = invoke(mdedup, args=["--strategy", "select-matching-path", "--regexp", "account-a", "--action", "hardlink-discarded", "account-a", "account-b"])
+assert result.exit_code == 0
+# The per-mail `✓` trail only renders on interactive terminals, so the piped
+# docs build asserts the action banner instead; the census below verifies the
+# links for real.
+assert "Perform hardlink-discarded action" in strip_ansi(result.output)
+```
+
+```shell-session
+$ find account-a account-b -type f | wc --lines
+7
+$ find account-a account-b -type f -printf '%i\n' | sort --unique | wc --lines
+5
+```
+
+```{click:source}
+:hide-source:
+# Same mails, fewer files: the two linked copies no longer have one each.
+assert _census() == (7, 5)
+```
+
+Still 7 mails on disk, now backed by 5 files: each `account-b` copy shares the file of its `account-a` twin. Both accounts still list everything they held, and each copy keeps its own `maildir` flags, which live in the file name rather than in the file, so the same mail can stay read in one account and unread in the other. Running the command again changes nothing, as copies already sharing a file are reported as such and left alone.
+
+```{caution}
+Only copies identical byte for byte are linked by default. Two copies of a mail that reached you by different routes usually differ, if only by a `Received` header, and linking those swaps one copy's content for the other's. `--hardlink-differing` allows it, as a deliberate choice. Mails from `mbox`, `babyl` and `mmdf` boxes are always left alone, having no file of their own to link.
+```
+
 ## Safety nets
 
 Several safeguards run before any mail is acted upon, each detailed in the [design page](https://kdeldycke.github.io/mail-deduplicate/design.html):

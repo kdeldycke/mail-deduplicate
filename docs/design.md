@@ -100,3 +100,22 @@ The default content threshold is **768 bytes**, and can be changed via the `--co
 ## Step 4: Performing actions
 
 Once duplicates have been selected, an action is performed on them.
+
+### Hardlinking duplicates
+
+`--action hardlink-discarded` is the one action that neither removes a mail nor writes it somewhere else: each discarded mail stays in its folder, under its own name, but the file backing it is replaced by a hardlink to the copy kept in its own duplicate set. The copies then share a single file on disk, and the space the others took is reclaimed.
+
+This is aimed at the same mail reaching several accounts or folders, where each copy carries the headers it collected on its own way in. Files that are already identical byte for byte are the province of general-purpose tools like [`duperemove`](https://github.com/markfasheh/duperemove) or [`hardlink`](https://jak-linux.org/projects/hardlink/), which scan a whole filesystem. What those cannot decide is whether two files that differ are the same *mail*: that is the question the hashing and selection steps above answer.
+
+Two properties make this safe to run on a live mail store:
+
+- The link is created under a temporary name in the mail's own directory and then renamed over it. The rename is atomic and stays on one filesystem by construction, so the mail is never missing from its box, whatever interrupts the run.
+- The mail keeps its file name, which is where `maildir` records its flags. The same mail can stay read in one folder and unread in another while both share one file.
+
+A mail is left untouched, and counted apart in the report, when it comes from a file-based box (`mbox`, `babyl` and `mmdf` pack every mail into the box's single file, so none has a file of its own to link), when it already shares the file of the copy kept, or when it sits on another filesystem. Re-running over an already-linked box is therefore a no-op.
+
+By default only copies that are identical byte for byte are linked. Linking a mail that differs swaps its content for the kept copy's, which reads as a deduplication but is really a rewrite: whatever was unique to that copy is gone, and nothing on disk records that it changed. That is the interesting case for mails delivered to several accounts, so `--hardlink-differing` enables it, as a deliberate choice rather than a default. The size and content thresholds described above still gate which mails reach this step at all.
+
+```{caution}
+Linked mails share one inode, and so share the permissions, ownership and modification time of the copy kept. A mail client that rewrites a mail in place rather than replacing it, which the `maildir` specification tells it not to do, would alter every copy at once.
+```

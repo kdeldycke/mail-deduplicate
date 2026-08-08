@@ -111,6 +111,16 @@ class Stat(Enum):
     MAIL_DELETED = StatDef(
         "Number of mails deleted from their mailbox in-place.", "mail"
     )
+    MAIL_HARDLINKED = StatDef(
+        "Number of mails replaced in-place by a hardlink to the copy kept in their "
+        "duplicate set.",
+        "mail",
+    )
+    MAIL_HARDLINK_SKIPPED = StatDef(
+        "Number of mails left untouched by the hardlinking action, because they "
+        "could not be linked to their copy or already were.",
+        "mail",
+    )
     SET_TOTAL = StatDef("Total number of duplicate sets.", "set")
     SET_SINGLE = StatDef(
         "Total number of sets containing only a single mail with no applicable "
@@ -736,8 +746,24 @@ class Deduplicate:
         self.discard: set[DedupMailMixin] = set()
         """Mails discarded after application of selection strategy."""
 
+        self.link_targets: dict[DedupMailMixin, DedupMailMixin] = {}
+        """Maps each discarded mail to the selected mail it can be hardlinked to.
+
+        Left empty unless the configured action consumes it: see
+        `track_link_targets`.
+        """
+
         self.conf = conf
         """Configuration shared across the deduplication process."""
+
+        self.track_link_targets: bool = str(conf["action"]).startswith("hardlink")
+        """Whether each discarded mail has to be paired with a selected one.
+
+        Only the hardlinking action needs that pairing, and it costs one dictionary
+        entry per discarded mail, so it is only recorded when something reads it.
+        Settled once here rather than per set, and derived from the action's ID
+        rather than by importing `Action`, which imports this module in turn.
+        """
 
         self.stats: Counter[Stat] = Counter()
         """Deduplication statistics. Unset statistics naturally read as zero."""
@@ -1068,6 +1094,7 @@ class Deduplicate:
                 self.stats += duplicates.stats
                 self.selection.update(duplicates.selection)
                 self.discard.update(duplicates.discard)
+                self.record_link_targets(duplicates.selection, duplicates.discard)
                 self.release(mail_set)
                 progress.update(1)
 
@@ -1092,6 +1119,38 @@ class Deduplicate:
         """
         for mail in mail_set:
             mail.dehydrate()
+
+    def record_link_targets(
+        self,
+        selection: Iterable[DedupMailMixin],
+        discard: Iterable[DedupMailMixin],
+    ) -> None:
+        """Pair every discarded mail of a set with a selected mail of that same set.
+
+        Hardlinking a discarded mail only makes sense against a copy that survives
+        the very set both were found in, and that pairing is the one thing the flat
+        selection and discard sets no longer say once every set has been settled.
+
+        A strategy is free to keep several mails, so the target is the one with the
+        lowest path: a run then links to the same copy however the sets came back,
+        which matters when the selection is spread over a pool of processes.
+
+        Iterables are only walked once the run is known to need them, so a call from
+        a non-hardlinking run costs nothing beyond the arguments themselves.
+        """
+        if not self.track_link_targets:
+            return
+
+        kept = tuple(selection)
+        discarded = tuple(discard)
+        # A skipped set discards nothing, and a set that discards always keeps at
+        # least one mail to discard it against.
+        if not kept or not discarded:
+            return
+
+        target = min(kept, key=lambda mail: (mail.path, str(mail.mail_id)))
+        for mail in discarded:
+            self.link_targets[mail] = target
 
     def select_in_parallel(self, jobs: int, theme, progress) -> None:
         """Apply the selection to every duplicate set across a pool of processes.
@@ -1187,6 +1246,10 @@ class Deduplicate:
         by_id = {(mail.source_path, mail.mail_id): mail for mail in mail_set}
         self.selection.update(by_id[key] for key in result.selected)
         self.discard.update(by_id[key] for key in result.discarded)
+        self.record_link_targets(
+            (by_id[key] for key in result.selected),
+            (by_id[key] for key in result.discarded),
+        )
         self.stats += Counter(result.stats)
         self.release(mail_set)
 
@@ -1295,20 +1358,32 @@ class Deduplicate:
 
         # Action stats. Each action targets a single subset of mails: the union of
         # unique and selected mails for *-selected actions, the discarded mails for
-        # *-discarded ones. The action's counter is expected to match its target
-        # exactly, as counters are also incremented in dry-run mode.
+        # *-discarded ones. The counters the action reports on are expected to
+        # account for its target exactly, as they are incremented in dry-run mode too.
         action_id = str(self.conf["action"])
-        action_counter = {
-            "copy": Stat.MAIL_COPIED,
-            "move": Stat.MAIL_MOVED,
-            "delete": Stat.MAIL_DELETED,
-        }[action_id.split("-")[0]]
-        if action_id.endswith("-discarded"):
-            self.assert_stats(Stat.MAIL_DISCARDED, "==", action_counter)
-        else:
+        if action_id.startswith("hardlink"):
+            # Hardlinking is the one action that cannot always go through: a mail
+            # packed into a file-based box, one already sharing its copy's inode and
+            # one sitting on another filesystem are all left alone. So the discarded
+            # mails are accounted for by both outcomes together, not by the linked
+            # ones alone.
             self.assert_stats(
-                (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED), "==", action_counter
+                Stat.MAIL_DISCARDED,
+                "==",
+                (Stat.MAIL_HARDLINKED, Stat.MAIL_HARDLINK_SKIPPED),
             )
+        else:
+            action_counter = {
+                "copy": Stat.MAIL_COPIED,
+                "move": Stat.MAIL_MOVED,
+                "delete": Stat.MAIL_DELETED,
+            }[action_id.split("-")[0]]
+            if action_id.endswith("-discarded"):
+                self.assert_stats(Stat.MAIL_DISCARDED, "==", action_counter)
+            else:
+                self.assert_stats(
+                    (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED), "==", action_counter
+                )
 
         # Sets accounting.
         self.assert_stats(Stat.SET_TOTAL, "==", Stat.MAIL_HASHES)

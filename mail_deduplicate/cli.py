@@ -123,6 +123,7 @@ class Config(TypedDict):
     export: Path | None
     export_format: BoxFormat
     export_append: bool
+    hardlink_differing: bool
     dry_run: bool
 
 
@@ -481,6 +482,16 @@ class MdedupCommand(Command):
         f"{Action.MOVE_SELECTED} and {Action.MOVE_DISCARDED} actions.",
     ),
     option(
+        "--hardlink-differing",
+        is_flag=True,
+        default=False,
+        help="Hardlink discarded mails whose content differs byte for byte from the "
+        "copy they are linked to, instead of leaving them alone. Their own content is "
+        "then swapped for that copy's, so whatever was unique to them, like the "
+        "headers a mail collects on its way to one account, is lost. "
+        f"Only affects the {Action.HARDLINK_DISCARDED} action.",
+    ),
+    option(
         "-n",
         "--dry-run",
         is_flag=True,
@@ -551,6 +562,7 @@ def mdedup(
     export,
     export_format,
     export_append,
+    hardlink_differing,
     dry_run,
     mail_sources,
 ):
@@ -596,6 +608,7 @@ def mdedup(
         export=export,
         export_format=export_format,
         export_append=export_append,
+        hardlink_differing=hardlink_differing,
         dry_run=dry_run,
     )
 
