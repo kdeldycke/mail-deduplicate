@@ -22,7 +22,7 @@ Share of antivirus engine verdicts flagging the binaries of each release, at sca
 <div style="height: 320px;"><canvas id="vt-trend"></canvas></div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js"></script>
 <script>
-const VT_TREND = [{"date": "2026-07-27", "flagged": 21, "pct": 6.2, "tag": "v9.0.0", "total": 341}, {"date": "2026-08-01", "flagged": 16, "pct": 4.1, "tag": "v9.1.0", "total": 388}, {"date": "2026-08-07", "flagged": 18, "pct": 4.7, "tag": "v9.2.0", "total": 384}];
+const VT_TREND = [{"date": "2026-07-27", "flagged": 21, "pct": 6.2, "tag": "v9.0.0", "total": 341}, {"date": "2026-08-01", "flagged": 16, "pct": 4.1, "tag": "v9.1.0", "total": 388}, {"date": "2026-08-07", "flagged": 18, "pct": 4.7, "tag": "v9.2.0", "total": 384}, {"date": "2026-08-08", "flagged": 14, "pct": 4.4, "tag": "v9.3.0", "total": 316}];
 const VT_DANGER_PCT = 10;
 const vtCss = getComputedStyle(document.documentElement);
 const vtColor = (name, fallback) =>
