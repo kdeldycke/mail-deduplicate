@@ -1,0 +1,9 @@
+Date: Mon, 04 Mar 2024 10:00:00 +0000
+From: sender@nohost.com
+To: recipient@nohost.com
+Subject: Fixture mail
+Message-Id: <pair@nohost.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+Shared body.

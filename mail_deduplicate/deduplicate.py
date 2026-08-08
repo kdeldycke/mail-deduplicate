@@ -24,7 +24,7 @@ from concurrent.futures import ProcessPoolExecutor
 from difflib import unified_diff
 from enum import Enum
 from functools import cached_property
-from itertools import combinations
+from itertools import combinations, islice
 from operator import attrgetter
 from pathlib import Path
 from typing import NamedTuple, cast
@@ -677,23 +677,25 @@ class Deduplicate:
         Falls back to hashing in this process if the pool cannot be started, which
         is the case in some frozen or sandboxed environments.
         """
-        tasks = []
-        for box in self.parallel_boxes():
-            for mail_id in box.iterkeys():
-                entry = self.cache.lookup(box, mail_id) if self.cache else None
-                if entry is not None:
-                    absorb(self.restore_cached(box, mail_id, entry))
-                    progress.update(1)
-                    continue
-                tasks.append((box, mail_id, resolve_mail_path(box, mail_id)))
-
-        if not tasks:
-            return
-
+        boxes = self.parallel_boxes()
         # Every source shares one structure, checked by parallel_boxes(), so a single
         # worker setup serves them all.
-        factory = cast("type", tasks[0][0]._factory)
-        payload = [(box._path, mail_id, path) for box, mail_id, path in tasks]
+        factory = cast("type", boxes[0]._factory)
+
+        def pending():
+            """Yields the mails the cache could not answer for, as work to hand out.
+
+            Lazy, and driven from this process: the boxes and the cache are consulted
+            here alone, so neither is ever touched concurrently.
+            """
+            for box in boxes:
+                for mail_id in box.iterkeys():
+                    entry = self.cache.lookup(box, mail_id) if self.cache else None
+                    if entry is not None:
+                        absorb(self.restore_cached(box, mail_id, entry))
+                        progress.update(1)
+                        continue
+                    yield box, mail_id, resolve_mail_path(box, mail_id)
 
         pool = None
         try:
@@ -702,21 +704,34 @@ class Deduplicate:
                 initializer=_init_hash_worker,
                 initargs=(self.conf, factory),
             )
+            logging.info(f"Hash mails across {jobs} processes.")
         except (OSError, ValueError, ImportError, NotImplementedError) as expt:
             logging.warning(f"Cannot start {jobs} hashing processes: {expt}")
             logging.warning("Hash in this process instead.")
             _init_hash_worker(self.conf, factory)
-            results: Iterable[HashedMail] = map(_hash_in_worker, payload)
-        else:
-            # Chunked so a queue round-trip is amortized over many mails. `map()`
-            # yields in submission order, so the grouping and the statistics come out
-            # identical to a sequential run whatever the number of workers.
-            results = pool.map(_hash_in_worker, payload, chunksize=self.CHUNK_SIZE)
 
+        # Handed out a window at a time rather than all at once: `map()` consumes
+        # whatever it is given immediately, so passing the whole corpus would hold a
+        # task per mail, undoing the flat memory the rest of the run maintains. The
+        # window is wide enough that every worker always has chunks queued behind it.
+        window = jobs * self.CHUNK_SIZE * 4
+        stream = pending()
         try:
-            for (box, mail_id, _), result in zip(tasks, results):
-                absorb(self.adopt_hashed(box, mail_id, result))
-                progress.update(1)
+            while batch := list(islice(stream, window)):
+                payload = [(box._path, mail_id, path) for box, mail_id, path in batch]
+                if pool is None:
+                    results: Iterable[HashedMail] = map(_hash_in_worker, payload)
+                else:
+                    # Chunked so a queue round-trip is amortized over many mails.
+                    # `map()` yields in submission order, so the grouping and the
+                    # statistics come out identical to a sequential run whatever the
+                    # number of workers.
+                    results = pool.map(
+                        _hash_in_worker, payload, chunksize=self.CHUNK_SIZE
+                    )
+                for (box, mail_id, _), result in zip(batch, results):
+                    absorb(self.adopt_hashed(box, mail_id, result))
+                    progress.update(1)
         finally:
             if pool is not None:
                 pool.shutdown()

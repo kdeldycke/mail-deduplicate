@@ -67,11 +67,13 @@ Deduplicating one box at a time keeps the peak lower than passing every box in a
 
 | `--hash-body` | `--jobs=2` | `--jobs=4` | `--jobs=8` | Whole run at 8 |
 | ------------- | ---------- | ---------- | ---------- | -------------- |
-| `skip`        | 1.67x      | 2.36x      | 2.77x      | 1.6x           |
-| `raw`         | 1.76x      | 2.49x      | 3.30x      | 1.8x           |
-| `normalized`  | 1.85x      | 2.68x      | 3.69x      | 2.2x           |
+| `skip`        | 1.5x       | 2.3x       | 2.6x       | 1.5x           |
+| `raw`         | 1.8x       | 2.4x       | 3.0x       | 1.7x           |
+| `normalized`  | 1.8x       | 2.8x       | 4.0x       | 2.2x           |
 
 The gain is largest where hashing does the most work, and the whole run gains less than the step does, because the hashing is only part of it. Above four jobs the returns flatten: reading the mails becomes the limit.
+
+Mails are handed out a window at a time rather than all at once, so a parallel run holds no more per-mail state than a sequential one.
 
 ```{important}
 Processes, not threads. Hashing a mail is Python-level work, which the interpreter lock serializes, so spreading it over threads only adds contention: it measured at `0.88x` to `0.97x`, an outright loss, before this became a process pool.

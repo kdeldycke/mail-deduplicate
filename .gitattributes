@@ -1,0 +1,5 @@
+# Mail fixtures are checked out byte-for-byte on every platform. Git's end-of-line
+# conversion would otherwise rewrite them to CRLF on Windows, changing the very
+# content the deduplication hashes. See:
+# https://github.com/kdeldycke/mail-deduplicate/issues/87
+tests/fixtures/** -text

@@ -41,3 +41,28 @@ stdout_contains = [
     # Individual strategies are documented at the end.
     "[select-all-but-one|discard-one]",
 ]
+
+# Hash a real box across worker processes.
+#
+# This is the only place the parallel hashing path runs against a *frozen* binary.
+# Worker processes are started by re-launching the executable, which in a compiled
+# binary lands in our own entry point rather than in multiprocessing's bootstrap: a
+# worker would then re-run the whole CLI instead of hashing its chunk. A
+# `freeze_support()` call in `__main__.py` is what prevents that, and nothing else
+# exercises it, since every other case here runs the interpreter.
+#
+# --hash-only stops after the hashing step, so this touches nothing on disk and
+# cannot damage the fixture whatever the options say. The relative path resolves
+# because both self-test runners execute from the repository checkout.
+[[cases]]
+cli_parameters = "--jobs=2 --hash-only tests/fixtures/eml-box"
+exit_code = 0
+strip_ansi = true
+# Reached the end of the hashing step, having hashed every fixture mail. A worker
+# re-running the CLI instead of its chunk fails this, whether it hangs, crashes or
+# floods the output.
+stdout_contains = "Hash: "
+# Took one of the two intended routes. Sandboxed and containerised environments can
+# legitimately refuse to spawn processes, and falling back is a correct outcome
+# there, so both are accepted: what must not happen is neither.
+stderr_regex_matches = "Hash mails across 2 processes\\.|Hash in this process instead\\."
