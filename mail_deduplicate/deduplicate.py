@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import logging
 import sys
-import textwrap
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import contextmanager
@@ -1270,12 +1269,19 @@ class Deduplicate:
                     .replace("_", " - ")
                     .title(),
                     self.stats[stat],
-                    "\n".join(textwrap.wrap(stat.description, 60)),
+                    stat.description,
                 ]
                 for stat in Stat
                 if stat.category == category
             ]
-            output += render_table(table, headers=(title, "Metric", "Description"))
+            # Only the renderer knows whether wrapping applies: pre-wrapping the
+            # descriptions here would bake line breaks into the cells of the
+            # structured formats, and break the `vertical` layout.
+            output += render_table(
+                table,
+                headers=(title, "Metric", "Description"),
+                max_column_widths=(None, None, "auto"),
+            )
             output += "\n"
         return output
 

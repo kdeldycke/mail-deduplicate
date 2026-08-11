@@ -67,17 +67,20 @@ classifiers = [
 dependencies = [
   # Provides enum.StrEnum for Python < 3.11; all versions expose the class.
   "backports-strenum>=1; python_version<'3.11'",
-  # 8.7.0 is the release carrying the config machinery cli.py relies on:
-  # config_strict/excluded_params forwarding in @command, kebab-case config keys,
-  # and complete --export-config output. It also covers the earlier features this
-  # code still depends on: 8.5.0 promoted ctx.render_table to a Context method
-  # reading --table-format from the context meta (deduplicate.py, mail.py), and
-  # 8.6.0 added OperationTrail (action.py) and stopped its test-suite runner from
-  # resolving venv interpreter symlinks (the binary self-test run by the release
-  # engine from the runtime-only environment relies on it).
+  # 8.8.2 added the max_column_widths argument to render_table(), which
+  # deduplicate.py's report() uses to size its Description column: pre-wrapping
+  # it here would bake line breaks into the cells of the structured formats.
+  # It also covers the earlier features this code still depends on: 8.5.0
+  # promoted ctx.render_table to a Context method reading --table-format from
+  # the context meta (deduplicate.py, mail.py), 8.6.0 added OperationTrail
+  # (action.py) and stopped its test-suite runner from resolving venv
+  # interpreter symlinks (the binary self-test run by the release engine from
+  # the runtime-only environment relies on it), and 8.7.0 carried the config
+  # machinery cli.py relies on: config_strict/excluded_params forwarding in
+  # @command, kebab-case config keys, and complete --export-config output.
   # The [toml] extra pulls the TOML writer (tomlkit) so --export-config toml
   # works out of the box, TOML being the format the documentation showcases.
-  "click-extra[toml]>=8.7",
+  "click-extra[toml]>=8.8.2",
   # Resolves the per-platform cache directory holding the hash cache database
   # (cache.py). 4.5.0 is the first release requiring Python 3.10, aligning its
   # minimal Python version to ours.
@@ -101,7 +104,7 @@ test = [
   # Test-only: conftest.py uses iterutils.same to check fixture homogeneity.
   "boltons>=25",
   # Aligned to the runtime click-extra floor.
-  "click-extra[pytest]>=8.7",
+  "click-extra[pytest]>=8.8.2",
   # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
   "coverage[toml]>=7.11",
   # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That module,
@@ -130,7 +133,7 @@ test = [
 docs = [
   # 8.5.0 renamed --show-params to --params, which docs/configuration.md runs at
   # build time via the click:run directive. Aligned to the runtime floor.
-  "click-extra[sphinx]>=8.7",
+  "click-extra[sphinx]>=8.8.2",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
@@ -170,6 +173,13 @@ dependency-groups.docs = { requires-python = ">= 3.14" }
 exclude-newer = "1 week"
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
+
+# TEMPORARY: the click-extra >=8.8.2 floor above is not on PyPI yet, so resolve
+# it from the branch carrying it. A direct URL makes the project unpublishable
+# (PyPI rejects direct references), so this section MUST be deleted and uv.lock
+# regenerated once click-extra 8.8.2 is released, before cutting any release.
+[tool.uv.sources]
+click-extra = { git = "https://github.com/kdeldycke/click-extra.git", branch = "main" }
 
 [tool.nuitka]
 product-name = "Mail Deduplicate"
