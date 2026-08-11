@@ -7,6 +7,7 @@
 
 - Size the `Description` column of the final report to the terminal instead of a fixed 60 characters, so the table stops overflowing an 80-column terminal.
 - Stop embedding line breaks in the report's descriptions: `--table-format=json`, `csv` and the other structured formats now carry each description as a single string, and `--table-format=vertical` aligns its wrapped lines under the label column.
+- Size the `Header value` column of the hash table to the terminal: a long `References` chain no longer stretches the `--hash-only` output several times past the terminal width.
 
 ## [`9.3.0` (2026-08-08)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.2.0...v9.3.0)
 

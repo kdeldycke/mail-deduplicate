@@ -467,14 +467,22 @@ class DedupMailMixin(Message):
         # get_current_context() is silent here so hashing can run in a --jobs worker
         # process, which does not inherit Click's context. With a context the table
         # honors --table-format; without one it falls back to the default.
+        #
+        # Header values run long: a References chain or a verbose Subject overflows
+        # the terminal several times over. Sizing the value column to what is left
+        # keeps the table readable, and leaving the wrapping to the renderer avoids
+        # baking line breaks into the cells of the structured formats.
         ctx = get_current_context(silent=True)
         if ctx is not None:
             rendered: str = ctx.find_root().render_table(  # type: ignore[attr-defined]
                 table_data,
                 headers=headers,
+                max_column_widths=(None, "auto"),
             )
         else:
-            rendered = render_table(table_data, headers=headers)
+            rendered = render_table(
+                table_data, headers=headers, max_column_widths=(None, "auto")
+            )
         return "\n" + rendered
 
     def serialized_headers(self) -> bytes:

@@ -209,6 +209,29 @@ class Strategy(enum.Enum):
     Aliases are great usability features to represent inverse operations. They help
     users reason about the selection operators in whichever direction matches their
     mental model.
+
+    ```{note}
+    True `Enum` aliases (`DISCARD_NEWEST = SELECT_OLDER`) were considered and turned
+    down. An alias is then the very same object as its canonical member, so it cannot
+    be told apart at runtime, and three properties go away:
+
+    1. `str()` stops round-tripping the spelling the user typed: a run started with
+       `--strategy=discard-newest` would report `select-older` in its logs.
+    2. `PATH_STRATEGIES` in `cli.py` collapses from four members to two, so the
+       `--regexp` help line and the `AnyValueIn` error message would name only half
+       the strategies that require it.
+    3. `tests/test_strategy.py` feeds `f"--strategy={strategy_id}"`, so pairs like
+       `[SELECT_OLDER, DISCARD_NEWEST]` would stringify identically and the alias
+       spellings would no longer be exercised end to end.
+
+    Should this be revisited on a Python floor bump: `Enum._add_alias_()` (3.13+)
+    accepts non-identifier names, so `SELECT_OLDER._add_alias_("discard-newest")`
+    puts the CLI spelling straight into `__members__`, where
+    `EnumChoice(Strategy, choice_source="name", show_aliases=True)` picks it up.
+    `EnumChoice` also grew a `transform` argument (click-extra 8.9.0) to kebab-case
+    the raw identifiers that `show_aliases` otherwise yields. Neither addresses the
+    three losses above, which is why the current arrangement stands.
+    ```
     """
 
     # Time-based strategies.
