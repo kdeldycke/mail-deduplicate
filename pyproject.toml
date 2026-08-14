@@ -171,11 +171,6 @@ required-version = ">=0.11.15"
 # The docs are only built on modern Python, letting the docs group adopt
 # packages (like myst-parser 5.1) that dropped support for our older floors.
 dependency-groups.docs = { requires-python = ">= 3.14" }
-# Cooldown buffer before adopting newly released packages.
-exclude-newer = "1 week"
-# Package is at root level, not in "./src/".
-build-backend.module-root = ""
-
 # The click-extra 8.8.2 features this code needs are not on PyPI yet, so resolve
 # them from the branch carrying them. A source override never reaches published
 # metadata, so a release cut while this stands would ship a wheel resolving to
@@ -187,8 +182,11 @@ build-backend.module-root = ""
 # above naming the awaited release. Once 8.8.2 ships, the updater drops this
 # table, tightens every `.dev0` floor to `>=8.8.2`, freezes the adoption through
 # the exclude-newer cooldown and re-locks. Nothing here needs deleting by hand.
-[tool.uv.sources]
-click-extra = { git = "https://github.com/kdeldycke/click-extra.git", branch = "main" }
+sources.click-extra = { git = "https://github.com/kdeldycke/click-extra.git", branch = "main" }
+# Cooldown buffer before adopting newly released packages.
+exclude-newer = "1 week"
+# Package is at root level, not in "./src/".
+build-backend.module-root = ""
 
 [tool.nuitka]
 product-name = "Mail Deduplicate"
