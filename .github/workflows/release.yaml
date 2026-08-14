@@ -5,6 +5,10 @@ name: 🚀 Build & release
   push:
     branches:
       - main
+  schedule:
+    - cron: "43 0 * * 1"
+
+permissions: {}
 
 concurrency:
   # Declared on this push-triggered entry, not the reusable _release-engine.yaml it
@@ -13,9 +17,17 @@ concurrency:
   # to cancel queued or building runs. Regular commits share a per-branch group and
   # cancel each other; release commits ([changelog] Release / Post-release) get a
   # unique SHA-based group so an in-flight release is never cancelled by a later push.
+  # Scheduled and manually dispatched runs get a run-scoped group: they build the
+  # full target fleet on purpose, so neither a later push nor another run should
+  # cancel them (a dispatch sharing the branch group was observed cancelled mid-build
+  # by the next push), and they never cancel a push run either.
   group: >-
     ${{ github.workflow }}-${{
-      github.event.pull_request.number
+      (
+        (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        && github.run_id
+      )
+      || github.event.pull_request.number
       || (
         (startsWith(github.event.head_commit.message, '[changelog] Release')
         || startsWith(github.event.head_commit.message, '[changelog] Post-release'))
@@ -25,10 +37,22 @@ concurrency:
     }}
   cancel-in-progress: true
 
+# Supply-chain cooldown: no package published within the window can be resolved by
+# any command in this workflow. Set here, not per command, so it also covers the
+# `metadata` bootstrap and any step added later; a workflow-level `env:` cannot
+# reference `needs`, so the window is a literal kept equal to `[tool.repomatic]
+# minimum-release-age`. repomatic's own test suite enforces that upstream; a
+# synced copy is kept in step by hand. Deliberate bypasses are per-package CLI
+# flags (`--exclude-newer-package`, `--min-release-age-exclude`).
+# See claude.md for the rationale.
+env:
+  NPM_CONFIG_MIN_RELEASE_AGE: 7
+  UV_EXCLUDE_NEWER: "1 week"
+
 jobs:
 
   build:
-    uses: kdeldycke/repomatic/.github/workflows/_release-build.yaml@f3fd0341a6ffbe9f948e78e3270ca30faf2b2459 # v7.4.1
+    uses: kdeldycke/repomatic/.github/workflows/_release-build.yaml@66650046de54a8032f4c38358b7ef8c9ae39e7b5 # v7.11.0
     permissions:
       id-token: write
       issues: write
@@ -49,24 +73,26 @@ jobs:
       # why). A bare `fromJSON('')` aborts the whole run with "Unexpected value ''", so we fall back to an empty
       # `{"include":[]}` matrix, which expands the job to zero runs and skips it cleanly.
       matrix: ${{ fromJSON(needs.build.outputs.release_commits_matrix || '{"include":[]}') }}
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-26.04
     permissions:
       # OIDC only: the PyPI Trusted Publishing token. The GitHub release notes
       # (with their PyPI admonition) are owned end to end by the engine lane's
       # create-release job, so this lane needs no write access to the repo.
       id-token: write
     steps:
-      - uses: kdeldycke/repomatic/.github/actions/publish-pypi@f3fd0341a6ffbe9f948e78e3270ca30faf2b2459 # v7.4.1
+      - uses: kdeldycke/repomatic/.github/actions/publish-pypi@66650046de54a8032f4c38358b7ef8c9ae39e7b5 # v7.11.0
         with:
           artifact-name: ${{ github.event.repository.name }}-${{ matrix.short_sha }}
 
   release:
-    uses: kdeldycke/repomatic/.github/workflows/_release-engine.yaml@f3fd0341a6ffbe9f948e78e3270ca30faf2b2459 # v7.4.1
+    uses: kdeldycke/repomatic/.github/workflows/_release-engine.yaml@66650046de54a8032f4c38358b7ef8c9ae39e7b5 # v7.11.0
     needs: build
     permissions:
       attestations: write
       contents: write
       id-token: write
+      pull-requests: write
     secrets:
       REPOMATIC_PAT: ${{ secrets.REPOMATIC_PAT }}
       VIRUSTOTAL_API_KEY: ${{ secrets.VIRUSTOTAL_API_KEY }}
+
