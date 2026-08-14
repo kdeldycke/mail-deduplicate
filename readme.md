@@ -8,7 +8,6 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/mail-deduplicate.svg)](https://pypi.org/project/mail-deduplicate)
 [![Downloads](https://static.pepy.tech/badge/mail-deduplicate/month)](https://pepy.tech/projects/mail-deduplicate)
 [![Unittests status](https://img.shields.io/github/actions/workflow/status/kdeldycke/mail-deduplicate/tests.yaml?branch=main&label=%F0%9F%94%AC%20Tests)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/tests.yaml?query=branch%3Amain)
-[![Coverage status](https://codecov.io/gh/kdeldycke/mail-deduplicate/graph/badge.svg?token=81NWQAPjEQ)](https://app.codecov.io/gh/kdeldycke/mail-deduplicate)
 [![Documentation status](https://img.shields.io/github/actions/workflow/status/kdeldycke/mail-deduplicate/docs.yaml?branch=main&label=%F0%9F%93%9A%20Docs)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/docs.yaml?query=branch%3Amain)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7364256.svg)](https://doi.org/10.5281/zenodo.7364256)
 

@@ -67,20 +67,22 @@ jobs:
     if: >
       !contains(fromJSON('["major-version-increment","minor-version-increment","prepare-release"]'),
       github.head_ref)
-      && !startsWith(github.event.head_commit.message || '', 'Bump major version to ')
-      && !startsWith(github.event.head_commit.message || '', 'Bump minor version to ')
-    runs-on: ubuntu-slim
+      && !startsWith(github.event.head_commit.message || '', '[changelog] Bump major version to ')
+      && !startsWith(github.event.head_commit.message || '', '[changelog] Bump minor version to ')
+    runs-on: ubuntu-26.04
     outputs:
       metadata: ${{ steps.metadata.outputs.metadata }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.2"
       - name: Run repomatic metadata
         id: metadata
         run: >
           uvx --no-progress 'repomatic==7.11.0' metadata
           --format github-json --output "$GITHUB_OUTPUT"
-          cli_scripts coverage_cells package_name
+          cli_scripts package_name
           test_matrix test_matrix_pr
 
   tests:
@@ -95,7 +97,12 @@ jobs:
         ${{ github.event_name != 'pull_request'
         && fromJSON(needs.metadata.outputs.metadata).test_matrix
         || fromJSON(needs.metadata.outputs.metadata).test_matrix_pr }}
-    name: "${{ matrix.state == 'stable' && '✅' || '⁉️' }} ${{ matrix.os }} / py${{ matrix.python-version }}"
+    # `python-label` is set by repomatic metadata only where the plain version
+    # would hide why a cell is continue-on-error (a prerelease reads `3.15-dev`);
+    # every other cell falls back to the version itself.
+    name: >-
+      ${{ matrix.state == 'stable' && '✅' || '⁉️' }} ${{ matrix.os }} /
+      py${{ matrix.python-label || matrix.python-version }}
     runs-on: ${{ matrix.os }}
     # We keep going when a job flagged as not stable fails.
     continue-on-error: ${{ matrix.state == 'unstable' }}
@@ -104,6 +111,8 @@ jobs:
         with:
           fetch-tags: true
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.2"
       - name: Force native ARM64 Python on Windows ARM64
         # Workaround for https://github.com/astral-sh/uv/issues/12906: uv defaults to x86_64 Python on ARM64 Windows,
         # relying on transparent emulation, so the windows-11-arm cell would silently test emulated x86_64 Python
@@ -135,44 +144,16 @@ jobs:
         run: uv --no-progress sync --frozen --all-extras --group test
 
       - name: Unittests
-        # Produce the coverage XML artifact consumed by the Codecov upload below.
         # `once`-marked tests are excluded from every matrix cell: the dedicated
         # `once-tests` job below runs them on a single runner instead.
+        #
+        # The coverage floor is `[tool.coverage] report.fail_under`, which this
+        # full-matrix slice is the one job expected to clear. Nothing is passed
+        # here: a `--cov-fail-under` flag would outrank that config and shadow
+        # the knob pyproject.toml already carries.
         run: >
           uv --no-progress run --frozen -- pytest
           -m "not once"
-          --cov-report=xml
-
-      - name: Upload coverage to Codecov
-        # Upload coverage only from the coverage-distinct cells: one runner per
-        # OS at released Python (the `coverage_cells` set, mirroring the PR
-        # matrix). Coverage depends on OS family and Python version, never CPU
-        # architecture, so architecture twins, prerelease, and free-threaded
-        # cells run the suite but produce coverage already captured by these.
-        #
-        # coverage_cells arrives as a space-joined string of `os|python-version`
-        # tokens (the GitHub list-output convention), so the membership test
-        # pads both operands with spaces to match a whole token, not a substring.
-        #
-        # Also skip sync-repomatic PRs (data-only changes with no coverable
-        # lines) and fork PRs (secrets are not available). The version-bump PR
-        # family is already filtered by the metadata job's `github.head_ref`
-        # gate above.
-        if: >
-          github.head_ref != 'sync-repomatic'
-          && env.CODECOV_TOKEN != ''
-          && contains(format(' {0} ', fromJSON(needs.metadata.outputs.metadata).coverage_cells),
-          format(' {0}|{1} ', matrix.os, matrix.python-version))
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        shell: bash
-        run: >
-          uvx --no-progress 'codecov-cli==11.3.1'
-          --auto-load-params-from githubactions
-          upload-process
-          --git-service github
-          --report-type coverage
-          --token "${CODECOV_TOKEN}"
 
       - name: Self-tests against test suite via console script
         # click-extra owns the test-suite engine and CLI; it reads the suite from
@@ -183,7 +164,11 @@ jobs:
         # console script (from repomatic metadata), so the self-test stays correct when
         # this workflow is synced to downstream repos.
         # Skipped for repos that ship no console script (nothing to self-test).
-        if: fromJSON(needs.metadata.outputs.metadata).cli_scripts[0]
+        # `!cancelled()` keeps this running after a failed pytest step: the two
+        # check different things, and letting a unit-test failure skip the
+        # self-test hides CLI drift until the next green run. Wrapped in
+        # `${{ }}` because a bare leading `!` is a YAML tag.
+        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).cli_scripts[0] }}
         env:
           CLI_SCRIPT: ${{ fromJSON(needs.metadata.outputs.metadata).cli_scripts[0] }}
         run: >
@@ -193,7 +178,8 @@ jobs:
         # Same suite as above, driven through the interpreter's `-m` entry
         # point so `__main__` stays exercised against the checkout on every
         # cell (the package-install job only covers it for released builds).
-        if: fromJSON(needs.metadata.outputs.metadata).cli_scripts[0]
+        # `!cancelled()` for the same reason as the step above.
+        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).cli_scripts[0] }}
         env:
           PACKAGE: ${{ fromJSON(needs.metadata.outputs.metadata).package_name }}
         shell: bash
@@ -205,12 +191,14 @@ jobs:
     name: 1️⃣ Run-once tests
     needs:
       - metadata
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-tags: true
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.2"
       - name: Install Python
         run: uv --no-progress venv --python 3.14
       - name: Install project
@@ -219,26 +207,11 @@ jobs:
         # `once`-marked tests (CLI invocability, plugin registration, metadata
         # checks) behave identically on every OS and Python, so the matrix
         # `tests` job excludes them and this single runner is their only
-        # executor.
-        run: uv --no-progress run --frozen -- pytest -m once --cov-report=xml
-      - name: Upload coverage to Codecov
-        # Same skip conditions as the matrix cells (data-only sync-repomatic
-        # PRs, fork PRs without secrets). No `coverage_cells` membership test:
-        # this job runs exactly once, and its upload keeps the lines only
-        # `once` tests cover counted in the merged report.
-        if: >
-          github.head_ref != 'sync-repomatic'
-          && env.CODECOV_TOKEN != ''
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        shell: bash
-        run: >
-          uvx --no-progress 'codecov-cli==11.3.1'
-          --auto-load-params-from githubactions
-          upload-process
-          --git-service github
-          --report-type coverage
-          --token "${CODECOV_TOKEN}"
+        # executor. `--cov-fail-under=0` opts this slice out of the
+        # `[tool.coverage] report.fail_under` ratchet: it covers a fraction of
+        # the package on its own by design, and the matrix job above is what
+        # holds the floor.
+        run: uv --no-progress run --frozen -- pytest -m once --cov-fail-under=0
 
   test-package-install:
     name: 📦 Package install
@@ -248,13 +221,15 @@ jobs:
     if: >-
       github.event_name != 'pull_request'
       && fromJSON(needs.metadata.outputs.metadata).cli_scripts
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-26.04
     env:
       CLI_SCRIPTS: ${{ fromJSON(needs.metadata.outputs.metadata).cli_scripts }}
       GIT_URL: git+https://github.com/${{ github.repository }}
       PACKAGE: ${{ fromJSON(needs.metadata.outputs.metadata).package_name }}
     steps:
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.2"
       - name: Install Python
         run: uv --no-progress venv --python 3.14
       - name: Run stable CLI

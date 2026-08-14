@@ -80,7 +80,9 @@ dependencies = [
   # @command, kebab-case config keys, and complete --export-config output.
   # The [toml] extra pulls the TOML writer (tomlkit) so --export-config toml
   # works out of the box, TOML being the format the documentation showcases.
-  "click-extra[toml]>=8.8.2",
+  # The `.dev0` suffix names 8.8.2 as the awaited release, pairing with the
+  # [tool.uv.sources] branch track below: see the note there.
+  "click-extra[toml]>=8.8.2.dev0",
   # Resolves the per-platform cache directory holding the hash cache database
   # (cache.py). 4.5.0 is the first release requiring Python 3.10, aligning its
   # minimal Python version to ours.
@@ -104,7 +106,7 @@ test = [
   # Test-only: conftest.py uses iterutils.same to check fixture homogeneity.
   "boltons>=25",
   # Aligned to the runtime click-extra floor.
-  "click-extra[pytest]>=8.8.2",
+  "click-extra[pytest]>=8.8.2.dev0",
   # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
   "coverage[toml]>=7.11",
   # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That module,
@@ -133,7 +135,7 @@ test = [
 docs = [
   # 8.5.0 renamed --show-params to --params, which docs/configuration.md runs at
   # build time via the click:run directive. Aligned to the runtime floor.
-  "click-extra[sphinx]>=8.8.2",
+  "click-extra[sphinx]>=8.8.2.dev0",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
@@ -174,10 +176,17 @@ exclude-newer = "1 week"
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
 
-# TEMPORARY: the click-extra >=8.8.2 floor above is not on PyPI yet, so resolve
-# it from the branch carrying it. A direct URL makes the project unpublishable
-# (PyPI rejects direct references), so this section MUST be deleted and uv.lock
-# regenerated once click-extra 8.8.2 is released, before cutting any release.
+# The click-extra 8.8.2 features this code needs are not on PyPI yet, so resolve
+# them from the branch carrying them. A source override never reaches published
+# metadata, so a release cut while this stands would ship a wheel resolving to
+# whatever PyPI holds under that name: `repomatic lint-deps` blocks the release
+# lane for exactly that reason.
+#
+# This is the branch-track idiom `repomatic sync-dep-sources` manages: a branch
+# source (never a `rev` or `tag` pin) paired with the `>=8.8.2.dev0` floors
+# above naming the awaited release. Once 8.8.2 ships, the updater drops this
+# table, tightens every `.dev0` floor to `>=8.8.2`, freezes the adoption through
+# the exclude-newer cooldown and re-locks. Nothing here needs deleting by hand.
 [tool.uv.sources]
 click-extra = { git = "https://github.com/kdeldycke/click-extra.git", branch = "main" }
 
@@ -235,8 +244,8 @@ warn_unused_configs = true
 # https://docs.pytest.org/en/latest/customize.html#pyproject-toml
 addopts = [
   "--durations=10",
-  # Coverage sources and settings live in [tool.coverage]; the CI test workflow
-  # passes --cov-report=xml on the command line to produce the Codecov artifact.
+  # Coverage sources, the branch flag and the failure ratchet all live in
+  # [tool.coverage].
   "--cov",
   "--cov-report=term",
   # Run tests in parallel across all logical cores (pytest-xdist).
@@ -259,6 +268,16 @@ xfail_strict = true
 # https://coverage.readthedocs.io/en/latest/config.html
 run.branch = true
 run.source = [ "mail_deduplicate" ]
+# Coverage ratchet: the suite fails below this. The matrix slice (everything
+# but the `once` marker) measures 97.0%, and the package holds only a handful
+# of platform-conditional lines, so the OS and Python spread across cells is
+# noise. Two points of margin absorb it without waving a real regression
+# through.
+#
+# The `once-tests` workflow job overrides this to 0, covering a fraction of the
+# package on its own by design. A focused local run trips it too, so pair those
+# with `--no-cov`.
+report.fail_under = 95
 report.precision = 2
 
 [tool.bumpversion]
@@ -373,3 +392,8 @@ validate = false
 # materialised at runtime by their own workflows, so they are not committed
 # here, matching the other downstream repositories.
 exclude = [ "skills" ]
+# Render the Click command tree as roff `.1` files and attach a
+# `mail-deduplicate-manpages.tar.gz` asset to every GitHub release. The script
+# target mirrors `click_extra_manpages` in `docs/conf.py`, so the release
+# tarball and the HTML docs site stay in lockstep.
+manpages.script = "mail_deduplicate.cli:mdedup"
