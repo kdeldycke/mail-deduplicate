@@ -67,7 +67,7 @@ classifiers = [
 dependencies = [
   # Provides enum.StrEnum for Python < 3.11; all versions expose the class.
   "backports-strenum>=1; python_version<'3.11'",
-  # 8.8.2 added the max_column_widths argument to render_table(), which
+  # 8.9.0 added the max_column_widths argument to render_table(), which
   # deduplicate.py's report() uses to size its Description column: pre-wrapping
   # it here would bake line breaks into the cells of the structured formats.
   # It also covers the earlier features this code still depends on: 8.5.0
@@ -80,9 +80,7 @@ dependencies = [
   # @command, kebab-case config keys, and complete --export-config output.
   # The [toml] extra pulls the TOML writer (tomlkit) so --export-config toml
   # works out of the box, TOML being the format the documentation showcases.
-  # The `.dev0` suffix names 8.8.2 as the awaited release, pairing with the
-  # [tool.uv.sources] branch track below: see the note there.
-  "click-extra[toml]>=8.8.2.dev0",
+  "click-extra[toml]>=8.9",
   # Resolves the per-platform cache directory holding the hash cache database
   # (cache.py). 4.5.0 is the first release requiring Python 3.10, aligning its
   # minimal Python version to ours.
@@ -106,7 +104,7 @@ test = [
   # Test-only: conftest.py uses iterutils.same to check fixture homogeneity.
   "boltons>=25",
   # Aligned to the runtime click-extra floor.
-  "click-extra[pytest]>=8.8.2.dev0",
+  "click-extra[pytest]>=8.9",
   # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
   "coverage[toml]>=7.11",
   # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That module,
@@ -135,7 +133,7 @@ test = [
 docs = [
   # 8.5.0 renamed --show-params to --params, which docs/configuration.md runs at
   # build time via the click:run directive. Aligned to the runtime floor.
-  "click-extra[sphinx]>=8.8.2.dev0",
+  "click-extra[sphinx]>=8.9",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
@@ -171,20 +169,16 @@ required-version = ">=0.11.15"
 # The docs are only built on modern Python, letting the docs group adopt
 # packages (like myst-parser 5.1) that dropped support for our older floors.
 dependency-groups.docs = { requires-python = ">= 3.14" }
-# The click-extra 8.8.2 features this code needs are not on PyPI yet, so resolve
-# them from the branch carrying them. A source override never reaches published
-# metadata, so a release cut while this stands would ship a wheel resolving to
-# whatever PyPI holds under that name: `repomatic lint-deps` blocks the release
-# lane for exactly that reason.
-#
-# This is the branch-track idiom `repomatic sync-dep-sources` manages: a branch
-# source (never a `rev` or `tag` pin) paired with the `>=8.8.2.dev0` floors
-# above naming the awaited release. Once 8.8.2 ships, the updater drops this
-# table, tightens every `.dev0` floor to `>=8.8.2`, freezes the adoption through
-# the exclude-newer cooldown and re-locks. Nothing here needs deleting by hand.
-sources.click-extra = { git = "https://github.com/kdeldycke/click-extra.git", branch = "main" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
+# Per-package cooldown control. A fixed date holds a package at the version
+# available then (just after it shipped), so `uv lock --upgrade` keeps that
+# version instead of tracking newer releases. `sync-uv-lock` freezes new
+# bypasses at that date and prunes each entry once its held version ages past
+# `exclude-newer`, returning the package to the normal cooldown. click-extra
+# 8.9.0 is let through early: it ships the table-wrapping machinery the report
+# and hash tables depend on (detailed in the runtime dependency note above).
+exclude-newer-package = { click-extra = "2026-08-16T00:00:00Z" }
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
 

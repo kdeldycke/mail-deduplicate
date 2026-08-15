@@ -10,6 +10,9 @@ resolution-markers = [
 exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "P1W"
 
+[options.exclude-newer-package]
+click-extra = "2026-08-16T00:00:00Z"
+
 [[package]]
 name = "accessible-pygments"
 version = "0.0.5"
@@ -190,8 +193,8 @@ wheels = [
 
 [[package]]
 name = "click-extra"
-version = "8.9.0.dev0"
-source = { git = "https://github.com/kdeldycke/click-extra.git?branch=main#76f43737ffa0f3e7d0fcc401eccb036936e299ba" }
+version = "8.9.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boltons" },
     { name = "click" },
@@ -202,6 +205,10 @@ dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "wcmatch" },
     { name = "wcwidth" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9f/5a/6ac519c831e4d51522d05a8655d3dc8051a109ea1fd935da2dfe06ac5dc1/click_extra-8.9.0.tar.gz", hash = "sha256:6586bd80d21b13d6343fc987c2279e170ad7213c972e638e8a6259c8241189cf", size = 1294893, upload-time = "2026-08-14T18:16:52.087Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0d/50/eb9aa0bf13d2f69288236f013ce5ce81b55d1b8211986dfe217c6ec54ab8/click_extra-8.9.0-py3-none-any.whl", hash = "sha256:7fc32dbddf4fcbf9c514a86a9aef0e0a882dc24145df34fbcf706bda4d4a0441", size = 452781, upload-time = "2026-08-14T18:16:50.459Z" },
 ]
 
 [package.optional-dependencies]
@@ -522,13 +529,13 @@ typing = [
 [package.metadata]
 requires-dist = [
     { name = "backports-strenum", marker = "python_full_version < '3.11'", specifier = ">=1" },
-    { name = "click-extra", extras = ["toml"], git = "https://github.com/kdeldycke/click-extra.git?branch=main" },
+    { name = "click-extra", extras = ["toml"], specifier = ">=8.9" },
     { name = "platformdirs", specifier = ">=4.5" },
 ]
 
 [package.metadata.requires-dev]
 docs = [
-    { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", git = "https://github.com/kdeldycke/click-extra.git?branch=main" },
+    { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", specifier = ">=8.9" },
     { name = "furo", marker = "python_full_version >= '3.14'", specifier = ">=2025.9.25" },
     { name = "myst-parser", marker = "python_full_version >= '3.14'", specifier = ">=5.1" },
     { name = "sphinx", marker = "python_full_version >= '3.14'", specifier = ">=8" },
@@ -540,7 +547,7 @@ docs = [
 ]
 test = [
     { name = "boltons", specifier = ">=25" },
-    { name = "click-extra", extras = ["pytest"], git = "https://github.com/kdeldycke/click-extra.git?branch=main" },
+    { name = "click-extra", extras = ["pytest"], specifier = ">=8.9" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.11" },
     { name = "extra-platforms", extras = ["pytest"], specifier = ">=2" },
     { name = "pytest", specifier = ">=9" },
