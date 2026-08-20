@@ -575,8 +575,13 @@ class DedupMailMixin(Message):
     def normalize_date(self, value: str) -> str:
         """Normalize `Date` to `YYYY-MM-DD` format.
 
-        Date timestamps can differ by seconds or hours for various reasons, so let's
-        only honour the date for now and normalize them to UTC timezone.
+        Date timestamps can differ by seconds or hours for various reasons, so only
+        the date is honoured, normalized to the UTC timezone.
+
+        ```{todo}
+        Revisit the day-level granularity, and whether the time of the day should
+        take part in the hash.
+        ```
         """
         if self.parsed_date is not None:
             utc_date = datetime.fromtimestamp(self.parsed_date, tz=timezone.utc).date()
@@ -593,8 +598,10 @@ class DedupMailMixin(Message):
 
         ```{danger}
         This may not be the cleanest way to normalize email addresses. E.g.
-        ``"Robert \\"Bob\\"```` becomes `Robert \\Bob\\`, but this shouldn't matter for
-        hashing purposes as we're just trying to get a good heuristic. Refs: #847 and #846.
+        `"Robert \\"Bob\\""` becomes `Robert \\Bob\\`, but this shouldn't matter for
+        hashing purposes as we're just trying to get a good heuristic. Refs:
+        [#846](https://github.com/kdeldycke/mail-deduplicate/issues/846) and
+        [#847](https://github.com/kdeldycke/mail-deduplicate/pull/847).
         ```
         """
         value = re.sub(r'["]', "", value)

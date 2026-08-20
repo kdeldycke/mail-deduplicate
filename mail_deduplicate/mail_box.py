@@ -252,9 +252,9 @@ class BoxFormat(Enum):
     From these, we can derive the proper constructor with our own custom `DedupMail`
     factory.
 
-    ```{hint}
-    This could be extended in the future to add support for other mailbox formats
-    and sources, like Gmail accounts, IMAP servers, etc.
+    ```{todo}
+    Add support for other mailbox formats and sources, like Gmail accounts, IMAP
+    servers, etc.
     ```
     """
 

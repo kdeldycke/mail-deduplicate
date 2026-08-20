@@ -223,14 +223,18 @@ class Strategy(enum.Enum):
     3. `tests/test_strategy.py` feeds `f"--strategy={strategy_id}"`, so pairs like
        `[SELECT_OLDER, DISCARD_NEWEST]` would stringify identically and the alias
        spellings would no longer be exercised end to end.
+    ```
 
-    Should this be revisited on a Python floor bump: `Enum._add_alias_()` (3.13+)
-    accepts non-identifier names, so `SELECT_OLDER._add_alias_("discard-newest")`
-    puts the CLI spelling straight into `__members__`, where
+    ```{todo}
+    Revisit the aliasing arrangement on a Python floor bump: `Enum._add_alias_()`
+    (3.13+) accepts non-identifier names, so
+    `SELECT_OLDER._add_alias_("discard-newest")` puts the CLI spelling straight into
+    `__members__`, where
     `EnumChoice(Strategy, choice_source="name", show_aliases=True)` picks it up.
     `EnumChoice` also grew a `transform` argument (click-extra 8.9.0) to kebab-case
     the raw identifiers that `show_aliases` otherwise yields. Neither addresses the
-    three losses above, which is why the current arrangement stands.
+    three losses listed in the note above, which is why the current arrangement
+    stands.
     ```
     """
 

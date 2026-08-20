@@ -228,6 +228,11 @@ def check_box(box_path, box_type, content=None):
     Does not use `set()` types internally to avoid silent deduplication. Translates
     all mails provided to `mailbox.Message` instances to provide fair comparison in a
     normalized space.
+
+    ```{todo}
+    Use a `Counter` to count occurrences, instead of comparing sorted lists of the
+    string rendering of each mail.
+    ```
     """
     # Check provided parameters.
     assert isinstance(box_path, str)
@@ -239,8 +244,6 @@ def check_box(box_path, box_type, content=None):
 
     # Compares the content of the box.
     box = box_type(box_path, create=False)
-
-    # TODO: use a Counter to count occurrences.
 
     assert len(box) == len(content)
     mails_found = sorted([str(m) for m in box])

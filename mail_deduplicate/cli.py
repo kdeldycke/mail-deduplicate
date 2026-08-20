@@ -325,8 +325,8 @@ def ignored_step_options(ctx) -> list[str]:
         type=EnumChoice(BoxFormat),
         help="Force all provided mail sources to be parsed in the specified format. "
         "If not set, auto-detect the format of sources independently. Auto-detection "
-        "only supports maildir and mbox format. Use this option to open up other box "
-        "format, or bypass unreliable detection.",
+        "only supports maildir, mbox and eml formats. Use this option to open up "
+        "other box formats, or bypass unreliable detection.",
     ),
     option(
         "-u",

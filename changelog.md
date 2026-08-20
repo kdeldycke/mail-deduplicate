@@ -13,6 +13,9 @@
 - Attach a `mail-deduplicate-manpages.tar.gz` asset to every GitHub release, rendered from the same command tree the documentation site builds its man pages from.
 - Move the test workflow's own jobs off the retired `ubuntu-slim` image onto `ubuntu-26.04`, pin the uv version they install, and name prerelease matrix cells `py3.15-dev` so an allowed failure says why it is allowed.
 - Run the CLI self-tests even after a failing unit test, so CLI drift stops hiding behind an unrelated failure until the next green run.
+- Fix the `--input-format` help, which still said auto-detection only covered `maildir` and `mbox`: `eml` folders have been detected since `9.1.0`.
+- Surface the deferred work buried in comments and prose on the documentation's Todo-list page, which now lists eight items instead of four.
+- Fix the API documentation of `normalize_address_header`: a mismatched code span leaked backticks into the rendered text, and its issue references are now links.
 
 ## [`9.3.0` (2026-08-08)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.2.0...v9.3.0)
 
