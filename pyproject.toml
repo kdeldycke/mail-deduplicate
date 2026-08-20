@@ -5,7 +5,7 @@ requires = [ "uv-build>=0.8" ]
 [project]
 # Docs: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 name = "mail-deduplicate"
-version = "9.3.1.dev0"
+version = "9.3.1"
 description = "📧 CLI to deduplicate mails from mail boxes"
 readme = "readme.md"
 keywords = [
@@ -88,7 +88,7 @@ dependencies = [
 ]
 urls.Changelog = "https://github.com/kdeldycke/mail-deduplicate/blob/main/changelog.md"
 urls.Documentation = "https://kdeldycke.github.io/mail-deduplicate"
-urls.Download = "https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.3.1.dev0"
+urls.Download = "https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.3.1"
 urls.Funding = "https://github.com/sponsors/kdeldycke"
 urls.Homepage = "https://github.com/kdeldycke/mail-deduplicate"
 urls.Issues = "https://github.com/kdeldycke/mail-deduplicate/issues"
@@ -273,7 +273,7 @@ report.fail_under = 95
 report.precision = 2
 
 [tool.bumpversion]
-current_version = "9.3.1.dev0"
+current_version = "9.3.1"
 # Parse versions with an optional .devN suffix (PEP 440).
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(\\.dev(?P<dev>\\d+))?"
 serialize = [
