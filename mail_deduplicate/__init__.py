@@ -24,7 +24,7 @@ if sys.version_info >= (3, 11):
 else:
     from backports.strenum import StrEnum
 
-__version__ = "9.3.1"
+__version__ = "9.3.2.dev0"
 
 __all__ = ["StrEnum", "__version__"]
 """Also re-exports the `StrEnum` shim, so a single import site covers the Python

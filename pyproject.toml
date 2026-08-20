@@ -5,7 +5,7 @@ requires = [ "uv-build>=0.8" ]
 [project]
 # Docs: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
 name = "mail-deduplicate"
-version = "9.3.1"
+version = "9.3.2.dev0"
 description = "📧 CLI to deduplicate mails from mail boxes"
 readme = "readme.md"
 keywords = [
@@ -88,7 +88,7 @@ dependencies = [
 ]
 urls.Changelog = "https://github.com/kdeldycke/mail-deduplicate/blob/main/changelog.md"
 urls.Documentation = "https://kdeldycke.github.io/mail-deduplicate"
-urls.Download = "https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.3.1"
+urls.Download = "https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.3.2.dev0"
 urls.Funding = "https://github.com/sponsors/kdeldycke"
 urls.Homepage = "https://github.com/kdeldycke/mail-deduplicate"
 urls.Issues = "https://github.com/kdeldycke/mail-deduplicate/issues"
@@ -186,8 +186,8 @@ build-backend.module-root = ""
 product-name = "Mail Deduplicate"
 file-description = "📧 CLI to deduplicate mails from mail boxes"
 copyright = "Kevin Deldycke <kevin@deldycke.com> and contributors. Distributed under GPL-2.0-or-later license."
-file-version = "9.3.1"
-product-version = "9.3.1"
+file-version = "9.3.2"
+product-version = "9.3.2"
 # click-extra ships themes.toml as package data loaded via importlib.resources;
 # Nuitka does not auto-bundle non-Python data files, so the binary falls back
 # to the no-color theme at startup unless it is declared here.
@@ -273,7 +273,7 @@ report.fail_under = 95
 report.precision = 2
 
 [tool.bumpversion]
-current_version = "9.3.1"
+current_version = "9.3.2.dev0"
 # Parse versions with an optional .devN suffix (PEP 440).
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(\\.dev(?P<dev>\\d+))?"
 serialize = [
