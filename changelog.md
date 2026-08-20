@@ -1,9 +1,11 @@
 # Changelog
 
-## [`9.3.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.0...main)
+## [`9.3.2.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.1...main)
 
 > [!WARNING]
 > This version is **not released yet** and is under active development.
+
+## [`9.3.1` (2026-08-20)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.0...v9.3.1)
 
 - Size the `Description` column of the final report to the terminal instead of a fixed 60 characters, so the table stops overflowing an 80-column terminal.
 - Stop embedding line breaks in the report's descriptions: `--table-format=json`, `csv` and the other structured formats now carry each description as a single string, and `--table-format=vertical` aligns its wrapped lines under the label column.
