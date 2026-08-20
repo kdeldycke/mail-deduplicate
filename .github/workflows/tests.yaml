@@ -76,11 +76,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.12.2"
+          version: "0.12.3"
       - name: Run repomatic metadata
         id: metadata
         run: >
-          uvx --no-progress 'repomatic==7.11.0' metadata
+          uvx --no-progress --exclude-newer-package repomatic=P0D 'repomatic==7.11.0' metadata
           --format github-json --output "$GITHUB_OUTPUT"
           cli_scripts package_name
           test_matrix test_matrix_pr
@@ -112,7 +112,7 @@ jobs:
           fetch-tags: true
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.12.2"
+          version: "0.12.3"
       - name: Force native ARM64 Python on Windows ARM64
         # Workaround for https://github.com/astral-sh/uv/issues/12906: uv defaults to x86_64 Python on ARM64 Windows,
         # relying on transparent emulation, so the windows-11-arm cell would silently test emulated x86_64 Python
@@ -198,7 +198,7 @@ jobs:
           fetch-tags: true
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.12.2"
+          version: "0.12.3"
       - name: Install Python
         run: uv --no-progress venv --python 3.14
       - name: Install project
@@ -229,7 +229,7 @@ jobs:
     steps:
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.12.2"
+          version: "0.12.3"
       - name: Install Python
         run: uv --no-progress venv --python 3.14
       - name: Run stable CLI
