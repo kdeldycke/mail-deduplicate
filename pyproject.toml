@@ -269,10 +269,10 @@ testpaths = [ "tests" ]
 # Make sure tests that are expected to fail do not resurrect and start working all of a sudden.
 xfail_strict = true
 
-[tool.coverage]
 # https://coverage.readthedocs.io/en/latest/config.html
-run.branch = true
+[tool.coverage]
 run.source = [ "mail_deduplicate" ]
+run.branch = true
 # Coverage ratchet: the suite fails below this. The matrix slice (everything
 # but the `once` marker) measures 97.0%, and the package holds only a handful
 # of platform-conditional lines, so the OS and Python spread across cells is
