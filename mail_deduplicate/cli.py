@@ -479,7 +479,9 @@ def ignored_step_options(ctx) -> list[str]:
         type=EnumChoice(Action),
         help=f"Action performed on the selected mails. Defaults to "
         f"{Action.COPY_SELECTED} as it is the safest: it only reads the mail sources "
-        "and create a brand new mail box with the selection results.",
+        "and create a brand new mail box with the selection results. Mails that have "
+        f"no duplicate are part of the selection, but {Action.DELETE_SELECTED} leaves "
+        "them in place, as deleting one removes the only copy of it there is.",
     ),
     option(
         "-E",

@@ -5,6 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Stop `--action delete-selected` from deleting the mails that have no duplicate, which it has done since `8.1.1`. Closes [#1053](https://github.com/kdeldycke/mail-deduplicate/issues/1053).
 - Size the `Description` column of the final report to the terminal instead of a fixed 60 characters, so the table stops overflowing an 80-column terminal.
 - Stop embedding line breaks in the report's descriptions: `--table-format=json`, `csv` and the other structured formats now carry each description as a single string, and `--table-format=vertical` aligns its wrapped lines under the label column.
 - Size the `Header value` column of the hash table to the terminal: a long `References` chain no longer stretches the `--hash-only` output several times past the terminal width.

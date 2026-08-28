@@ -60,6 +60,13 @@ SELECTION = [duplicate_mail, unique_mail]
 """Mails the selection resolves to: the unique mail plus one surviving copy."""
 DISCARD = [duplicate_mail, duplicate_mail]
 """Mails the discard resolves to: the two other copies."""
+DISCARD_AND_UNIQUE = [*DISCARD, unique_mail]
+"""What a `delete-selected` run leaves behind.
+
+The mail that has no duplicate belongs to the selection, but deleting it would leave
+no copy of it anywhere, so only the copy the strategy picked is removed. See:
+https://github.com/kdeldycke/mail-deduplicate/issues/1053
+"""
 
 
 @pytest.mark.parametrize("dry_run", [False, True], ids=["real", "dry_run"])
@@ -70,7 +77,9 @@ DISCARD = [duplicate_mail, duplicate_mail]
         pytest.param("copy-discarded", True, FULL_BOX, DISCARD, id="copy-discarded"),
         pytest.param("move-selected", True, DISCARD, SELECTION, id="move-selected"),
         pytest.param("move-discarded", True, SELECTION, DISCARD, id="move-discarded"),
-        pytest.param("delete-selected", False, DISCARD, None, id="delete-selected"),
+        pytest.param(
+            "delete-selected", False, DISCARD_AND_UNIQUE, None, id="delete-selected"
+        ),
         pytest.param("delete-discarded", False, SELECTION, None, id="delete-discarded"),
         # Hardlinking keeps every mail in place: the copies are identical here, so
         # the box reads exactly as it did before, whatever backs its mails.
@@ -86,7 +95,8 @@ def test_action_matrix(
     stays consistent, in real and dry-run mode alike.
 
     Copy actions leave the source intact; move and delete actions strip it down to
-    whichever subset they did not act on. Export actions also cover the re-reading of
+    whichever subset they did not act on, with `delete-selected` also leaving the
+    mail that has no duplicate. Export actions also cover the re-reading of
     full messages from the source boxes, as mails are dehydrated to lightweight stubs
     once hashed: a regression there would export empty or truncated mails.
     """
@@ -111,6 +121,46 @@ def test_action_matrix(
         check_box(box_path, box_type, content=source_after)
         if needs_export:
             check_box(export_path, mbox, content=export_after)
+
+
+@pytest.mark.parametrize("jobs", [1, 2], ids=["sequential", "parallel"])
+def test_delete_selected_spares_mails_without_duplicates(invoke, make_box, jobs):
+    """A mail that has no duplicate survives a `delete-selected` run that has nothing
+    else to act on.
+
+    The two copies here differ by far more than the default size threshold, as a mail
+    carrying an attachment differs from the same mail without one. Their set is
+    skipped, which leaves the selection made of the mail that has no duplicate alone.
+    Deleting the whole selection then wipes the one mail the run was never asked to
+    touch, and keeps the two it was. Covers both the sequential and the parallel
+    selection paths, as each merges its own verdict back. See:
+    https://github.com/kdeldycke/mail-deduplicate/issues/1053
+    """
+    plain_copy = MailFactory(
+        message_id="<newsletter@example.com>", body="Weather report for today.\n"
+    )
+    copy_with_attachment = MailFactory(
+        message_id="<newsletter@example.com>",
+        body="Weather report for today. " + "attachment payload " * 200 + "\n",
+    )
+    box_path, box_type, _ = make_box(
+        Maildir, [plain_copy, copy_with_attachment, unique_mail]
+    )
+
+    result = invoke(
+        f"--jobs={jobs}",
+        "--strategy=select-all-but-one",
+        "--action=delete-selected",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "Metrics appear inconsistent" not in result.stderr
+    assert "too dissimilar in size" in result.stderr
+    assert "left untouched: they have no duplicate" in result.stderr
+    check_box(
+        box_path, box_type, content=[plain_copy, copy_with_attachment, unique_mail]
+    )
 
 
 @pytest.mark.parametrize(

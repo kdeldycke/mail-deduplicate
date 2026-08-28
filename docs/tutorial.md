@@ -250,7 +250,7 @@ for _path, _count in (("archive-2024.mbox", 1), ("archive-2025.mbox", 4)):
     _box.close()
 ```
 
-`archive-2024.mbox` is down to its single unique mail, and `archive-2025.mbox` was not touched. Mails without duplicates are never deleted, whatever the strategy: only discarded members of a duplicate set are.
+`archive-2024.mbox` is down to its single unique mail, and `archive-2025.mbox` was not touched. Mails without duplicates are never deleted, whatever the strategy and whichever of the two delete actions runs: only members of a duplicate set are.
 
 ```{caution}
 For folder-based boxes (`maildir`, `mh`, `eml`), `--regexp` is tested against the path of each individual mail file. For file-based boxes (`mbox`, `babyl`, `mmdf`), all mails share the path of the box itself.

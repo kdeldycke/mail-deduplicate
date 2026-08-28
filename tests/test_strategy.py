@@ -315,6 +315,9 @@ test_cases = [
             bigger_mail,
         ],
     ),
+    # Both cases below carry a third mail nothing else in the box is a copy of. It
+    # belongs to the selection, but the delete-selected action leaves it alone rather
+    # than removing the only copy of it there is.
     (
         "one_selection",
         [Strategy.SELECT_ONE, Strategy.DISCARD_ALL_BUT_ONE],
@@ -330,6 +333,7 @@ test_cases = [
             random_mail_1,
             random_mail_2,
             random_mail_2,
+            random_mail_3,
         ],
     ),
     (
@@ -346,6 +350,7 @@ test_cases = [
         [
             random_mail_1,
             random_mail_2,
+            random_mail_3,
         ],
     ),
 ]

@@ -198,6 +198,15 @@ class DuplicateSet:
         self.selection: set[DedupMailMixin] = set()
         """Mails selected after application of selection strategy."""
 
+        self.unique: set[DedupMailMixin] = set()
+        """The subset of the selection no strategy ever ruled on.
+
+        A mail alone in its set has no copy to be compared to, so it is kept
+        without any criterion picking it over another. Held apart from the rest
+        of the selection so a destructive action can leave it alone. See:
+        https://github.com/kdeldycke/mail-deduplicate/issues/1053
+        """
+
         self.discard: set[DedupMailMixin] = set()
         """Mails discarded after application of selection strategy."""
 
@@ -420,6 +429,7 @@ class DuplicateSet:
             self.stats[Stat.MAIL_UNIQUE] += 1
             self.stats[Stat.MAIL_DUPLICATES] = 0
             self.selection = set(self.pool)
+            self.unique = set(self.pool)
             return
 
         try:
@@ -601,6 +611,7 @@ class SelectedSet(NamedTuple):
     """
 
     selected: tuple[tuple[str, str], ...]
+    unique: tuple[tuple[str, str], ...]
     discarded: tuple[tuple[str, str], ...]
     stats: dict[Stat, int]
     records: tuple[tuple[int, str], ...]
@@ -668,6 +679,10 @@ def _select_in_worker(task: tuple[str, tuple[MailMeta, ...]]) -> SelectedSet:
             (cast("str", m.source_path), cast("str", m.mail_id))
             for m in duplicates.selection
         ),
+        unique=tuple(
+            (cast("str", m.source_path), cast("str", m.mail_id))
+            for m in duplicates.unique
+        ),
         discarded=tuple(
             (cast("str", m.source_path), cast("str", m.mail_id))
             for m in duplicates.discard
@@ -717,6 +732,12 @@ class Deduplicate:
 
         self.selection: set[DedupMailMixin] = set()
         """Mails selected after application of selection strategy."""
+
+        self.unique: set[DedupMailMixin] = set()
+        """The subset of the selection made of mails that have no duplicate.
+
+        See `DuplicateSet.unique`, which each duplicate set contributes here.
+        """
 
         self.discard: set[DedupMailMixin] = set()
         """Mails discarded after application of selection strategy."""
@@ -1108,6 +1129,7 @@ class Deduplicate:
         duplicates.select()
         self.stats += duplicates.stats
         self.selection.update(duplicates.selection)
+        self.unique.update(duplicates.unique)
         self.discard.update(duplicates.discard)
         self.record_link_targets(duplicates.selection, duplicates.discard)
         self.release(mail_set)
@@ -1239,6 +1261,7 @@ class Deduplicate:
         # span several.
         by_id = {(mail.source_path, mail.mail_id): mail for mail in mail_set}
         self.selection.update(by_id[key] for key in result.selected)
+        self.unique.update(by_id[key] for key in result.unique)
         self.discard.update(by_id[key] for key in result.discarded)
         self.record_link_targets(
             (by_id[key] for key in result.selected),
@@ -1358,9 +1381,11 @@ class Deduplicate:
         )
 
         # Action stats. Each action targets a single subset of mails: the union of
-        # unique and selected mails for *-selected actions, the discarded mails for
-        # *-discarded ones. The counters the action reports on are expected to
-        # account for its target exactly, as they are incremented in dry-run mode too.
+        # unique and selected mails for *-selected actions, the selected ones alone
+        # for the deletion sparing the mails that have no duplicate, and the
+        # discarded mails for *-discarded ones. The counters the action reports on
+        # are expected to account for its target exactly, as they are incremented in
+        # dry-run mode too.
         action = self.conf["action"]
         if action.verb == "hardlink":
             # Hardlinking is the one action that cannot always go through: a mail
@@ -1381,6 +1406,8 @@ class Deduplicate:
             }[action.verb]
             if action.acts_on_discarded:
                 self.assert_stats(Stat.MAIL_DISCARDED, "==", action_counter)
+            elif action.spares_unique:
+                self.assert_stats(Stat.MAIL_SELECTED, "==", action_counter)
             else:
                 self.assert_stats(
                     (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED), "==", action_counter

@@ -284,6 +284,10 @@ class Action(StrEnum):
     An action ID joins an operation verb to the subset of mails it applies to: the
     `*-selected` actions act on the mails kept by the selection, the `*-discarded`
     ones on the mails it discarded.
+
+    The mails that have no duplicate belong to the selection, so the copy and move
+    actions carry them into the box they build. `spares_unique` explains why the
+    delete one leaves them behind.
     """
 
     COPY_SELECTED = "copy-selected"
@@ -305,9 +309,27 @@ class Action(StrEnum):
         ones."""
         return self.value.endswith("-discarded")
 
+    @property
+    def spares_unique(self) -> bool:
+        """Whether the action must leave the mails that have no duplicate alone.
+
+        A mail alone in its duplicate set is kept, so it belongs to the selection
+        every `*-selected` action targets. Copying and moving it is what makes the
+        exported box hold the whole deduplicated corpus rather than its duplicates
+        only, and neither loses it. Deleting it does: no strategy ever ruled on that
+        mail, nothing was written anywhere else, and there is no other copy of it to
+        fall back on. So the deletion applies to the mails a strategy really picked.
+        See: https://github.com/kdeldycke/mail-deduplicate/issues/1053
+        """
+        return self is Action.DELETE_SELECTED
+
     def targets(self, dedup: Deduplicate) -> set[DedupMailMixin]:
         """The subset of mails this action applies to."""
-        return dedup.discard if self.acts_on_discarded else dedup.selection
+        if self.acts_on_discarded:
+            return dedup.discard
+        if self.spares_unique:
+            return dedup.selection - dedup.unique
+        return dedup.selection
 
     def perform(self, dedup: Deduplicate) -> None:
         """Perform the action on the subset of mails it targets."""
@@ -319,13 +341,21 @@ class Action(StrEnum):
             return
         logging.info(f"{selection_count} mails selected for action.")
 
+        targets = self.targets(dedup)
+        if self.spares_unique and dedup.unique:
+            # Said before the count below, which it accounts for.
+            logging.warning(
+                f"{len(dedup.unique)} mails left untouched: they have no duplicate, "
+                "so deleting them would leave no copy behind.",
+            )
+
         if dedup.conf["dry_run"]:
             # Said once, and loudly. The statistics below count what the action
             # would have touched, so without this line a dry run reads exactly like
             # a real one. The trail's own summary cannot carry the warning alone:
             # it only shows on an interactive terminal.
             logging.warning(
-                f"DRY RUN: {len(self.targets(dedup))} mails would be acted upon, "
+                f"DRY RUN: {len(targets)} mails would be acted upon, "
                 "but none will be altered.",
             )
 
@@ -336,4 +366,4 @@ class Action(StrEnum):
             == dedup.stats[Stat.MAIL_SELECTED] + dedup.stats[Stat.MAIL_UNIQUE]
         )
 
-        OPERATIONS[self.verb](dedup, self.targets(dedup))
+        OPERATIONS[self.verb](dedup, targets)
