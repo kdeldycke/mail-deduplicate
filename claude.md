@@ -8,7 +8,7 @@ Mail Deduplicate (`mdedup`) is a CLI that finds and removes duplicate mails acro
 
 ## Upstream conventions
 
-This repository uses the reusable workflows and `pyproject.toml` configuration from [`kdeldycke/repomatic`](https://github.com/kdeldycke/repomatic) and follows the conventions established there. For code style, typing, documentation, testing and design principles, the upstream [`claude.md`](https://github.com/kdeldycke/repomatic/blob/main/claude.md) is the canonical reference. This file records only what is specific to mail-deduplicate.
+This repository uses the reusable workflows and `pyproject.toml` configuration from [`kdeldycke/repomatic`](https://github.com/kdeldycke/repomatic) and follows the conventions established there. Since `7.14.0`, repomatic no longer syncs instructions into a consuming repository: the generic conventions for code style, typing, documentation, testing and design live in the machine-wide instructions file, and this file records only what is specific to mail-deduplicate.
 
 **Contributing upstream:** if you spot a gap or improvement in the reusable workflows or shared conventions, propose it at [`kdeldycke/repomatic`](https://github.com/kdeldycke/repomatic/issues).
 

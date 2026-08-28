@@ -67,19 +67,10 @@ classifiers = [
 dependencies = [
   # Provides enum.StrEnum for Python < 3.11; all versions expose the class.
   "backports-strenum>=1; python_version<'3.11'",
-  # 8.9.0 added the max_column_widths argument to render_table(), which
-  # deduplicate.py's report() uses to size its Description column: pre-wrapping
-  # it here would bake line breaks into the cells of the structured formats.
-  # It also covers the earlier features this code still depends on: 8.5.0
-  # promoted ctx.render_table to a Context method reading --table-format from
-  # the context meta (deduplicate.py, mail.py), 8.6.0 added OperationTrail
-  # (action.py) and stopped its test-suite runner from resolving venv
-  # interpreter symlinks (the binary self-test run by the release engine from
-  # the runtime-only environment relies on it), and 8.7.0 carried the config
-  # machinery cli.py relies on: config_strict/excluded_params forwarding in
-  # @command, kebab-case config keys, and complete --export-config output.
-  # The [toml] extra pulls the TOML writer (tomlkit) so --export-config toml
-  # works out of the box, TOML being the format the documentation showcases.
+  # 8.9.0 added the max_column_widths argument of render_table():
+  # deduplicate.py's report() sizes its Description column with it, instead of
+  # pre-wrapping text that would bake line breaks into the structured formats.
+  # The [toml] extra pulls tomlkit for --export-config toml.
   "click-extra[toml]>=8.9",
   # Resolves the per-platform cache directory holding the hash cache database
   # (cache.py). 4.5.0 is the first release requiring Python 3.10, aligning its
@@ -107,11 +98,9 @@ test = [
   "click-extra[pytest]>=8.9",
   # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
   "coverage[toml]>=7.11",
-  # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That module,
-  # its @skip_<id> platform decorators, and the [pytest] extra that installs pytest for
-  # it all date back to 2.0.0 (which already required Python >= 3.10, like us). The
-  # skip_windows name has been stable since: the later 6.x/7.x renames only touched
-  # group decorators (like unknown_linux), never the per-OS ones.
+  # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That
+  # module, its @skip_<id> platform decorators and the [pytest] extra installing
+  # pytest for them date back to 2.0.0, which already required Python >= 3.10.
   "extra-platforms[pytest]>=2",
   # Pytest 9.0.0 introduced support for native TOML configuration files.
   "pytest>=9",
@@ -385,9 +374,13 @@ number = true
 validate = false
 
 [tool.repomatic]
-# Only the skills component is excluded. The label and renovate configs are
-# materialised at runtime by their own workflows, so they are not committed
-# here, matching the other downstream repositories.
+# 7.2.1 and 7.2.2 were tagged and released on GitHub, but never uploaded to
+# PyPI. Declaring them here stops lint-changelog reporting the gap on every run.
+abandoned-versions = [ "7.2.1", "7.2.2" ]
+# Skills are excluded here; init also reports labels, plugin and subagents as
+# excluded on its own. The label config is materialised at runtime by its own
+# workflow, so it is not committed here, matching the other downstream
+# repositories.
 exclude = [ "skills" ]
 # Render the Click command tree as roff `.1` files and attach a
 # `mail-deduplicate-manpages.tar.gz` asset to every GitHub release. The script
