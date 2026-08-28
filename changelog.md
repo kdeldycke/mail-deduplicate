@@ -7,6 +7,9 @@
 
 ## [`9.3.1` (2026-08-28)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.0...v9.3.1)
 
+> [!NOTE]
+> `9.3.1` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/9.3.1/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.3.1).
+
 - Attach a `mail-deduplicate-manpages.tar.gz` asset to every GitHub release, rendered from the same command tree the documentation site builds its man pages from.
 - Size the report's `Description` and the hash table's `Header value` columns to the terminal instead of a fixed width, so neither table overflows an 80-column terminal.
 - Stop embedding line breaks in the report's descriptions: the structured formats now carry each description as a single string, and `--table-format=vertical` aligns wrapped lines under the label column.
