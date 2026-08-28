@@ -1,9 +1,6 @@
 # Changelog
 
-## [`9.3.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.0...main)
-
-> [!WARNING]
-> This version is **not released yet** and is under active development.
+## [`9.3.1` (2026-08-28)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.0...v9.3.1)
 
 - Attach a `mail-deduplicate-manpages.tar.gz` asset to every GitHub release, rendered from the same command tree the documentation site builds its man pages from.
 - Size the report's `Description` and the hash table's `Header value` columns to the terminal instead of a fixed width, so neither table overflows an 80-column terminal.
