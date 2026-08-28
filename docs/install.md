@@ -181,9 +181,8 @@ $ file ./mdedup*
 
 Mail Deduplicate should now be available system-wide:
 
-```{click:run}
-from mail_deduplicate.cli import mdedup
-invoke(mdedup, args=["--version"])
+```shell-session
+$ mdedup --version
 ```
 
 If not, you can directly execute the module from Python:

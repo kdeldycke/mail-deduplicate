@@ -46,6 +46,14 @@ def test_action_definitions():
             else f"{action.verb}-selected"
         )
 
+        # Only a destructive action on the selection can lose a mail that has no
+        # duplicate, so it is the only one sparing them. Pinned over every member so
+        # a new destructive `*-selected` action cannot silently bring back
+        # https://github.com/kdeldycke/mail-deduplicate/issues/1053.
+        assert action.spares_unique == (
+            action.verb == "delete" and not action.acts_on_discarded
+        )
+
 
 duplicate_mail = MailFactory(body="Shared duplicate body.\n")
 unique_mail = MailFactory(

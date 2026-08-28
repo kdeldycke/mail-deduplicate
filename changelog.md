@@ -5,20 +5,15 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
-- Stop `--action delete-selected` from deleting the mails that have no duplicate, which it has done since `8.1.1`. Closes [#1053](https://github.com/kdeldycke/mail-deduplicate/issues/1053).
-- Size the `Description` column of the final report to the terminal instead of a fixed 60 characters, so the table stops overflowing an 80-column terminal.
-- Stop embedding line breaks in the report's descriptions: `--table-format=json`, `csv` and the other structured formats now carry each description as a single string, and `--table-format=vertical` aligns its wrapped lines under the label column.
-- Size the `Header value` column of the hash table to the terminal: a long `References` chain no longer stretches the `--hash-only` output several times past the terminal width.
-- Fix the test workflow dying at its first job: it asked `repomatic metadata` for the `coverage_cells` key, which was removed along with the Codecov integration. Every other job gates on that one through `needs:`, so none of them ran.
-- Gate coverage on a `[tool.coverage] report.fail_under` ratchet, set at 95% against a measured 97%, replacing the Codecov reporting the upgrade retired. The run-once test job opts out of the floor, since it covers 27% of the package by design.
 - Attach a `mail-deduplicate-manpages.tar.gz` asset to every GitHub release, rendered from the same command tree the documentation site builds its man pages from.
-- Move the test workflow's own jobs off the retired `ubuntu-slim` image onto `ubuntu-26.04`, pin the uv version they install, and name prerelease matrix cells `py3.15-dev` so an allowed failure says why it is allowed.
-- Run the CLI self-tests even after a failing unit test, so CLI drift stops hiding behind an unrelated failure until the next green run.
-- Stop the package-install test job failing for the week after each release, and give every test job a timeout instead of GitHub's six-hour default.
+- Size the report's `Description` and the hash table's `Header value` columns to the terminal instead of a fixed width, so neither table overflows an 80-column terminal.
+- Stop embedding line breaks in the report's descriptions: the structured formats now carry each description as a single string, and `--table-format=vertical` aligns wrapped lines under the label column.
+- Stop `--action delete-selected` from deleting the mails that have no duplicate, which it has done since `8.1.1`. Closes [#1053](https://github.com/kdeldycke/mail-deduplicate/issues/1053).
 - Fix the `--input-format` help, which still said auto-detection only covered `maildir` and `mbox`: `eml` folders have been detected since `9.1.0`.
-- Surface the deferred work buried in comments and prose on the documentation's Todo-list page, which now lists eight items instead of four.
+- Fix the installation guide's `mdedup --version` example, which rendered the documentation tool's version instead of the CLI's.
 - Fix the API documentation of `normalize_address_header`: a mismatched code span leaked backticks into the rendered text, and its issue references are now links.
 - Expand the troubleshooting docs: how to read a strategy against an action, what the `0` and `-1` thresholds do, and why genuine copies can be skipped for size.
+- Surface the deferred work buried in code comments and prose on the documentation's Todo-list page.
 
 ## [`9.3.0` (2026-08-08)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.2.0...v9.3.0)
 

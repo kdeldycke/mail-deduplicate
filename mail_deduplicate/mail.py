@@ -473,17 +473,12 @@ class DedupMailMixin(Message):
         # keeps the table readable, and leaving the wrapping to the renderer avoids
         # baking line breaks into the cells of the structured formats.
         ctx = get_current_context(silent=True)
+        renderer = render_table
         if ctx is not None:
-            rendered: str = ctx.find_root().render_table(  # type: ignore[attr-defined]
-                table_data,
-                headers=headers,
-                max_column_widths=(None, "auto"),
-            )
-        else:
-            rendered = render_table(
-                table_data, headers=headers, max_column_widths=(None, "auto")
-            )
-        return "\n" + rendered
+            renderer = ctx.find_root().render_table  # type: ignore[attr-defined]
+        return "\n" + renderer(
+            table_data, headers=headers, max_column_widths=(None, "auto")
+        )
 
     def serialized_headers(self) -> bytes:
         """Serialize the canonical headers into a single string ready to be hashed.

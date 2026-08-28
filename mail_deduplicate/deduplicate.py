@@ -645,6 +645,15 @@ def _init_select_worker(conf: Config, message_class: type, log_level: int) -> No
     logging.getLogger().setLevel(log_level)
 
 
+def _name_mails(mails: Iterable[DedupMailMixin]) -> tuple[tuple[str, str], ...]:
+    """Name each mail by its box and its ID, for a worker to hand back to the parent.
+
+    Both are set the moment a mail is read from its box, which every mail a worker
+    sees has been, but the attributes stay optional on the class.
+    """
+    return tuple((cast("str", m.source_path), cast("str", m.mail_id)) for m in mails)
+
+
 def _select_in_worker(task: tuple[str, tuple[MailMeta, ...]]) -> SelectedSet:
     """Run one duplicate set through the thresholds and the selection strategies.
 
@@ -673,20 +682,9 @@ def _select_in_worker(task: tuple[str, tuple[MailMeta, ...]]) -> SelectedSet:
         root.removeHandler(handler)
 
     return SelectedSet(
-        # Both are set the moment a mail is read from its box, which every mail
-        # here has been, but the attributes stay optional on the class.
-        selected=tuple(
-            (cast("str", m.source_path), cast("str", m.mail_id))
-            for m in duplicates.selection
-        ),
-        unique=tuple(
-            (cast("str", m.source_path), cast("str", m.mail_id))
-            for m in duplicates.unique
-        ),
-        discarded=tuple(
-            (cast("str", m.source_path), cast("str", m.mail_id))
-            for m in duplicates.discard
-        ),
+        selected=_name_mails(duplicates.selection),
+        unique=_name_mails(duplicates.unique),
+        discarded=_name_mails(duplicates.discard),
         stats=dict(duplicates.stats),
         records=tuple(captured),
     )

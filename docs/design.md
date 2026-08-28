@@ -113,7 +113,7 @@ A strategy names the half of each set it selects, and an action names the half i
 
 A mail alone in its duplicate set has no copy to be compared to, so no strategy ever rules on it. It is kept, and belongs to the selection the `*-selected` actions target: this is what makes `--action copy-selected` and `--action move-selected` produce a box holding the whole deduplicated corpus, and not its duplicates only.
 
-`--action delete-selected` is the one exception, and leaves those mails in place. Deleting one removes the only copy of it there is, and nothing was written anywhere else first. The deletion therefore applies to the mails a strategy really picked, and the report says how many were left untouched.
+`--action delete-selected` is the one exception, and leaves those mails in place. Deleting one removes the only copy of it there is, and nothing was written anywhere else first. The deletion therefore applies to the mails a strategy really picked, and the run warns how many mails it left untouched before acting.
 
 ### Hardlinking duplicates
 
