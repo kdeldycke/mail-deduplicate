@@ -171,14 +171,6 @@ required-version = ">=0.11.15"
 dependency-groups.docs = { requires-python = ">= 3.14" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
-# Per-package cooldown control. A fixed date holds a package at the version
-# available then (just after it shipped), so `uv lock --upgrade` keeps that
-# version instead of tracking newer releases. `sync-uv-lock` freezes new
-# bypasses at that date and prunes each entry once its held version ages past
-# `exclude-newer`, returning the package to the normal cooldown. click-extra
-# 8.9.0 is let through early: it ships the table-wrapping machinery the report
-# and hash tables depend on (detailed in the runtime dependency note above).
-exclude-newer-package = { click-extra = "2026-08-16T00:00:00Z" }
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
 
