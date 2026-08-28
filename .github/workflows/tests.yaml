@@ -70,6 +70,7 @@ jobs:
       && !startsWith(github.event.head_commit.message || '', '[changelog] Bump major version to ')
       && !startsWith(github.event.head_commit.message || '', '[changelog] Bump minor version to ')
     runs-on: ubuntu-26.04
+    timeout-minutes: 15
     outputs:
       metadata: ${{ steps.metadata.outputs.metadata }}
     steps:
@@ -106,6 +107,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     # We keep going when a job flagged as not stable fails.
     continue-on-error: ${{ matrix.state == 'unstable' }}
+    # Wider than the default: this job provisions a toolchain, so its runtime tracks how much it has to install.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -192,6 +195,8 @@ jobs:
     needs:
       - metadata
     runs-on: ubuntu-26.04
+    # Wider than the default: this job provisions a toolchain, so its runtime tracks how much it has to install.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -222,10 +227,21 @@ jobs:
       github.event_name != 'pull_request'
       && fromJSON(needs.metadata.outputs.metadata).cli_scripts
     runs-on: ubuntu-26.04
+    # Wider than the default: this job provisions a toolchain, so its runtime tracks how much it has to install.
+    timeout-minutes: 30
     env:
       CLI_SCRIPTS: ${{ fromJSON(needs.metadata.outputs.metadata).cli_scripts }}
       GIT_URL: git+https://github.com/${{ github.repository }}
       PACKAGE: ${{ fromJSON(needs.metadata.outputs.metadata).package_name }}
+      # The one job that opts out of the workflow-wide supply-chain cooldown, by
+      # setting a zero-length window. Its subject IS the freshly published
+      # artifact: it answers "does the release that shipped minutes ago install
+      # and run?", which a cooldown makes unanswerable, since neither the new
+      # release nor a dependency floor raised to a recent version can resolve
+      # until the window elapses. Scoped to this job and safe to scope here: it
+      # inherits `permissions: {}`, takes no secrets, and only runs `--version`
+      # on a throwaway runner. See claude.md § Cooldown on every install.
+      UV_EXCLUDE_NEWER: P0D
     steps:
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
