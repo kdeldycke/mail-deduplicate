@@ -538,6 +538,7 @@ $RECYCLE.BIN/
 # Claude Code local files.
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
+**/.claude/.cc-writes/
 
 # Sphinx linkcheck output.
 docs/_linkcheck/
