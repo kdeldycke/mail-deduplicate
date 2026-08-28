@@ -350,12 +350,13 @@ Several safeguards run before any mail is acted upon, each detailed in the [desi
 
 ## When nothing gets deduplicated
 
-A run ending with `Duplicates: 0` or `Deduplicated: 0` is the number one source of confusion, so map the statistics report to its cause:
+A run that changes nothing is the number one source of confusion, so map the statistics report to its cause:
 
+- `Copied`, `Moved` or `Deleted` at zero: the action found nothing to act on. That row is the symptom, so read the rows above it for the cause. With `--action delete-selected`, zero is also what a box holding no duplicate at all reports, as mails without a copy are never deleted.
 - `Duplicates: 0`: no two mails shared a hash. A single box that was never merged or re-synced typically holds no duplicates: `mdedup` shines on piles of overlapping boxes. If you are certain copies are in there, they may differ in the hashed headers: mails re-delivered or forwarded can get a new `Message-ID` for instance. Narrow the matching down with repeated `--hash-header` options, or inspect what each mail hashes to with `--hash-only`.
 - `Duplicates` above zero but `Skipped - Strategy` counting sets: either no `--strategy` was given, or the chosen criterion cannot split the copies apart (identical copies share the same date and size). Switch to `select-one` or a path-based strategy, or chain one as a fallback with a repeated `--strategy` option.
 - `Skipped - Timestamp` counting sets: a time-based strategy could not compare some mails because they lack a parseable `Date` header. Chain a fallback with a repeated `--strategy` option so another criterion takes over, or pick a strategy that does not depend on time, like `select-one`.
-- `Skipped - Size` or `Skipped - Content` counting sets, or `Set aside ... mails too dissimilar` warnings in the logs: mails grouped under the same hash differ more than the thresholds allow. Inspect with `--show-diff`, and raise `--size-threshold` or `--content-threshold` deliberately if the differences are legitimate.
+- `Skipped - Size` or `Skipped - Content` counting sets, or `Set aside ... mails too dissimilar` warnings in the logs: mails grouped under the same hash differ more than the thresholds allow. The usual cause is one mail archived twice in two shapes. A newsletter kept once as plain text and once with its base64 attachment or its HTML part puts thousands of bytes between two genuine copies. Inspect the difference with `--show-diff`. Then raise `--size-threshold` and `--content-threshold` deliberately, or set both to `-1` to drop the check. Dropping it leaves the hash as the only evidence that two mails are copies, so narrow `--hash-header` down at the same time.
 
 ## Going further
 

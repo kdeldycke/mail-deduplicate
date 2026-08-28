@@ -89,17 +89,25 @@ One copy could have been stored by the sender's MUA prior to sending, without an
 This threshold has to be large enough to allow for footers added by mailing list servers.
 ```
 
-The default size threshold is **512 bytes**, and can be changed via the `--size-threshold` option.
+The default size threshold is **512 bytes**, and can be changed via the `--size-threshold` option. Set it to `0` to demand copies of exactly the same size, or to `-1` to drop the check. Dropping it leaves the hash as the only evidence that two mails are copies.
 
 ### ❎ Safeguard: content threshold
 
 Similarly to the size threshold, we generate unified diffs of duplicates and ensure that the diff is not greater than a certain size to limit false-positives.
 
-The default content threshold is **768 bytes**, and can be changed via the `--content-threshold` option.
+The default content threshold is **768 bytes**, and can be changed via the `--content-threshold` option. Its `0` and `-1` values mean what they mean for the size threshold.
 
 ## Step 4: Performing actions
 
 Once duplicates have been selected, an action is performed on them.
+
+### Reading a strategy against an action
+
+A strategy names the half of each set it selects, and an action names the half it applies to. The two are chosen apart, so read them together before running anything destructive.
+
+`--strategy select-newest --action delete-discarded` keeps the newest copy of each set and removes the others. Swapping the action for `delete-selected` removes the newest copy and keeps the others. Both are valid requests, and only one of them is usually the intended one. The same holds for the `discard-*` strategies, which name the opposite half: `--strategy discard-newest --action delete-selected` also keeps the newest copy.
+
+`--dry-run` reports what either pairing would do without touching a mail, which settles the question in one run.
 
 ### Mails without duplicates
 

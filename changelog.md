@@ -17,6 +17,7 @@
 - Fix the `--input-format` help, which still said auto-detection only covered `maildir` and `mbox`: `eml` folders have been detected since `9.1.0`.
 - Surface the deferred work buried in comments and prose on the documentation's Todo-list page, which now lists eight items instead of four.
 - Fix the API documentation of `normalize_address_header`: a mismatched code span leaked backticks into the rendered text, and its issue references are now links.
+- Expand the troubleshooting docs: how to read a strategy against an action, what the `0` and `-1` thresholds do, and why genuine copies can be skipped for size.
 
 ## [`9.3.0` (2026-08-08)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.2.0...v9.3.0)
 
