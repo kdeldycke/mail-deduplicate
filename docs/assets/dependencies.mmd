@@ -3,8 +3,6 @@ flowchart LR
 
     subgraph primary-deps [Primary dependencies]
         click_extra{{"`click-extra`"}}
-        extra_platforms{{"`extra-platforms`"}}
-        boltons{{"`boltons`"}}
         backports_strenum{{"`backports-strenum`"}}
         platformdirs{{"`platformdirs`"}}
     end
@@ -22,6 +20,7 @@ flowchart LR
     typing_extensions(["`typing-extensions`"])
     accessible_pygments(["`accessible-pygments`"])
     exceptiongroup(["`exceptiongroup`"])
+    extra_platforms(["`extra-platforms`"])
     mdit_py_plugins(["`mdit-py-plugins`"])
     packaging(["`packaging`"])
     pluggy(["`pluggy`"])
@@ -34,6 +33,7 @@ flowchart LR
     wcwidth(["`wcwidth`"])
     alabaster(["`alabaster`"])
     babel(["`babel`"])
+    boltons(["`boltons`"])
     bracex(["`bracex`"])
     certifi(["`certifi`"])
     charset_normalizer(["`charset-normalizer`"])
@@ -83,8 +83,6 @@ flowchart LR
     end
 
     mail_deduplicate ==>|" >=8.9 "| click_extra
-    mail_deduplicate ==>|" >=2 "| extra_platforms
-    mail_deduplicate ==>|" >=25 "| boltons
     mail_deduplicate ==>|" >=1 "| backports_strenum
     mail_deduplicate ==>|" >=4.5 "| platformdirs
     sphinx --> pygments
@@ -110,12 +108,12 @@ flowchart LR
     click_extra --> click_0
     click_extra --> cloup
     click_extra --> docutils
-    click_extra --> extra_platforms
     click_extra --> tomli
-    click_extra --> boltons
+    click_extra --> extra_platforms
     click_extra --> tabulate
     click_extra --> wcmatch
     click_extra --> wcwidth
+    click_extra --> boltons
     click_extra --> deepmerge
     click_extra --> tomlkit
     pytest --> pygments
@@ -146,7 +144,6 @@ flowchart LR
     sphinxcontrib_mermaid --> jinja2
     sphinxcontrib_mermaid --> pyyaml
     coverage --> tomli
-    extra_platforms --> pytest
     whenever --> tzdata
     whenever --> tzlocal
     pytest_github_actions_annotate_failures --> pytest
@@ -168,6 +165,7 @@ flowchart LR
     markdown_it_py --> mdurl
     accessible_pygments --> pygments
     exceptiongroup --> typing_extensions
+    extra_platforms --> pytest
     mdit_py_plugins --> markdown_it_py
     sphinx_basic_ng --> sphinx
     tabulate --> wcwidth
@@ -249,10 +247,8 @@ flowchart LR
 
     style mail_deduplicate stroke-width:3px
     style backports_strenum stroke-width:3px
-    style boltons stroke-width:3px
     style click_extra stroke-width:3px
     style coverage stroke-width:3px
-    style extra_platforms stroke-width:3px
     style furo stroke-width:3px
     style myst_parser stroke-width:3px
     style platformdirs stroke-width:3px
