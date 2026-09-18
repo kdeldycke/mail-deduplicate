@@ -1,9 +1,6 @@
 # Changelog
 
-## [`9.3.2.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.1...main)
-
-> [!WARNING]
-> This version is **not released yet** and is under active development.
+## [`9.3.2` (2026-09-18)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.1...v9.3.2)
 
 - Require `click-extra` `9.0`, whose `--jobs auto` uses every logical CPU on hosts with fewer than three, as the corrected `--jobs` help now says.
 - Fix `-H`/`--hash-only`, which crashed with `RuntimeError: Option group not associated to a step number.` under `click-extra` `9.1.0` and later.
