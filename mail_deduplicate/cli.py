@@ -285,9 +285,10 @@ def ignored_step_options(ctx) -> list[str]:
     ignored: list[str] = []
     for group in ctx.command.option_groups:
         step_number = re.search(r"step #(\d+)", group.title)
-        if not step_number:
-            raise RuntimeError("Option group not associated to a step number.")
-        if int(step_number.group(1)) > 2:
+        # Click Extra files its own options (configuration, output, logging,
+        # introspection) under groups of their own: they belong to no step, and
+        # apply in every mode.
+        if step_number and int(step_number.group(1)) > 2:
             ignored.extend(
                 "/".join(opt.opts + opt.secondary_opts)
                 for opt in group.options
