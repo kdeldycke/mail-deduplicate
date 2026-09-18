@@ -67,11 +67,10 @@ classifiers = [
 dependencies = [
   # Provides enum.StrEnum for Python < 3.11; all versions expose the class.
   "backports-strenum>=1; python_version<'3.11'",
-  # 8.9.0 added the max_column_widths argument of render_table():
-  # deduplicate.py's report() sizes its Description column with it, instead of
-  # pre-wrapping text that would bake line breaks into the structured formats.
-  # The [toml] extra pulls tomlkit for --export-config toml.
-  "click-extra[toml]>=8.9",
+  # Below 9.0.0, --jobs auto keeps one CPU free on 2-CPU hosts too, so it runs a
+  # single job there. This contradicts the --jobs help in cli.py. The [toml] extra
+  # pulls tomlkit for --export-config toml.
+  "click-extra[toml]>=9",
   # Resolves the per-platform cache directory holding the hash cache database
   # (cache.py). 4.5.0 is the first release requiring Python 3.10, aligning its
   # minimal Python version to ours.
@@ -95,7 +94,7 @@ test = [
   # Test-only: conftest.py uses iterutils.same to check fixture homogeneity.
   "boltons>=25",
   # Aligned to the runtime click-extra floor.
-  "click-extra[pytest]>=8.9",
+  "click-extra[pytest]>=9",
   # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
   "coverage[toml]>=7.11",
   # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That
@@ -120,9 +119,8 @@ test = [
   "whenever>=0.10",
 ]
 docs = [
-  # 8.5.0 renamed --show-params to --params, which docs/configuration.md runs at
-  # build time via the click:run directive. Aligned to the runtime floor.
-  "click-extra[sphinx]>=8.9",
+  # Aligned to the runtime click-extra floor.
+  "click-extra[sphinx]>=9",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
