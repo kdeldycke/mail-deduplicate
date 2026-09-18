@@ -535,7 +535,7 @@
   longer displayed.
 - Test production of packages in Travis CI jobs.
 - Move development and packaging documentation to Sphinx. Closes [#22](https://github.com/kdeldycke/mail-deduplicate/issues/22).
-- Make wheels generated under Python 2 environnment available for Python
+- Make wheels generated under Python 2 environment available for Python
   3 too.
 - Let unittests generates their own fake and temporary maildirs.
 - Print CLI output in unittests.
