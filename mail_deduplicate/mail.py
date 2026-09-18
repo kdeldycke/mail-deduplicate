@@ -584,7 +584,7 @@ class DedupMailMixin(Message):
         return value
 
     def normalize_address_header(self, value: str) -> str:
-        """Normalize address headers by removing quotes and collapsing whitespace.
+        r"""Normalize address headers by removing quotes and collapsing whitespace.
 
         E.g., `"Bob" <bob@example.com>` becomes `Bob <bob@example.com>`.
 
@@ -593,7 +593,7 @@ class DedupMailMixin(Message):
 
         ```{danger}
         This may not be the cleanest way to normalize email addresses. E.g.
-        `"Robert \\"Bob\\""` becomes `Robert \\Bob\\`, but this shouldn't matter for
+        `"Robert \"Bob\""` becomes `Robert \Bob\`, but this shouldn't matter for
         hashing purposes as we're just trying to get a good heuristic. Refs:
         [#846](https://github.com/kdeldycke/mail-deduplicate/issues/846) and
         [#847](https://github.com/kdeldycke/mail-deduplicate/pull/847).

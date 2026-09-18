@@ -83,14 +83,14 @@ class CacheEntry(NamedTuple):
 
 
 def default_cache_dir() -> Path:
-    """Location of the cache database, following each platform's conventions.
+    r"""Location of the cache database, following each platform's conventions.
 
     `~/Library/Caches/mdedup` on macOS, `$XDG_CACHE_HOME/mdedup` on other POSIX
-    systems, and `%LOCALAPPDATA%\\mdedup\\Cache` on Windows.
+    systems, and `%LOCALAPPDATA%\mdedup\Cache` on Windows.
 
     `appauthor` is turned off because there is no vendor to namespace under: leaving
     it unset would have Windows fall back to the application name and nest the cache
-    one level deeper, under `mdedup\\mdedup\\Cache`.
+    one level deeper, under `mdedup\mdedup\Cache`.
     """
     return user_cache_path("mdedup", appauthor=False)
 

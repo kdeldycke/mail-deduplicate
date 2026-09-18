@@ -604,7 +604,7 @@ def mdedup(
     - Step #3: apply a selection strategy on each subset of duplicate mails.
     - Step #4: perform an action on all selected mails.
     - Step #5: report statistics.
-    """
+    """  # noqa: D301  Click reads the \b backspace as a no-rewrap marker.
     # Print help screen and exit if no mail source provided.
     if not mail_sources:
         # Same as Click Extra's HelpOption.print_help.
