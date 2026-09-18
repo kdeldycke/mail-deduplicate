@@ -160,6 +160,15 @@ dependency-groups.docs = { requires-python = ">= 3.14" }
 exclude-newer = "1 week"
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
+build-backend.source-exclude = [
+  "**/.DS_Store",
+  "**/__pycache__",
+]
+# Ship the test suite in the sdist, so distribution packagers can build and test
+# straight from the PyPI sdist instead of fetching a GitHub tag tarball. The tests
+# read no repository file besides pyproject.toml, which every sdist carries.
+# source-include feeds the sdist only: the wheel stays module-only.
+build-backend.source-include = [ "tests/**" ]
 
 [tool.nuitka]
 product-name = "Mail Deduplicate"

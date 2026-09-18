@@ -5,6 +5,8 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Ship the test suite in the PyPI sdist, so downstream packagers can build and test without a Git checkout.
+
 ## [`9.3.2` (2026-09-18)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.1...v9.3.2)
 
 - Require `click-extra` `9.0`, whose `--jobs auto` uses every logical CPU on hosts with fewer than three, as the corrected `--jobs` help now says.
