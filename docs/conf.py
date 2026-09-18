@@ -71,7 +71,7 @@ mermaid_d3_zoom = True
 
 # Emit a roff man page (man/mdedup.1, plus an .html sibling when mandoc or groff is
 # on PATH) into the HTML build via click-extra's generator, giving packagers a .1
-# artifact to install. Uses the same generator as the `mdedup --man` option.
+# artifact to install. Uses the same generator as `mdedup --help-format man`.
 click_extra_manpages = [
     {
         "script": "mail_deduplicate.cli:mdedup",
@@ -80,7 +80,7 @@ click_extra_manpages = [
 ]
 
 # The click:run directives (and their python: siblings) execute build-time Python,
-# so click-extra 8.x gates them behind this opt-in (default off). Pages under docs/
+# so click-extra gates them behind this opt-in (default off). Pages under docs/
 # use {click:run} to render live CLI output, so it must be turned on here.
 click_extra_enable_exec_directives = True
 

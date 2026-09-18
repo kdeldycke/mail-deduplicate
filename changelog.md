@@ -6,6 +6,7 @@
 > This version is **not released yet** and is under active development.
 
 - Fix `-H`/`--hash-only`, which crashed with `RuntimeError: Option group not associated to a step number.` under `click-extra` `9.1.0` and later.
+- Fix the `--jobs` help, which said `auto` always leaves one logical CPU free: hosts with fewer than three use all of them.
 
 ## [`9.3.1` (2026-08-28)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.0...v9.3.1)
 

@@ -564,10 +564,10 @@ def ignored_step_options(ctx) -> list[str]:
     default=1,
     help=(
         "Number of parallel jobs used to hash mails (step #2) and settle duplicate "
-        "sets (step #3). Accepts an integer, 'auto' (one fewer than the host's "
-        "logical CPUs) or 'max'. Defaults to 1 (sequential). Only folder-based "
-        "boxes fan out; higher values speed up --hash-body raw/normalized and "
-        "boxes holding many duplicate sets."
+        "sets (step #3). Accepts an integer, 'auto' (the host's logical CPUs, "
+        "minus one when there are three or more) or 'max'. Defaults to 1 "
+        "(sequential). Only folder-based boxes fan out; higher values speed up "
+        "--hash-body raw/normalized and boxes holding many duplicate sets."
     ),
 )
 @pass_context
