@@ -11,14 +11,14 @@ flowchart LR
     requests(["`requests`"])
     jinja2(["`jinja2`"])
     beautifulsoup4(["`beautifulsoup4`"])
-    click_0(["`click`"])
     cloup(["`cloup`"])
-    colorama(["`colorama`"])
     docutils(["`docutils`"])
     markdown_it_py(["`markdown-it-py`"])
     tomli(["`tomli`"])
     typing_extensions(["`typing-extensions`"])
     accessible_pygments(["`accessible-pygments`"])
+    click_0(["`click`"])
+    colorama(["`colorama`"])
     exceptiongroup(["`exceptiongroup`"])
     extra_platforms(["`extra-platforms`"])
     mdit_py_plugins(["`mdit-py-plugins`"])
@@ -82,14 +82,14 @@ flowchart LR
         types_boltons{{"`types-boltons >=25.0.0.20250822`"}}
     end
 
-    mail_deduplicate ==>|" >=8.9 "| click_extra
+    mail_deduplicate ==>|" >=9 "| click_extra
     mail_deduplicate ==>|" >=1 "| backports_strenum
     mail_deduplicate ==>|" >=4.5 "| platformdirs
     sphinx --> pygments
     sphinx --> requests
     sphinx --> jinja2
-    sphinx --> colorama
     sphinx --> docutils
+    sphinx --> colorama
     sphinx --> packaging
     sphinx --> alabaster
     sphinx --> babel
@@ -105,10 +105,10 @@ flowchart LR
     click_extra --> sphinx
     click_extra --> pytest
     click_extra --> pygments
-    click_extra --> click_0
     click_extra --> cloup
     click_extra --> docutils
     click_extra --> tomli
+    click_extra --> click_0
     click_extra --> extra_platforms
     click_extra --> tabulate
     click_extra --> wcmatch
@@ -117,8 +117,8 @@ flowchart LR
     click_extra --> deepmerge
     click_extra --> tomlkit
     pytest --> pygments
-    pytest --> colorama
     pytest --> tomli
+    pytest --> colorama
     pytest --> exceptiongroup
     pytest --> packaging
     pytest --> pluggy
@@ -159,9 +159,8 @@ flowchart LR
     jinja2 --> markupsafe
     beautifulsoup4 --> typing_extensions
     beautifulsoup4 --> soupsieve
-    click_0 --> colorama
-    cloup --> click_0
     cloup --> typing_extensions
+    cloup --> click_0
     markdown_it_py --> mdurl
     accessible_pygments --> pygments
     exceptiongroup --> typing_extensions
