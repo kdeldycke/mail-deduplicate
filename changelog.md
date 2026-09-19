@@ -1,5 +1,10 @@
 # Changelog
 
+## [`9.3.4.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.3...main)
+
+> [!WARNING]
+> This version is **not released yet** and is under active development.
+
 ## [`9.3.3` (2026-09-19)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.2...v9.3.3)
 
 - Ship the test suite in the PyPI sdist, so downstream packagers can build and test without a Git checkout.
