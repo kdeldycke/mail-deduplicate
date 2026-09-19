@@ -373,7 +373,8 @@ exclude = [
   "^https://www\\.npmjs\\.com/package/.*$",
   # star-history.com builds its chart and its anchor with JavaScript, so both
   # the link and its fragment are invisible to lychee. The `benchmark-update`
-  # skill writes one of these charts into every `docs/benchmark.md` it produces.
+  # skill now draws its chart locally, but a `docs/benchmark.md` it wrote
+  # earlier may still embed one of these.
   "^https://star-history\\.com/.*$",
   # githubstatus.com returns 405 to HEAD requests from bots.
   "githubstatus\\.com",
