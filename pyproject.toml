@@ -134,6 +134,9 @@ docs = [
   "sphinx-copybutton>=0.5.2",
   # sphinx-design 0.6 introduced the current directive syntax for cards, grids, and tabs.
   "sphinx-design>=0.6",
+  # sphinx-sitemap 2.7.0 and 2.7.1 turn sitemap_show_lastmod on by default, which
+  # dates every page from its git history. 2.7.2 turns it back off.
+  "sphinx-sitemap>=2.7.2",
   # sphinxcontrib-mermaid 1.2.3 fixed mermaid_d3_zoom configuration support.
   "sphinxcontrib-mermaid>=1.2.3",
   # sphinxext-opengraph 0.13 stabilized OpenGraph metadata generation for Sphinx 8+.

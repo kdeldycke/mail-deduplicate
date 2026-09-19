@@ -6,6 +6,7 @@
 > This version is **not released yet** and is under active development.
 
 - Ship the test suite in the PyPI sdist, so downstream packagers can build and test without a Git checkout.
+- Publish a sitemap and a custom 404 page with the documentation, and stop publishing a copy of every documentation source under `_sources/`.
 
 ## [`9.3.2` (2026-09-18)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.1...v9.3.2)
 

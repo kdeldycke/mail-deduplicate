@@ -6,6 +6,10 @@ from pathlib import Path
 # tomllib is stdlib; mypy analyzes at the 3.10 project floor, where it is absent.
 import tomllib  # type: ignore[import-not-found]
 
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from sphinx.application import Sphinx
+
 project_path = Path(__file__).parent.parent.resolve()
 
 # Fetch general information about the project from pyproject.toml.
@@ -17,6 +21,12 @@ project_id = toml_config["project"]["name"]
 version = release = toml_config["project"]["version"]
 url = toml_config["project"]["urls"]["Homepage"]
 author = ", ".join(author["name"] for author in toml_config["project"]["authors"])
+
+# Canonical origin of the published site. The trailing slash is mandatory:
+# sphinx-sitemap concatenates it with each page link, and sphinxext-opengraph
+# resolves each page with `urljoin`, which drops a last path segment that has no
+# trailing slash.
+docs_site_url = toml_config["project"]["urls"]["Documentation"].rstrip("/") + "/"
 
 # Title-case each word of the project ID.
 project = " ".join(word.title() for word in project_id.split("-"))
@@ -31,6 +41,9 @@ extensions = [
     # Adds a copy button to code blocks.
     "sphinx_copybutton",
     "sphinx_design",
+    # Emits sitemap.xml from html_baseurl, so crawlers get every page as a list
+    # instead of having to discover it by following links.
+    "sphinx_sitemap",
     "sphinxext.opengraph",
     "myst_parser",
     "sphinx.ext.autosectionlabel",
@@ -146,6 +159,18 @@ linkcheck_ignore = [
     r"https://isync\.sourceforge\.io",
 ]
 
+# Sphinx emits a `<link rel="canonical">` on every page from this base, and
+# sphinx-sitemap builds sitemap.xml from it.
+html_baseurl = docs_site_url
+# sphinx-sitemap defaults to a `{lang}{version}{link}` layout, for sites that publish
+# translations or versions side by side. This site publishes one tree, so anything
+# but the bare link yields sitemap entries that 404.
+sitemap_url_scheme = "{link}"
+
+# Absolute base of the OpenGraph tags. It reads the same constant as html_baseurl,
+# so og:url and the canonical link always name the same page.
+ogp_site_url = docs_site_url
+
 # Theme config.
 html_theme = "furo"
 html_title = project
@@ -172,3 +197,41 @@ html_theme_options = {
 html_last_updated_fmt = "%Y-%m-%d"
 copyright = f"{author} and contributors"
 html_show_sphinx = False
+
+# Do not publish a copy of every source document under `_sources/`: no page links
+# to it, and the sources are in the repository. `html_copy_source` gates the files
+# and `html_show_sourcelink` the link, so a theme that reads only the second does
+# not offer a link to files that are no longer there.
+html_copy_source = False
+html_show_sourcelink = False
+
+# Copied verbatim to the root of the build, where GitHub Pages looks for a custom
+# `404.html`. html_static_path would put it under `_static/` instead.
+html_extra_path = ["404.html"]
+
+
+def prune_build_artifacts(app: Sphinx, exception: Exception | None) -> None:
+    """Delete the files Sphinx leaves in the output tree that are not content.
+
+    `.buildinfo` records the configuration hash that an incremental build compares
+    against, and `.buildinfo.bak` is the copy Sphinx keeps when that comparison
+    fails. No setting suppresses them: the HTML builder always writes `.buildinfo`
+    when the build finishes.
+
+    Sphinx also creates `_sources/` whatever `html_copy_source` says, so switching
+    that setting off leaves an empty directory. This hook deletes the directory
+    only while it is empty.
+    """
+    if exception:
+        return
+    outdir = Path(app.outdir)
+    for marker in (".buildinfo", ".buildinfo.bak"):
+        (outdir / marker).unlink(missing_ok=True)
+    sources = outdir / "_sources"
+    if sources.is_dir() and not any(sources.iterdir()):
+        sources.rmdir()
+
+
+def setup(app: Sphinx) -> None:
+    """Prune the non-content files once the build finishes."""
+    app.connect("build-finished", prune_build_artifacts)
