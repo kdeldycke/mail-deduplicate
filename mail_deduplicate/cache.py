@@ -410,7 +410,7 @@ class HashCache:
             self.connection.commit()
         except sqlite3.Error as expt:
             logging.warning(f"Cannot write the hash cache at {self.path}: {expt}")
-            logging.warning("This run is unaffected, the next one starts cold.")
+            logging.warning("The next run starts cold.")
             self.connection.rollback()
             return False
         return True
