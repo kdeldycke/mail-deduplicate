@@ -350,10 +350,9 @@ class Action(StrEnum):
             )
 
         if dedup.conf["dry_run"]:
-            # Said once, and loudly. The statistics below count what the action
-            # would have touched, so without this line a dry run reads exactly like
-            # a real one. The trail's own summary cannot carry the warning alone:
-            # it only shows on an interactive terminal.
+            # Said once, and loudly. The trail's lines and the statistics below
+            # report what the action would have touched, so without this line a dry
+            # run reads exactly like a real one until the trail's closing summary.
             logging.warning(
                 f"DRY RUN: {len(targets)} mails would be acted upon, "
                 "but none will be altered.",

@@ -5,6 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Require `click-extra` `9.3`, which prints the per-mail `✓` lines and closing count of an action on piped runs too, as on a terminal.
 - Ship the test suite in the PyPI sdist, so downstream packagers can build and test without a Git checkout.
 - Publish a sitemap and a custom 404 page with the documentation, and stop publishing a copy of every documentation source under `_sources/`.
 
