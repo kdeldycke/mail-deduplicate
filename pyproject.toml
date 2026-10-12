@@ -244,6 +244,13 @@ warn_return_any = true
 warn_unreachable = true
 pretty = true
 warn_unused_configs = true
+overrides = [
+  # mypy checks at the Python 3.10 floor, and docs/conf.py imports Sphinx for
+  # its type hints. Sphinx 9.1 uses the `type` statement of Python 3.12, which
+  # stops the whole run on a syntax error. Skipping the import types every
+  # Sphinx name as `Any`.
+  { module = [ "sphinx.*" ], ignore_missing_imports = true, follow_imports = "skip" },
+]
 
 [tool.pytest]
 # https://docs.pytest.org/en/latest/customize.html#pyproject-toml
