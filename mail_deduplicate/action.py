@@ -66,10 +66,19 @@ def export_box(dedup: Deduplicate) -> Iterator[Mailbox | None]:
 def dry_run_prefix(dedup: Deduplicate) -> str:
     """Marks a summary as describing what a run would have done.
 
-    A dry run reports through the same trail as a real one, so what it did not do is
-    said once at the end rather than warned about for every single mail.
+    A dry run reports through the same trail as a real one, and this prefix does for
+    the trail's closing summary what `outcome()` does for each of its lines.
     """
     return "DRY RUN: would have " if dedup.conf["dry_run"] else ""
+
+
+def outcome(dedup: Deduplicate, done: str) -> str:
+    """Words what happened to a mail, for its line of the trail.
+
+    A dry run touches no mail, so it says what the action would have done to each of
+    them, where a real run reports it as done.
+    """
+    return f"would be {done}" if dedup.conf["dry_run"] else done
 
 
 def copy_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
@@ -84,7 +93,7 @@ def copy_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
                 assert box is not None
                 with mail.hydrated():
                     box.add(mail)
-            trail.mark(True, f"{mail!r} copied")
+            trail.mark(True, f"{mail!r} {outcome(dedup, 'copied')}")
     trail.finish(
         trail.ok_count == len(mails),
         f"{dry_run_prefix(dedup)}Copied {trail.ok_count}/{len(mails)} mails",
@@ -110,7 +119,7 @@ def move_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
                 dedup.sources[cast("str", mail.source_path)].remove(
                     cast("str", mail.mail_id)
                 )
-            trail.mark(True, f"{mail!r} moved")
+            trail.mark(True, f"{mail!r} {outcome(dedup, 'moved')}")
     trail.finish(
         trail.ok_count == len(mails),
         f"{dry_run_prefix(dedup)}Moved {trail.ok_count}/{len(mails)} mails",
@@ -129,7 +138,7 @@ def delete_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
             dedup.sources[cast("str", mail.source_path)].remove(
                 cast("str", mail.mail_id)
             )
-        trail.mark(True, f"{mail!r} deleted")
+        trail.mark(True, f"{mail!r} {outcome(dedup, 'deleted')}")
     trail.finish(
         trail.ok_count == len(mails),
         f"{dry_run_prefix(dedup)}Deleted {trail.ok_count}/{len(mails)} mails",
@@ -247,13 +256,13 @@ def hardlink_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> Non
             logging.debug(f"Skip {mail!r}: {blocker}.")
             skipped[blocker] += 1
             dedup.stats[Stat.MAIL_HARDLINK_SKIPPED] += 1
-            trail.mark(False, f"{mail!r} skipped")
+            trail.mark(False, f"{mail!r} {outcome(dedup, 'skipped')}")
             continue
 
         logging.debug(f"Hardlinked {mail!r} to {target!r}.")
         reclaimed += freed
         dedup.stats[Stat.MAIL_HARDLINKED] += 1
-        trail.mark(True, f"{mail!r} hardlinked")
+        trail.mark(True, f"{mail!r} {outcome(dedup, 'hardlinked')}")
 
     trail.finish(
         trail.ok_count == len(mails),
@@ -350,9 +359,9 @@ class Action(StrEnum):
             )
 
         if dedup.conf["dry_run"]:
-            # Said once, and loudly. The trail's lines and the statistics below
-            # report what the action would have touched, so without this line a dry
-            # run reads exactly like a real one until the trail's closing summary.
+            # Said once, and loudly, before the first mail. The trail words its lines
+            # and its summary as what would have happened, but the statistics below
+            # count those mails exactly as a real run does.
             logging.warning(
                 f"DRY RUN: {len(targets)} mails would be acted upon, "
                 "but none will be altered.",

@@ -131,6 +131,43 @@ def test_action_matrix(
             check_box(export_path, mbox, content=export_after)
 
 
+@pytest.mark.parametrize("dry_run", [False, True], ids=["real", "dry_run"])
+@pytest.mark.parametrize(
+    ("action", "needs_export", "box_type", "outcome"),
+    (
+        pytest.param("copy-discarded", True, Maildir, "copied", id="copy"),
+        pytest.param("move-discarded", True, Maildir, "moved", id="move"),
+        pytest.param("delete-discarded", False, Maildir, "deleted", id="delete"),
+        pytest.param("hardlink-discarded", False, Maildir, "hardlinked", id="hardlink"),
+        # Mails of a file-based box have no file of their own to link.
+        pytest.param("hardlink-discarded", False, mbox, "skipped", id="hardlink-skip"),
+    ),
+)
+def test_trail_lines_tell_a_dry_run_apart(
+    invoke, make_box, action, needs_export, box_type, outcome, dry_run
+):
+    """Each mail's line reports what happened to it in a real run only.
+
+    A dry run touches no mail, so its lines say what would have happened instead of
+    reading like the record of a run that went through.
+    """
+    box_path, _, export_path = make_box(box_type, FULL_BOX)
+
+    args = ["--strategy=select-one", f"--action={action}", box_path]
+    if needs_export:
+        args.append(f"--export={export_path}")
+    if dry_run:
+        args.insert(0, "--dry-run")
+    result = invoke(*args)
+
+    assert result.exit_code == 0
+    # A mail's repr closes on `>`, which anchors the wording that follows it.
+    lines = [line for line in result.stderr.splitlines() if line[:3] in ("✓ <", "✘ <")]
+    assert len(lines) == len(DISCARD)
+    expected = f"> would be {outcome}" if dry_run else f"> {outcome}"
+    assert all(line.endswith(expected) for line in lines), lines
+
+
 @pytest.mark.parametrize("jobs", [1, 2], ids=["sequential", "parallel"])
 def test_delete_selected_spares_mails_without_duplicates(invoke, make_box, jobs):
     """A mail that has no duplicate survives a `delete-selected` run that has nothing

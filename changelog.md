@@ -7,6 +7,7 @@
 
 - Require `click-extra` `9.3`, which prints the per-mail `✓` lines and closing count of an action on piped runs too, as on a terminal.
 - Ship the test suite in the PyPI sdist, so downstream packagers can build and test without a Git checkout.
+- Fix the per-mail lines of a dry run, which reported each mail as `deleted`, `copied`, `moved` or `hardlinked`: they now read `would be deleted`.
 - Publish a sitemap and a custom 404 page with the documentation, and stop publishing a copy of every documentation source under `_sources/`.
 
 ## [`9.3.2` (2026-09-18)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.1...v9.3.2)
