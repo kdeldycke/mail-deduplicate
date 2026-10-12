@@ -171,18 +171,22 @@ jobs:
         # check different things, and letting a unit-test failure skip the
         # self-test hides CLI drift until the next green run. Wrapped in
         # `${{ }}` because a bare leading `!` is a YAML tag.
-        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).cli_scripts[0] }}
+        # `cli_scripts` reaches this job as one space-separated string, which an
+        # expression cannot index: the `if:` reads it whole, and the shell takes
+        # its first word.
+        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).cli_scripts }}
         env:
-          CLI_SCRIPT: ${{ fromJSON(needs.metadata.outputs.metadata).cli_scripts[0] }}
-        run: >
-          uv run --frozen --no-progress --
-          click-extra test-suite --command "${CLI_SCRIPT}" --jobs max
+          CLI_SCRIPTS: ${{ fromJSON(needs.metadata.outputs.metadata).cli_scripts }}
+        shell: bash
+        run: |
+          read -r script _ <<< "${CLI_SCRIPTS}"
+          uv run --frozen --no-progress -- click-extra test-suite --command "${script}" --jobs max
       - name: Self-tests against test suite via python -m
         # Same suite as above, driven through the interpreter's `-m` entry
         # point so `__main__` stays exercised against the checkout on every
         # cell (the package-install job only covers it for released builds).
         # `!cancelled()` for the same reason as the step above.
-        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).cli_scripts[0] }}
+        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).cli_scripts }}
         env:
           PACKAGE: ${{ fromJSON(needs.metadata.outputs.metadata).package_name }}
         shell: bash
