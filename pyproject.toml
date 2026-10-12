@@ -28,6 +28,7 @@ keywords = [
   "mbox",
   "MH",
   "MMDF",
+  "python",
 ]
 license = "GPL-2.0-or-later"
 license-files = [ "license" ]
@@ -154,8 +155,8 @@ typing = [
 ]
 
 [tool.uv]
-# Pin uv to a narrow range so every contributor and CI runner resolves uv.lock
-# with the same resolver (astral-sh/setup-uv reads this automatically).
+# Floor uv at the minimum resolver relied on, with no upper bound. CI installs
+# the exact uv each astral-sh/setup-uv step pins, which must satisfy this floor.
 required-version = ">=0.11.15"
 # The docs are only built on modern Python, letting the docs group adopt
 # packages (like myst-parser 5.1) that dropped support for our older floors.
@@ -207,17 +208,6 @@ default.extend-ignore-identifiers-re = [
   # "certifi" is the certificate-bundle package name, surfaced in the Mermaid
   # dependency graph at docs/assets/dependencies.mmd.
   "certifi",
-  # error: `ist` should be `is`, `it`, `its`, `sit`, `list`
-  #     ╭▸ ./docs/development.md:107:10
-  #     │
-  # 107 │ - [chalk.ist](https://chalk.ist)
-  #     ╰╴         ━━━
-  # error: `ist` should be `is`, `it`, `its`, `sit`, `list`
-  #     ╭▸ ./docs/development.md:107:29
-  #     │
-  # 107 │ - [chalk.ist](https://chalk.ist)
-  #     ╰╴                            ━━━
-  "ist",
 ]
 # Check hidden files and directories too, which typos skips by default: the
 # `.github/` workflows and the `.claude/` agents and skills live there.
@@ -421,11 +411,6 @@ validate = false
 # 7.2.1 and 7.2.2 were tagged and released on GitHub, but never uploaded to
 # PyPI. Declaring them here stops lint-changelog reporting the gap on every run.
 abandoned-versions = [ "7.2.1", "7.2.2" ]
-# Skills are excluded here; init also reports labels, plugin and subagents as
-# excluded on its own. The label config is materialised at runtime by its own
-# workflow, so it is not committed here, matching the other downstream
-# repositories.
-exclude = [ "skills" ]
 # The `lychee` component only syncs to awesome-* repositories by default.
 # Opting in keeps `[tool.lychee]` in step with the bundled template. The sync
 # keeps the local entries and their comments, placed after the template's.
