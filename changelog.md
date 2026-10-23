@@ -1,5 +1,10 @@
 # Changelog
 
+## [`9.4.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.4.0...main)
+
+> [!WARNING]
+> This version is **not released yet** and is under active development.
+
 ## [`9.4.0` (2026-10-23)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.2...v9.4.0)
 
 - Require `click-extra` `9.3`, which prints the per-mail `✓` lines and closing count of an action on piped runs too, as on a terminal.
