@@ -52,6 +52,10 @@ invoke(mdedup, args=["--export-config", "toml"])
 
 Options without a value are commented out in the TOML export, as TOML has no null type. Combine the flag with other options or environment variables to capture them in the generated file: `mdedup --strategy discard-older --export-config toml` emits a configuration whose `strategies` chain is already filled in.
 
+```{todo}
+Switch the TOML export from `tomlkit` to [`tomlrt`](https://dimbleby.github.io/tomlrt/) once this project requires Python 3.11, the oldest Python `tomlrt` supports. Raise the `click-extra[toml]` floor to the first release whose `[toml]` extra installs `tomlrt`, then update the comment above it in `pyproject.toml`.
+```
+
 ## Validate a file
 
 The `--validate-config` option checks a configuration file against the CLI's parameters and exits, reporting every unrecognized key at once:
