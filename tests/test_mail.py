@@ -119,6 +119,67 @@ def test_body_lines_gathers_multipart_preamble_and_epilogue():
     assert "This is the epilogue." in lines
 
 
+def multipart_mail(
+    preamble: bytes = b"Forecast.",
+    part: bytes = b"Sunny.",
+    epilogue: bytes = b"End of forecast.",
+) -> bytes:
+    """Wrap one 8-bit `text/plain` part in a `multipart/mixed` mail."""
+    return (
+        b"Subject: multi\n"
+        b'Content-Type: multipart/mixed; boundary="BOUND"\n'
+        b"\n" + preamble + b"\n"
+        b"--BOUND\n"
+        b"Content-Type: text/plain; charset=utf-8\n"
+        b"Content-Transfer-Encoding: 8bit\n"
+        b"\n" + part + b"\n"
+        b"--BOUND--\n" + epilogue + b"\n"
+    )
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        pytest.param(
+            multipart_mail(preamble="台北天氣預報".encode()),
+            "台北天氣預報",
+            id="utf8-preamble",
+        ),
+        pytest.param(
+            multipart_mail(epilogue="台北天氣預報".encode()),
+            "台北天氣預報",
+            id="utf8-epilogue",
+        ),
+        pytest.param(multipart_mail(part="晴天".encode()), "晴天", id="utf8-part"),
+        pytest.param(
+            multipart_mail(preamble=b"Forecast: 25\xb0C"),
+            "Forecast: 25\N{REPLACEMENT CHARACTER}C",
+            id="latin1-preamble",
+        ),
+        pytest.param(
+            multipart_mail(epilogue=b"Forecast: 25\xb0C"),
+            "Forecast: 25\N{REPLACEMENT CHARACTER}C",
+            id="latin1-epilogue",
+        ),
+    ],
+)
+def test_body_lines_decodes_8bit_bytes(raw, expected):
+    """Non-ASCII bytes are decoded wherever they sit in a multipart mail.
+
+    The parser keeps each non-ASCII byte as a lone surrogate. `get_payload()` decodes
+    the parts, and `body_lines` decodes the preamble and epilogue as UTF-8, instead of
+    leaving surrogates that crash both body hashes with a `UnicodeEncodeError`. A byte
+    that is not valid UTF-8 becomes `U+FFFD`.
+
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/1085
+    """
+    mail = create_mail_from_bytes(raw)
+
+    assert expected in mail.body_lines
+    assert mail.hash_raw_body
+    assert mail.hash_normalized_body
+
+
 def test_decode_part_returns_non_text_payload_as_is():
     """A non-text part is passed through undecoded."""
     raw = b"Subject: s\nContent-Type: application/octet-stream\n\nraw-binary-payload\n"

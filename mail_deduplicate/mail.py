@@ -370,7 +370,7 @@ class DedupMailMixin(Message):
         self.hydrate()
         body: list[str] = []
         if self.preamble is not None:
-            body.extend(self.preamble.splitlines())
+            body.extend(self.undo_surrogateescape(self.preamble).splitlines())
 
         for part in self.walk():
             if part.is_multipart():
@@ -378,7 +378,7 @@ class DedupMailMixin(Message):
             body.extend(self.decode_part(part).splitlines())
 
         if self.epilogue is not None:
-            body.extend(self.epilogue.splitlines())
+            body.extend(self.undo_surrogateescape(self.epilogue).splitlines())
         return body
 
     def decode_part(self, part: Message) -> str:
@@ -405,6 +405,20 @@ class DedupMailMixin(Message):
                     continue
 
         return cast(str, part.get_payload(decode=False))
+
+    def undo_surrogateescape(self, text: str) -> str:
+        """Decode as UTF-8 the non-ASCII bytes that parsing left as lone surrogates.
+
+        A mail parsed from bytes keeps each non-ASCII byte as a lone surrogate, and
+        encoding such a string to UTF-8 raises `UnicodeEncodeError`. `get_payload()`
+        undoes this for each part, with the charset of the part. The preamble and the
+        epilogue have no charset, so they go through here instead. Bytes that are not
+        valid UTF-8 become `U+FFFD`, as `get_payload()` does with its charset.
+
+        Encoding with `utf-8` instead of `ascii` keeps the non-ASCII characters of a
+        mail parsed from a string, which `ascii` rejects.
+        """
+        return text.encode("utf-8", "surrogateescape").decode("utf-8", "replace")
 
     def hash_key(self) -> str:
         """Returns the canonical hash of a mail.
