@@ -38,7 +38,7 @@ from . import StrEnum
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
+    from collections.abc import Callable, Generator, Iterator
     from mailbox import Mailbox, _ProxyFile
 
     from .cli import Config
@@ -280,7 +280,7 @@ class DedupMailMixin(Message):
             setattr(self, name, getattr(fresh, name))
 
     @contextmanager
-    def hydrated(self) -> Iterator[DedupMailMixin]:
+    def hydrated(self) -> Generator[DedupMailMixin, None, None]:
         """Borrow the full parsed message for the duration of the block.
 
         Restores the message on the way in and releases it on the way out, so a step

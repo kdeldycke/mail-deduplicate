@@ -37,7 +37,7 @@ from .mail_box import FOLDER_FORMAT_CLASSES, create_box
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from collections.abc import Callable, Collection, Iterator
+    from collections.abc import Callable, Collection, Generator
     from mailbox import Mailbox
 
     from .deduplicate import Deduplicate
@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 
 @contextmanager
-def export_box(dedup: Deduplicate) -> Iterator[Mailbox | None]:
+def export_box(dedup: Deduplicate) -> Generator[Mailbox | None, None, None]:
     """Context manager for export box operations."""
     if dedup.conf["dry_run"]:
         yield None

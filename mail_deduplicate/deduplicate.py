@@ -55,7 +55,7 @@ from .mail_box import (
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Iterator
+    from collections.abc import Callable, Generator, Iterable, Iterator
     from mailbox import Mailbox
 
     from .cli import Config
@@ -826,7 +826,7 @@ class Deduplicate:
         initargs: tuple,
         verb: str,
         doing: str,
-    ) -> Iterator[ProcessPoolExecutor | None]:
+    ) -> Generator[ProcessPoolExecutor | None, None, None]:
         """Hand out a pool of worker processes prepared by the initializer, and shut
         it down however the block it wraps ends.
 
