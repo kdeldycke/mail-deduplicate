@@ -26,6 +26,7 @@ flowchart LR
     pluggy(["`pluggy`"])
     pyyaml(["`pyyaml`"])
     sphinx_basic_ng(["`sphinx-basic-ng`"])
+    sphinx_last_updated_by_git(["`sphinx-last-updated-by-git`"])
     tabulate(["`tabulate`"])
     tzdata(["`tzdata`"])
     tzlocal(["`tzlocal`"])
@@ -59,30 +60,38 @@ flowchart LR
 
     subgraph grp_docs [--group docs]
         sphinx{{"`sphinx >=8`"}}
+        pytest{{"`pytest >=9`"}}
         myst_parser{{"`myst-parser >=5.1`"}}
         furo{{"`furo >=2025.9.25`"}}
+        pytest_cov{{"`pytest-cov >=7`"}}
+        pytest_xdist{{"`pytest-xdist >=3.7`"}}
         sphinxcontrib_mermaid{{"`sphinxcontrib-mermaid >=1.2.3`"}}
+        coverage{{"`coverage >=7.11`"}}
+        whenever{{"`whenever >=0.10`"}}
+        pytest_github_actions_annotate_failures{{"`pytest-github-actions-annotate-failures >=0.2`"}}
+        pytest_randomly{{"`pytest-randomly >=3.3.1`"}}
         sphinx_autodoc_typehints{{"`sphinx-autodoc-typehints >=2.4`"}}
         sphinx_copybutton{{"`sphinx-copybutton >=0.5.2`"}}
         sphinx_design{{"`sphinx-design >=0.6`"}}
+        sphinx_sitemap{{"`sphinx-sitemap >=2.7.2`"}}
         sphinxext_opengraph{{"`sphinxext-opengraph >=0.13`"}}
     end
 
     subgraph grp_test [--group test]
-        pytest{{"`pytest >=9`"}}
-        pytest_cov{{"`pytest-cov >=4`"}}
-        pytest_xdist{{"`pytest-xdist >=3.7`"}}
-        coverage{{"`coverage >=7.11`"}}
-        whenever{{"`whenever >=0.10`"}}
-        pytest_github_actions_annotate_failures{{"`pytest-github-actions-annotate-failures >=0.2`"}}
-        pytest_randomly{{"`pytest-randomly >=3`"}}
+        grp_test_pytest{{"`pytest >=9`"}}
+        grp_test_pytest_cov{{"`pytest-cov >=7`"}}
+        grp_test_pytest_xdist{{"`pytest-xdist >=3.7`"}}
+        grp_test_coverage{{"`coverage >=7.11`"}}
+        grp_test_whenever{{"`whenever >=0.10`"}}
+        grp_test_pytest_github_actions_annotate_failures{{"`pytest-github-actions-annotate-failures >=0.2`"}}
+        grp_test_pytest_randomly{{"`pytest-randomly >=3.3.1`"}}
     end
 
     subgraph grp_typing [--group typing]
         types_boltons{{"`types-boltons >=25.0.0.20250822`"}}
     end
 
-    mail_deduplicate ==>|" >=9 "| click_extra
+    mail_deduplicate ==>|" >=9.4.1 "| click_extra
     mail_deduplicate ==>|" >=1 "| backports_strenum
     mail_deduplicate ==>|" >=4.5 "| platformdirs
     sphinx --> pygments
@@ -151,6 +160,7 @@ flowchart LR
     sphinx_autodoc_typehints --> sphinx
     sphinx_copybutton --> sphinx
     sphinx_design --> sphinx
+    sphinx_sitemap --> sphinx_last_updated_by_git
     sphinxext_opengraph --> sphinx
     requests --> certifi
     requests --> charset_normalizer
@@ -167,12 +177,20 @@ flowchart LR
     extra_platforms --> pytest
     mdit_py_plugins --> markdown_it_py
     sphinx_basic_ng --> sphinx
+    sphinx_last_updated_by_git --> sphinx
     tabulate --> wcwidth
     tzlocal --> tzdata
     wcmatch --> bracex
     mail_deduplicate -.-> grp_docs
     mail_deduplicate -.-> grp_test
     mail_deduplicate -.-> grp_typing
+    grp_test_pytest -.- pytest
+    grp_test_pytest_cov -.- pytest_cov
+    grp_test_pytest_xdist -.- pytest_xdist
+    grp_test_coverage -.- coverage
+    grp_test_whenever -.- whenever
+    grp_test_pytest_github_actions_annotate_failures -.- pytest_github_actions_annotate_failures
+    grp_test_pytest_randomly -.- pytest_randomly
 
     click accessible_pygments "https://pypi.org/project/accessible-pygments/" _blank
     click alabaster "https://pypi.org/project/alabaster/" _blank
@@ -224,6 +242,8 @@ flowchart LR
     click sphinx_basic_ng "https://pypi.org/project/sphinx-basic-ng/" _blank
     click sphinx_copybutton "https://pypi.org/project/sphinx-copybutton/" _blank
     click sphinx_design "https://pypi.org/project/sphinx-design/" _blank
+    click sphinx_last_updated_by_git "https://pypi.org/project/sphinx-last-updated-by-git/" _blank
+    click sphinx_sitemap "https://pypi.org/project/sphinx-sitemap/" _blank
     click sphinxcontrib_applehelp "https://pypi.org/project/sphinxcontrib-applehelp/" _blank
     click sphinxcontrib_devhelp "https://pypi.org/project/sphinxcontrib-devhelp/" _blank
     click sphinxcontrib_htmlhelp "https://pypi.org/project/sphinxcontrib-htmlhelp/" _blank
@@ -243,6 +263,13 @@ flowchart LR
     click wcmatch "https://pypi.org/project/wcmatch/" _blank
     click wcwidth "https://pypi.org/project/wcwidth/" _blank
     click whenever "https://pypi.org/project/whenever/" _blank
+    click grp_test_pytest "https://pypi.org/project/pytest/" _blank
+    click grp_test_pytest_cov "https://pypi.org/project/pytest-cov/" _blank
+    click grp_test_pytest_xdist "https://pypi.org/project/pytest-xdist/" _blank
+    click grp_test_coverage "https://pypi.org/project/coverage/" _blank
+    click grp_test_whenever "https://pypi.org/project/whenever/" _blank
+    click grp_test_pytest_github_actions_annotate_failures "https://pypi.org/project/pytest-github-actions-annotate-failures/" _blank
+    click grp_test_pytest_randomly "https://pypi.org/project/pytest-randomly/" _blank
 
     style mail_deduplicate stroke-width:3px
     style backports_strenum stroke-width:3px
@@ -260,10 +287,18 @@ flowchart LR
     style sphinx_autodoc_typehints stroke-width:3px
     style sphinx_copybutton stroke-width:3px
     style sphinx_design stroke-width:3px
+    style sphinx_sitemap stroke-width:3px
     style sphinxcontrib_mermaid stroke-width:3px
     style sphinxext_opengraph stroke-width:3px
     style types_boltons stroke-width:3px
     style whenever stroke-width:3px
+    style grp_test_pytest stroke-width:3px,stroke-dasharray:5 5
+    style grp_test_pytest_cov stroke-width:3px,stroke-dasharray:5 5
+    style grp_test_pytest_xdist stroke-width:3px,stroke-dasharray:5 5
+    style grp_test_coverage stroke-width:3px,stroke-dasharray:5 5
+    style grp_test_whenever stroke-width:3px,stroke-dasharray:5 5
+    style grp_test_pytest_github_actions_annotate_failures stroke-width:3px,stroke-dasharray:5 5
+    style grp_test_pytest_randomly stroke-width:3px,stroke-dasharray:5 5
 
     style primary-deps fill:#1565C020,stroke:#42A5F5
     style grp_docs fill:#546E7A20,stroke:#90A4AE
