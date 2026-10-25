@@ -18,6 +18,9 @@ from __future__ import annotations
 
 import inspect
 import mailbox
+import os
+import subprocess
+import sys
 from functools import cache
 from mailbox import Mailbox, Message, NoSuchMailboxError, mbox
 from pathlib import Path
@@ -224,6 +227,100 @@ def test_run_cut_short_unlocks_boxes(invoke, make_box, monkeypatch, box_format, 
     monkeypatch.undo()
     result = invoke(*args)
     assert result.exit_code == 0
+    check_box(box_path, box_type, content=[dup])
+
+
+STOP_POINT = "Removals queued, waiting to be stopped."
+"""Line printed by `STOPPABLE_RUN` once its action has queued its removals."""
+
+
+STOPPABLE_RUN = f"""
+import sys
+import time
+
+from mail_deduplicate.action import Action
+from mail_deduplicate.cli import mdedup
+
+perform = Action.perform
+
+
+def perform_then_wait(self, dedup):
+    perform(self, dedup)
+    print({STOP_POINT!r}, flush=True)
+    time.sleep(60)
+
+
+Action.perform = perform_then_wait
+mdedup(sys.argv[1:])
+"""
+"""An `mdedup` run that waits to be stopped while it holds the locks of its boxes."""
+
+
+@pytest.mark.parametrize(
+    "box_format",
+    # Maildir and EML need no lock.
+    [BoxFormat.MBOX, BoxFormat.MH, BoxFormat.BABYL, BoxFormat.MMDF],
+    ids=str,
+)
+@pytest.mark.parametrize(
+    "stop",
+    [
+        pytest.param(subprocess.Popen.terminate, id="sigterm"),
+        pytest.param(subprocess.Popen.kill, id="sigkill"),
+    ],
+)
+def test_killed_run_needs_force_unlock(invoke, make_box, box_format, stop):
+    """A run stopped by `SIGTERM` or `SIGKILL` exits before any cleanup: its box stays
+    locked, and only `--force-unlock` lets the next run through.
+
+    On Windows, `terminate()` and `kill()` both call `TerminateProcess()`, which skips
+    the cleanup too.
+    """
+    box_type = box_format.base_class
+    dup = MailFactory(body="Same body.\n", message_id="<killed@test.com>")
+    box_path, _, _ = make_box(box_type, [dup, dup])
+    args = (
+        f"--input-format={box_format}",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    with subprocess.Popen(
+        (sys.executable, "-c", STOPPABLE_RUN, *args),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        # The run prints characters that a legacy Windows code page cannot encode.
+        env={**os.environ, "PYTHONUTF8": "1"},
+        text=True,
+        encoding="UTF-8",
+    ) as process:
+        try:
+            assert process.stdout is not None
+            output = ""
+            for line in process.stdout:
+                output += line
+                if STOP_POINT in line:
+                    break
+            else:
+                pytest.fail(f"The run ended before its action:\n{output}")
+            stop(process)
+            process.wait(timeout=30)
+        finally:
+            process.kill()
+    assert process.returncode != 0
+
+    # Nothing ran after the signal, so a single-file box keeps its queued removals
+    # unwritten. A folder-based box deletes each mail file as soon as it is removed.
+    queued = box_format.structure == BoxStructure.FILE
+    check_box(box_path, box_type, content=[dup, dup] if queued else [dup])
+
+    refused = invoke(*args)
+    assert refused.exit_code == 1
+    assert "already locked" in refused.stderr.lower()
+
+    forced = invoke("--force-unlock", *args)
+    assert forced.exit_code == 0
     check_box(box_path, box_type, content=[dup])
 
 
