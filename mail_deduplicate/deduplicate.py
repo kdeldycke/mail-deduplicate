@@ -49,6 +49,7 @@ from .mail_box import (
     FOLDER_FORMAT_CLASSES,
     iter_mail_ids,
     open_box,
+    release_box,
     resolve_mail_path,
 )
 
@@ -1268,13 +1269,23 @@ class Deduplicate:
         self.stats += Counter(result.stats)
         self.release(mail_set)
 
-    def close_all(self) -> None:
-        """Close all open boxes, and the hash cache if one was opened."""
+    def close_all(self, flush: bool = True) -> None:
+        """Close all open boxes, and the hash cache if one was opened.
+
+        With `flush` off, the pending changes of the boxes stay unwritten: see
+        `release_box()`. Closed boxes and cache are dropped, so calling this again
+        does nothing.
+        """
         for source_path, box in self.sources.items():
             logging.debug(f"Close {source_path}")
-            box.close()
+            if flush:
+                box.close()
+            else:
+                release_box(box)
+        self.sources.clear()
         if self.cache:
             self.cache.close()
+            self.cache = None
 
     def report(self) -> str:
         """Returns a text report of user-friendly statistics and metrics."""

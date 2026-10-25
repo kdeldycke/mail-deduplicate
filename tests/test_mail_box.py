@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from mail_deduplicate.action import Action
 from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import (
     EML,
@@ -187,6 +188,42 @@ def test_force_unlock_recovers_stale_lock(invoke, make_box):
         box_path,
     )
     assert forced.exit_code == 0
+    check_box(box_path, box_type, content=[dup])
+
+
+@ALL_FORMATS
+@pytest.mark.parametrize("error", [RuntimeError, KeyboardInterrupt])
+def test_run_cut_short_unlocks_boxes(invoke, make_box, monkeypatch, box_format, error):
+    """A run cut short by an error or an interrupt still unlocks its source box, so
+    the next run needs no `--force-unlock`."""
+    box_type = box_format.base_class
+    dup = MailFactory(body="Same body.\n", message_id="<cut-short@test.com>")
+    box_path, _, _ = make_box(box_type, [dup, dup])
+    args = (
+        f"--input-format={box_format}",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    # Fail once the action has queued its removals, before the boxes are closed.
+    perform = Action.perform
+
+    def perform_then_fail(self, dedup):
+        perform(self, dedup)
+        raise error
+
+    monkeypatch.setattr(Action, "perform", perform_then_fail)
+    assert invoke(*args).exit_code == 1
+    # A single-file box only writes the removals it queued when it is closed, and a
+    # run cut short leaves them unwritten. A folder-based box deletes each mail file
+    # as soon as it is removed.
+    queued = box_format.structure == BoxStructure.FILE
+    check_box(box_path, box_type, content=[dup, dup] if queued else [dup])
+
+    monkeypatch.undo()
+    result = invoke(*args)
+    assert result.exit_code == 0
     check_box(box_path, box_type, content=[dup])
 
 

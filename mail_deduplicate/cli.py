@@ -641,6 +641,9 @@ def mdedup(
     )
 
     dedup = Deduplicate(conf)
+    # A run cut short by an error or an interrupt never reaches `close_all()` below.
+    # Unlock its boxes on the way out anyway, or the next run finds them locked.
+    ctx.call_on_close(lambda: dedup.close_all(flush=False))
 
     theme = get_current_theme()
     echo(theme.heading("\n● Step #1 - Load mails"))

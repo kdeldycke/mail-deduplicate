@@ -445,6 +445,21 @@ def lock_box(box: Mailbox, force_unlock: bool) -> Mailbox:
     return box
 
 
+def release_box(box: Mailbox) -> None:
+    """Unlock a box and close its file, without writing its pending changes.
+
+    `Mailbox.close()` first writes the pending changes of a single-file box, which
+    rewrites the whole file when a mail was removed. A run cut short by an error or
+    an interrupt calls this instead: its single-file boxes stay as the run found
+    them, and an interrupt does not start a rewrite.
+    """
+    box.unlock()
+    # Single-file boxes hold their file open between operations.
+    file = getattr(box, "_file", None)
+    if file is not None:
+        file.close()
+
+
 def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     """Browse recursively the subfolder tree of a box.
 
