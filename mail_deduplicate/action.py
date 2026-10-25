@@ -32,6 +32,7 @@ from uuid import uuid4
 from click_extra import OperationTrail, format_size, get_current_theme
 
 from . import StrEnum
+from .bug_report import blame
 from .deduplicate import Stat
 from .mail_box import FOLDER_FORMAT_CLASSES, create_box
 
@@ -91,7 +92,7 @@ def copy_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
             if not dedup.conf["dry_run"]:
                 # The box is only left closed on a dry run, ruled out just above.
                 assert box is not None
-                with mail.hydrated():
+                with blame(mail, dedup.step), mail.hydrated():
                     box.add(mail)
             trail.mark(True, f"{mail!r} {outcome(dedup, 'copied')}")
     trail.finish(
@@ -112,13 +113,14 @@ def move_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
             if not dedup.conf["dry_run"]:
                 # The box is only left closed on a dry run, ruled out just above.
                 assert box is not None
-                with mail.hydrated():
-                    box.add(mail)
-                # Identity attributes are set the moment a mail is read from its
-                # box, which every mail reaching an action has been.
-                dedup.sources[cast("str", mail.source_path)].remove(
-                    cast("str", mail.mail_id)
-                )
+                with blame(mail, dedup.step):
+                    with mail.hydrated():
+                        box.add(mail)
+                    # Identity attributes are set the moment a mail is read from its
+                    # box, which every mail reaching an action has been.
+                    dedup.sources[cast("str", mail.source_path)].remove(
+                        cast("str", mail.mail_id)
+                    )
             trail.mark(True, f"{mail!r} {outcome(dedup, 'moved')}")
     trail.finish(
         trail.ok_count == len(mails),
@@ -135,9 +137,10 @@ def delete_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
         if not dedup.conf["dry_run"]:
             # Identity attributes are set the moment a mail is read from its box,
             # which every mail reaching an action has been.
-            dedup.sources[cast("str", mail.source_path)].remove(
-                cast("str", mail.mail_id)
-            )
+            with blame(mail, dedup.step):
+                dedup.sources[cast("str", mail.source_path)].remove(
+                    cast("str", mail.mail_id)
+                )
         trail.mark(True, f"{mail!r} {outcome(dedup, 'deleted')}")
     trail.finish(
         trail.ok_count == len(mails),
@@ -237,7 +240,8 @@ def hardlink_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> Non
     for mail in mails:
         target = dedup.link_targets[mail]
 
-        blocker = hardlink_blocker(dedup, mail, target)
+        with blame(mail, dedup.step):
+            blocker = hardlink_blocker(dedup, mail, target)
         freed = 0
         if not blocker:
             try:
@@ -342,6 +346,8 @@ class Action(StrEnum):
 
     def perform(self, dedup: Deduplicate) -> None:
         """Perform the action on the subset of mails it targets."""
+        # Names the step in a bug report: copying, moving, deleting or hardlinking.
+        dedup.step = f"{self.verb.removesuffix('e')}ing"
         logging.info(f"Perform {get_current_theme().choice(str(self))} action...")
 
         selection_count = len(dedup.selection)

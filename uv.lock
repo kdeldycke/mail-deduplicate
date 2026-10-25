@@ -568,6 +568,7 @@ source = { editable = "." }
 dependencies = [
     { name = "backports-strenum", marker = "python_full_version < '3.11'" },
     { name = "click-extra", extra = ["toml"] },
+    { name = "extra-platforms" },
     { name = "platformdirs", version = "4.12.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "platformdirs", version = "4.13.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
@@ -615,6 +616,7 @@ typing = [
 requires-dist = [
     { name = "backports-strenum", marker = "python_full_version < '3.11'", specifier = ">=1" },
     { name = "click-extra", extras = ["toml"], specifier = ">=9.4.1" },
+    { name = "extra-platforms", specifier = ">=13.4" },
     { name = "platformdirs", specifier = ">=4.5" },
 ]
 
@@ -624,7 +626,7 @@ docs = [
     { name = "click-extra", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=9.4.1" },
     { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", specifier = ">=9.4.1" },
     { name = "coverage", extras = ["toml"], marker = "python_full_version >= '3.14'", specifier = ">=7.11" },
-    { name = "extra-platforms", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=2" },
+    { name = "extra-platforms", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=13.4" },
     { name = "furo", marker = "python_full_version >= '3.14'", specifier = ">=2025.9.25" },
     { name = "myst-parser", marker = "python_full_version >= '3.14'", specifier = ">=5.1" },
     { name = "pytest", marker = "python_full_version >= '3.14'", specifier = ">=9" },
@@ -645,7 +647,7 @@ test = [
     { name = "boltons", specifier = ">=25" },
     { name = "click-extra", extras = ["pytest"], specifier = ">=9.4.1" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.11" },
-    { name = "extra-platforms", extras = ["pytest"], specifier = ">=2" },
+    { name = "extra-platforms", extras = ["pytest"], specifier = ">=13.4" },
     { name = "pytest", specifier = ">=9" },
     { name = "pytest-cov", specifier = ">=7" },
     { name = "pytest-github-actions-annotate-failures", specifier = ">=0.2" },

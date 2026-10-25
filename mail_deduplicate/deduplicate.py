@@ -32,6 +32,7 @@ from difflib import unified_diff
 from enum import Enum, unique
 from functools import cached_property
 from itertools import combinations, islice
+from mailbox import Error as MailboxError
 from pathlib import Path
 from typing import NamedTuple, cast
 
@@ -43,10 +44,12 @@ from click_extra import (
 )
 
 from . import StrEnum
+from .bug_report import Failure, FailureLog, box_format_of, render_report
 from .cache import CacheEntry, HashCache, open_cache
 from .mail import TimeSource, TooFewHeaders
 from .mail_box import (
     FOLDER_FORMAT_CLASSES,
+    MailSourceError,
     iter_mail_ids,
     open_box,
     release_box,
@@ -72,8 +75,13 @@ class Stat(Enum):
 
     MAIL_FOUND = "Total number of mails encountered from all mail sources."
     MAIL_REJECTED = (
-        "Number of mails rejected individually because they were unparsable or "
-        "did not have enough metadata to compute hashes."
+        "Number of mails rejected individually because they could not be read, were "
+        "unparsable, or did not have enough metadata to compute hashes."
+    )
+    MAIL_FAILED = (
+        "Number of mails set aside, and left untouched, because hashing them failed "
+        "on an unexpected error. The bug report after this table tells how to report "
+        "it."
     )
     MAIL_RETAINED = "Number of valid mails parsed and retained for deduplication."
     MAIL_HASHES = "Number of unique hashes."
@@ -128,6 +136,10 @@ class Stat(Enum):
     SET_SKIPPED_STRATEGY = (
         "Number of sets skipped from the selection process because the strategy "
         "could not be applied."
+    )
+    SET_SKIPPED_ERROR = (
+        "Number of sets skipped from the selection process because reading or "
+        "comparing their mails failed on an error."
     )
     SET_DEDUPLICATED = (
         "Number of valid sets on which the selection strategy was successfully applied."
@@ -518,6 +530,45 @@ class DuplicateSet:
         self.selection = selected
         self.discard = set(self.pool.difference(selected))
 
+    def select_or_skip(self, failures: FailureLog) -> Failure | None:
+        """Run `select()`, and skip the whole set if it raises an error.
+
+        Returns the error, ready for the bug report, or `None` when the selection
+        went through or the error needs no report. See `skip_on_error()`.
+        """
+        pool = self.pool
+        try:
+            self.select()
+        except Exception as expt:  # noqa: BLE001
+            return self.skip_on_error(expt, pool, failures)
+        return None
+
+    def skip_on_error(
+        self,
+        expt: Exception,
+        pool: frozenset[DedupMailMixin],
+        failures: FailureLog,
+    ) -> Failure | None:
+        """Skip the whole set after an error, as a set failing a safeguard is skipped.
+
+        Whatever the interrupted selection recorded is dropped, and the full `pool`
+        is accounted for, so none of its mails is acted upon. An `OSError` means a
+        mail could not be read again, which needs no bug report. Any other error is
+        captured for the report and returned.
+        """
+        self.pool = pool
+        self.__dict__.pop("size", None)
+        self.selection, self.unique, self.discard = set(), set(), set()
+        self.stats = Counter({Stat.MAIL_DUPLICATES: self.size})
+        if isinstance(expt, OSError):
+            self.skip_set(
+                f"cannot read its mails again: {expt}", Stat.SET_SKIPPED_ERROR
+            )
+            return None
+        failure = failures.capture(expt, "selecting", sorted(pool, key=repr))
+        self.skip_set(f"unexpected error {failure.error}", Stat.SET_SKIPPED_ERROR)
+        return failure
+
 
 class HashedMail(NamedTuple):
     """What a hashing worker sends back for one mail.
@@ -534,6 +585,21 @@ class HashedMail(NamedTuple):
     timestamp: float | None
     mail_size: int | None
     rejection: str | None
+    failure: Failure | None = None
+
+
+class HashOutcome(NamedTuple):
+    """What the hashing step makes of one mail, ready to be merged into the run.
+
+    At most one of `mail_hash`, `rejection` and `failure` is set: a mail is retained,
+    rejected for a reason that needs no bug report, or set aside after an error that
+    does.
+    """
+
+    mail: DedupMailMixin
+    mail_hash: str | None
+    rejection: str | None = None
+    failure: Failure | None = None
 
 
 _WORKER: dict = {}
@@ -545,10 +611,15 @@ pickled once per worker instead of once per mail.
 
 
 def _init_hash_worker(conf: Config, message_class: type) -> None:
-    """Prepare a worker process to hash mails of one box format."""
+    """Prepare a worker process to hash mails of one box format.
+
+    The worker keeps a `FailureLog` of its own, only to stop fingerprinting the mails
+    of a kind of failure it already sampled: the parent keeps the one of the run.
+    """
     _WORKER["conf"] = conf
     _WORKER["message_class"] = message_class
     _WORKER["body_hasher"] = conf["hash_body"].function
+    _WORKER["failures"] = FailureLog()
 
 
 def _load_worker_mail(source_path: str, mail_id: str, path: str) -> DedupMailMixin:
@@ -566,26 +637,59 @@ def _load_worker_mail(source_path: str, mail_id: str, path: str) -> DedupMailMix
     return mail  # type: ignore[no-any-return]
 
 
+def _worker_stub(source_path: str, mail_id: str, path: str) -> DedupMailMixin:
+    """An empty mail standing for one that a worker process could not read.
+
+    It carries the identity of the mail and the location of its file, which is all
+    a bug report needs to name and fingerprint it.
+    """
+    stub = cast("DedupMailMixin", _WORKER["message_class"]())
+    stub.source_path = source_path
+    stub.mail_id = mail_id
+    stub._path_override = path
+    stub.conf = _WORKER["conf"]
+    return stub
+
+
+def _worker_failure(expt: Exception, step: str, mail: DedupMailMixin) -> Failure:
+    """Capture an error raised in a worker process, and count it in its log."""
+    failures: FailureLog = _WORKER["failures"]
+    failure = failures.capture(expt, step, [mail])
+    failures.add(failure)
+    return failure
+
+
 def _hash_in_worker(task: tuple[str, str, str]) -> HashedMail:
     """Read, parse and hash one mail from its own file, in a worker process.
 
     Only ever handed mails of folder-based boxes, which own their file, so nothing
     is shared with the other workers or with the parent. Failures come back as a
-    rejection rather than an exception, so one unreadable mail cannot take the pool
-    down with it.
+    rejection or a `Failure` rather than an exception, so one mail cannot take the
+    pool down with it.
     """
     source_path, mail_id, path = task
     try:
         mail = _load_worker_mail(source_path, mail_id, path)
     except OSError as expt:
         return HashedMail(None, None, None, f"unreadable file: {expt}")
+    except Exception as expt:  # noqa: BLE001
+        stub = _worker_stub(source_path, mail_id, path)
+        return HashedMail(
+            None, None, None, None, _worker_failure(expt, "hashing", stub)
+        )
 
     try:
         mail_hash = mail.hash_key() + _WORKER["body_hasher"](mail)
+        mail.dehydrate()
     except TooFewHeaders as expt:
         return HashedMail(None, None, None, expt.args[0])
+    except OSError as expt:
+        return HashedMail(None, None, None, f"unreadable file: {expt}")
+    except Exception as expt:  # noqa: BLE001
+        return HashedMail(
+            None, None, None, None, _worker_failure(expt, "hashing", mail)
+        )
 
-    mail.dehydrate()
     return HashedMail(
         mail_hash,
         mail.__dict__.get("timestamp"),
@@ -616,6 +720,7 @@ class SelectedSet(NamedTuple):
     discarded: tuple[tuple[str, str], ...]
     stats: dict[Stat, int]
     records: tuple[tuple[int, str], ...]
+    failure: Failure | None = None
 
 
 class _RecordCollector(logging.Handler):
@@ -643,6 +748,7 @@ def _init_select_worker(conf: Config, message_class: type, log_level: int) -> No
     """
     _WORKER["conf"] = conf
     _WORKER["message_class"] = message_class
+    _WORKER["failures"] = FailureLog()
     logging.getLogger().setLevel(log_level)
 
 
@@ -660,34 +766,52 @@ def _select_in_worker(task: tuple[str, tuple[MailMeta, ...]]) -> SelectedSet:
 
     Sets share nothing with each other, which is what makes this worth handing out:
     a worker re-reads only the mails of its own set, from their own files.
+
+    A mail that cannot be read again skips the whole set, as an error raised by the
+    selection itself does: see `DuplicateSet.skip_on_error()`.
     """
     hash_key, metas = task
-
-    mails = []
-    for meta in metas:
-        mail = _load_worker_mail(meta.source_path, meta.mail_id, meta.path)
-        # Already settled by the hashing step: recomputing risks disagreeing with it.
-        mail.__dict__["timestamp"] = meta.timestamp
-        if meta.mail_size is not None:
-            mail.__dict__["size"] = meta.mail_size
-        mails.append(mail)
+    conf = _WORKER["conf"]
+    failures: FailureLog = _WORKER["failures"]
 
     captured: list[tuple[int, str]] = []
     handler = _RecordCollector(captured)
     root = logging.getLogger()
     root.addHandler(handler)
     try:
-        duplicates = DuplicateSet(hash_key, mails, _WORKER["conf"])
-        duplicates.select()
+        mails = []
+        try:
+            for meta in metas:
+                mail = _load_worker_mail(meta.source_path, meta.mail_id, meta.path)
+                # Already settled by the hashing step: recomputing risks disagreeing
+                # with it.
+                mail.__dict__["timestamp"] = meta.timestamp
+                if meta.mail_size is not None:
+                    mail.__dict__["size"] = meta.mail_size
+                mails.append(mail)
+        except Exception as expt:  # noqa: BLE001
+            # Stubs account for the set, and lead the bug report back to the files.
+            duplicates = DuplicateSet(
+                hash_key,
+                [_worker_stub(m.source_path, m.mail_id, m.path) for m in metas],
+                conf,
+            )
+            failure = duplicates.skip_on_error(expt, duplicates.pool, failures)
+        else:
+            duplicates = DuplicateSet(hash_key, mails, conf)
+            failure = duplicates.select_or_skip(failures)
     finally:
         root.removeHandler(handler)
 
+    if failure is not None:
+        failures.add(failure)
     return SelectedSet(
         selected=_name_mails(duplicates.selection),
         unique=_name_mails(duplicates.unique),
         discarded=_name_mails(duplicates.discard),
         stats=dict(duplicates.stats),
         records=tuple(captured),
+        failure=failure,
     )
 
 
@@ -762,13 +886,26 @@ class Deduplicate:
         self.stats: Counter[Stat] = Counter()
         """Deduplication statistics. Unset statistics naturally read as zero."""
 
+        self.failures = FailureLog()
+        """The errors no rule explains, each of which put a mail or a duplicate set
+        aside."""
+
+        self.step = "loading"
+        """What the run is doing, named by the bug report of an error that stops it."""
+
+        self.source_formats: Counter[str] = Counter()
+        """Number of boxes opened in each format, for the bug report.
+
+        Counted as the boxes open, since closing them empties `sources`.
+        """
+
         self.cache: HashCache | None = open_cache(conf)
         """Cross-run cache of mail hashes, when the user opted in with `--cache` and
         the database could be opened."""
 
     def restore_cached(
         self, box: Mailbox, mail_id: str, entry: CacheEntry
-    ) -> tuple[DedupMailMixin, str, None]:
+    ) -> HashOutcome:
         """Rebuild a hashed mail from its cache entry, without opening its file.
 
         Produces the same dehydrated stub the hashing step would have left behind,
@@ -783,7 +920,7 @@ class Deduplicate:
         if entry.mail_size is not None:
             mail.__dict__["size"] = entry.mail_size
         mail.dehydrate()
-        return mail, entry.mail_hash, None
+        return HashOutcome(mail, entry.mail_hash)
 
     def blank_stub(self, box: Mailbox, mail_id: str) -> DedupMailMixin:
         """An empty mail carrying only its identity, ready to be filled in.
@@ -940,10 +1077,12 @@ class Deduplicate:
 
     def adopt_hashed(
         self, box: Mailbox, mail_id: str, result: HashedMail
-    ) -> tuple[DedupMailMixin, str | None, TooFewHeaders | None]:
+    ) -> HashOutcome:
         """Turn a worker's answer back into the mail stub this process works with."""
-        if result.rejection is not None:
-            return self.blank_stub(box, mail_id), None, TooFewHeaders(result.rejection)
+        if result.rejection is not None or result.failure is not None:
+            return HashOutcome(
+                self.blank_stub(box, mail_id), None, result.rejection, result.failure
+            )
         return self.restore_cached(
             box,
             mail_id,
@@ -957,22 +1096,30 @@ class Deduplicate:
 
         Duplicate sources of mails are not allowed, as when we perform the action, we
         use the path as a unique key to tie back a mail from its source.
+
+        A source that cannot be opened or listed raises `MailSourceError`: the error
+        comes from the source or its format, which the user can fix.
         """
+        self.step = "loading"
         # Make the path absolute and resolve any symlinks.
         path = Path(source_path).resolve(strict=True)
         if str(path) in self.sources:
-            raise ValueError(f"{path} already added.")
+            raise MailSourceError(f"{path} already added.")
 
         # Open and register the mail source. Subfolders will be registered as their
         # own box.
-        boxes = open_box(path, self.conf["input_format"], self.conf["force_unlock"])
-        for box in boxes:
-            self.sources[box._path] = box
+        try:
+            boxes = open_box(path, self.conf["input_format"], self.conf["force_unlock"])
+            for box in boxes:
+                self.sources[box._path] = box
+                self.source_formats[box_format_of(box)] += 1
 
-            # Track global mail count.
-            mail_found = len(box)
-            logging.info(f"{mail_found} mails found.")
-            self.stats[Stat.MAIL_FOUND] += mail_found
+                # Track global mail count.
+                mail_found = len(box)
+                logging.info(f"{mail_found} mails found.")
+                self.stats[Stat.MAIL_FOUND] += mail_found
+        except (OSError, MailboxError) as expt:
+            raise MailSourceError(f"Cannot read {path}: {expt}") from expt
 
     def hash_all(self) -> None:
         """Browse all mails from all registered sources, compute hashes and group mails
@@ -991,6 +1138,7 @@ class Deduplicate:
         concurrent access, so the speedup is largest where the hashing itself is the
         cost, with `--hash-body raw`/`normalized`.
         """
+        self.step = "hashing"
         theme = get_current_theme()
         logging.info(
             f"Use [{', '.join(map(theme.choice, self.conf['hash_headers']))}] headers to "
@@ -999,38 +1147,79 @@ class Deduplicate:
 
         body_hasher = self.conf["hash_body"].function
 
-        def compute(box, mail_id, mail):
+        def compute(box, mail_id, mail) -> HashOutcome:
             """Hash a single parsed mail, in this very process.
 
-            The mail is dehydrated on the way out, so only its identity and memoized
-            scalars survive the hashing step.
+            A retained mail is dehydrated on the way out, so only its identity and
+            memoized scalars survive the hashing step. A rejected or failed mail is
+            not retained at all.
             """
             mail.add_box_metadata(box, mail_id)
             mail.conf = self.conf
             try:
-                return mail, mail.hash_key() + body_hasher(mail), None
-            except TooFewHeaders as expt:
-                return mail, None, expt
-            finally:
+                mail_hash = mail.hash_key() + body_hasher(mail)
                 mail.dehydrate()
+            except TooFewHeaders as expt:
+                return HashOutcome(mail, None, expt.args[0])
+            except OSError as expt:
+                return HashOutcome(mail, None, f"unreadable file: {expt}")
+            except Exception as expt:  # noqa: BLE001
+                failure = self.failures.capture(expt, "hashing", [mail])
+                return HashOutcome(mail, None, None, failure)
+            return HashOutcome(mail, mail_hash)
 
-        def absorb(result):
+        def read_and_compute(box, mail_id) -> HashOutcome:
+            """Read a mail from its box, then hash it. Never raises.
+
+            A mail that went away between the box listing it and this read is
+            rejected, as `--jobs` workers reject a mail whose file is gone.
+            """
+            try:
+                mail = box[mail_id]
+            except KeyError:
+                stub = self.blank_stub(box, mail_id)
+                return HashOutcome(stub, None, "vanished before it could be read")
+            except OSError as expt:
+                stub = self.blank_stub(box, mail_id)
+                return HashOutcome(stub, None, f"unreadable file: {expt}")
+            except Exception as expt:  # noqa: BLE001
+                stub = self.blank_stub(box, mail_id)
+                failure = self.failures.capture(expt, "hashing", [stub])
+                return HashOutcome(stub, None, None, failure)
+            return compute(box, mail_id, mail)
+
+        def absorb(outcome: HashOutcome) -> None:
             """Merge one hashed mail into the shared groups and stats. Called only from
             the main process, keeping the parallel path and the cache race-free."""
-            mail, mail_hash, expt = result
-            if expt is not None:
-                logging.warning(f"Rejecting {mail!r}: {expt.args[0]}")
+            mail, mail_hash, rejection, failure = outcome
+            # Identity attributes are set the moment a mail is read from its box, or
+            # stubbed for it, which every mail reaching this point has been.
+            source_path = cast("str", mail.source_path)
+            mail_id = cast("str", mail.mail_id)
+            if failure is not None:
+                logging.warning(
+                    f"Set aside {mail!r} after an unexpected error: {failure.error}"
+                )
+                self.failures.add(failure)
+                self.stats[Stat.MAIL_FAILED] += 1
+                if self.cache:
+                    # A fixed release must read the mail again.
+                    self.cache.forget(source_path, mail_id)
+            elif rejection is not None:
+                logging.warning(f"Rejecting {mail!r}: {rejection}")
                 self.stats[Stat.MAIL_REJECTED] += 1
                 if self.cache:
                     # A rejection depends on more than the hash, so it is not cached.
-                    self.cache.forget(mail.source_path, mail.mail_id)
+                    self.cache.forget(source_path, mail_id)
             else:
+                # A mail neither rejected nor failed always comes with its hash.
+                mail_hash = cast("str", mail_hash)
                 self.mails.setdefault(mail_hash, []).append(mail)
                 self.stats[Stat.MAIL_RETAINED] += 1
                 if self.cache:
                     self.cache.store(
-                        mail.source_path,
-                        mail.mail_id,
+                        source_path,
+                        mail_id,
                         CacheEntry(
                             mail_hash,
                             mail.__dict__.get("timestamp"),
@@ -1052,14 +1241,7 @@ class Deduplicate:
                 for box, mail_id in self.uncached(
                     self.sources.values(), absorb, progress
                 ):
-                    try:
-                        mail = box[mail_id]
-                    except KeyError:
-                        # The mail went away between the box listing it and us
-                        # reading it, which `iteritems()` also skips over.
-                        logging.debug(f"Mail {mail_id} vanished from {box._path}.")
-                        continue
-                    absorb(compute(box, mail_id, mail))
+                    absorb(read_and_compute(box, mail_id))
                     progress.update(1)
 
         if self.cache:
@@ -1082,6 +1264,7 @@ class Deduplicate:
         The selection is settled one duplicate set at a time, to keep the memory
         footprint low and make the log easier to read.
         """
+        self.step = "selecting"
         theme = get_current_theme()
         strategies = self.conf["strategies"]
         if strategies:
@@ -1125,7 +1308,9 @@ class Deduplicate:
         this process, and merge its verdict into the run."""
         self.log_set_heading(hash_key, len(mail_set))
         duplicates = DuplicateSet(hash_key, mail_set, self.conf)
-        duplicates.select()
+        failure = duplicates.select_or_skip(self.failures)
+        if failure is not None:
+            self.failures.add(failure)
         self.stats += duplicates.stats
         self.selection.update(duplicates.selection)
         self.unique.update(duplicates.unique)
@@ -1255,6 +1440,8 @@ class Deduplicate:
         self.log_set_heading(hash_key, len(mail_set))
         for levelno, message in result.records:
             logging.log(levelno, message)
+        if result.failure is not None:
+            self.failures.add(result.failure)
 
         # Mail IDs only identify a mail within its own box, and a duplicate set can
         # span several.
@@ -1289,6 +1476,7 @@ class Deduplicate:
 
     def report(self) -> str:
         """Returns a text report of user-friendly statistics and metrics."""
+        self.step = "reporting"
         ctx = get_current_context()
         render_table = ctx.find_root().render_table  # type: ignore[attr-defined]
 
@@ -1316,6 +1504,22 @@ class Deduplicate:
             )
             output += "\n"
         return output
+
+    def report_failures(self) -> bool:
+        """Log the bug report of the mails and sets the run set aside.
+
+        Returns whether there were any, so the run can end with an error code.
+        """
+        if not self.failures:
+            return False
+        logging.error(
+            render_report(
+                self.failures.headline(),
+                self.failures.report_lines(),
+                self.source_formats,
+            )
+        )
+        return True
 
     def assert_stats(
         self,
@@ -1352,6 +1556,25 @@ class Deduplicate:
             + f"EXPECTED: {first_name} {operator} {second_name}\n"
             + f"          {first_value} {operator} {second_value}\n"
         )
+        counts = ", ".join(
+            f"{stat.name.lower()}={self.stats[stat]}"
+            for stat in Stat
+            if self.stats[stat]
+        )
+        logging.error(
+            render_report(
+                "The statistics of the run do not add up, which is a bug.",
+                (
+                    "",
+                    (
+                        f"Failed check: {first_name} {operator} {second_name}, "
+                        f"{first_value} {operator} {second_value}"
+                    ),
+                    f"Statistics: {counts or 'all zero'}",
+                ),
+                self.source_formats,
+            )
+        )
         sys.exit(115)
 
     def check_stats(self):
@@ -1361,9 +1584,12 @@ class Deduplicate:
         """
         # Box opening stats.
         self.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_REJECTED)
+        self.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_FAILED)
         self.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_RETAINED)
         self.assert_stats(
-            Stat.MAIL_FOUND, "==", (Stat.MAIL_REJECTED, Stat.MAIL_RETAINED)
+            Stat.MAIL_FOUND,
+            "==",
+            (Stat.MAIL_REJECTED, Stat.MAIL_FAILED, Stat.MAIL_RETAINED),
         )
 
         # Mail grouping by hash.
@@ -1435,6 +1661,7 @@ class Deduplicate:
                 Stat.SET_SKIPPED_CONTENT,
                 Stat.SET_SKIPPED_TIMESTAMP,
                 Stat.SET_SKIPPED_STRATEGY,
+                Stat.SET_SKIPPED_ERROR,
                 Stat.SET_DEDUPLICATED,
             ),
         )

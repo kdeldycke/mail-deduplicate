@@ -24,6 +24,7 @@ from typing import TypedDict
 
 from click_extra import (
     BadParameter,
+    ClickException,
     Command,
     EnumChoice,
     IntRange,
@@ -44,6 +45,7 @@ from cloup.constraints import If, accept_none, require_all
 from cloup.constraints.conditions import Predicate
 
 from .action import Action
+from .bug_report import report_unexpected_errors
 from .cache import default_cache_path
 from .deduplicate import BodyHasher, Deduplicate
 from .mail import TimeSource
@@ -612,8 +614,8 @@ def mdedup(
         ctx.exit()
 
     if export and export.exists() and not export_append:
-        raise FileExistsError(
-            f"Cannot export to existing file {export!r} unless --export-append is set."
+        raise ClickException(
+            f"Cannot export to existing file {export} unless --export-append is set."
         )
 
     conf = Config(
@@ -645,48 +647,56 @@ def mdedup(
     # Unlock its boxes on the way out anyway, or the next run finds them locked.
     ctx.call_on_close(lambda: dedup.close_all(flush=False))
 
-    theme = get_current_theme()
-    echo(theme.heading("\n● Step #1 - Load mails"))
-    with progressbar(
-        mail_sources,
-        length=len(mail_sources),
-        label="Mail sources",
-        show_pos=True,
-    ) as progress:
-        for source in progress:
-            dedup.add_source(source)
+    # The hashing and selection steps set aside the mails an unexpected error hits,
+    # and report them at the end. An error escaping the steps ends the run here,
+    # with a one-line message or a bug report.
+    with report_unexpected_errors(dedup):
+        theme = get_current_theme()
+        echo(theme.heading("\n● Step #1 - Load mails"))
+        with progressbar(
+            mail_sources,
+            length=len(mail_sources),
+            label="Mail sources",
+            show_pos=True,
+        ) as progress:
+            for source in progress:
+                dedup.add_source(source)
 
-    echo(theme.heading("\n● Step #2 - Compute hashes and group duplicates"))
-    dedup.hash_all()
+        echo(theme.heading("\n● Step #2 - Compute hashes and group duplicates"))
+        dedup.hash_all()
 
-    if hash_only:
-        ignored_user_options = ignored_step_options(ctx)
-        if ignored_user_options:
-            logging.warning(
-                "Options provided by user, but ignored in -H/--hash-only mode: "
-                + ", ".join(ignored_user_options)
-            )
+        if hash_only:
+            ignored_user_options = ignored_step_options(ctx)
+            if ignored_user_options:
+                logging.warning(
+                    "Options provided by user, but ignored in -H/--hash-only mode: "
+                    + ", ".join(ignored_user_options)
+                )
 
-        # Print all computed hashes. Rendering the canonical headers needs the full
-        # message back, so borrow it one mail at a time to keep memory flat.
-        for all_mails in dedup.mails.values():
-            for mail in all_mails:
-                with mail.hydrated():
-                    echo(mail.pretty_canonical_headers())
-                    echo(f"Hash: {mail.hash_key()}")
+            # Print all computed hashes. Rendering the canonical headers needs the
+            # full message back, so borrow it one mail at a time to keep memory flat.
+            for all_mails in dedup.mails.values():
+                for mail in all_mails:
+                    with mail.hydrated():
+                        echo(mail.pretty_canonical_headers())
+                        echo(f"Hash: {mail.hash_key()}")
 
-        # Exit right away, releasing the boxes and the cache on the way out.
+            # Exit right away, releasing the boxes and the cache on the way out.
+            dedup.close_all()
+            ctx.exit(1 if dedup.report_failures() else 0)
+
+        echo(theme.heading("\n● Step #3 - Select mails in each group"))
+        dedup.build_sets()
+
+        echo(theme.heading("\n● Step #4 - Perform action on selected mails"))
+        action.perform(dedup)
         dedup.close_all()
-        ctx.exit()
 
-    echo(theme.heading("\n● Step #3 - Select mails in each group"))
-    dedup.build_sets()
+        echo(theme.heading("\n● Step #5 - Report and statistics"))
+        # Print deduplication statistics, then performs a self-check on them.
+        echo(dedup.report())
+        failed = dedup.report_failures()
+        dedup.check_stats()
 
-    echo(theme.heading("\n● Step #4 - Perform action on selected mails"))
-    action.perform(dedup)
-    dedup.close_all()
-
-    echo(theme.heading("\n● Step #5 - Report and statistics"))
-    # Print deduplication statistics, then performs a self-check on them.
-    echo(dedup.report())
-    dedup.check_stats()
+    if failed:
+        ctx.exit(1)

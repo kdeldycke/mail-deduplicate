@@ -73,6 +73,9 @@ dependencies = [
   # parses its options: test_killed_run_needs_force_unlock starts its runs that way.
   # The [toml] extra pulls tomlkit for --export-config toml.
   "click-extra[toml]>=9.4.1",
+  # bug_report.py asks is_any_agent(), added in 10.0.0. Aligned to the 13.4 floor
+  # of click-extra 9.4.1, the lowest release any install can resolve.
+  "extra-platforms>=13.4",
   # Resolves the per-platform cache directory holding the hash cache database
   # (cache.py). 4.5.0 is the first release requiring Python 3.10, aligning its
   # minimal Python version to ours.
@@ -99,10 +102,9 @@ test = [
   "click-extra[pytest]>=9.4.1",
   # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
   "coverage[toml]>=7.11",
-  # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That
-  # module, its @skip_<id> platform decorators and the [pytest] extra installing
-  # pytest for them date back to 2.0.0, which already required Python >= 3.10.
-  "extra-platforms[pytest]>=2",
+  # Aligned to the runtime extra-platforms floor. The [pytest] extra provides the
+  # skip_windows decorator that tests/test_mail.py imports.
+  "extra-platforms[pytest]>=13.4",
   # Pytest 9.0.0 introduced support for native TOML configuration files.
   "pytest>=9",
   # Below 7.0.0, pytest-cov also measures the subprocesses that

@@ -46,9 +46,20 @@ body:
     validations:
       required: true
   - type: textarea
+    id: report
+    attributes:
+      label: Bug report
+      description: >
+        If `mdedup` printed a bug report, paste the lines between its two `8<`
+        markers. They describe the failing mails by their structure, with none of
+        their content.
+      render: text
+  - type: textarea
     id: logs
     attributes:
       label: Logs
       description: >
-        Relevant log output. Run with `--verbosity DEBUG` for full details.
+        Relevant log output. Run with `--verbosity DEBUG` for full details. DEBUG
+        logs print header values, like addresses and subjects: remove them before
+        you post.
       render: text

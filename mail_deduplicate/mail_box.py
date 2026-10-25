@@ -30,13 +30,22 @@ from pathlib import Path
 from typing import cast
 from uuid import uuid4
 
-from click_extra import get_current_theme
+from click_extra import ClickException, get_current_theme
 
 from .mail import DedupMailMixin
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
+
+
+class MailSourceError(ClickException):
+    """A mail source that cannot be used as given.
+
+    Raised for a problem the user can fix: a folder with no structure mdedup
+    recognizes, a box another program locked, a source given twice. Click prints it
+    as a one-line `Error:`, with no traceback and no invitation to report a bug.
+    """
 
 
 def maildir_mail_path(box: Mailbox, key: str) -> str:
@@ -380,10 +389,10 @@ def autodetect_box_type(path: Path) -> BoxFormat:
         elif contains_eml(path):
             box_format = BoxFormat.EML
         else:
-            raise ValueError(
+            raise MailSourceError(
                 f"Unrecognized folder: no {'/'.join(sorted(MAILDIR_SUBDIRS))} "
                 "maildir structure, no nested maildir folders, and no .eml files "
-                "found. Force a format with --input-format."
+                f"found in {path}. Force a format with --input-format."
             )
 
     # A single file is read as an mbox.
@@ -391,7 +400,7 @@ def autodetect_box_type(path: Path) -> BoxFormat:
         box_format = BoxFormat.MBOX
 
     if not box_format:
-        raise ValueError("Unrecognized mail source type.")
+        raise MailSourceError(f"Unrecognized mail source type: {path}")
 
     logging.info(f"{get_current_theme().choice(str(box_format))} detected.")
     return box_format
@@ -424,19 +433,22 @@ def open_box(
 def lock_box(box: Mailbox, force_unlock: bool) -> Mailbox:
     """Lock an opened box and allows for forced unlocking.
 
-    Returns the locked box.
+    Returns the locked box. Raises `MailSourceError` if another lock holds the box
+    and `force_unlock` is not set.
     """
     try:
         logging.debug("Locking box...")
         box.lock()
-    except ExternalClashError:
+    except ExternalClashError as expt:
         if not force_unlock:
-            logging.error("Box already locked!")
             # Release the file handle before aborting. On Windows a lingering open
             # handle keeps the box file locked, so a later `--force-unlock` run in the
             # same process cannot rewrite it (WinError 32).
             release_box(box)
-            raise
+            raise MailSourceError(
+                f"{box._path} is already locked. If no other program uses it, run "
+                "again with --force-unlock."
+            ) from expt
         logging.warning("Box already locked! Forcing removal of lock...")
         box._locked = True  # type: ignore[attr-defined]
         box.unlock()

@@ -300,8 +300,15 @@ class DedupMailMixin(Message):
         Mails from file-based boxes share the box's path, so the mail ID is appended
         to tell them apart. See:
         https://github.com/kdeldycke/mail-deduplicate/issues/157
+
+        A mail with no box attached, or one that went away from its box, has no path
+        to render: the box path and mail ID name it instead, as warnings and bug
+        reports print them.
         """
-        path = getattr(self, "path", None)
+        try:
+            path = self.path
+        except (AttributeError, KeyError, OSError):
+            path = None
         if path and path != self.source_path:
             return f"<{self.__class__.__name__} {path}>"
         return f"<{self.__class__.__name__} {self.source_path}:{self.mail_id}>"

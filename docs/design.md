@@ -133,3 +133,27 @@ By default only copies that are identical byte for byte are linked. Linking a ma
 ```{caution}
 Linked mails share one inode, and so share the permissions, ownership and modification time of the copy kept. A mail client that rewrites a mail in place rather than replacing it, which the `maildir` specification tells it not to do, would alter every copy at once.
 ```
+
+## Errors and bug reports
+
+A problem you can fix ends the run with a one-line `Error:` message and exit code `1`, before any mail is touched: a source with no structure `mdedup` recognizes, a box another program locked, a source given twice, an export box that already exists, or a file the system refuses to read or write.
+
+An error `mdedup` has no rule for is a bug, either in its code or in how it handles a mail shape it never met. What happens next depends on the step:
+
+- In the hashing and selection steps, `mdedup` sets aside the mail or the duplicate set that raised the error, and goes on with the others. No action touches what it set aside. The `Failed` and `Skipped - Error` rows of the statistics count them, and the run ends with a bug report and exit code `1`.
+- In the action step, `mdedup` stops at the first such error, as a move or a deletion must not go on past a mail it cannot explain. It prints the same bug report, which names the mail the action was working on.
+- When the statistics self-check finds counts that do not add up, the run ends with exit code `115` and a bug report.
+
+The bug report holds a block to paste into a [GitHub issue](https://github.com/kdeldycke/mail-deduplicate/issues). The block gives the version of `mdedup`, Python and the platform, the options of the run, and the formats of its sources. Then comes the error, with its traceback reduced to module names and line numbers, and a fingerprint of the mails involved.
+
+A fingerprint describes the structure of a mail, never its content:
+
+- its size and line endings,
+- the name of each header,
+- the value of `Date`, `MIME-Version` and `Content-Transfer-Encoding`, and the type and structural parameters of `Content-Type` and `Content-Disposition`,
+- the shape of every other header value: its length, its kind of bytes, its folding and its encoded words,
+- the MIME tree, with the type, charset, transfer encoding and kind of bytes of each part, the preamble and epilogue of each multipart, and the defects the parser found.
+
+```{hint}
+A path, a regular expression, an address, a subject, a body and a file name never reach the block. Read it before you post it all the same: an error message can quote a header value.
+```

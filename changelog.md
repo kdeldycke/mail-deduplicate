@@ -5,6 +5,11 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Set aside the mails and duplicate sets that hit an unexpected error while hashing or selecting, and end the run with exit code `1`.
+- Print a bug report after an unexpected error, ready to paste into an issue, with a fingerprint of each failing mail that holds none of its content.
+- Report an unusable mail source, a locked box, a system error or an existing export box as a one-line error instead of a traceback.
+- Reject a mail that vanishes or cannot be read during a sequential run, as `--jobs` runs did, instead of failing the statistics self-check or crashing.
+- Depend on `extra-platforms` `13.4` directly, which `click-extra` already installed.
 - Require `click-extra` `9.4.1`: piped runs now print the per-mail `✓` lines and closing count of an action, and `python -c` runs no longer crash.
 - Ship the test suite in the PyPI sdist, so downstream packagers can build and test without a Git checkout.
 - Fix the per-mail lines of a dry run, which reported each mail as `deleted`, `copied`, `moved` or `hardlinked`: they now read `would be deleted`.

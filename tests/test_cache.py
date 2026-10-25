@@ -215,14 +215,15 @@ def test_edited_file_based_box_invalidates_every_mail(
 
 
 @pytest.mark.parametrize("cache_args", ((), ("--cache-path",)))
-def test_mail_vanishing_mid_run_is_skipped(
+def test_mail_vanishing_mid_run_is_rejected(
     invoke, make_box, tmp_path, monkeypatch, cache_args
 ):
-    """A mail removed between the box listing it and the run reading it is skipped.
+    """A mail removed between the box listing it and the run reading it is rejected.
 
     Regression test: the hashing step used to walk the box with `iteritems()`, which
     swallows that race. Walking the keys instead, so a cached mail is never read,
-    has to keep swallowing it rather than dying on a `KeyError`.
+    has to keep handling it rather than dying on a `KeyError`. Rejecting the mail
+    keeps it in the statistics, as a `--jobs` worker does for a file that is gone.
     """
     box_path, _, _ = make_box(Maildir, [MailFactory(), MailFactory()])
     args = [f"{arg}={tmp_path / 'hashes.db'}" for arg in cache_args]
@@ -241,13 +242,16 @@ def test_mail_vanishing_mid_run_is_skipped(
     monkeypatch.setattr(deduplicate, "iter_mail_ids", drop_one)
     result = invoke(*args, *DEDUP_ARGS, box_path)
 
-    # The mail is skipped instead of blowing up on the key it no longer answers to.
+    # The mail is rejected instead of blowing up on the key it no longer answers to.
     assert "KeyError" not in result.stderr
-    assert metrics(result.stdout)["Retained"] == "1"
-    # It does leave the run one mail short of the count taken when the box was
-    # opened, which the statistics self-check reports as it would for any gap.
-    assert result.exit_code == 115
-    assert "Metrics appear inconsistent" in result.stderr
+    assert "vanished before it could be read" in result.stderr
+    found = metrics(result.stdout)
+    assert found["Retained"] == "1"
+    assert found["Rejected"] == "1"
+    # The rejection keeps the count taken when the box was opened, so the
+    # statistics self-check passes.
+    assert result.exit_code == 0
+    assert "Metrics appear inconsistent" not in result.stderr
 
 
 def test_unusable_cache_does_not_abort_the_run(invoke, make_box, tmp_path):

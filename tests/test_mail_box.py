@@ -22,12 +22,13 @@ import os
 import subprocess
 import sys
 from functools import cache
-from mailbox import ExternalClashError, Mailbox, Message, NoSuchMailboxError, mbox
+from mailbox import Mailbox, Message, NoSuchMailboxError, mbox
 from pathlib import Path
 
 import pytest
 
 from mail_deduplicate.action import Action
+from mail_deduplicate.bug_report import REPORT_START
 from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import (
     EML,
@@ -35,6 +36,7 @@ from mail_deduplicate.mail_box import (
     FOLDER_FORMATS,
     BoxFormat,
     BoxStructure,
+    MailSourceError,
     create_box,
     lock_box,
 )
@@ -342,7 +344,7 @@ def test_refused_lock_keeps_no_file_open(make_box, box_format):
     holder.lock()
     box = box_type(box_path)
     try:
-        with pytest.raises(ExternalClashError):
+        with pytest.raises(MailSourceError, match="already locked"):
             lock_box(box, force_unlock=False)
     finally:
         holder.unlock()
@@ -379,8 +381,11 @@ def test_invalid_maildir_structure(invoke):
     assert result.exit_code == 1
     assert "Step #1" in result.stdout
     assert "Opening " in result.stderr
-    assert "Unrecognized folder" in str(result.exc_info[1])
-    assert "--input-format" in str(result.exc_info[1])
+    assert "Error: Unrecognized folder" in result.stderr
+    assert "--input-format" in result.stderr
+    # A problem the user can fix gets a one-line error: no traceback, no bug report.
+    assert "Traceback" not in result.stderr
+    assert REPORT_START not in result.stderr
 
 
 def test_verbatim_nested_maildirs(invoke, tmp_path):

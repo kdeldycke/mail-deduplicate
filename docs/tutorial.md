@@ -337,6 +337,7 @@ Several safeguards run before any mail is acted upon, each detailed in the [desi
 - Mails differing too much in size or content from the rest of their set are considered suspicious: they are set aside, and only the mails that all match each other are deduplicated. The set is skipped as a whole when no such core remains. The `--size-threshold` and `--content-threshold` options tune these limits, and `--show-diff` prints the offending differences.
 - A strategy that would select all mails of a set, or none, achieves nothing: the set is handed over to the next `--strategy` if one was chained, and left untouched otherwise.
 - Unique mails are always part of the final selection, so a merge never drops them.
+- A mail or a set that hits an unexpected error is set aside and left untouched, and the run ends with a bug report to paste into an issue. See [errors and bug reports](https://kdeldycke.github.io/mail-deduplicate/design.html#errors-and-bug-reports).
 
 ## When nothing gets deduplicated
 
