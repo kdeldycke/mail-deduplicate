@@ -69,10 +69,10 @@ classifiers = [
 dependencies = [
   # Provides enum.StrEnum for Python < 3.11; all versions expose the class.
   "backports-strenum>=1; python_version<'3.11'",
-  # Below 9.3.0, the action trail only prints on an interactive terminal: a piped
-  # run reports neither its mails nor the closing count docs/tutorial.md asserts.
+  # Below 9.4.1, a run started from `python -c` crashes on a RuntimeError while it
+  # parses its options: test_killed_run_needs_force_unlock starts its runs that way.
   # The [toml] extra pulls tomlkit for --export-config toml.
-  "click-extra[toml]>=9.3",
+  "click-extra[toml]>=9.4.1",
   # Resolves the per-platform cache directory holding the hash cache database
   # (cache.py). 4.5.0 is the first release requiring Python 3.10, aligning its
   # minimal Python version to ours.
@@ -96,7 +96,7 @@ test = [
   # Test-only: conftest.py uses iterutils.same to check fixture homogeneity.
   "boltons>=25",
   # Aligned to the runtime click-extra floor.
-  "click-extra[pytest]>=9.3",
+  "click-extra[pytest]>=9.4.1",
   # coverage 7.11.0 dropped Python 3.9, matching our requires-python >= 3.10.
   "coverage[toml]>=7.11",
   # tests/test_mail.py imports skip_windows from extra_platforms.pytest. That
@@ -105,8 +105,10 @@ test = [
   "extra-platforms[pytest]>=2",
   # Pytest 9.0.0 introduced support for native TOML configuration files.
   "pytest>=9",
-  # pytest-cov 4.0 stabilized the modern pytest plugin interface; --cov/--cov-report in addopts.
-  "pytest-cov>=4",
+  # Below 7.0.0, pytest-cov also measures the subprocesses that
+  # test_killed_run_needs_force_unlock starts, without branch data: the run then
+  # ends on an INTERNALERROR that cannot combine the two kinds of data.
+  "pytest-cov>=7",
   # pytest-github-actions-annotate-failures 0.2 requires Python >= 3.8; CI annotation
   # API stable since 0.1.x.
   "pytest-github-actions-annotate-failures>=0.2",
@@ -124,7 +126,7 @@ test = [
 ]
 docs = [
   # Aligned to the runtime click-extra floor.
-  "click-extra[sphinx]>=9.3",
+  "click-extra[sphinx]>=9.4.1",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
@@ -418,3 +420,9 @@ include = [ "lychee" ]
 # target mirrors `click_extra_manpages` in `docs/conf.py`, so the release
 # tarball and the HTML docs site stay in lockstep.
 manpages.script = "mail_deduplicate.cli:mdedup"
+# One cell resolves every direct dependency to the lowest version its specifier
+# allows, on the floor Python of the fastest runner. The lockfile holds the
+# newest release of each, so no other cell runs a declared floor.
+test-matrix.full-include = [
+  { os = "ubuntu-26.04-arm", python-version = "3.10", resolution = "lowest-direct" },
+]

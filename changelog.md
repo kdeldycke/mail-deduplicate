@@ -5,7 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
-- Require `click-extra` `9.3`, which prints the per-mail `✓` lines and closing count of an action on piped runs too, as on a terminal.
+- Require `click-extra` `9.4.1`: piped runs now print the per-mail `✓` lines and closing count of an action, and `python -c` runs no longer crash.
 - Ship the test suite in the PyPI sdist, so downstream packagers can build and test without a Git checkout.
 - Fix the per-mail lines of a dry run, which reported each mail as `deleted`, `copied`, `moved` or `hardlinked`: they now read `would be deleted`.
 - Fix a `UnicodeEncodeError` crash on multipart mails with non-ASCII bytes in their preamble or epilogue, which since `9.3.0` also hit runs with the default `--hash-body skip`. Closes [#1085](https://github.com/kdeldycke/mail-deduplicate/issues/1085).
