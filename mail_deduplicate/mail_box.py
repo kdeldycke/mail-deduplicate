@@ -435,7 +435,7 @@ def lock_box(box: Mailbox, force_unlock: bool) -> Mailbox:
             # Release the file handle before aborting. On Windows a lingering open
             # handle keeps the box file locked, so a later `--force-unlock` run in the
             # same process cannot rewrite it (WinError 32).
-            box.close()
+            release_box(box)
             raise
         logging.warning("Box already locked! Forcing removal of lock...")
         box._locked = True  # type: ignore[attr-defined]
@@ -452,6 +452,9 @@ def release_box(box: Mailbox) -> None:
     rewrites the whole file when a mail was removed. A run cut short by an error or
     an interrupt calls this instead: its single-file boxes stay as the run found
     them, and an interrupt does not start a rewrite.
+
+    Unlike `MH.close()`, this also closes the `.mh_sequences` file that a refused
+    `MH.lock()` leaves open.
     """
     box.unlock()
     # Single-file boxes hold their file open between operations.

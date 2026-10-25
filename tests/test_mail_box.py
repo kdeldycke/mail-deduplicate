@@ -22,7 +22,7 @@ import os
 import subprocess
 import sys
 from functools import cache
-from mailbox import Mailbox, Message, NoSuchMailboxError, mbox
+from mailbox import ExternalClashError, Mailbox, Message, NoSuchMailboxError, mbox
 from pathlib import Path
 
 import pytest
@@ -36,6 +36,7 @@ from mail_deduplicate.mail_box import (
     BoxFormat,
     BoxStructure,
     create_box,
+    lock_box,
 )
 
 from .conftest import MailFactory, check_box
@@ -322,6 +323,33 @@ def test_killed_run_needs_force_unlock(invoke, make_box, box_format, stop):
     forced = invoke("--force-unlock", *args)
     assert forced.exit_code == 0
     check_box(box_path, box_type, content=[dup])
+
+
+@pytest.mark.parametrize(
+    "box_format",
+    # Maildir and EML need no lock.
+    [BoxFormat.MBOX, BoxFormat.MH, BoxFormat.BABYL, BoxFormat.MMDF],
+    ids=str,
+)
+def test_refused_lock_keeps_no_file_open(make_box, box_format):
+    """A box refused for an existing lock keeps no file open.
+
+    `MH.lock()` opens `.mh_sequences` before it takes the lock, and `MH.close()` only
+    closes that file for a locked box.
+    """
+    box_path, box_type, _ = make_box(box_format.base_class)
+    holder = box_type(box_path)
+    holder.lock()
+    box = box_type(box_path)
+    try:
+        with pytest.raises(ExternalClashError):
+            lock_box(box, force_unlock=False)
+    finally:
+        holder.unlock()
+        holder.close()
+
+    file = getattr(box, "_file", None)
+    assert file is None or file.closed
 
 
 def test_create_box_refuses_to_clobber_existing(tmp_path):
