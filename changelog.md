@@ -12,6 +12,7 @@
 - Unlock the source boxes of a run cut short by an error or Ctrl-C, so the next run no longer fails without `--force-unlock`.
 - Refuse to run the CLI inside a `--jobs` worker, which a binary with an unguarded launcher did in each worker it started.
 - Publish a sitemap and a custom 404 page with the documentation, and stop publishing a copy of every documentation source under `_sources/`.
+- Fix the module sections of the test suite page in the documentation, which the build left empty without `pytest`.
 
 ## [`9.3.2` (2026-09-18)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.1...v9.3.2)
 

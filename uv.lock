@@ -574,9 +574,17 @@ dependencies = [
 
 [package.dev-dependencies]
 docs = [
-    { name = "click-extra", extra = ["sphinx"], marker = "python_full_version >= '3.14'" },
+    { name = "boltons", marker = "python_full_version >= '3.14'" },
+    { name = "click-extra", extra = ["pytest", "sphinx"], marker = "python_full_version >= '3.14'" },
+    { name = "coverage", extra = ["toml"], marker = "python_full_version >= '3.14'" },
+    { name = "extra-platforms", extra = ["pytest"], marker = "python_full_version >= '3.14'" },
     { name = "furo", marker = "python_full_version >= '3.14'" },
     { name = "myst-parser", marker = "python_full_version >= '3.14'" },
+    { name = "pytest", marker = "python_full_version >= '3.14'" },
+    { name = "pytest-cov", marker = "python_full_version >= '3.14'" },
+    { name = "pytest-github-actions-annotate-failures", marker = "python_full_version >= '3.14'" },
+    { name = "pytest-randomly", marker = "python_full_version >= '3.14'" },
+    { name = "pytest-xdist", extra = ["psutil"], marker = "python_full_version >= '3.14'" },
     { name = "sphinx", marker = "python_full_version >= '3.14'" },
     { name = "sphinx-autodoc-typehints", marker = "python_full_version >= '3.14'" },
     { name = "sphinx-copybutton", marker = "python_full_version >= '3.14'" },
@@ -584,6 +592,7 @@ docs = [
     { name = "sphinx-sitemap", marker = "python_full_version >= '3.14'" },
     { name = "sphinxcontrib-mermaid", marker = "python_full_version >= '3.14'" },
     { name = "sphinxext-opengraph", marker = "python_full_version >= '3.14'" },
+    { name = "whenever", marker = "python_full_version >= '3.14'" },
 ]
 test = [
     { name = "boltons" },
@@ -611,9 +620,18 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 docs = [
+    { name = "boltons", marker = "python_full_version >= '3.14'", specifier = ">=25" },
+    { name = "click-extra", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=9.4.1" },
     { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", specifier = ">=9.4.1" },
+    { name = "coverage", extras = ["toml"], marker = "python_full_version >= '3.14'", specifier = ">=7.11" },
+    { name = "extra-platforms", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=2" },
     { name = "furo", marker = "python_full_version >= '3.14'", specifier = ">=2025.9.25" },
     { name = "myst-parser", marker = "python_full_version >= '3.14'", specifier = ">=5.1" },
+    { name = "pytest", marker = "python_full_version >= '3.14'", specifier = ">=9" },
+    { name = "pytest-cov", marker = "python_full_version >= '3.14'", specifier = ">=7" },
+    { name = "pytest-github-actions-annotate-failures", marker = "python_full_version >= '3.14'", specifier = ">=0.2" },
+    { name = "pytest-randomly", marker = "python_full_version >= '3.14'", specifier = ">=3.3.1" },
+    { name = "pytest-xdist", extras = ["psutil"], marker = "python_full_version >= '3.14'", specifier = ">=3.7" },
     { name = "sphinx", marker = "python_full_version >= '3.14'", specifier = ">=8" },
     { name = "sphinx-autodoc-typehints", marker = "python_full_version >= '3.14'", specifier = ">=2.4" },
     { name = "sphinx-copybutton", marker = "python_full_version >= '3.14'", specifier = ">=0.5.2" },
@@ -621,6 +639,7 @@ docs = [
     { name = "sphinx-sitemap", marker = "python_full_version >= '3.14'", specifier = ">=2.7.2" },
     { name = "sphinxcontrib-mermaid", marker = "python_full_version >= '3.14'", specifier = ">=1.2.3" },
     { name = "sphinxext-opengraph", marker = "python_full_version >= '3.14'", specifier = ">=0.13" },
+    { name = "whenever", marker = "python_full_version >= '3.14'", specifier = ">=0.10" },
 ]
 test = [
     { name = "boltons", specifier = ">=25" },

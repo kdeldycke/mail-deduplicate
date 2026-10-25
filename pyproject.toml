@@ -125,6 +125,9 @@ test = [
   "whenever>=0.10",
 ]
 docs = [
+  # docs/tests.md documents the tests/ modules, which autodoc can only import with
+  # the test dependencies installed.
+  { include-group = "test" },
   # Aligned to the runtime click-extra floor.
   "click-extra[sphinx]>=9.4.1",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
