@@ -110,8 +110,10 @@ test = [
   # pytest-github-actions-annotate-failures 0.2 requires Python >= 3.8; CI annotation
   # API stable since 0.1.x.
   "pytest-github-actions-annotate-failures>=0.2",
-  # pytest-randomly 3.x is the modern API; basic test randomization compatible with pytest >= 9.
-  "pytest-randomly>=3",
+  # Below 3.3.0, each xdist worker picks its own default seed: the workers then
+  # collect the tests in different orders, and the session aborts. 3.3.1 fixes
+  # 3.3.0 for a run without xdist.
+  "pytest-randomly>=3.3.1",
   # pytest-xdist < 3.7 fails on Python 3.14 (no requires-python guard in older releases);
   # [psutil] extra needed for --numprocesses=auto.
   "pytest-xdist[psutil]>=3.7",
@@ -205,11 +207,6 @@ default.extend-identifiers = { Github = "GitHub", IOS = "iOS", Javascript = "Jav
 default.extend-words = { astroid = "astroid", certifi = "certifi", oject = "oject", sur = "sur" }
 # Skip content between <!-- typos:off --> and <!-- typos:on --> markers.
 default.extend-ignore-re = [ "(?s)<!-- typos:off -->.*?<!-- typos:on -->" ]
-default.extend-ignore-identifiers-re = [
-  # "certifi" is the certificate-bundle package name, surfaced in the Mermaid
-  # dependency graph at docs/assets/dependencies.mmd.
-  "certifi",
-]
 # Check hidden files and directories too, which typos skips by default: the
 # `.github/` workflows and the `.claude/` agents and skills live there.
 files.ignore-hidden = false

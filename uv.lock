@@ -12,7 +12,7 @@ exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for 
 exclude-newer-span = "P1W"
 
 [options.exclude-newer-package]
-certifi = { timestamp = "0001-01-01T00:00:00Z", span = "PT0S" }
+certifi = "2026-10-22T00:00:00Z"
 
 [[package]]
 name = "accessible-pygments"
@@ -630,7 +630,7 @@ test = [
     { name = "pytest", specifier = ">=9" },
     { name = "pytest-cov", specifier = ">=4" },
     { name = "pytest-github-actions-annotate-failures", specifier = ">=0.2" },
-    { name = "pytest-randomly", specifier = ">=3" },
+    { name = "pytest-randomly", specifier = ">=3.3.1" },
     { name = "pytest-xdist", extras = ["psutil"], specifier = ">=3.7" },
     { name = "whenever", specifier = ">=0.10" },
 ]

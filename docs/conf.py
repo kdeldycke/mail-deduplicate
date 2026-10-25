@@ -80,6 +80,12 @@ myst_fence_as_directive = ["mermaid"]
 # GitHub. Drop to 3 if deeper headings ever collide into duplicate-anchor warnings.
 myst_heading_anchors = 6
 
+# Fail the build on a fragment link that lands nowhere. myst-parser logs a
+# `myst.xref_missing` warning for a `#anchor` that matches no heading slug or
+# `(target)=` label, and ships the link as written. Sphinx exits 0 on warnings.
+# click-extra reads this setting from `9.4.0`.
+click_extra_fail_on_warnings = ["myst.xref_missing"]
+
 mermaid_d3_zoom = True
 
 # Emit a roff man page (man/mdedup.1, plus an .html sibling when mandoc or groff is
