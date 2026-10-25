@@ -16,6 +16,10 @@
 
 from __future__ import annotations
 
+import builtins
+import multiprocessing
+import os
+import subprocess
 import sys
 import tracemalloc
 from mailbox import Maildir, mbox
@@ -25,6 +29,7 @@ import pytest
 from click_extra import BUILTIN_THEMES
 from click_extra.test_suite import load_test_suite, run_test_suite
 
+from mail_deduplicate.__main__ import WORKER_RERUN_ERROR, main
 from mail_deduplicate.mail import DedupMailMixin
 
 from .conftest import MailFactory
@@ -341,8 +346,6 @@ def test_hash_only_warns_about_ignored_options(invoke, make_box):
 def test_main_entrypoint_reports_version(monkeypatch, capsys):
     """The `main()` indirection runs the CLI end to end: `--version` exits cleanly
     through it."""
-    from mail_deduplicate.__main__ import main
-
     monkeypatch.setattr(sys, "argv", ["mdedup", "--version"])
 
     with pytest.raises(SystemExit) as exc:
@@ -350,3 +353,83 @@ def test_main_entrypoint_reports_version(monkeypatch, capsys):
 
     assert exc.value.code == 0
     assert "mdedup" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "enter_worker",
+    [
+        # A spawn or forkserver worker, importing the main module of its parent.
+        pytest.param(
+            lambda patch: patch.setattr(
+                multiprocessing.current_process(), "_inheriting", True, raising=False
+            ),
+            id="bootstrap",
+        ),
+        # A Nuitka worker, which runs the launcher before any bootstrap.
+        pytest.param(
+            lambda patch: patch.setattr(
+                builtins, "__nuitka_original_args", ["mdedup"], raising=False
+            ),
+            id="nuitka",
+        ),
+    ],
+)
+def test_main_refuses_to_run_in_a_worker(monkeypatch, enter_worker):
+    """`main()` exits before it imports the CLI, in both states a worker reaches it."""
+    enter_worker(monkeypatch)
+    monkeypatch.setattr(
+        "mail_deduplicate.cli.mdedup", lambda: pytest.fail("The CLI ran in a worker.")
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        main()
+
+    assert exc.value.code == WORKER_RERUN_ERROR
+
+
+UNGUARDED_LAUNCHER = """\
+import multiprocessing
+import sys
+
+import mail_deduplicate.__main__ as user_main
+
+# Each spawn worker imports this file again, which calls main() in it.
+multiprocessing.set_start_method("spawn", force=True)
+sys.exit(user_main.main())
+"""
+"""A launcher shaped like the one Nuitka writes for `--main-entry-point`, with no
+`__name__ == "__main__"` guard around its call."""
+
+
+def test_unguarded_launcher_stops_in_each_worker(tmp_path):
+    """A launcher that calls `main()` when imported stops in each `--jobs` worker,
+    before the CLI there opens a box. The parent then fails on its broken pool.
+
+    The run cannot multiply processes, guard or not: CPython refuses to start a
+    process from a worker that is still importing its parent's main module.
+    """
+    launcher = tmp_path / "mdedup.py"
+    launcher.write_text(UNGUARDED_LAUNCHER, encoding="UTF-8")
+    box = Path(__file__).parent / "fixtures" / "eml-box"
+
+    result = subprocess.run(
+        (sys.executable, str(launcher), "--jobs=2", "--hash-only", str(box)),
+        capture_output=True,
+        # The run prints characters that a legacy Windows code page cannot encode.
+        env={**os.environ, "PYTHONUTF8": "1"},
+        text=True,
+        encoding="UTF-8",
+        timeout=120,
+        check=False,
+    )
+    output = result.stdout + result.stderr
+    # Sandboxes, containers and a host out of semaphores refuse to start processes,
+    # and the run then hashes in the parent, with no worker to test.
+    if "Hash in this process instead." in output:
+        pytest.skip("This host refused to start the worker processes.")
+
+    assert result.returncode != 0
+    assert WORKER_RERUN_ERROR in output
+    # Only the parent opened the box: no worker got as far as the CLI.
+    assert output.count("Opening ") == 1
+    assert "bootstrapping phase" not in output

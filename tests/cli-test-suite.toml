@@ -46,10 +46,11 @@ stdout_contains = [
 #
 # This is the only place the parallel hashing path runs against a *frozen* binary.
 # Worker processes are started by re-launching the executable, which in a compiled
-# binary lands in our own entry point rather than in multiprocessing's bootstrap: a
-# worker would then re-run the whole CLI instead of hashing its chunk. A
-# `freeze_support()` call in `__main__.py` is what prevents that, and nothing else
-# exercises it, since every other case here runs the interpreter.
+# binary can land in our own entry point rather than in multiprocessing's bootstrap.
+# `main()` in `__main__.py` then refuses to run in the worker, so a binary built
+# with a launcher that calls it on import fails here instead of running the CLI once
+# per worker. Nothing else exercises it, since every other case here runs the
+# interpreter.
 #
 # --hash-only stops after the hashing step, so this touches nothing on disk and
 # cannot damage the fixture whatever the options say. The relative path resolves

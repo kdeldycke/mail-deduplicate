@@ -23,6 +23,38 @@ $ python -m mail_deduplicate
 
 from __future__ import annotations
 
+import builtins
+import multiprocessing
+import sys
+
+WORKER_RERUN_ERROR = (
+    "Refusing to run mdedup inside one of its own worker processes. This "
+    "executable starts the CLI again in each --jobs worker. Use --jobs=1 to run "
+    "without workers."
+)
+"""Message a worker exits with when its launcher starts the CLI again in it."""
+
+
+def in_worker_process() -> bool:
+    """Tell whether this process is a `--jobs` worker that has not started its task.
+
+    A launcher without a `__name__ == "__main__"` guard calls {func}`main` again in
+    each worker it starts, as the one Nuitka writes for `--main-entry-point` does.
+    Two states reveal that call:
+
+    - A spawn or forkserver worker imports the main module of its parent while
+      `multiprocessing` sets the `_inheriting` flag of the process. CPython reads
+      the same flag, but only refuses once the CLI starts a process, after it
+      opened the boxes.
+    - A Nuitka worker runs the launcher before any bootstrap, so no flag is set
+      yet. Nuitka's multiprocessing plugin first saves the command line of the
+      worker as `builtins.__nuitka_original_args`.
+    """
+    return bool(
+        getattr(multiprocessing.current_process(), "_inheriting", False)
+        or hasattr(builtins, "__nuitka_original_args")
+    )
+
 
 def main():
     """Execute the CLI.
@@ -31,8 +63,8 @@ def main():
 
         - plain inline package call: `python -m mail_deduplicate`,
         - `pyproject.toml` entry point: `mdedup = 'mail_deduplicate.__main__:main`,
-        - Nuitka's main module invocation requirement:
-          `python -m nuitka (...) mail_deduplicate/__main__.py`
+        - Nuitka's entry point:
+          `python -m nuitka (...) --main-entry-point=mdedup=mail_deduplicate.__main__:main`
 
     That way we can deduce all three cases from the entry point.
 
@@ -40,13 +72,15 @@ def main():
     `Command.main()` already defaults `prog_name` to the command's name, so even
     `python -m mail_deduplicate --version` reports itself as `mdedup`.
     """
-    from multiprocessing import freeze_support
+    # `--jobs` hashes in worker processes, which a frozen binary starts by launching
+    # itself again. When the freezer sets `sys.frozen`, as PyInstaller does, this
+    # call turns that launch into the worker and never returns. A no-op elsewhere.
+    multiprocessing.freeze_support()
 
-    # `--jobs` hashes in worker processes, which re-launch this executable to start.
-    # In a frozen binary that re-launch lands here instead of in the worker bootstrap,
-    # so without this call each worker would run the whole CLI again. A no-op
-    # everywhere else.
-    freeze_support()
+    # Nuitka sets no `sys.frozen`, and its launcher can still call this function in
+    # each worker: stop there, before the CLI opens a box or starts more workers.
+    if in_worker_process():
+        sys.exit(WORKER_RERUN_ERROR)
 
     from mail_deduplicate.cli import mdedup
 
