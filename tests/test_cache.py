@@ -327,11 +327,21 @@ def cached_rows(cache_db) -> int:
     return int(count)
 
 
-def test_deleted_mails_are_pruned(cached_run, cache_db, make_box):
+@pytest.mark.parametrize(
+    "write_batch",
+    (HashCache.WRITE_BATCH, 1),
+    ids=("default-batch", "batch-of-one"),
+)
+def test_deleted_mails_are_pruned(
+    cached_run, cache_db, make_box, monkeypatch, write_batch
+):
     """Mails removed from a box must not keep their entry forever.
 
     A cache nobody prunes only grows, holding hashes for mails that no longer exist.
+    Batches of one flush the writes and the sightings of a run as they come, as a
+    corpus bigger than a batch does.
     """
+    monkeypatch.setattr(HashCache, "WRITE_BATCH", write_batch)
     mails = [MailFactory(message_id=f"<d{i}@nohost.com>") for i in range(5)]
     box_path, _, _ = make_box(Maildir, mails)
 

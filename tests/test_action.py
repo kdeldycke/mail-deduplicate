@@ -16,13 +16,14 @@
 
 from __future__ import annotations
 
+import os
 from mailbox import Maildir, mbox
 from pathlib import Path
 from string import ascii_lowercase
 
 import pytest
 
-from mail_deduplicate.action import OPERATIONS, Action
+from mail_deduplicate.action import LINK_TEMP_PREFIX, OPERATIONS, Action
 from mail_deduplicate.deduplicate import Deduplicate, Stat
 from mail_deduplicate.mail_box import BoxFormat
 
@@ -340,6 +341,33 @@ def test_hardlink_discarded_is_idempotent(invoke, make_box):
     assert "Metrics appear inconsistent" not in result.stderr
     assert "already shares the file of the copy kept" in result.stderr
     assert {path: path.stat().st_ino for path in mail_files(box_path)} == linked
+    check_box(box_path, box_type, content=FULL_BOX)
+
+
+def test_hardlink_that_cannot_be_created_leaves_the_mail(invoke, make_box, monkeypatch):
+    """A link that cannot replace its mail leaves the mail as it was, removes the
+    temporary link it went through, and counts the mail as skipped."""
+    box_path, box_type, _ = make_box(Maildir, FULL_BOX)
+    before = {path: path.stat().st_ino for path in mail_files(box_path)}
+    replace = os.replace
+
+    def refuse(src, dst):
+        if Path(box_path) in Path(dst).parents:
+            raise PermissionError(13, "Permission denied", dst)
+        replace(src, dst)
+
+    monkeypatch.setattr(os, "replace", refuse)
+
+    result = invoke("--strategy=select-one", "--action=hardlink-discarded", box_path)
+
+    assert result.exit_code == 0
+    assert "Metrics appear inconsistent" not in result.stderr
+    assert (
+        "2 mails left untouched: the link could not be created (Permission denied)."
+        in result.stderr
+    )
+    assert {path: path.stat().st_ino for path in mail_files(box_path)} == before
+    assert list(Path(box_path).rglob(f"{LINK_TEMP_PREFIX}*")) == []
     check_box(box_path, box_type, content=FULL_BOX)
 
 

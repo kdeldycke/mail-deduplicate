@@ -18,13 +18,14 @@ from __future__ import annotations
 
 import logging
 import re
+import sqlite3
 import subprocess
 import sys
 from base64 import b64encode
 from collections import Counter
 from fractions import Fraction
 from importlib.metadata import metadata
-from mailbox import Maildir, mbox
+from mailbox import Mailbox, Maildir, mbox
 
 import pytest
 
@@ -53,7 +54,7 @@ from mail_deduplicate.deduplicate import (
     _init_select_worker,
     _select_in_worker,
 )
-from mail_deduplicate.mail import DedupMailMixin
+from mail_deduplicate.mail import DedupMailMixin, TooFewHeaders
 from mail_deduplicate.mail_box import BoxFormat, MaildirDedupMail, resolve_mail_path
 from mail_deduplicate.strategy import Strategy
 
@@ -121,13 +122,13 @@ def report_block(output: str) -> str:
     return output[start : output.index(REPORT_END, start)]
 
 
-def fail_on_doomed(monkeypatch, method: str, message: str) -> None:
-    """Make a method of the mails raise on the mail carrying `DOOMED_ID`."""
+def fail_on_doomed(monkeypatch, method: str, error: Exception) -> None:
+    """Make a method of the mails raise `error` on the mail carrying `DOOMED_ID`."""
     original = getattr(DedupMailMixin, method)
 
     def patched(self, *args, **kwargs):
         if self.get("Message-ID") == DOOMED_ID:
-            raise RuntimeError(message)
+            raise error
         return original(self, *args, **kwargs)
 
     monkeypatch.setattr(DedupMailMixin, method, patched)
@@ -217,6 +218,11 @@ def test_fingerprint_shows_8bit_values():
             id="binary-charset",
         ),
         pytest.param(
+            b"Content-Type: text/plain; charset=x-kiwi\n\nbody",
+            "text/plain; charset=x-kiwi, payload 4 B ascii, unknown charset",
+            id="unknown-charset",
+        ),
+        pytest.param(
             b"Subject: a\r\nTo: b\n\nbody\rmore\n",
             "line endings: mixed: 1 CRLF, 3 LF, 1 CR",
             id="mixed-line-endings",
@@ -228,6 +234,59 @@ def test_fingerprint_describes_broken_mails(raw, expected):
     print_ = fingerprint(raw)
     assert print_.startswith(f"size: {len(raw)} B, line endings: ")
     assert expected in print_
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    (
+        pytest.param(
+            b"Subject: =?utf-8?B?UGVhcg==?=\n\nbody",
+            "Subject: <20 B ascii, encoded words utf-8/B>",
+            id="encoded-word",
+        ),
+        pytest.param(
+            b"Date: " + b"7" * 300 + b"\n\nbody",
+            f"Date: '{'7' * bug_report.MAX_VALUE_LENGTH}...'",
+            id="long-date",
+        ),
+        # The semicolon quoted after an escaped quote splits no parameter.
+        pytest.param(
+            b'Content-Type: text/plain; name="a\\"b;c"\n\nbody',
+            "Content-Type: text/plain; name: <8 B ascii>",
+            id="escaped-quote",
+        ),
+        pytest.param(
+            b"Content-Type: text/plain;; charset=utf-8\n\nbody",
+            "Content-Type: text/plain; charset=utf-8",
+            id="empty-parameter",
+        ),
+    ),
+)
+def test_fingerprint_shows_header_values(raw, expected):
+    """Header values show by their shape, a `Date` shows as it is up to a capped
+    length, and a `Content-Type` shows by its structure."""
+    assert expected in fingerprint(raw)
+
+
+def test_fingerprint_failure_is_reported(monkeypatch):
+    """A mail the fingerprint cannot describe gets a line saying so, instead of
+    taking the bug report down with it."""
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("Unexpected quince.")
+
+    monkeypatch.setattr(bug_report, "part_lines", fail)
+
+    assert fingerprint(b"Subject: a\n\nbody") == (
+        "Fingerprint unavailable: RuntimeError."
+    )
+
+
+def test_bytes_recovered_from_surrogates():
+    """The surrogate parsing leaves for a non-ASCII byte turns back into that byte,
+    and a surrogate from no byte shows as the invalid UTF-8 it is."""
+    assert bug_report.to_bytes(f"caf{chr(0xDCC3)}{chr(0xDCA9)}") == b"caf\xc3\xa9"
+    assert bug_report.to_bytes(chr(0xD800)) == b"\xed\xa0\x80"
 
 
 def test_fingerprint_length_is_capped():
@@ -275,6 +334,61 @@ def test_traceback_starts_in_the_blamed_block():
     )
     method = "Fraction.__new__" if sys.version_info >= (3, 11) else "__new__"
     assert re.fullmatch(rf"fractions:\d+ in {re.escape(method)}", frames[-1])
+
+
+def dive(depth: int) -> None:
+    """Raise an error from `depth` calls further down."""
+    if depth:
+        dive(depth - 1)
+    raise ValueError("Deep melon.")
+
+
+def test_traceback_keeps_the_innermost_frames():
+    """A deep traceback keeps the frames closest to the error, and counts the outer
+    ones it drops."""
+    depth = 20
+    try:
+        dive(depth)
+    except ValueError as expt:
+        frames = capture(expt, "hashing").frames
+
+    # This test, then each of the calls to `dive()`.
+    outer = 1 + depth + 1 - bug_report.MAX_FRAMES
+    assert frames[0] == f"... {outer} outer frames"
+    assert len(frames) == bug_report.MAX_FRAMES + 1
+    assert re.fullmatch(r"tests\.test_bug_report:\d+ in dive", frames[-1])
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    (
+        pytest.param(
+            ValueError("Unexpected melon."),
+            "ValueError: Unexpected melon.",
+            id="builtin",
+        ),
+        pytest.param(
+            sqlite3.OperationalError("database is locked"),
+            "sqlite3.OperationalError: database is locked",
+            id="other-module",
+        ),
+        pytest.param(
+            ValueError("melon " * 100),
+            f"ValueError: {('melon ' * 100)[: bug_report.MAX_VALUE_LENGTH]}...",
+            id="long-message",
+        ),
+        pytest.param(KeyError(), "KeyError", id="no-message"),
+    ),
+)
+def test_failure_describes_its_error(error, expected):
+    """A failure names the class of its error, with its module outside the builtins,
+    then its message, on one line of capped length."""
+    assert capture(error, "hashing").error == expected
+
+
+def test_unknown_box_format_shows_its_class():
+    """A box of no known format shows in the report by the name of its class."""
+    assert bug_report.box_format_of(Mailbox("basket")) == "Mailbox"
 
 
 def test_failure_log_keeps_a_few_samples():
@@ -383,7 +497,7 @@ def test_hashing_error_sets_the_mail_aside(invoke, make_box, monkeypatch, box_fo
     dup = MailFactory(message_id="<plum@orchard.example>")
     doomed = MailFactory(message_id=DOOMED_ID)
     box_path, _, _ = make_box(box_type, [dup, dup, doomed])
-    fail_on_doomed(monkeypatch, "hash_key", "Unexpected tomato.")
+    fail_on_doomed(monkeypatch, "hash_key", RuntimeError("Unexpected tomato."))
 
     result = invoke(
         f"--input-format={box_format}",
@@ -414,12 +528,79 @@ def test_hashing_error_sets_the_mail_aside(invoke, make_box, monkeypatch, box_fo
     assert [text for text in MAIL_FACTORY_CONTENT if text in block] == []
 
 
+@pytest.mark.parametrize(
+    ("failing", "error", "outcome", "exit_code", "counted"),
+    (
+        # A file the system refuses to read is a problem the user can fix.
+        pytest.param(
+            "read",
+            PermissionError(13, "Permission denied"),
+            "Rejecting <",
+            0,
+            "Rejected",
+            id="unreadable",
+        ),
+        pytest.param(
+            "read",
+            RuntimeError("Unexpected tomato."),
+            "Set aside <",
+            1,
+            "Failed",
+            id="unexpected-on-read",
+        ),
+        pytest.param(
+            "hash",
+            PermissionError(13, "Permission denied"),
+            "Rejecting <",
+            0,
+            "Rejected",
+            id="unreadable-mid-hash",
+        ),
+    ),
+)
+def test_mail_failing_to_read_is_rejected_or_set_aside(
+    invoke, make_box, monkeypatch, failing, error, outcome, exit_code, counted
+):
+    """A mail that cannot be read is rejected on a system error, and set aside on any
+    other one. Either way, it is left untouched while the others are deduplicated."""
+    dup = MailFactory(message_id="<plum@orchard.example>")
+    doomed = MailFactory(message_id=DOOMED_ID)
+    box_path, box_type, _ = make_box(Maildir, [dup, dup, doomed])
+    if failing == "read":
+        box = Maildir(box_path, create=False)
+        (doomed_key,) = (
+            key for key, mail in box.iteritems() if mail["Message-ID"] == DOOMED_ID
+        )
+        box.close()
+        get_file = Maildir.get_file
+
+        def read(self, key):
+            if key == doomed_key:
+                raise error
+            return get_file(self, key)
+
+        monkeypatch.setattr(Maildir, "get_file", read)
+    else:
+        fail_on_doomed(monkeypatch, "hash_key", error)
+
+    result = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
+
+    assert result.exit_code == exit_code
+    assert outcome in result.stderr
+    assert str(error) in result.stderr
+    found = metrics(result.stdout)
+    assert found[counted] == "1"
+    assert found["Retained"] == "2"
+    assert "Metrics appear inconsistent" not in result.stderr
+    check_box(box_path, box_type, content=[dup, doomed])
+
+
 def test_hash_only_reports_failures(invoke, make_box, monkeypatch):
     """`--hash-only` prints the hashes it computed, then reports the failed mails."""
     box_path, _, _ = make_box(
         Maildir, [MailFactory(), MailFactory(message_id=DOOMED_ID)]
     )
-    fail_on_doomed(monkeypatch, "hash_key", "Unexpected tomato.")
+    fail_on_doomed(monkeypatch, "hash_key", RuntimeError("Unexpected tomato."))
 
     result = invoke("--hash-only", box_path)
 
@@ -432,13 +613,14 @@ def test_debug_log_holds_traceback_of_samples(invoke, make_box, monkeypatch):
     """At the debug level, the log holds the full traceback of each failure the
     report details."""
     box_path, _, _ = make_box(Maildir, [MailFactory(message_id=DOOMED_ID)])
-    fail_on_doomed(monkeypatch, "hash_key", "Unexpected tomato.")
+    fail_on_doomed(monkeypatch, "hash_key", RuntimeError("Unexpected tomato."))
 
     result = invoke("--verbosity=DEBUG", "--hash-only", box_path)
 
     assert result.exit_code == 1
     assert "Traceback of a failure the report details:" in result.stderr
-    assert "raise RuntimeError(message)" in result.stderr
+    # The source line of the raise in `fail_on_doomed()`.
+    assert "raise error" in result.stderr
 
 
 def test_report_masks_paths_and_regexps(invoke, make_box, monkeypatch):
@@ -446,7 +628,7 @@ def test_report_masks_paths_and_regexps(invoke, make_box, monkeypatch):
     paths and regular expressions, which can name folders and people."""
     dup = MailFactory(message_id="<plum@orchard.example>")
     box_path, _, _ = make_box(Maildir, [dup, dup, MailFactory(message_id=DOOMED_ID)])
-    fail_on_doomed(monkeypatch, "hash_key", "Unexpected tomato.")
+    fail_on_doomed(monkeypatch, "hash_key", RuntimeError("Unexpected tomato."))
 
     result = invoke(
         "--size-threshold=0",
@@ -454,6 +636,8 @@ def test_report_masks_paths_and_regexps(invoke, make_box, monkeypatch):
         "--regexp=Orchard[0-9]+",
         "--action=delete-discarded",
         "--dry-run",
+        "--no-cache",
+        "--jobs=1",
         box_path,
     )
 
@@ -465,7 +649,10 @@ def test_report_masks_paths_and_regexps(invoke, make_box, monkeypatch):
     assert "--regexp <regexp>" in options
     assert "--action delete-discarded" in options
     assert "--dry-run" in options
-    assert options.endswith(" <path>")
+    # A flag turned off on the command line shows by its negative spelling.
+    assert "--no-cache" in options
+    assert "--jobs 1" in options
+    assert " <path>" in options
     assert "Orchard" not in block
     assert "Sources: 1 maildir" in block
 
@@ -582,7 +769,7 @@ def test_hashing_worker_returns_its_failure(
 
         monkeypatch.setattr(deduplicate, "_load_worker_mail", load)
     else:
-        fail_on_doomed(monkeypatch, "hash_key", "Unexpected tomato.")
+        fail_on_doomed(monkeypatch, "hash_key", RuntimeError("Unexpected tomato."))
 
     _init_hash_worker(config, MaildirDedupMail)
     result = _hash_in_worker((box._path, mail_id, path))
@@ -605,11 +792,69 @@ def test_hashing_worker_returns_its_failure(
     )
 
 
+@pytest.mark.parametrize(
+    ("failing", "error", "rejection"),
+    (
+        pytest.param(
+            "parse",
+            PermissionError(13, "Permission denied"),
+            "unreadable file: [Errno 13] Permission denied",
+            id="unreadable",
+        ),
+        pytest.param(
+            "hash",
+            PermissionError(13, "Permission denied"),
+            "unreadable file: [Errno 13] Permission denied",
+            id="unreadable-mid-hash",
+        ),
+        pytest.param(
+            "hash",
+            TooFewHeaders("1 headers found out of 4."),
+            "1 headers found out of 4.",
+            id="too-few-headers",
+        ),
+    ),
+)
+def test_hashing_worker_rejects_its_mail(
+    config, make_box, monkeypatch, worker_state, failing, error, rejection
+):
+    """A worker rejects a mail it cannot read or hash for a reason the user can fix,
+    as this process does, with no failure to report."""
+    box_path, _, _ = make_box(Maildir, [MailFactory(message_id=DOOMED_ID)])
+    box = BoxFormat.MAILDIR.constructor(box_path, create=False)
+    mail_id = next(iter(box.keys()))
+    if failing == "parse":
+
+        def load(*args):
+            raise error
+
+        monkeypatch.setattr(deduplicate, "_load_worker_mail", load)
+    else:
+        fail_on_doomed(monkeypatch, "hash_key", error)
+
+    _init_hash_worker(config, MaildirDedupMail)
+    result = _hash_in_worker((box._path, mail_id, resolve_mail_path(box, mail_id)))
+
+    assert (result.mail_hash, result.rejection, result.failure) == (
+        None,
+        rejection,
+        None,
+    )
+    # The parent turns the answer into a stub, rejected for the same reason.
+    outcome = Deduplicate(config).adopt_hashed(box, mail_id, result)
+    assert (outcome.mail_hash, outcome.rejection, outcome.failure) == (
+        None,
+        rejection,
+        None,
+    )
+
+
 @pytest.mark.parametrize("failing", ("select", "read"))
 def test_selection_worker_skips_its_set(
     config, make_box, monkeypatch, worker_state, failing
 ):
-    """A worker skips a set it cannot settle, and accounts for all of its mails."""
+    """A worker skips a set it cannot settle, and accounts for all of its mails. The
+    parent merges that verdict back, and keeps the failure of a bug for the report."""
     dup = MailFactory(message_id="<plum@orchard.example>")
     box_path, _, _ = make_box(Maildir, [dup, dup])
     box = BoxFormat.MAILDIR.constructor(box_path, create=False)
@@ -617,6 +862,8 @@ def test_selection_worker_skips_its_set(
         MailMeta(box._path, key, resolve_mail_path(box, key), None, None)
         for key in sorted(box.keys())
     )
+    dedup = Deduplicate(config)
+    mail_set = [dedup.blank_stub(box, meta.mail_id) for meta in metas]
     if failing == "read":
         mail_files(box_path)[0].unlink()
     else:
@@ -648,6 +895,10 @@ def test_selection_worker_skips_its_set(
         assert any(
             "unexpected error RuntimeError: Unexpected pear." in m for m in messages
         )
+
+    dedup.adopt_selection("a-hash", mail_set, result)
+    assert dedup.stats[Stat.SET_SKIPPED_ERROR] == 1
+    assert bool(dedup.failures) is (failing == "select")
 
 
 @pytest.mark.parametrize(

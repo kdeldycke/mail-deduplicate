@@ -409,13 +409,29 @@ def test_nonexistent_path(invoke, source):
     assert f"Path '{source}' does not exist" in result.stderr
 
 
-def test_invalid_maildir_structure(invoke):
-    result = invoke("--action=delete-discarded", ".")
+@pytest.mark.parametrize(
+    ("args", "messages"),
+    (
+        pytest.param(
+            (),
+            ("Error: Unrecognized folder", "--input-format"),
+            id="unrecognized-folder",
+        ),
+        # A folder cannot be read as a single-file box.
+        pytest.param(
+            ("--input-format=mbox",), ("Error: Cannot read ",), id="folder-as-mbox"
+        ),
+    ),
+)
+def test_unusable_source(invoke, args, messages):
+    """A source that cannot be opened in its format stops the run before any mail is
+    touched."""
+    result = invoke(*args, "--action=delete-discarded", ".")
     assert result.exit_code == 1
     assert "Step #1" in result.stdout
     assert "Opening " in result.stderr
-    assert "Error: Unrecognized folder" in result.stderr
-    assert "--input-format" in result.stderr
+    for message in messages:
+        assert message in result.stderr
     # A problem the user can fix gets a one-line error: no traceback, no bug report.
     assert "Traceback" not in result.stderr
     assert REPORT_START not in result.stderr
