@@ -276,6 +276,36 @@ def test_unusable_cache_does_not_abort_the_run(invoke, make_box, tmp_path):
     assert metrics(result.stdout)["Retained"] == "2"
 
 
+def test_corrupt_cache_is_skipped_and_closed(invoke, make_box, tmp_path, monkeypatch):
+    """A file that is not a database is reported and skipped, and its connection is
+    closed.
+
+    SQLite opens any file, and only fails on the first statement it runs there, so
+    the connection exists by then and must not stay open for the rest of the run.
+    """
+    cache_db = tmp_path.joinpath("hashes.db")
+    cache_db.write_bytes(b"Not a database, only a basket of pears. " * 100)
+    box_path, _, _ = make_box(Maildir, [MailFactory(), MailFactory()])
+    connections = []
+    connect = sqlite3.connect
+
+    def tracked_connect(*args, **kwargs):
+        connection = connect(*args, **kwargs)
+        connections.append(connection)
+        return connection
+
+    monkeypatch.setattr(sqlite3, "connect", tracked_connect)
+
+    result = invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path)
+
+    assert result.exit_code == 0
+    assert "Cannot open the hash cache" in result.stderr
+    assert metrics(result.stdout)["Retained"] == "2"
+    assert len(connections) == 1
+    with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+        connections[0].execute("SELECT 1")
+
+
 def test_rejected_mails_are_not_cached(invoke, make_box, tmp_path):
     """A rejection depends on more than the hash, so it is recomputed every run."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])

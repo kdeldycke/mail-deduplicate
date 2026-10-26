@@ -160,35 +160,41 @@ class HashCache:
 
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.connection = sqlite3.connect(self.path, timeout=self.LOCK_TIMEOUT)
-        self.connection.executescript(
-            """
-            PRAGMA journal_mode = WAL;
-            PRAGMA synchronous = NORMAL;
-            CREATE TABLE IF NOT EXISTS settings (
-                key   TEXT PRIMARY KEY,
-                value TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS sources (
-                id   INTEGER PRIMARY KEY,
-                path TEXT NOT NULL UNIQUE
-            );
-            CREATE TABLE IF NOT EXISTS hashes (
-                source_id INTEGER NOT NULL REFERENCES sources(id),
-                mail_id   TEXT    NOT NULL,
-                size      INTEGER NOT NULL,
-                mtime_ns  INTEGER NOT NULL,
-                mail_hash TEXT    NOT NULL,
-                timestamp REAL,
-                mail_size INTEGER,
-                PRIMARY KEY (source_id, mail_id)
-            ) WITHOUT ROWID;
-            CREATE TEMPORARY TABLE seen (
-                source_id INTEGER NOT NULL,
-                mail_id   TEXT    NOT NULL
-            );
-            """,
-        )
-        self._enforce_fingerprint(fingerprint)
+        try:
+            self.connection.executescript(
+                """
+                PRAGMA journal_mode = WAL;
+                PRAGMA synchronous = NORMAL;
+                CREATE TABLE IF NOT EXISTS settings (
+                    key   TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS sources (
+                    id   INTEGER PRIMARY KEY,
+                    path TEXT NOT NULL UNIQUE
+                );
+                CREATE TABLE IF NOT EXISTS hashes (
+                    source_id INTEGER NOT NULL REFERENCES sources(id),
+                    mail_id   TEXT    NOT NULL,
+                    size      INTEGER NOT NULL,
+                    mtime_ns  INTEGER NOT NULL,
+                    mail_hash TEXT    NOT NULL,
+                    timestamp REAL,
+                    mail_size INTEGER,
+                    PRIMARY KEY (source_id, mail_id)
+                ) WITHOUT ROWID;
+                CREATE TEMPORARY TABLE seen (
+                    source_id INTEGER NOT NULL,
+                    mail_id   TEXT    NOT NULL
+                );
+                """,
+            )
+            self._enforce_fingerprint(fingerprint)
+        except BaseException:
+            # SQLite opens any file and only fails on the first statement it runs,
+            # so a file that is not a database leaves a connection behind.
+            self.connection.close()
+            raise
 
         # Only ever holds the mails read but not yet hashed, which the caller bounds
         # to one batch, so it does not grow with the size of the corpus.
