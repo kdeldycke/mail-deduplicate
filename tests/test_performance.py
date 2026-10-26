@@ -30,9 +30,9 @@ import pytest
 
 from mail_deduplicate import deduplicate
 from mail_deduplicate.deduplicate import Deduplicate
-from mail_deduplicate.mail_box import BoxFormat, BoxStructure
+from mail_deduplicate.mail_box import BoxStructure
 
-from .conftest import DEDUP_ARGS, MailFactory, metrics
+from .conftest import ALL_FORMATS, DEDUP_ARGS, MailFactory, metrics
 
 RETAINED_BYTES_CEILING = 2000
 """Upper bound on the bytes the hash index keeps per mail, once hashing is done.
@@ -210,7 +210,7 @@ def test_retained_mails_carry_neither_path_nor_payload(
     assert {"box", "mail_id", "source_path", "timestamp"} <= attrs
 
 
-@pytest.mark.parametrize("box_format", tuple(BoxFormat), ids=str)
+@ALL_FORMATS
 def test_parallel_hashing_only_claims_folder_boxes(make_box, config, box_format):
     """Only boxes whose mails own a file can be handed to worker processes.
 

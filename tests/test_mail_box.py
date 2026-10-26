@@ -45,7 +45,7 @@ from mail_deduplicate.mail_box import (
     lock_box,
 )
 
-from .conftest import MailFactory, check_box
+from .conftest import ALL_FORMATS, MailFactory, check_box
 
 
 @cache
@@ -66,9 +66,13 @@ def stdlib_box_types() -> list[type[Mailbox]]:
     return klass_list
 
 
-# Sweep every BoxFormat, so format-agnostic behavior is checked over the whole set
-# instead of the historical maildir/mbox pair.
-ALL_FORMATS = pytest.mark.parametrize("box_format", tuple(BoxFormat), ids=str)
+LOCKING_FORMATS = pytest.mark.parametrize(
+    "box_format",
+    (BoxFormat.MBOX, BoxFormat.MH, BoxFormat.BABYL, BoxFormat.MMDF),
+    ids=str,
+)
+"""Sweeps a test over the formats that lock their box: maildir and eml take no
+lock."""
 
 
 @ALL_FORMATS
@@ -227,12 +231,7 @@ mdedup(sys.argv[1:])
 """An `mdedup` run that waits to be stopped while it holds the locks of its boxes."""
 
 
-@pytest.mark.parametrize(
-    "box_format",
-    # Maildir and EML need no lock.
-    [BoxFormat.MBOX, BoxFormat.MH, BoxFormat.BABYL, BoxFormat.MMDF],
-    ids=str,
-)
+@LOCKING_FORMATS
 @pytest.mark.parametrize(
     "stop",
     [
@@ -298,12 +297,7 @@ def test_killed_run_needs_force_unlock(invoke, make_box, box_format, stop):
     check_box(box_path, box_type, content=[dup])
 
 
-@pytest.mark.parametrize(
-    "box_format",
-    # Maildir and EML need no lock.
-    [BoxFormat.MBOX, BoxFormat.MH, BoxFormat.BABYL, BoxFormat.MMDF],
-    ids=str,
-)
+@LOCKING_FORMATS
 def test_refused_lock_keeps_no_file_open(make_box, box_format):
     """A box refused for an existing lock keeps no file open.
 

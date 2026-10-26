@@ -19,9 +19,10 @@ from __future__ import annotations
 import random
 import re
 import string
+from collections import Counter
 from email.utils import formatdate as maildate
 from functools import partial
-from mailbox import MH, MMDF, Babyl, Mailbox, Maildir, Message, mbox
+from mailbox import Mailbox, Message
 from pathlib import Path
 from textwrap import dedent
 from uuid import uuid4
@@ -40,15 +41,23 @@ from mail_deduplicate.cli import (
 )
 from mail_deduplicate.deduplicate import BodyHasher
 from mail_deduplicate.mail import TimeSource
-from mail_deduplicate.mail_box import EML, BoxFormat
+from mail_deduplicate.mail_box import BoxFormat
 
 """ Fixtures, configuration and helpers for tests. """
 
 
-BOX_TYPES = (Maildir, mbox, MH, Babyl, MMDF, EML)
+BOX_TYPES = tuple(box_format.base_class for box_format in BoxFormat)
 """All box classes the `make_box`/`check_box` helpers know how to build and read.
 
 Covers every format in `BoxFormat`, so tests can parametrize over the whole set.
+"""
+
+
+ALL_FORMATS = pytest.mark.parametrize("box_format", tuple(BoxFormat), ids=str)
+"""Sweeps a test over every `BoxFormat`.
+
+Checks format-agnostic behavior over the whole set instead of the historical
+maildir/mbox pair.
 """
 
 
@@ -225,14 +234,10 @@ def mail_files(box_path: str) -> list[Path]:
 def check_box(box_path, box_type, content=None):
     """Check the content of a mail box, in any of the `BOX_TYPES` formats.
 
-    Does not use `set()` types internally to avoid silent deduplication. Translates
-    all mails provided to `mailbox.Message` instances to provide fair comparison in a
-    normalized space.
-
-    ```{todo}
-    Use a `Counter` to count occurrences, instead of comparing sorted lists of the
-    string rendering of each mail.
-    ```
+    Counts the occurrences of each mail, so a copy missing from the box or added to
+    it fails the check, where comparing sets would silently deduplicate them.
+    Translates all mails provided to `mailbox.Message` instances to provide fair
+    comparison in a normalized space.
     """
     # Check provided parameters.
     assert isinstance(box_path, str)
@@ -244,8 +249,6 @@ def check_box(box_path, box_type, content=None):
 
     # Compares the content of the box.
     box = box_type(box_path, create=False)
-
-    assert len(box) == len(content)
-    mails_found = sorted([str(m) for m in box])
-    assert sorted([str(m.as_message()) for m in content]) == mails_found
+    found = Counter(str(mail) for mail in box)
     box.close()
+    assert found == Counter(str(mail.as_message()) for mail in content)

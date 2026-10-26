@@ -57,7 +57,7 @@ from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import BoxFormat, MaildirDedupMail, resolve_mail_path
 from mail_deduplicate.strategy import Strategy
 
-from .conftest import MailFactory, check_box, mail_files, metrics
+from .conftest import ALL_FORMATS, MailFactory, check_box, mail_files, metrics
 
 DOOMED_ID = "<doomed@orchard.example>"
 """`Message-ID` of the test mail that the patched code fails on."""
@@ -337,7 +337,7 @@ def test_agents_ask_their_user_first(monkeypatch, agent):
     assert "Detail." in block
 
 
-@pytest.mark.parametrize("box_format", BoxFormat, ids=str)
+@ALL_FORMATS
 def test_hashing_error_sets_the_mail_aside(invoke, make_box, monkeypatch, box_format):
     """A mail that fails hashing is set aside and left untouched, the others are
     deduplicated, and the run ends with a bug report."""

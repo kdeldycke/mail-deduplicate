@@ -27,9 +27,8 @@ import pytest
 from mail_deduplicate import deduplicate
 from mail_deduplicate.cache import HashCache, default_cache_dir, default_cache_path
 from mail_deduplicate.mail import DedupMailMixin
-from mail_deduplicate.mail_box import BoxFormat
 
-from .conftest import DEDUP_ARGS, MailFactory, mail_files, metrics
+from .conftest import ALL_FORMATS, DEDUP_ARGS, MailFactory, mail_files, metrics
 
 
 @pytest.fixture()
@@ -48,6 +47,25 @@ def count_hashes(monkeypatch):
 
     monkeypatch.setattr(DedupMailMixin, "hash_key", spy)
     return hashed
+
+
+@pytest.fixture()
+def cache_db(tmp_path):
+    """Path of the hash cache database of a test."""
+    return tmp_path.joinpath("hashes.db")
+
+
+@pytest.fixture()
+def cached_run(invoke, cache_db):
+    """Runs `DEDUP_ARGS` with the hash cache of the test.
+
+    Takes the options to add, then the boxes to deduplicate.
+    """
+
+    def run(*args):
+        return invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, *args)
+
+    return run
 
 
 def test_cache_is_off_by_default(invoke, make_box, tmp_path, monkeypatch):
@@ -73,10 +91,10 @@ def test_default_cache_path_sits_under_the_cache_dir():
     assert default_cache_path().name.endswith(".db")
 
 
-@pytest.mark.parametrize("box_format", tuple(BoxFormat), ids=str)
+@ALL_FORMATS
 @pytest.mark.parametrize("jobs", (1, 2))
 def test_warm_run_matches_uncached_run(
-    invoke, make_box, tmp_path, box_format, jobs, count_hashes
+    invoke, cached_run, make_box, box_format, jobs, count_hashes
 ):
     """A run served from the cache must decide exactly what an uncached run does.
 
@@ -93,13 +111,12 @@ def test_warm_run_matches_uncached_run(
         MailFactory(message_id="<b@nohost.com>"),
     ]
     box_path, _, _ = make_box(box_format.base_class, mails)
-    cache_db = tmp_path.joinpath("hashes.db")
-    args = (f"--input-format={box_format}", f"--jobs={jobs}", *DEDUP_ARGS)
+    args = (f"--input-format={box_format}", f"--jobs={jobs}", box_path)
 
-    uncached = invoke(*args, box_path)
-    cold = invoke(f"--cache-path={cache_db}", *args, box_path)
+    uncached = invoke(*DEDUP_ARGS, *args)
+    cold = cached_run(*args)
     count_hashes.clear()
-    warm = invoke(f"--cache-path={cache_db}", *args, box_path)
+    warm = cached_run(*args)
 
     assert uncached.exit_code == cold.exit_code == warm.exit_code == 0
     # The warm run was really served by the cache, so the comparison below is about
@@ -124,7 +141,7 @@ def test_warm_run_matches_uncached_run(
     ),
 )
 def test_settings_change_discards_the_cache(
-    invoke, make_box, tmp_path, count_hashes, changed_option
+    cached_run, make_box, count_hashes, changed_option
 ):
     """Every option feeding a cached value invalidates the whole database.
 
@@ -132,29 +149,27 @@ def test_settings_change_discards_the_cache(
     valid one by its staleness key alone, so none of them may survive.
     """
     box_path, _, _ = make_box(Maildir, [MailFactory(), MailFactory()])
-    cache_db = tmp_path.joinpath("hashes.db")
 
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
+    assert cached_run(box_path).exit_code == 0
     assert len(count_hashes) == 2
 
     count_hashes.clear()
-    result = invoke(f"--cache-path={cache_db}", changed_option, *DEDUP_ARGS, box_path)
+    result = cached_run(changed_option, box_path)
 
     assert result.exit_code == 0
     # Every mail is hashed again, none was served from the stale database.
     assert len(count_hashes) == 2
 
 
-def test_modified_mail_is_rehashed(invoke, make_box, tmp_path, count_hashes):
+def test_modified_mail_is_rehashed(cached_run, make_box, count_hashes):
     """A mail whose file changed must not be served from the cache.
 
     Maildir keys survive a rewrite, so only the staleness key stands between a
     modified mail and a hash computed from its previous content.
     """
     box_path, _, _ = make_box(Maildir, [MailFactory(), MailFactory()])
-    cache_db = tmp_path.joinpath("hashes.db")
 
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
+    assert cached_run(box_path).exit_code == 0
     assert len(count_hashes) == 2
 
     # Rewrite one mail in place, under the very same file name.
@@ -164,22 +179,21 @@ def test_modified_mail_is_rehashed(invoke, make_box, tmp_path, count_hashes):
     )
 
     count_hashes.clear()
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
+    assert cached_run(box_path).exit_code == 0
 
     # Only the rewritten mail is read again; its untouched sibling stays cached.
     assert len(count_hashes) == 1
 
 
 def test_edited_file_based_box_invalidates_every_mail(
-    invoke, make_box, tmp_path, count_hashes
+    cached_run, make_box, count_hashes
 ):
     """Mails of an mbox share the box's file and are keyed by byte offsets, which
     shift as soon as a mail is added or removed. Editing the box must therefore
     invalidate all of its mails at once, not just the ones that moved."""
     box_path, _, _ = make_box(mbox, [MailFactory(), MailFactory()])
-    cache_db = tmp_path.joinpath("hashes.db")
 
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
+    assert cached_run(box_path).exit_code == 0
     assert len(count_hashes) == 2
 
     box = mbox(box_path, create=False)
@@ -188,7 +202,7 @@ def test_edited_file_based_box_invalidates_every_mail(
     box.close()
 
     count_hashes.clear()
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
+    assert cached_run(box_path).exit_code == 0
 
     assert len(count_hashes) == 3
 
@@ -254,14 +268,15 @@ def test_unusable_cache_does_not_abort_the_run(invoke, make_box, tmp_path):
     assert metrics(result.stdout)["Retained"] == "2"
 
 
-def test_corrupt_cache_is_skipped_and_closed(invoke, make_box, tmp_path, monkeypatch):
+def test_corrupt_cache_is_skipped_and_closed(
+    cached_run, cache_db, make_box, monkeypatch
+):
     """A file that is not a database is reported and skipped, and its connection is
     closed.
 
     SQLite opens any file, and only fails on the first statement it runs there, so
     the connection exists by then and must not stay open for the rest of the run.
     """
-    cache_db = tmp_path.joinpath("hashes.db")
     cache_db.write_bytes(b"Not a database, only a basket of pears. " * 100)
     box_path, _, _ = make_box(Maildir, [MailFactory(), MailFactory()])
     connections = []
@@ -274,7 +289,7 @@ def test_corrupt_cache_is_skipped_and_closed(invoke, make_box, tmp_path, monkeyp
 
     monkeypatch.setattr(sqlite3, "connect", tracked_connect)
 
-    result = invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path)
+    result = cached_run(box_path)
 
     assert result.exit_code == 0
     assert "Cannot open the hash cache" in result.stderr
@@ -284,10 +299,9 @@ def test_corrupt_cache_is_skipped_and_closed(invoke, make_box, tmp_path, monkeyp
         connections[0].execute("SELECT 1")
 
 
-def test_rejected_mails_are_not_cached(invoke, make_box, tmp_path):
+def test_rejected_mails_are_not_cached(invoke, make_box, cache_db):
     """A rejection depends on more than the hash, so it is recomputed every run."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])
-    cache_db = tmp_path.joinpath("hashes.db")
     too_few = (
         "--hash-header=x-absent-one",
         "--hash-header=x-absent-two",
@@ -313,51 +327,49 @@ def cached_rows(cache_db) -> int:
     return int(count)
 
 
-def test_deleted_mails_are_pruned(invoke, make_box, tmp_path):
+def test_deleted_mails_are_pruned(cached_run, cache_db, make_box):
     """Mails removed from a box must not keep their entry forever.
 
     A cache nobody prunes only grows, holding hashes for mails that no longer exist.
     """
     mails = [MailFactory(message_id=f"<d{i}@nohost.com>") for i in range(5)]
     box_path, _, _ = make_box(Maildir, mails)
-    cache_db = tmp_path.joinpath("hashes.db")
 
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
+    assert cached_run(box_path).exit_code == 0
     assert cached_rows(cache_db) == 5
 
     for doomed in mail_files(box_path)[:3]:
         doomed.unlink()
 
-    result = invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path)
+    result = cached_run(box_path)
 
     assert result.exit_code == 0
     assert cached_rows(cache_db) == 2
     assert "3 stale entries dropped" in result.stderr
 
 
-def test_vanished_box_is_pruned(invoke, make_box, tmp_path):
+def test_vanished_box_is_pruned(cached_run, cache_db, make_box):
     """A box that was deleted or moved takes all of its entries with it."""
     kept_path, _, _ = make_box(Maildir, [MailFactory(message_id="<k@nohost.com>")])
     gone_path, _, _ = make_box(
         Maildir, [MailFactory(message_id=f"<g{i}@nohost.com>") for i in range(4)]
     )
-    cache_db = tmp_path.joinpath("hashes.db")
 
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, kept_path).exit_code == 0
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, gone_path).exit_code == 0
+    assert cached_run(kept_path).exit_code == 0
+    assert cached_run(gone_path).exit_code == 0
     assert cached_rows(cache_db) == 5
 
     shutil.rmtree(gone_path)
 
     # A run over the surviving box alone is enough to notice the other one is gone.
-    result = invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, kept_path)
+    result = cached_run(kept_path)
 
     assert result.exit_code == 0
     assert cached_rows(cache_db) == 1
     assert "4 stale entries dropped" in result.stderr
 
 
-def test_unvisited_boxes_are_left_alone(invoke, make_box, tmp_path):
+def test_unvisited_boxes_are_left_alone(cached_run, cache_db, make_box):
     """Only the boxes a run opens are pruned mail by mail.
 
     Every mail of a box nobody opened is absent from the run's sightings for the
@@ -368,19 +380,18 @@ def test_unvisited_boxes_are_left_alone(invoke, make_box, tmp_path):
     second_path, _, _ = make_box(
         Maildir, [MailFactory(message_id=f"<y{i}@nohost.com>") for i in range(3)]
     )
-    cache_db = tmp_path.joinpath("hashes.db")
 
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, first_path).exit_code == 0
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, second_path).exit_code == 0
+    assert cached_run(first_path).exit_code == 0
+    assert cached_run(second_path).exit_code == 0
     assert cached_rows(cache_db) == 4
 
     # Re-run over the first box only: the second one still exists, untouched.
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, first_path).exit_code == 0
+    assert cached_run(first_path).exit_code == 0
 
     assert cached_rows(cache_db) == 4
 
 
-def test_run_survives_a_database_held_by_another_run(invoke, make_box, tmp_path):
+def test_run_survives_a_database_held_by_another_run(cached_run, cache_db, make_box):
     """A database another run is writing must not take this one down.
 
     Runs sharing a cache contend on the write burst each performs at the end. By
@@ -391,16 +402,15 @@ def test_run_survives_a_database_held_by_another_run(invoke, make_box, tmp_path)
     box_path, _, _ = make_box(
         Maildir, [MailFactory(message_id=f"<h{i}@nohost.com>") for i in range(3)]
     )
-    cache_db = tmp_path.joinpath("hashes.db")
 
     # Seed the database, then grab and hold its write lock.
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
+    assert cached_run(box_path).exit_code == 0
     holder = sqlite3.connect(cache_db, timeout=0, isolation_level="EXCLUSIVE")
     holder.execute("BEGIN EXCLUSIVE")
     try:
         # Waiting the full lock timeout would stall the suite, so cut it short.
         with mock.patch.object(HashCache, "LOCK_TIMEOUT", 0.1):
-            result = invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path)
+            result = cached_run(box_path)
     finally:
         holder.rollback()
         holder.close()
@@ -411,19 +421,18 @@ def test_run_survives_a_database_held_by_another_run(invoke, make_box, tmp_path)
     assert "Cannot" in result.stderr and "hash cache" in result.stderr
 
 
-def test_cache_survives_a_corpus_growing_between_runs(invoke, make_box, tmp_path):
+def test_cache_survives_a_corpus_growing_between_runs(cached_run, make_box):
     """Mails added to a folder-based box after a run join the cached ones."""
     box_path, _, _ = make_box(Maildir, [MailFactory(message_id="<a@nohost.com>")])
-    cache_db = tmp_path.joinpath("hashes.db")
 
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
+    assert cached_run(box_path).exit_code == 0
 
     box = Maildir(box_path, create=False)
     box.lock()
     box.add(MailFactory(message_id="<b@nohost.com>").render())
     box.close()
 
-    result = invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path)
+    result = cached_run(box_path)
 
     assert result.exit_code == 0
     assert metrics(result.stdout)["Found"] == "2"

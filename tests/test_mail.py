@@ -19,7 +19,6 @@ from __future__ import annotations
 import base64
 import email
 import email.header
-from mailbox import Maildir, mbox
 from pathlib import Path
 from typing import Any, cast
 
@@ -28,7 +27,23 @@ import pytest
 from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import BoxFormat, BoxStructure
 
-from .conftest import MailFactory
+from .conftest import ALL_FORMATS, MailFactory
+
+
+def create_mail_from_bytes(raw: bytes) -> DedupMailMixin:
+    """Parse raw bytes into a `DedupMailMixin`, body and all.
+
+    Keeps the parsed payload, so the body-derived properties (`body_lines`, `size`,
+    the body hashes) can be exercised.
+    """
+    mail = cast(DedupMailMixin, email.message_from_bytes(raw))
+    mail.__class__ = DedupMailMixin
+    # Swapping __class__ bypasses __init__, so mirror the box metadata defaults it
+    # sets, as they are required to render the mail's repr.
+    mail.box = None
+    mail.source_path = None
+    mail.mail_id = None
+    return mail
 
 
 def create_mail_with_headers(
@@ -39,39 +54,10 @@ def create_mail_with_headers(
     :param headers: `(name, value)` tuples to set as mail headers. Values can be
         strings, bytes, or `email.header.Header` objects.
     """
-    # Create minimal valid email structure
-    raw_mail = b"Subject: placeholder\n\nTest body"
-    msg = email.message_from_bytes(raw_mail)
-
-    # Create a DedupMailMixin by copying the parsed message
-    mail = cast(DedupMailMixin, msg)
-    mail.__class__ = DedupMailMixin
-
-    # Swapping __class__ bypasses __init__, so mirror the box metadata defaults it
-    # sets, as they are required to render the mail's repr.
-    mail.box = None
-    mail.source_path = None
-    mail.mail_id = None
-
+    mail = create_mail_from_bytes(b"Subject: placeholder\n\nTest body")
     # Replace headers with provided ones
     if headers:
         cast(Any, mail)._headers = list(headers)
-
-    return mail
-
-
-def create_mail_from_bytes(raw: bytes) -> DedupMailMixin:
-    """Parse raw bytes into a `DedupMailMixin`, body and all.
-
-    Unlike `create_mail_with_headers`, this keeps the parsed payload, so the
-    body-derived properties (`body_lines`, `size`, the body hashes) can be exercised.
-    """
-    mail = cast(DedupMailMixin, email.message_from_bytes(raw))
-    mail.__class__ = DedupMailMixin
-    # Swapping __class__ bypasses __init__, so mirror the box metadata defaults.
-    mail.box = None
-    mail.source_path = None
-    mail.mail_id = None
     return mail
 
 
@@ -618,7 +604,7 @@ def test_unparsable_date_returns_none(header):
     assert mail.parsed_date is None
 
 
-@pytest.mark.parametrize("box_format", tuple(BoxFormat), ids=str)
+@ALL_FORMATS
 def test_mail_path_derived_from_box(make_box, box_format):
     """A mail's location comes from its box's own index, not from opening its file,
     and its repr renders that location, ready to be copy-pasted for inspection.
@@ -660,10 +646,9 @@ def test_mail_path_derived_from_box(make_box, box_format):
         assert set(paths) == {box_path}
 
 
-def load_single_mail(make_box, config, box_type):
+def load_single_mail(make_box, config, box_format):
     """Helper returning the single mail of a fresh test box, ready for dedup work."""
-    box_format = next(fmt for fmt in BoxFormat if fmt.base_class is box_type)
-    box_path, _, _ = make_box(box_type, [MailFactory()])
+    box_path, _, _ = make_box(box_format.base_class, [MailFactory()])
     box = box_format.constructor(box_path, create=False)
     mail_id, mail = next(iter(box.iteritems()))
     mail.add_box_metadata(box, mail_id)
@@ -671,15 +656,15 @@ def load_single_mail(make_box, config, box_type):
     return box, mail_id, mail
 
 
-@pytest.mark.parametrize("box_type", (Maildir, mbox))
-def test_dehydrate_hydrate_roundtrip(make_box, config, box_type):
+@pytest.mark.parametrize("box_format", (BoxFormat.MAILDIR, BoxFormat.MBOX), ids=str)
+def test_dehydrate_hydrate_roundtrip(make_box, config, box_format):
     """Dehydration must drop the parsed message but keep the scalars used by the
     selection strategies, and content-dependent properties must transparently
     restore the exact same content from the source box.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/761
     """
-    box, _, mail = load_single_mail(make_box, config, box_type)
+    box, _, mail = load_single_mail(make_box, config, box_format)
 
     original_text = str(mail)
     original_body = mail.body_lines
@@ -707,11 +692,11 @@ def test_dehydrate_hydrate_roundtrip(make_box, config, box_type):
     box.close()
 
 
-@pytest.mark.parametrize("box_type", (Maildir, mbox))
-def test_dehydrated_mail_defers_body_reads(make_box, config, box_type):
+@pytest.mark.parametrize("box_format", (BoxFormat.MAILDIR, BoxFormat.MBOX), ids=str)
+def test_dehydrated_mail_defers_body_reads(make_box, config, box_format):
     """A mail dehydrated before its body was ever decoded must re-read its message
     from the source box on the first body-dependent access."""
-    box, mail_id, mail = load_single_mail(make_box, config, box_type)
+    box, mail_id, mail = load_single_mail(make_box, config, box_format)
     twin = box[mail_id]
     twin.conf = config
 
