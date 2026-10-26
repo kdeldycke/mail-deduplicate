@@ -1,9 +1,6 @@
 # Changelog
 
-## [`9.4.0.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.2...main)
-
-> [!WARNING]
-> This version is **not released yet** and is under active development.
+## [`9.4.0` (2026-10-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.2...v9.4.0)
 
 - Set aside the mails and duplicate sets that hit an unexpected error while hashing or selecting, and end the run with exit code `1`.
 - Print a bug report after an unexpected error, linking to the issue form, with a fingerprint of each failing mail that holds none of its content.
