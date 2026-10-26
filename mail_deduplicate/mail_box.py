@@ -479,7 +479,10 @@ def release_box(box: Mailbox) -> None:
 def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     """Browse recursively the subfolder tree of a box.
 
-    Returns a list of opened and locked boxes, each for one subfolder.
+    Returns a list of opened and locked boxes, each for one subfolder. If a subfolder
+    cannot be locked, because another program holds it for instance, the boxes locked
+    before it are unlocked again and the error is raised: the next run then needs no
+    `--force-unlock` for them.
 
     Skips box types not supporting subfolders. For `maildir`, both the
     `Maildir++` convention (dot-prefixed folders) and Verbatim-style layouts
@@ -489,32 +492,39 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     """
     folder_list = []
 
-    if isinstance(box, Maildir) and not is_maildir(Path(box._path)):
-        logging.info("No mails at this level: only browse nested folders.")
-    else:
-        folder_list.append(lock_box(box, force_unlock))
+    try:
+        if isinstance(box, Maildir) and not is_maildir(Path(box._path)):
+            logging.info("No mails at this level: only browse nested folders.")
+        else:
+            folder_list.append(lock_box(box, force_unlock))
 
-    if isinstance(box, FOLDER_FORMAT_CLASSES):
-        # Asserts to please the type checker.
-        assert hasattr(box, "list_folders")
-        assert hasattr(box, "get_folder")
-        for folder_id in box.list_folders():
-            logging.info(f"Opening subfolder {folder_id} ...")
-            folder_list += open_subfolders(box.get_folder(folder_id), force_unlock)
+        if isinstance(box, FOLDER_FORMAT_CLASSES):
+            # Asserts to please the type checker.
+            assert hasattr(box, "list_folders")
+            assert hasattr(box, "get_folder")
+            for folder_id in box.list_folders():
+                logging.info(f"Opening subfolder {folder_id} ...")
+                folder_list += open_subfolders(box.get_folder(folder_id), force_unlock)
 
-        # Python's mailbox module only lists dot-prefixed Maildir++ folders, so
-        # browse the filesystem for Verbatim-style nested maildir folders.
-        if isinstance(box, Maildir):
-            for sub_path in sorted(Path(box._path).iterdir()):
-                if (
-                    sub_path.is_dir()
-                    and not sub_path.name.startswith(".")
-                    and sub_path.name not in MAILDIR_SUBDIRS
-                    and contains_maildir(sub_path)
-                ):
-                    logging.info(f"Opening subfolder {sub_path.name} ...")
-                    sub_box = Maildir(sub_path, factory=box._factory, create=False)
-                    folder_list += open_subfolders(sub_box, force_unlock)
+            # Python's mailbox module only lists dot-prefixed Maildir++ folders, so
+            # browse the filesystem for Verbatim-style nested maildir folders.
+            if isinstance(box, Maildir):
+                for sub_path in sorted(Path(box._path).iterdir()):
+                    if (
+                        sub_path.is_dir()
+                        and not sub_path.name.startswith(".")
+                        and sub_path.name not in MAILDIR_SUBDIRS
+                        and contains_maildir(sub_path)
+                    ):
+                        logging.info(f"Opening subfolder {sub_path.name} ...")
+                        sub_box = Maildir(sub_path, factory=box._factory, create=False)
+                        folder_list += open_subfolders(sub_box, force_unlock)
+    except BaseException:
+        # A nested call that failed unlocked its own boxes already: unlock the ones
+        # this call locked before the error.
+        for locked in folder_list:
+            release_box(locked)
+        raise
     return folder_list
 
 

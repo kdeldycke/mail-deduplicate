@@ -398,8 +398,7 @@ def test_hardlink_discarded_leaves_file_based_box_alone(invoke, make_box):
 )
 def test_export_keeps_partless_multipart(invoke, tmp_path, raw, action, export_format):
     """A multipart mail parsed with no subpart reaches every export format byte for
-    byte. Its 8-bit bytes no longer stop the run on a `UnicodeEncodeError`, and a
-    closing boundary no longer cuts its body short.
+    byte, whether its body holds 8-bit bytes or a closing boundary.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/1090
     """

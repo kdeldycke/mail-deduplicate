@@ -209,7 +209,7 @@ def test_edited_file_based_box_invalidates_every_mail(
 
 @pytest.mark.parametrize("cache_args", ((), ("--cache-path",)))
 def test_mail_vanishing_mid_run_is_rejected(
-    invoke, make_box, tmp_path, monkeypatch, cache_args
+    invoke, make_box, cache_db, monkeypatch, cache_args
 ):
     """A mail removed between the box listing it and the run reading it is rejected.
 
@@ -219,7 +219,7 @@ def test_mail_vanishing_mid_run_is_rejected(
     keeps it in the statistics, as a `--jobs` worker does for a file that is gone.
     """
     box_path, _, _ = make_box(Maildir, [MailFactory(), MailFactory()])
-    args = [f"{arg}={tmp_path / 'hashes.db'}" for arg in cache_args]
+    args = [f"{arg}={cache_db}" for arg in cache_args]
 
     doomed = mail_files(box_path)[0]
     original_ids = deduplicate.iter_mail_ids

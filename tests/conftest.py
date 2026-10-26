@@ -33,6 +33,7 @@ from click_extra.pytest import runner  # noqa: F401
 from whenever import Date, Instant, Time
 
 from mail_deduplicate.action import Action
+from mail_deduplicate.bug_report import REPORT_START
 from mail_deduplicate.cli import (
     DEFAULT_HASH_HEADERS,
     DEFAULT_MINIMAL_HEADERS,
@@ -54,11 +55,7 @@ Covers every format in `BoxFormat`, so tests can parametrize over the whole set.
 
 
 ALL_FORMATS = pytest.mark.parametrize("box_format", tuple(BoxFormat), ids=str)
-"""Sweeps a test over every `BoxFormat`.
-
-Checks format-agnostic behavior over the whole set instead of the historical
-maildir/mbox pair.
-"""
+"""Sweeps a test over every `BoxFormat`, to check a behavior shared by all of them."""
 
 
 DEDUP_ARGS = ("--strategy=select-newest", "--action=delete-discarded", "--dry-run")
@@ -252,3 +249,15 @@ def check_box(box_path, box_type, content=None):
     found = Counter(str(mail) for mail in box)
     box.close()
     assert found == Counter(str(mail.as_message()) for mail in content)
+
+
+def assert_one_line_error(result, *messages: str) -> None:
+    """Check that a problem the user can fix ended the run with a one-line error.
+
+    The `stderr` of the run holds each of the `messages`. It holds no traceback and no
+    invitation to file a bug report, which belong to the errors that are bugs.
+    """
+    for message in messages:
+        assert message in result.stderr
+    assert "Traceback" not in result.stderr
+    assert REPORT_START not in result.stderr

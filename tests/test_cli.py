@@ -30,10 +30,9 @@ from click_extra import BUILTIN_THEMES
 from click_extra.test_suite import load_test_suite, run_test_suite
 
 from mail_deduplicate.__main__ import WORKER_RERUN_ERROR, main
-from mail_deduplicate.bug_report import REPORT_START
 from mail_deduplicate.mail import DedupMailMixin
 
-from .conftest import MailFactory
+from .conftest import MailFactory, assert_one_line_error
 
 
 def test_bare_call(invoke):
@@ -63,13 +62,10 @@ def test_early_export_file_check(invoke, make_box, tmp_path):
     # the eager --jobs option logs its resolution, so stderr is not strictly empty.)
     assert "Opening" not in result.stderr
     assert "mails found" not in result.stderr
-    # A problem the user can fix gets a one-line error: no traceback, no bug report.
-    assert (
-        f"Error: Cannot export to existing file {file} unless --export-append is set."
-        in result.stderr
+    assert_one_line_error(
+        result,
+        f"Error: Cannot export to existing file {file} unless --export-append is set.",
     )
-    assert "Traceback" not in result.stderr
-    assert REPORT_START not in result.stderr
 
 
 @pytest.mark.parametrize("theme_id", ("dark", "light"))
@@ -338,9 +334,7 @@ def test_duplicate_source_rejected(invoke, make_box):
     )
 
     assert result.exit_code == 1
-    assert f"Error: {Path(box_path).resolve()} already added." in result.stderr
-    assert "Traceback" not in result.stderr
-    assert REPORT_START not in result.stderr
+    assert_one_line_error(result, f"Error: {Path(box_path).resolve()} already added.")
 
 
 def test_hash_only_warns_about_ignored_options(invoke, make_box):

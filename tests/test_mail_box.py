@@ -31,7 +31,6 @@ from mailbox import Mailbox, Message, NoSuchMailboxError
 import pytest
 
 from mail_deduplicate.action import Action
-from mail_deduplicate.bug_report import REPORT_START
 from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.mail_box import (
     EML,
@@ -45,7 +44,7 @@ from mail_deduplicate.mail_box import (
     lock_box,
 )
 
-from .conftest import ALL_FORMATS, MailFactory, check_box
+from .conftest import ALL_FORMATS, MailFactory, assert_one_line_error, check_box
 
 
 @cache
@@ -319,6 +318,33 @@ def test_refused_lock_keeps_no_file_open(make_box, box_format):
     assert file is None or file.closed
 
 
+def test_refused_subfolder_lock_unlocks_the_folders_before_it(invoke, make_box):
+    """A subfolder locked by another program stops the run, and the folders locked
+    before it are unlocked again: the next run needs no `--force-unlock`."""
+    box_path, _, _ = make_box(mailbox.MH, [MailFactory(message_id="<apple@test.com>")])
+    root = mailbox.MH(box_path, create=False)
+    root.add_folder("kiwi").add(MailFactory(message_id="<kiwi@test.com>").render())
+    root.close()
+    args = (
+        "--input-format=mh",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+    )
+
+    holder = mailbox.MH(os.path.join(box_path, "kiwi"), create=False)
+    holder.lock()
+    try:
+        refused = invoke(*args)
+    finally:
+        holder.unlock()
+        holder.close()
+
+    assert refused.exit_code == 1
+    assert_one_line_error(refused, "kiwi is already locked")
+    assert invoke(*args).exit_code == 0
+
+
 def test_create_box_refuses_to_clobber_existing(tmp_path):
     """create_box refuses an existing path unless append is requested, guarding a
     destination box even when reached directly."""
@@ -430,11 +456,7 @@ def test_unusable_source(invoke, args, messages):
     assert result.exit_code == 1
     assert "Step #1" in result.stdout
     assert "Opening " in result.stderr
-    for message in messages:
-        assert message in result.stderr
-    # A problem the user can fix gets a one-line error: no traceback, no bug report.
-    assert "Traceback" not in result.stderr
-    assert REPORT_START not in result.stderr
+    assert_one_line_error(result, *messages)
 
 
 def test_verbatim_nested_maildirs(invoke, tmp_path):

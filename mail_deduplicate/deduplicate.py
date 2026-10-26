@@ -568,11 +568,12 @@ class DuplicateSet:
 class HashedMail(NamedTuple):
     """What a hashing worker sends back for one mail.
 
-    Deliberately nothing but scalars: the parsed message stays in the worker and dies
-    with the task, so a few dozen bytes cross the process boundary instead of the
-    whole mail. Which mail an answer belongs to is not carried either, as `fan_out()`
-    hands every answer back alongside the task it came from. The parent rebuilds the
-    same dehydrated stub it would have produced itself, exactly as it does for a mail
+    Deliberately nothing but scalars, and the strings of a `Failure` for a mail that
+    hit an unexpected error: the parsed message stays in the worker and dies with the
+    task, so a few dozen bytes cross the process boundary instead of the whole mail.
+    Which mail an answer belongs to is not carried either, as `fan_out()` hands every
+    answer back alongside the task it came from. The parent rebuilds the same
+    dehydrated stub it would have produced itself, exactly as it does for a mail
     restored from the cache.
     """
 
@@ -595,6 +596,11 @@ class HashOutcome(NamedTuple):
     mail_hash: str | None
     rejection: str | None = None
     failure: Failure | None = None
+
+
+def unreadable(expt: OSError) -> str:
+    """Words the rejection of a mail whose file the system refused to read."""
+    return f"unreadable file: {expt}"
 
 
 _WORKER: dict = {}
@@ -666,7 +672,7 @@ def _hash_in_worker(task: tuple[str, str, str]) -> HashedMail:
     try:
         mail = _load_worker_mail(source_path, mail_id, path)
     except OSError as expt:
-        return HashedMail(None, None, None, f"unreadable file: {expt}")
+        return HashedMail(None, None, None, unreadable(expt))
     except Exception as expt:  # noqa: BLE001
         stub = _worker_stub(source_path, mail_id, path)
         return HashedMail(
@@ -679,7 +685,7 @@ def _hash_in_worker(task: tuple[str, str, str]) -> HashedMail:
     except TooFewHeaders as expt:
         return HashedMail(None, None, None, expt.args[0])
     except OSError as expt:
-        return HashedMail(None, None, None, f"unreadable file: {expt}")
+        return HashedMail(None, None, None, unreadable(expt))
     except Exception as expt:  # noqa: BLE001
         return HashedMail(
             None, None, None, None, _worker_failure(expt, "hashing", mail)
@@ -1157,7 +1163,7 @@ class Deduplicate:
             except TooFewHeaders as expt:
                 return HashOutcome(mail, None, expt.args[0])
             except OSError as expt:
-                return HashOutcome(mail, None, f"unreadable file: {expt}")
+                return HashOutcome(mail, None, unreadable(expt))
             except Exception as expt:  # noqa: BLE001
                 failure = self.failures.capture(expt, "hashing", [mail])
                 return HashOutcome(mail, None, None, failure)
@@ -1176,7 +1182,7 @@ class Deduplicate:
                 return HashOutcome(stub, None, "vanished before it could be read")
             except OSError as expt:
                 stub = self.blank_stub(box, mail_id)
-                return HashOutcome(stub, None, f"unreadable file: {expt}")
+                return HashOutcome(stub, None, unreadable(expt))
             except Exception as expt:  # noqa: BLE001
                 stub = self.blank_stub(box, mail_id)
                 failure = self.failures.capture(expt, "hashing", [stub])
@@ -1525,7 +1531,11 @@ class Deduplicate:
         operator: str,
         second: Stat | tuple[Stat, ...],
     ) -> None:
-        """Render failed stats assertions in plain English."""
+        """Render failed stats assertions in plain English.
+
+        Statistics that do not add up are a bug: the run logs a bug report and exits
+        with code 115.
+        """
 
         def get_value_and_name(operand: Stat | tuple[Stat, ...]) -> tuple[int, str]:
             if isinstance(operand, tuple):

@@ -58,7 +58,14 @@ from mail_deduplicate.mail import DedupMailMixin, TooFewHeaders
 from mail_deduplicate.mail_box import BoxFormat, MaildirDedupMail, resolve_mail_path
 from mail_deduplicate.strategy import Strategy
 
-from .conftest import ALL_FORMATS, MailFactory, check_box, mail_files, metrics
+from .conftest import (
+    ALL_FORMATS,
+    MailFactory,
+    assert_one_line_error,
+    check_box,
+    mail_files,
+    metrics,
+)
 
 DOOMED_ID = "<doomed@orchard.example>"
 """`Message-ID` of the test mail that the patched code fails on."""
@@ -285,7 +292,7 @@ def test_fingerprint_failure_is_reported(monkeypatch):
 def test_bytes_recovered_from_surrogates():
     """The surrogate parsing leaves for a non-ASCII byte turns back into that byte,
     and a surrogate from no byte shows as the invalid UTF-8 it is."""
-    assert bug_report.to_bytes(f"caf{chr(0xDCC3)}{chr(0xDCA9)}") == b"caf\xc3\xa9"
+    assert bug_report.to_bytes(f"touch{chr(0xDCC3)}{chr(0xDCA9)}") == b"touch\xc3\xa9"
     assert bug_report.to_bytes(chr(0xD800)) == b"\xed\xa0\x80"
 
 
@@ -744,58 +751,23 @@ def test_action_system_error_is_one_line(invoke, make_box, monkeypatch):
     result = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
 
     assert result.exit_code == 1
-    assert (
+    assert_one_line_error(
+        result,
         "Error: [Errno 13] Permission denied: '/pantry/jam' (while deleting "
-        "<MaildirDedupMail " in result.stderr
+        "<MaildirDedupMail ",
     )
-    assert "Traceback" not in result.stderr
-    assert REPORT_START not in result.stderr
     check_box(box_path, box_type, content=[dup, dup])
-
-
-@pytest.mark.parametrize("failing", ("parse", "hash"))
-def test_hashing_worker_returns_its_failure(
-    config, make_box, monkeypatch, worker_state, failing
-):
-    """A worker process sends its failure back as strings: one mail failing does not
-    take the pool down with it."""
-    box_path, _, _ = make_box(Maildir, [MailFactory(message_id=DOOMED_ID)])
-    box = BoxFormat.MAILDIR.constructor(box_path, create=False)
-    mail_id = next(iter(box.keys()))
-    path = resolve_mail_path(box, mail_id)
-    if failing == "parse":
-
-        def load(*args):
-            raise RuntimeError("Unexpected tomato.")
-
-        monkeypatch.setattr(deduplicate, "_load_worker_mail", load)
-    else:
-        fail_on_doomed(monkeypatch, "hash_key", RuntimeError("Unexpected tomato."))
-
-    _init_hash_worker(config, MaildirDedupMail)
-    result = _hash_in_worker((box._path, mail_id, path))
-
-    assert (result.mail_hash, result.rejection) == (None, None)
-    failure = result.failure
-    assert failure is not None
-    assert failure.step == "hashing"
-    assert failure.error == "RuntimeError: Unexpected tomato."
-    assert failure.culprits == (f"<MaildirDedupMail {path}>",)
-    assert failure.formats == ("maildir",)
-    assert failure.fingerprints[0].startswith("size: ")
-
-    # The parent turns the answer into a stub, set aside with its failure.
-    outcome = Deduplicate(config).adopt_hashed(box, mail_id, result)
-    assert (outcome.mail_hash, outcome.rejection, outcome.failure) == (
-        None,
-        None,
-        failure,
-    )
 
 
 @pytest.mark.parametrize(
     ("failing", "error", "rejection"),
     (
+        pytest.param(
+            "parse", RuntimeError("Unexpected tomato."), None, id="unexpected-on-parse"
+        ),
+        pytest.param(
+            "hash", RuntimeError("Unexpected tomato."), None, id="unexpected-on-hash"
+        ),
         pytest.param(
             "parse",
             PermissionError(13, "Permission denied"),
@@ -816,14 +788,16 @@ def test_hashing_worker_returns_its_failure(
         ),
     ),
 )
-def test_hashing_worker_rejects_its_mail(
+def test_hashing_worker_rejects_or_sets_aside_its_mail(
     config, make_box, monkeypatch, worker_state, failing, error, rejection
 ):
-    """A worker rejects a mail it cannot read or hash for a reason the user can fix,
-    as this process does, with no failure to report."""
+    """A worker process answers with strings: one mail failing does not take the pool
+    down with it. It rejects a mail it cannot read or hash for a reason the user can
+    fix, as this process does, and sends any other error back as a failure."""
     box_path, _, _ = make_box(Maildir, [MailFactory(message_id=DOOMED_ID)])
     box = BoxFormat.MAILDIR.constructor(box_path, create=False)
     mail_id = next(iter(box.keys()))
+    path = resolve_mail_path(box, mail_id)
     if failing == "parse":
 
         def load(*args):
@@ -834,19 +808,26 @@ def test_hashing_worker_rejects_its_mail(
         fail_on_doomed(monkeypatch, "hash_key", error)
 
     _init_hash_worker(config, MaildirDedupMail)
-    result = _hash_in_worker((box._path, mail_id, resolve_mail_path(box, mail_id)))
+    result = _hash_in_worker((box._path, mail_id, path))
 
-    assert (result.mail_hash, result.rejection, result.failure) == (
-        None,
-        rejection,
-        None,
-    )
-    # The parent turns the answer into a stub, rejected for the same reason.
+    assert (result.mail_hash, result.rejection) == (None, rejection)
+    failure = result.failure
+    if rejection is None:
+        assert failure is not None
+        assert failure.step == "hashing"
+        assert failure.error == "RuntimeError: Unexpected tomato."
+        assert failure.culprits == (f"<MaildirDedupMail {path}>",)
+        assert failure.formats == ("maildir",)
+        assert failure.fingerprints[0].startswith("size: ")
+    else:
+        assert failure is None
+
+    # The parent turns the answer into a stub, set aside or rejected the same way.
     outcome = Deduplicate(config).adopt_hashed(box, mail_id, result)
     assert (outcome.mail_hash, outcome.rejection, outcome.failure) == (
         None,
         rejection,
-        None,
+        failure,
     )
 
 
