@@ -141,13 +141,12 @@ def normalize_headers(
 
     We then deduplicate them, while preserving order.
 
-    Mail headers are expected to be composed of ASCII characters between 33 and 126
-    (both inclusive) according to RFC-5322.
+    Mail headers are expected to be composed of one or more ASCII characters between
+    33 and 126 (both inclusive) according to RFC-5322.
     """
     normalized_headers = tuple(dict.fromkeys(h.lower() for h in value))
     for hid in normalized_headers:
-        ascii_indexes = set(map(ord, hid))
-        if min(ascii_indexes) < 33 or max(ascii_indexes) > 126:
+        if not hid or not all(33 <= ord(char) <= 126 for char in hid):
             raise BadParameter(f"invalid header ID: {hid!r}.")
     if len(normalized_headers) == 0:
         raise BadParameter("At least one header ID must be provided.")

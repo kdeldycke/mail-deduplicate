@@ -105,18 +105,32 @@ def test_config_mail_sources_blocked(invoke, make_box, make_config):
     )
 
 
-def test_config_constraints_apply(invoke, make_box, make_config):
-    """Constraints fire on config-sourced values like on command-line ones."""
+@pytest.mark.parametrize(
+    ("setting", "message"),
+    (
+        pytest.param(
+            'strategies = ["select-matching-path"]',
+            "--regexp is required",
+            id="constraint",
+        ),
+        # Only a configuration file can set an empty list: without any --hash-header,
+        # the command line falls back to the default headers.
+        pytest.param(
+            "hash-headers = []",
+            "At least one header ID must be provided.",
+            id="no-hash-header",
+        ),
+    ),
+)
+def test_config_values_checked(invoke, make_box, make_config, setting, message):
+    """Config-sourced values go through the checks of command-line ones."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])
-    conf_path = make_config("""\
-        [mdedup]
-        strategies = ["select-matching-path"]
-    """)
+    conf_path = make_config(f"[mdedup]\n{setting}\n")
 
     result = invoke("--config", conf_path, box_path)
 
     assert result.exit_code == 2
-    assert "--regexp is required" in result.stderr
+    assert message in result.stderr
 
 
 def test_cli_overrides_config(invoke, make_config):

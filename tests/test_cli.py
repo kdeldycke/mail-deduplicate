@@ -299,15 +299,23 @@ def test_headers_table_rendered_only_when_logged(invoke, make_box, monkeypatch):
     assert len(renders) == 2
 
 
-def test_invalid_hash_header_rejected(invoke, make_box):
-    """A header ID with out-of-range characters is refused at parse time."""
+@pytest.mark.parametrize(
+    "header",
+    (
+        # The space (ASCII 32) falls below the RFC-5322 printable range.
+        pytest.param("bad header", id="space"),
+        pytest.param("", id="empty"),
+    ),
+)
+def test_invalid_hash_header_rejected(invoke, make_box, header):
+    """A header ID with out-of-range characters, or with none at all, is refused at
+    parse time."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])
 
-    # The space (ASCII 32) falls below the RFC-5322 printable range.
-    result = invoke("--hash-header", "bad header", box_path)
+    result = invoke("--hash-header", header, box_path)
 
     assert result.exit_code == 2
-    assert "invalid header ID" in result.stderr
+    assert f"invalid header ID: {header!r}." in result.stderr
 
 
 def test_invalid_regexp_rejected(invoke, make_box):
