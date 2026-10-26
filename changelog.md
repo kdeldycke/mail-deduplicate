@@ -10,6 +10,9 @@
 
 ## [`9.4.0` (2026-10-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.2...v9.4.0)
 
+> [!WARNING]
+> The binaries of this version fail when `--jobs` is above `1`, ending with exit code `1` and a bug report that names `BrokenProcessPool`. Run them with `--jobs=1`, or install `mdedup` from 🐍 PyPI.
+
 - Set aside the mails and duplicate sets that hit an unexpected error while hashing or selecting, and end the run with exit code `1`.
 - Print a bug report after an unexpected error, linking to the issue form, with a fingerprint of each failing mail that holds none of its content.
 - Report an unusable mail source, a locked box, a system error or an existing export box as a one-line error instead of a traceback.
