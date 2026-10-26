@@ -80,7 +80,7 @@ Output is not free. Even reduced to what is worth reading, it accounts for rough
 | 2. Hashing              | 2.0s       | 0.9s       |
 | 3. Selecting duplicates | 1.1s       | 0.7s       |
 | **A first run**         | **3.4s**   | **1.8s**   |
-| **A cached second run** | **1.7s**   | **1.3s**   |
+| **A cached second run** | **1.9s**   | **1.3s**   |
 
 A first run gains most, since hashing is the bulk of it and parallelizes best: `2.6x` on that step with the default `--hash-body skip`, `3.0x` with `raw` and `4.0x` with `normalized`. Once the [cache](#reusing-hashes-between-runs) has removed the hashing, what remains is the selection, which gains about twice over.
 
