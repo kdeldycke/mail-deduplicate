@@ -25,7 +25,7 @@ import pytest
 
 from mail_deduplicate.action import LINK_TEMP_PREFIX, OPERATIONS, Action
 from mail_deduplicate.deduplicate import Deduplicate, Stat
-from mail_deduplicate.mail_box import BoxFormat
+from mail_deduplicate.mail_box import EML, BoxFormat
 
 from .conftest import MailFactory, check_box, mail_files
 
@@ -403,10 +403,11 @@ def test_export_keeps_partless_multipart(invoke, tmp_path, raw, action, export_f
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/1090
     """
-    source_path = tmp_path / "source.mbox"
-    source = mbox(source_path)
-    source.add(raw)
-    source.close()
+    # A folder of `.eml` files keeps the CRLF line endings of the mail on every
+    # platform. On Windows, the stdlib boxes write each LF as CRLF, which doubles
+    # the CR of a CRLF ending and ends the headers after the first one.
+    source_path = tmp_path / "source"
+    EML(str(source_path)).add(raw)
     export_path = tmp_path / "export"
 
     result = invoke(
