@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import re
+import subprocess
 import sys
 from base64 import b64encode
 from collections import Counter
@@ -38,6 +39,7 @@ from mail_deduplicate.bug_report import (
     blame,
     capture,
     fingerprint,
+    mdedup_version,
     render_report,
     report_url,
 )
@@ -284,6 +286,24 @@ def test_failure_log_keeps_a_few_samples():
     assert "RuntimeError: Unexpected kiwi." in lines
 
 
+def test_report_version_matches_version_option():
+    """The report gives the version `mdedup --version` prints, which names the
+    commit of a development build.
+
+    A real run, as `--version` resolves the CLI from the stack, which a
+    `CliRunner` invoking the command from another module misleads."""
+    result = subprocess.run(
+        (sys.executable, "-m", "mail_deduplicate", "--no-color", "--version"),
+        capture_output=True,
+        text=True,
+        encoding="UTF-8",
+        timeout=120,
+        check=True,
+    )
+
+    assert result.stdout == f"mdedup, version {mdedup_version()}\n"
+
+
 @pytest.mark.parametrize("agent", (True, False))
 def test_agents_ask_their_user_first(monkeypatch, agent):
     """An AI agent is asked to show the report to its user before filing it."""
@@ -292,6 +312,7 @@ def test_agents_ask_their_user_first(monkeypatch, agent):
     assert ("AI agent: show this report to your user" in report) is agent
     assert f"\n{ISSUES_URL}/new?template=bug-report.yml&title=Title.\n" in report
     block = report_block(report)
+    assert f"mdedup {mdedup_version()}, Python " in block
     assert "Sources: 2 mbox" in block
     assert "Options: unknown" in block
     assert "Detail." in block

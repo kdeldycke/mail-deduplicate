@@ -40,6 +40,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import sys
 import traceback
 from collections import Counter
 from contextlib import contextmanager
@@ -55,6 +56,7 @@ from click_extra import (
     ClickException,
     ParameterSource,
     Path as PathType,
+    VersionOption,
     context,
     get_current_context,
 )
@@ -693,6 +695,24 @@ def options_summary() -> str:
     return " ".join(words) or "none"
 
 
+def mdedup_version() -> str:
+    """The version of mdedup, as `mdedup --version` prints it.
+
+    Click Extra appends to a development version the short hash of its commit,
+    which it reads from `git`, a hash baked in at build time, or a `git archive`
+    export.
+
+    ```{todo}
+    Raise the `click-extra` floor to its first release that also reads the commit
+    of an install from a Git URL, so the report of a `uvx --from git+...` run names
+    its commit.
+    ```
+    """
+    option = VersionOption()
+    option.pin_field("module", sys.modules[__package__])
+    return option.version or __version__
+
+
 def report_url(title: str) -> str:
     """The URL of the bug report form, with its title filled in."""
     return f"{ISSUES_URL}/new?{urlencode({'template': REPORT_FORM, 'title': title})}"
@@ -725,7 +745,7 @@ def render_report(
     formats = ", ".join(f"{n} {name}" for name, n in sorted(sources.items()))
     lines.extend((
         REPORT_START,
-        f"mdedup {__version__}, {env_summary()}",
+        f"mdedup {mdedup_version()}, {env_summary()}",
         f"Options: {options_summary()}",
         f"Sources: {formats or 'none'}",
         *details,
