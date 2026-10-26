@@ -5,6 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Read a `Date` header with an out-of-range year, like `99999`, as no date, instead of setting the mail aside with a bug report.
 - Fix the Arch Linux install steps, which ran `pacman -S` on a package that only the AUR carries.
 
 ## [`9.4.0` (2026-10-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.2...v9.4.0)

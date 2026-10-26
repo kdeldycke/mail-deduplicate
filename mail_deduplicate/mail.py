@@ -25,7 +25,7 @@ import hashlib
 import logging
 import os
 import re
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from datetime import datetime, timezone
 from email.header import Header
 from functools import cached_property
@@ -317,7 +317,8 @@ class DedupMailMixin(Message):
     def parsed_date(self) -> float | None:
         """Parse the mail's date header into float timestamp.
 
-        Returns `None` if the mail has no valid date header.
+        Returns `None` if the mail has no valid date header, or one whose year no
+        timestamp can hold.
 
         Self-hydrating: re-reads the message from its box if it was dehydrated.
         """
@@ -325,11 +326,14 @@ class DedupMailMixin(Message):
         value = self.get("Date")
         parsed = email.utils.parsedate_tz(value)
 
-        if not parsed:
-            logging.debug(f"Mail {self!r} has no valid Date header: {value!r}")
-            return None
+        if parsed:
+            # `parsedate_tz()` accepts a year like 99999, which `mktime_tz()` then
+            # refuses: `datetime` stops at 9999.
+            with suppress(OverflowError, ValueError):
+                return float(email.utils.mktime_tz(parsed))
 
-        return float(email.utils.mktime_tz(parsed))
+        logging.debug(f"Mail {self!r} has no valid Date header: {value!r}")
+        return None
 
     @cached_property
     def timestamp(self) -> float | None:

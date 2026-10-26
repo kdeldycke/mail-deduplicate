@@ -595,11 +595,17 @@ def test_header_normalization(header_name, values, expected):
         pytest.param(("Date", ""), id="empty-date"),
         pytest.param(("Date", "Hello, World!"), id="greeting-date"),
         pytest.param(("Subject", "No date around here"), id="no-date-header"),
+        pytest.param(
+            ("Date", "Thu, 01 Jan 99999 00:00:00 +0000"), id="year-out-of-range"
+        ),
+        pytest.param(
+            ("Date", "Thu, 01 Jan 99999 00:00:00"), id="year-out-of-range-no-timezone"
+        ),
     ),
 )
 def test_unparsable_date_returns_none(header):
-    """A missing or unparsable `Date` header produces no timestamp instead of
-    crashing."""
+    """A missing, unparsable or out-of-range `Date` header produces no timestamp
+    instead of crashing."""
     mail = create_mail_with_headers(header)
     assert mail.parsed_date is None
 
