@@ -276,15 +276,15 @@ xfail_strict = true
 run.source = [ "mail_deduplicate" ]
 run.branch = true
 # Coverage ratchet: the suite fails below this. The matrix slice (everything
-# but the `once` marker) measures 97.0%, and the package holds only a handful
-# of platform-conditional lines, so the OS and Python spread across cells is
-# noise. Two points of margin absorb it without waving a real regression
-# through.
+# but the `once` marker) measures 98.67% on macOS with Python 3.14, and the
+# package holds only a handful of platform-conditional lines, so the OS and
+# Python spread across cells is noise. About two points of margin absorb it
+# without waving a real regression through.
 #
 # The `once-tests` workflow job overrides this to 0, covering a fraction of the
 # package on its own by design. A focused local run trips it too, so pair those
 # with `--no-cov`.
-report.fail_under = 95
+report.fail_under = 96.5
 report.precision = 2
 
 [tool.bumpversion]
