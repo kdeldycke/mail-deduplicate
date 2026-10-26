@@ -26,9 +26,9 @@ from typing import Any, cast
 import pytest
 
 from mail_deduplicate.mail import DedupMailMixin
-from mail_deduplicate.mail_box import MAILDIR_SUBDIRS, BoxFormat, BoxStructure
+from mail_deduplicate.mail_box import BoxFormat, BoxStructure
 
-from .conftest import BOX_TYPES, MailFactory
+from .conftest import MailFactory
 
 
 def create_mail_with_headers(
@@ -161,15 +161,42 @@ def multipart_mail(
             "Forecast: 25\N{REPLACEMENT CHARACTER}C",
             id="latin1-epilogue",
         ),
+        pytest.param(
+            b"Subject: s\n"
+            b"Content-Type: application/octet-stream\n"
+            b"\n"
+            b"raw-binary-payload\n",
+            "raw-binary-payload",
+            id="non-text-part-as-is",
+        ),
+        # The ASCII attempt fails on non-ASCII bytes, the UTF-8 one does not.
+        pytest.param(
+            b"Subject: s\nContent-Type: text/plain\n\n" + "Café déjà vu\n".encode(),
+            "Café déjà vu",
+            id="no-charset-utf8-fallback",
+        ),
+        pytest.param(
+            b"Subject: s\n"
+            b'Content-Type: text/plain; charset="utf-8"\n'
+            b"Content-Transfer-Encoding: base64\n"
+            b"\n" + base64.b64encode(b"\xff\xfe not valid utf-8") + b"\n",
+            base64.b64encode(b"\xff\xfe not valid utf-8").decode("ascii"),
+            id="charset-fails-raw-payload",
+        ),
     ],
 )
-def test_body_lines_decodes_8bit_bytes(raw, expected):
-    """Non-ASCII bytes are decoded wherever they sit in a multipart mail.
+def test_body_lines_decodes_each_part(raw, expected):
+    """Every part of a mail is decoded into its body lines, whatever its bytes, and
+    both body hashes are computed from them.
 
     The parser keeps each non-ASCII byte as a lone surrogate. `get_payload()` decodes
     the parts, and `body_lines` decodes the preamble and epilogue as UTF-8, instead of
     leaving surrogates that crash both body hashes with a `UnicodeEncodeError`. A byte
     that is not valid UTF-8 becomes `U+FFFD`.
+
+    A non-text part is passed through undecoded. A text part with no charset is tried
+    as ASCII, then as UTF-8. A text part its charset cannot decode comes back as its
+    raw payload instead of crashing.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/1085
     """
@@ -178,33 +205,6 @@ def test_body_lines_decodes_8bit_bytes(raw, expected):
     assert expected in mail.body_lines
     assert mail.hash_raw_body
     assert mail.hash_normalized_body
-
-
-def test_decode_part_returns_non_text_payload_as_is():
-    """A non-text part is passed through undecoded."""
-    raw = b"Subject: s\nContent-Type: application/octet-stream\n\nraw-binary-payload\n"
-    assert "raw-binary-payload" in create_mail_from_bytes(raw).body_lines
-
-
-def test_decode_part_falls_back_to_utf8_without_charset():
-    """A text part with no declared charset decodes via the utf-8 fallback once the
-    ascii attempt fails on non-ASCII bytes."""
-    raw = b"Subject: s\nContent-Type: text/plain\n\n" + "Café déjà vu\n".encode()
-    assert "Café déjà vu" in create_mail_from_bytes(raw).body_lines
-
-
-def test_decode_part_falls_back_to_raw_when_charset_fails():
-    """When the declared charset cannot decode the bytes, the raw payload is returned
-    instead of crashing."""
-    payload = base64.b64encode(b"\xff\xfe not valid utf-8").decode("ascii")
-    raw = (
-        b"Subject: s\n"
-        b'Content-Type: text/plain; charset="utf-8"\n'
-        b"Content-Transfer-Encoding: base64\n"
-        b"\n" + payload.encode("ascii") + b"\n"
-    )
-    # The undecodable payload does not raise and leaves a non-empty body.
-    assert create_mail_from_bytes(raw).body_lines
 
 
 @pytest.mark.parametrize(
@@ -602,75 +602,52 @@ def test_header_normalization(header_name, values, expected):
     assert result == expected
 
 
-@pytest.mark.parametrize("date_value", ["invalid date", "", "Hello, World!"])
-def test_unparsable_date_returns_none(date_value):
-    """An unparsable `Date` header produces no timestamp instead of crashing."""
-    mail = create_mail_with_headers(("Date", date_value))
+@pytest.mark.parametrize(
+    "header",
+    (
+        pytest.param(("Date", "invalid date"), id="invalid-date"),
+        pytest.param(("Date", ""), id="empty-date"),
+        pytest.param(("Date", "Hello, World!"), id="greeting-date"),
+        pytest.param(("Subject", "No date around here"), id="no-date-header"),
+    ),
+)
+def test_unparsable_date_returns_none(header):
+    """A missing or unparsable `Date` header produces no timestamp instead of
+    crashing."""
+    mail = create_mail_with_headers(header)
     assert mail.parsed_date is None
 
 
-def test_missing_date_header_returns_none():
-    """A mail without any `Date` header produces no timestamp instead of crashing."""
-    mail = create_mail_with_headers(("Subject", "No date around here"))
-    assert mail.parsed_date is None
+@pytest.mark.parametrize("box_format", tuple(BoxFormat), ids=str)
+def test_mail_path_derived_from_box(make_box, box_format):
+    """A mail's location comes from its box's own index, not from opening its file,
+    and its repr renders that location, ready to be copy-pasted for inspection.
 
-
-def test_maildir_repr_renders_mail_file_path(make_box):
-    """The repr of a maildir mail is the fully-qualified path of its own file, ready
-    to be copy-pasted for direct inspection.
+    Folder-based boxes give every mail its own file, so their mails carry distinct
+    paths below the box's directory, which their repr shows. File-based boxes pack
+    every mail into the box's single file, so their mails all share its path, and
+    their repr adds the mail ID to tell them apart.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/157
     """
-    box_path, _, _ = make_box(Maildir, [MailFactory()])
-    box = BoxFormat.MAILDIR.constructor(box_path, create=False)
-    mail_id, mail = next(iter(box.iteritems()))
-    mail.add_box_metadata(box, mail_id)
-    box.close()
-
-    assert repr(mail) == f"<MaildirDedupMail {mail.path}>"
-
-    # The rendered path points to the mail's own file within the box.
-    path = Path(mail.path)
-    assert path.is_file()
-    assert path.parent.name in MAILDIR_SUBDIRS
-    assert path.parent.parent == Path(box_path)
-
-
-def test_mbox_repr_appends_mail_id(make_box):
-    """Mails of a file-based box all share the box's path, so their repr keeps the
-    mail ID to tell them apart."""
-    box_path, _, _ = make_box(mbox, [MailFactory(), MailFactory()])
-    box = BoxFormat.MBOX.constructor(box_path, create=False)
-    reprs = set()
-    for mail_id, mail in box.iteritems():
-        mail.add_box_metadata(box, mail_id)
-        assert repr(mail) == f"<mboxDedupMail {box_path}:{mail_id}>"
-        reprs.add(repr(mail))
-    box.close()
-
-    assert len(reprs) == 2
-    assert Path(box_path).is_file()
-
-
-@pytest.mark.parametrize("box_type", BOX_TYPES)
-def test_mail_path_derived_from_box(make_box, box_type):
-    """A mail's location comes from its box's own index, not from opening its file.
-
-    Folder-based boxes give every mail its own file, so their mails carry distinct
-    paths below the box's directory. File-based boxes pack every mail into the box's
-    single file, so their mails all share its path and are told apart by their ID.
-    """
-    box_format = next(fmt for fmt in BoxFormat if fmt.base_class is box_type)
-    box_path, _, _ = make_box(box_type, [MailFactory(), MailFactory()])
+    box_path, _, _ = make_box(box_format.base_class, [MailFactory(), MailFactory()])
     box = box_format.constructor(box_path, create=False)
 
     paths = []
+    reprs = set()
     for mail_id, mail in box.iteritems():
         mail.add_box_metadata(box, mail_id)
         paths.append(mail.path)
+        reprs.add(repr(mail))
+        name = type(mail).__name__
+        if box_format.structure is BoxStructure.FOLDER:
+            assert repr(mail) == f"<{name} {mail.path}>"
+        else:
+            assert repr(mail) == f"<{name} {box_path}:{mail_id}>"
     box.close()
 
     assert len(paths) == 2
+    assert len(reprs) == 2
     # Whatever the layout, the path points at something readable on disk.
     assert all(Path(path).is_file() for path in paths)
 

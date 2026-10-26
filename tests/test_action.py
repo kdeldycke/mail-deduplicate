@@ -42,31 +42,31 @@ PARTLESS_HEADERS = (
 parses with no subpart."""
 
 
-def test_action_definitions():
+@pytest.mark.parametrize("action", Action, ids=str)
+def test_action_definition(action):
     """Test duplicate action definitions."""
-    for action in Action:
-        assert isinstance(action.value, str)
-        assert set(action.value).issubset(ascii_lowercase + "-")
-        assert str(action) == action.value
-        assert action.name.lower().replace("_", "-") == action.value
+    assert isinstance(action.value, str)
+    assert set(action.value).issubset(ascii_lowercase + "-")
+    assert str(action) == action.value
+    assert action.name.lower().replace("_", "-") == action.value
 
-        # Every action decomposes into a registered operation and a target subset.
-        operation = OPERATIONS[action.verb]
-        assert callable(operation)
-        assert operation.__name__ == f"{action.verb}_mails"
-        assert action.value == (
-            f"{action.verb}-discarded"
-            if action.acts_on_discarded
-            else f"{action.verb}-selected"
-        )
+    # Every action decomposes into a registered operation and a target subset.
+    operation = OPERATIONS[action.verb]
+    assert callable(operation)
+    assert operation.__name__ == f"{action.verb}_mails"
+    assert action.value == (
+        f"{action.verb}-discarded"
+        if action.acts_on_discarded
+        else f"{action.verb}-selected"
+    )
 
-        # Only a destructive action on the selection can lose a mail that has no
-        # duplicate, so it is the only one sparing them. Pinned over every member so
-        # a new destructive `*-selected` action cannot silently bring back
-        # https://github.com/kdeldycke/mail-deduplicate/issues/1053.
-        assert action.spares_unique == (
-            action.verb == "delete" and not action.acts_on_discarded
-        )
+    # Only a destructive action on the selection can lose a mail that has no
+    # duplicate, so it is the only one sparing them. Pinned over every member so a
+    # new destructive `*-selected` action cannot silently bring back
+    # https://github.com/kdeldycke/mail-deduplicate/issues/1053.
+    assert action.spares_unique == (
+        action.verb == "delete" and not action.acts_on_discarded
+    )
 
 
 duplicate_mail = MailFactory(body="Shared duplicate body.\n")

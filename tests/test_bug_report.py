@@ -180,35 +180,54 @@ def test_fingerprint_shows_8bit_values():
 
 
 @pytest.mark.parametrize(
-    "raw",
+    ("raw", "expected"),
     (
-        b"",
-        b"\x00\xff\xfe",
-        b"Subject: \xff\xfe\x00\n\nbody",
-        b"a line with no colon\n\nbody",
-        b"Content-Type: multipart/mixed; boundary=x\n\n--x\nContent-Type: text/plain\n",
-        b"Content-Type: message/rfc822\n\nnot a mail",
-        b"Content-Type: text/plain; charset=\xff\xfe\n\nbody",
-        b"Subject: a\r\nTo: b\n\nbody\rmore\n",
+        pytest.param(b"", "text/plain, payload empty", id="empty"),
+        pytest.param(
+            b"\x00\xff\xfe",
+            "payload 3 B 8-bit, not UTF-8, control bytes",
+            id="binary",
+        ),
+        pytest.param(
+            b"Subject: \xff\xfe\x00\n\nbody",
+            "Subject: <3 B 8-bit, not UTF-8, control bytes>",
+            id="binary-header",
+        ),
+        pytest.param(
+            b"a line with no colon\n\nbody",
+            "defects MissingHeaderBodySeparatorDefect",
+            id="no-header",
+        ),
+        # The defects the parser found show on the part they belong to.
+        pytest.param(
+            b"Content-Type: multipart/mixed; boundary=x\n\n--x\n"
+            b"Content-Type: text/plain\n",
+            "multipart/mixed, preamble none, epilogue none, defects "
+            "CloseBoundaryNotFoundDefect",
+            id="unclosed-boundary",
+        ),
+        pytest.param(
+            b"Content-Type: message/rfc822\n\nnot a mail",
+            "\n    text/plain, payload 10 B ascii, defects",
+            id="rfc822-not-a-mail",
+        ),
+        pytest.param(
+            b"Content-Type: text/plain; charset=\xff\xfe\n\nbody",
+            "Content-Type: text/plain; ?: <10 B 8-bit, not UTF-8>",
+            id="binary-charset",
+        ),
+        pytest.param(
+            b"Subject: a\r\nTo: b\n\nbody\rmore\n",
+            "line endings: mixed: 1 CRLF, 3 LF, 1 CR",
+            id="mixed-line-endings",
+        ),
     ),
 )
-def test_fingerprint_describes_broken_mails(raw):
-    """A broken mail still gets a fingerprint."""
+def test_fingerprint_describes_broken_mails(raw, expected):
+    """A broken mail still gets a fingerprint, which shows what is wrong with it."""
     print_ = fingerprint(raw)
     assert print_.startswith(f"size: {len(raw)} B, line endings: ")
-
-
-def test_fingerprint_reports_parser_defects():
-    """The defects the parser found show on the part they belong to."""
-    print_ = fingerprint(
-        b"Content-Type: multipart/mixed; boundary=x\n\n--x\nContent-Type: text/plain\n"
-    )
-    assert "defects CloseBoundaryNotFoundDefect" in print_
-
-
-def test_fingerprint_counts_mixed_line_endings():
-    print_ = fingerprint(b"Subject: a\r\nTo: b\n\nbody\rmore\n")
-    assert "line endings: mixed: 1 CRLF, 3 LF, 1 CR" in print_
+    assert expected in print_
 
 
 def test_fingerprint_length_is_capped():
@@ -601,9 +620,7 @@ def test_selection_worker_skips_its_set(
         pytest.param("bogus", 5, 5, id="unknown-operator"),
     ),
 )
-def test_statistics_self_check_reports_a_bug(
-    config, caplog, operator, found, retained
-):
+def test_statistics_self_check_reports_a_bug(config, caplog, operator, found, retained):
     """Statistics that do not add up, or that the check cannot compare, end the run
     with exit code 115 and a bug report."""
     dedup = Deduplicate(config)

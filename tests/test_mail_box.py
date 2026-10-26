@@ -66,88 +66,77 @@ def stdlib_box_types() -> list[type[Mailbox]]:
     return klass_list
 
 
-def test_box_format_definition():
-    """Ensures all box formats are correctly defined."""
-    for box in BoxFormat:
-        assert issubclass(box.base_class, Mailbox)
-
-        assert box.base_class.__name__.upper() == box.name
-        assert str(box) == box.name.lower()
-
-        assert box.structure in BoxStructure
-
-        assert issubclass(box.message_class, Message)
-        assert issubclass(box.message_class, DedupMailMixin)
-        assert box.message_class.__name__.startswith(box.base_class.__name__)
-
-        assert callable(box.constructor)
-
-    # Check all standard library box types are covered, on top of which custom
-    # formats like eml are provided.
-    assert set(stdlib_box_types()) <= {box.base_class for box in BoxFormat}
-
-    assert set(FOLDER_FORMATS).isdisjoint(FILE_FORMATS)
-    assert set(BoxFormat) == set(FOLDER_FORMATS) | set(FILE_FORMATS)
-
-
 # Sweep every BoxFormat, so format-agnostic behavior is checked over the whole set
 # instead of the historical maildir/mbox pair.
 ALL_FORMATS = pytest.mark.parametrize("box_format", tuple(BoxFormat), ids=str)
 
 
 @ALL_FORMATS
-def test_box_instantiation(make_box, box_format):
-    """Each format opens through its own custom DedupMail factory."""
-    box_type = box_format.base_class
-    mail = MailFactory(body="Single mail\n")
+def test_box_format_definition(box_format):
+    """Ensures each box format is correctly defined."""
+    assert issubclass(box_format.base_class, Mailbox)
 
-    box_path, created_type, _ = make_box(box_type, [mail])
+    assert box_format.base_class.__name__.upper() == box_format.name
+    assert str(box_format) == box_format.name.lower()
 
-    assert created_type is box_type
-    check_box(box_path, box_type, [mail])
+    assert box_format.structure in BoxStructure
 
-    mail_box = box_format.constructor(box_path)
-    assert isinstance(mail_box, box_format.base_class)
-    assert issubclass(mail_box._factory, box_format.message_class)
+    assert issubclass(box_format.message_class, Message)
+    assert issubclass(box_format.message_class, DedupMailMixin)
+    assert box_format.message_class.__name__.startswith(box_format.base_class.__name__)
 
-    assert len(mail_box) == 1
-    message = next(mail_box.itervalues())
-    assert isinstance(message, box_format.message_class)
-    assert isinstance(message, DedupMailMixin)
-    assert hasattr(message, "source_path")
-    assert hasattr(message, "mail_id")
-    mail_box.close()
+    assert callable(box_format.constructor)
+
+
+def test_box_formats_cover_stdlib():
+    """Box formats cover every box type of the standard library, on top of which
+    custom formats like eml are provided, and each format has one structure."""
+    assert set(stdlib_box_types()) <= {box.base_class for box in BoxFormat}
+
+    assert set(FOLDER_FORMATS).isdisjoint(FILE_FORMATS)
+    assert set(BoxFormat) == set(FOLDER_FORMATS) | set(FILE_FORMATS)
 
 
 @ALL_FORMATS
-def test_box_roundtrip(make_box, box_format):
-    """A mix of unique and duplicate mails survives a build/read round-trip.
+@pytest.mark.parametrize(
+    "mails",
+    (
+        pytest.param([], id="empty"),
+        pytest.param([MailFactory(body="Single mail\n")], id="single"),
+        pytest.param(
+            [
+                MailFactory(body="First mail\n", message_id="<1@test.com>"),
+                MailFactory(body="Second mail\n", message_id="<2@test.com>"),
+                MailFactory(body="Duplicate content\n", message_id="<dup@test.com>"),
+                MailFactory(body="Duplicate content\n", message_id="<dup@test.com>"),
+            ],
+            id="mixed",
+        ),
+    ),
+)
+def test_box_roundtrip(make_box, box_format, mails):
+    """Mails survive a build/read round-trip in each format, which opens through its
+    own custom DedupMail factory.
 
-    Collapses several near-identical single-format round-trip tests into one sweep,
-    and is the first time MH, Babyl and MMDF are exercised at all.
+    The duplicates of the mixed box check that no layer collapses identical mails.
     """
     box_type = box_format.base_class
-    mails = [
-        MailFactory(body="First mail\n", message_id="<1@test.com>"),
-        MailFactory(body="Second mail\n", message_id="<2@test.com>"),
-        MailFactory(body="Duplicate content\n", message_id="<dup@test.com>"),
-        MailFactory(body="Duplicate content\n", message_id="<dup@test.com>"),
-    ]
-
     box_path, created_type, _ = make_box(box_type, mails)
 
     assert created_type is box_type
     check_box(box_path, box_type, mails)
 
+    mail_box = box_format.constructor(box_path)
+    assert isinstance(mail_box, box_format.base_class)
+    assert issubclass(mail_box._factory, box_format.message_class)
 
-@ALL_FORMATS
-def test_box_empty(make_box, box_format):
-    """An empty box of any format reads back as empty."""
-    box_type = box_format.base_class
-    box_path, created_type, _ = make_box(box_type)
-
-    assert created_type is box_type
-    check_box(box_path, box_type, [])
+    assert len(mail_box) == len(mails)
+    for message in mail_box.itervalues():
+        assert isinstance(message, box_format.message_class)
+        assert isinstance(message, DedupMailMixin)
+        assert hasattr(message, "source_path")
+        assert hasattr(message, "mail_id")
+    mail_box.close()
 
 
 @ALL_FORMATS

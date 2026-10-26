@@ -27,25 +27,25 @@ from mail_deduplicate.strategy import Strategy
 from .conftest import MailFactory, check_box
 
 
-def test_strategy_definitions():
-    """Test deduplication strategy definitions."""
-
-    # Check there is no hidden aliases defined in the Strategy enum.
+def test_strategy_enum_has_no_hidden_alias():
+    """The `Strategy` enum defines no member under a second name or value."""
     assert len(Strategy) == len(Strategy.__members__)
     assert len(Strategy) == len(Strategy._value2member_map_)
 
-    all_strategy_ids = {s.name.lower() for s in Strategy}
 
-    for strategy in Strategy:
-        assert isinstance(strategy.value, str | int)
+@pytest.mark.parametrize("strategy", Strategy, ids=str)
+def test_strategy_definition(strategy):
+    """Each strategy has a lowercase ID matching its name, and runs a documented
+    function named after one of the strategies."""
+    assert isinstance(strategy.value, str | int)
 
-        assert strategy.name.lower().replace("_", "-") == str(strategy)
+    assert strategy.name.lower().replace("_", "-") == str(strategy)
 
-        assert set(str(strategy)).issubset(ascii_lowercase + "-")
-        assert callable(strategy.function)
-        assert strategy.function.__name__ in all_strategy_ids
-        docstring = strategy.function.__doc__
-        assert docstring and docstring.strip()
+    assert set(str(strategy)).issubset(ascii_lowercase + "-")
+    assert callable(strategy.function)
+    assert strategy.function.__name__ in {s.name.lower() for s in Strategy}
+    docstring = strategy.function.__doc__
+    assert docstring and docstring.strip()
 
 
 # Time-based collection of pre-defined fixtures.
@@ -502,45 +502,44 @@ def test_strategy_cascade_dedup_aliases(invoke, make_box):
     check_box(box_path, box_type, content=[oldest_mail])
 
 
-def test_strategy_cascade_regexp_required(invoke, make_box):
-    """--regexp is required as soon as a path-based strategy is part of the
-    cascade."""
+PATH_STRATEGIES = (
+    "discard-matching-path, discard-non-matching-path, select-matching-path, "
+    "select-non-matching-path"
+)
+"""The strategies taking a `--regexp`, as the constraint errors list them."""
+
+
+@pytest.mark.parametrize(
+    ("args", "messages"),
+    (
+        pytest.param(
+            ("--strategy=select-oldest", "--strategy=select-matching-path"),
+            (f"when -s/--strategy is one of {PATH_STRATEGIES}, --regexp is required",),
+            id="required",
+        ),
+        pytest.param(
+            ("--strategy=select-oldest", "--strategy=select-one", "--regexp=.*"),
+            (
+                (
+                    f"when -s/--strategy is none of {PATH_STRATEGIES}, the following "
+                    "parameters should not be provided:"
+                ),
+                "--regexp (-r)",
+            ),
+            id="not-allowed",
+        ),
+    ),
+)
+def test_strategy_cascade_regexp(invoke, make_box, args, messages):
+    """--regexp is required as soon as a path-based strategy is part of the cascade,
+    and rejected when no strategy of the cascade makes use of it."""
     box_path, _, _ = make_box(Maildir, [random_mail_1, random_mail_1])
 
-    result = invoke(
-        "--strategy=select-oldest",
-        "--strategy=select-matching-path",
-        "--action=delete-discarded",
-        box_path,
-    )
+    result = invoke(*args, "--action=delete-discarded", box_path)
 
     assert result.exit_code == 2
-    assert (
-        "when -s/--strategy is one of discard-matching-path, "
-        "discard-non-matching-path, select-matching-path, select-non-matching-path, "
-        "--regexp is required" in result.stderr
-    )
-
-
-def test_strategy_cascade_regexp_not_allowed(invoke, make_box):
-    """--regexp is rejected when no strategy of the cascade makes use of it."""
-    box_path, _, _ = make_box(Maildir, [random_mail_1, random_mail_1])
-
-    result = invoke(
-        "--strategy=select-oldest",
-        "--strategy=select-one",
-        "--regexp=.*",
-        "--action=delete-discarded",
-        box_path,
-    )
-
-    assert result.exit_code == 2
-    assert (
-        "when -s/--strategy is none of discard-matching-path, "
-        "discard-non-matching-path, select-matching-path, select-non-matching-path, "
-        "the following parameters should not be provided:" in result.stderr
-    )
-    assert "--regexp (-r)" in result.stderr
+    for message in messages:
+        assert message in result.stderr
 
 
 outlier_mail = MailFactory(body="An entirely different mail body. " * 60)
@@ -661,9 +660,10 @@ def test_no_strategy_skips_duplicate_sets(invoke, make_box):
     check_box(box_path, box_type, content=[random_mail_1, random_mail_1])
 
 
-def test_content_dissimilar_pair_skipped_without_diff(invoke, make_box):
-    """A content-dissimilar set is skipped whole; without --show-diff, no unified diff
-    is printed for it."""
+@pytest.mark.parametrize("show_diff", (False, True), ids=("no-diff", "show-diff"))
+def test_content_dissimilar_pair_skipped(invoke, make_box, show_diff):
+    """A content-dissimilar set is skipped whole, and --show-diff prints the unified
+    diff of its mails."""
     # Same headers group them; equal-length bodies keep the size check quiet so the
     # content check is what trips.
     a = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="aaaa bbbb\n")
@@ -672,6 +672,7 @@ def test_content_dissimilar_pair_skipped_without_diff(invoke, make_box):
 
     result = invoke(
         "--content-threshold=0",
+        *(("--show-diff",) if show_diff else ()),
         "--strategy=select-one",
         "--action=delete-discarded",
         box_path,
@@ -679,5 +680,6 @@ def test_content_dissimilar_pair_skipped_without_diff(invoke, make_box):
 
     assert result.exit_code == 0
     assert "too dissimilar in content" in result.stderr
-    assert "@@" not in result.stderr  # no unified-diff hunk header without --show-diff
+    # The one-line bodies make a single hunk.
+    assert ("@@ -1 +1 @@" in result.stderr) is show_diff
     check_box(box_path, box_type, content=[a, b])

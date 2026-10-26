@@ -300,32 +300,32 @@ def test_headers_table_rendered_only_when_logged(invoke, make_box, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "header",
+    ("args", "message"),
     (
         # The space (ASCII 32) falls below the RFC-5322 printable range.
-        pytest.param("bad header", id="space"),
-        pytest.param("", id="empty"),
+        pytest.param(
+            ("--hash-header", "bad header"),
+            "invalid header ID: 'bad header'.",
+            id="header-with-space",
+        ),
+        pytest.param(
+            ("--hash-header", ""), "invalid header ID: ''.", id="empty-header"
+        ),
+        pytest.param(
+            ("--strategy=select-matching-path", "--regexp=["),
+            "invalid regular expression",
+            id="uncompilable-regexp",
+        ),
     ),
 )
-def test_invalid_hash_header_rejected(invoke, make_box, header):
-    """A header ID with out-of-range characters, or with none at all, is refused at
-    parse time."""
+def test_invalid_option_value_rejected(invoke, make_box, args, message):
+    """An option value that cannot work is refused at parse time."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])
 
-    result = invoke("--hash-header", header, box_path)
+    result = invoke(*args, box_path)
 
     assert result.exit_code == 2
-    assert f"invalid header ID: {header!r}." in result.stderr
-
-
-def test_invalid_regexp_rejected(invoke, make_box):
-    """An un-compilable regular expression is refused at parse time."""
-    box_path, _, _ = make_box(Maildir, [MailFactory()])
-
-    result = invoke("--strategy=select-matching-path", "--regexp=[", box_path)
-
-    assert result.exit_code == 2
-    assert "invalid regular expression" in result.stderr
+    assert message in result.stderr
 
 
 def test_duplicate_source_rejected(invoke, make_box):

@@ -231,56 +231,44 @@ def test_parallel_hashing_only_claims_folder_boxes(make_box, config, box_format)
     dedup.close_all()
 
 
-def test_parallel_hashing_falls_back_when_the_pool_will_not_start(
-    invoke, make_box, monkeypatch
+@pytest.mark.parametrize(
+    ("step", "verb", "initializer"),
+    (
+        pytest.param("hashing", "Hash", deduplicate._init_hash_worker, id="hashing"),
+        pytest.param(
+            "selection", "Select", deduplicate._init_select_worker, id="selection"
+        ),
+    ),
+)
+def test_step_falls_back_when_its_pool_will_not_start(
+    invoke, make_box, monkeypatch, step, verb, initializer
 ):
     """A pool that cannot be started must not cost the run its results.
 
-    Frozen and sandboxed environments can refuse to spawn processes. Hashing then
-    happens in this one, which is slower and entirely correct.
+    Frozen and sandboxed environments can refuse to spawn processes. The step then
+    runs in this one, which is slower and entirely correct.
     """
-
-    def refuse(*args, **kwargs):
-        raise OSError("no processes for you")
-
-    monkeypatch.setattr("mail_deduplicate.deduplicate.ProcessPoolExecutor", refuse)
-    mails = [MailFactory(message_id=f"<f{i}@nohost.com>") for i in range(6)]
-    box_path, _, _ = make_box(Maildir, mails)
-
-    result = invoke("--jobs=4", *DEDUP_ARGS, box_path)
-
-    assert result.exit_code == 0
-    assert "Cannot start 4 hashing processes" in result.stderr
-    assert "Hash in this process instead" in result.stderr
-    # Every mail was still hashed and grouped.
-    assert metrics(result.stdout)["Retained"] == "6"
-
-
-def test_selection_falls_back_when_the_pool_will_not_start(
-    invoke, make_box, monkeypatch
-):
-    """Selecting across processes must degrade the same way hashing does."""
-    started: list[str] = []
+    refused: list[str] = []
     real_pool = deduplicate.ProcessPoolExecutor
 
-    def refuse_selection(*args, **kwargs):
-        # Let the hashing pool through, so only the selection one is denied.
-        if kwargs.get("initializer") is deduplicate._init_select_worker:
-            started.append("refused")
+    def refuse(*args, **kwargs):
+        # Let the pool of the other step through, so only this step's is denied.
+        if kwargs.get("initializer") is initializer:
+            refused.append(step)
             raise OSError("no processes for you")
         return real_pool(*args, **kwargs)
 
-    monkeypatch.setattr(deduplicate, "ProcessPoolExecutor", refuse_selection)
+    monkeypatch.setattr(deduplicate, "ProcessPoolExecutor", refuse)
     pairs = [MailFactory(message_id=f"<s{i}@nohost.com>") for i in range(3)]
     box_path, _, _ = make_box(Maildir, [mail for mail in pairs for _ in range(2)])
 
     result = invoke("--jobs=4", *DEDUP_ARGS, box_path)
 
-    assert started == ["refused"]
+    assert refused == [step]
     assert result.exit_code == 0
-    assert "Cannot start 4 selection processes" in result.stderr
-    assert "Select in this process instead" in result.stderr
-    # The duplicates were still found and acted on.
+    assert f"Cannot start 4 {step} processes" in result.stderr
+    assert f"{verb} in this process instead" in result.stderr
+    # Every mail was still hashed, and the duplicates found and acted on.
     assert metrics(result.stdout)["Retained"] == "6"
 
 

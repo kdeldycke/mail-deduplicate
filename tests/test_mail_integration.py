@@ -42,46 +42,35 @@ invalid_windows_dates = skip_windows(
 invalid_date_mail_1 = MailFactory(date_rfc2822="Thu, 13 Dec 101 15:30 WET")
 invalid_date_mail_2 = MailFactory(date_rfc2822="Thu, 13 Dec 102 15:30 WET")
 
-
-@invalid_windows_dates
-def test_invalid_date_parsing_noop(invoke, make_box):
-    """Mails with strange non-standard dates gets parsed anyway and grouped into
-    duplicate sets.
-
-    No deduplication happen: mails groups shares the same metadata.
-    """
-    box_path, box_type, _ = make_box(
-        Maildir,
-        [
-            invalid_date_mail_1,
-            invalid_date_mail_2,
-            invalid_date_mail_2,
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-        ],
-    )
-
-    result = invoke("--strategy=select-newest", "--action=delete-selected", box_path)
-
-    assert result.exit_code == 0
-
-    check_box(
-        box_path,
-        box_type,
-        content=[
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-            invalid_date_mail_2,
-            invalid_date_mail_2,
-        ],
-    )
+DATELESS_HASH_HEADERS = (
+    "--hash-header=message-id",
+    "--hash-header=from",
+    "--hash-header=to",
+    "--hash-header=subject",
+)
+"""Four headers every test mail carries, and no `Date`: mails that differ by their
+date alone land in the same duplicate set."""
 
 
 @invalid_windows_dates
-def test_invalid_date_parsing_dedup(invoke, make_box):
-    """Mails with strange non-standard dates gets parsed anyway and deduplicated if we
-    reduce the source of hashed headers."""
+@pytest.mark.parametrize(
+    ("hash_headers", "remaining"),
+    (
+        # Each group shares its metadata, dates included, so no group has a newest
+        # mail to pick: nothing is deduplicated.
+        pytest.param(
+            (),
+            [invalid_date_mail_1] * 3 + [invalid_date_mail_2] * 2,
+            id="noop",
+        ),
+        # Without the date in the hash, both dates share one set, and its newest
+        # mails are deleted.
+        pytest.param(DATELESS_HASH_HEADERS, [invalid_date_mail_1] * 3, id="dedup"),
+    ),
+)
+def test_invalid_date_parsing(invoke, make_box, hash_headers, remaining):
+    """Mails with strange non-standard dates get parsed anyway and grouped into
+    duplicate sets."""
     box_path, box_type, _ = make_box(
         Maildir,
         [
@@ -94,30 +83,21 @@ def test_invalid_date_parsing_dedup(invoke, make_box):
     )
 
     result = invoke(
-        "--hash-header=message-id",
-        "--hash-header=from",
-        "--hash-header=to",
-        "--hash-header=subject",
+        *hash_headers,
         "--strategy=select-newest",
         "--action=delete-selected",
         box_path,
     )
 
     assert result.exit_code == 0
-
-    check_box(
-        box_path,
-        box_type,
-        content=[
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-            invalid_date_mail_1,
-        ],
-    )
+    check_box(box_path, box_type, content=remaining)
 
 
 undated_mail = MailFactory(date_rfc2822="invalid date")
 """A mail whose `Date` header cannot be parsed into a timestamp."""
+
+dated_mail = MailFactory(date="2021-01-01")
+"""A mail with a valid `Date` header."""
 
 
 def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
@@ -160,48 +140,38 @@ def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
     box.close()
 
 
-def test_unparsable_date_skips_time_strategy(invoke, make_box):
+@pytest.mark.parametrize(
+    ("mails", "args"),
+    (
+        pytest.param(
+            [undated_mail, undated_mail],
+            ("--strategy=select-oldest",),
+            id="all-undated",
+        ),
+        # A single undated mail is enough to skip its whole set.
+        pytest.param(
+            [undated_mail, dated_mail],
+            (*DATELESS_HASH_HEADERS, "--strategy=select-newest"),
+            id="one-undated",
+        ),
+    ),
+)
+def test_unparsable_date_skips_time_strategy(invoke, make_box, mails, args):
     """Time-based strategies skip duplicate sets containing mails without a parseable
     `Date` header, and name the offending mails instead of crashing.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/132
     """
-    box_path, box_type, _ = make_box(Maildir, [undated_mail, undated_mail])
+    box_path, box_type, _ = make_box(Maildir, mails)
 
-    result = invoke("--strategy=select-oldest", "--action=delete-selected", box_path)
-
-    assert result.exit_code == 0
-    assert "cannot compare mails without a timestamp" in result.stderr
-    assert "No timestamp for <MaildirDedupMail" in result.stderr
-
-    # No mail was removed.
-    check_box(box_path, box_type, content=[undated_mail, undated_mail])
-
-
-def test_mixed_missing_date_skips_time_strategy(invoke, make_box):
-    """A single mail without a parseable `Date` header is enough to skip its whole
-    set when a time-based strategy is applied."""
-    dated_mail = MailFactory(date="2021-01-01")
-    box_path, box_type, _ = make_box(Maildir, [undated_mail, dated_mail])
-
-    result = invoke(
-        # Remove the date from the hashed headers so both mails are grouped in the
-        # same duplicate set.
-        "--hash-header=message-id",
-        "--hash-header=from",
-        "--hash-header=to",
-        "--hash-header=subject",
-        "--strategy=select-newest",
-        "--action=delete-selected",
-        box_path,
-    )
+    result = invoke(*args, "--action=delete-selected", box_path)
 
     assert result.exit_code == 0
     assert "cannot compare mails without a timestamp" in result.stderr
     assert "No timestamp for <MaildirDedupMail" in result.stderr
 
     # No mail was removed.
-    check_box(box_path, box_type, content=[undated_mail, dated_mail])
+    check_box(box_path, box_type, content=mails)
 
 
 def test_unparsable_date_show_diff(invoke, make_box):
@@ -226,49 +196,24 @@ def test_unparsable_date_show_diff(invoke, make_box):
 
 
 @pytest.mark.parametrize(
-    ("hash_body", "deduplicated"),
+    ("hash_body", "other_body", "deduplicated"),
     (
-        pytest.param("skip", True, id="skip-ignores-body"),
-        pytest.param("raw", False, id="raw-separates-differing-bodies"),
+        pytest.param("skip", "Hello   world\n", True, id="skip-spaced"),
+        pytest.param("skip", "Goodbye world\n", True, id="skip-different"),
+        pytest.param("raw", "Hello   world\n", False, id="raw-spaced"),
+        pytest.param("raw", "Goodbye world\n", False, id="raw-different"),
+        pytest.param("normalized", "Hello   world\n", True, id="normalized-spaced"),
+        pytest.param("normalized", "Goodbye world\n", False, id="normalized-different"),
     ),
 )
-def test_hash_body_skip_vs_raw(invoke, make_box, hash_body, deduplicated):
-    """--hash-body=skip groups mails by their headers alone, so two mails with
-    identical headers but different bodies are duplicates; =raw folds the body into
-    the hash, so they no longer are."""
-    a = MailFactory(date="2021-01-01", message_id="<hb@nohost.com>", body="Body A.\n")
-    b = MailFactory(
-        date="2021-01-01", message_id="<hb@nohost.com>", body="A different body B.\n"
-    )
-    box_path, _, _ = make_box(Maildir, [a, b])
-
-    result = invoke(
-        f"--hash-body={hash_body}",
-        "--strategy=select-one",
-        "--action=delete-discarded",
-        box_path,
-    )
-
-    assert result.exit_code == 0
-    assert len(Maildir(box_path, create=False)) == (1 if deduplicated else 2)
-
-
-@pytest.mark.parametrize(
-    ("hash_body", "deduplicated"),
-    (
-        pytest.param("raw", False, id="raw-keeps-whitespace-variants-apart"),
-        pytest.param("normalized", True, id="normalized-folds-whitespace-variants"),
-    ),
-)
-def test_hash_body_raw_vs_normalized(invoke, make_box, hash_body, deduplicated):
-    """--hash-body=normalized ignores whitespace-only body differences that =raw
-    treats as distinct."""
+def test_hash_body(invoke, make_box, hash_body, other_body, deduplicated):
+    """--hash-body=skip groups mails by their headers alone, so mails with identical
+    headers are duplicates whatever their bodies. =raw folds every byte of the body
+    into the hash, and =normalized folds it in but ignores whitespace."""
     a = MailFactory(
         date="2021-01-01", message_id="<n@nohost.com>", body="Hello world\n"
     )
-    b = MailFactory(
-        date="2021-01-01", message_id="<n@nohost.com>", body="Hello   world\n"
-    )
+    b = MailFactory(date="2021-01-01", message_id="<n@nohost.com>", body=other_body)
     box_path, _, _ = make_box(Maildir, [a, b])
 
     result = invoke(
