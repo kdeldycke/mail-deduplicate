@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import shutil
 import sqlite3
+from contextlib import closing
 from mailbox import Maildir, mbox
 from unittest import mock
 
@@ -290,14 +291,16 @@ def test_rejected_mails_are_not_cached(invoke, make_box, tmp_path):
 
     assert result.exit_code == 0
     assert "Rejecting" in result.stderr
-    with sqlite3.connect(cache_db) as connection:
-        rows = connection.execute("SELECT COUNT(*) FROM hashes").fetchone()[0]
-    assert rows == 0
+    assert cached_rows(cache_db) == 0
 
 
 def cached_rows(cache_db) -> int:
-    """Number of mail entries held by a cache database."""
-    with sqlite3.connect(cache_db) as connection:
+    """Number of mail entries held by a cache database.
+
+    The connection of `sqlite3` commits on leaving a `with` block, but stays open:
+    `closing()` is what closes it.
+    """
+    with closing(sqlite3.connect(cache_db)) as connection:
         count = connection.execute("SELECT COUNT(*) FROM hashes").fetchone()[0]
     return int(count)
 
