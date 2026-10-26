@@ -518,43 +518,48 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     return folder_list
 
 
-def has_8bit_partless_multipart(mail: Message) -> bool:
-    """Whether the mail has a multipart part parsed with no subpart, with 8-bit bytes.
+def has_partless_multipart(mail: Message) -> bool:
+    """Whether the mail has a multipart part that parsed with no subpart.
 
     A multipart part whose body never opens with its boundary parses with no
-    subpart: its whole body becomes a string. `BytesGenerator` writes that string as
-    `get_payload()` returns it, decoded with the charset of the part. It then fails
-    to encode the 8-bit bytes to ASCII, with a `UnicodeEncodeError`: see
+    subpart. The parser keeps its body as a string, up to a closing boundary if one
+    comes: that boundary and all that follows it are dropped. `BytesGenerator` then
+    writes the string as `get_payload()` returns it, decoded with the charset of the
+    part, and fails to encode 8-bit bytes to ASCII, with a `UnicodeEncodeError`: see
     [python/cpython#136686](https://github.com/python/cpython/issues/136686).
     """
-    for part in mail.walk():
-        if part.get_content_maintype() != "multipart":
-            continue
-        payload = part.get_payload()
-        if isinstance(payload, str) and not payload.isascii():
-            return True
-    return False
+    return any(
+        part.get_content_maintype() == "multipart" and not part.is_multipart()
+        for part in mail.walk()
+    )
 
 
 def add_mail(box: Mailbox, mail: DedupMailMixin) -> None:
-    """Add a mail to a box, as the bytes its source box holds if the email package
-    cannot write it.
+    """Add a mail to a box, as the bytes its source box holds if Python cannot
+    rebuild it.
 
-    Every box format writes a mail with `BytesGenerator`, which fails on a mail that
-    `has_8bit_partless_multipart()`. Such a mail goes in as the bytes its source box
-    holds, with the LF line endings the generator gives to the other mails. See:
+    Every box format writes a mail with `BytesGenerator`, from the message parsed
+    out of it. A mail that `has_partless_multipart()` would come out short, or not
+    at all. It goes in as the bytes its source box holds instead, with the LF line
+    endings the generator gives to the other mails. See:
     https://github.com/kdeldycke/mail-deduplicate/issues/1090
+
+    A fixed subclass of `BytesGenerator` would not bring back what the parser
+    dropped. It also cannot take the place of the class in `email.generator`: the
+    stdlib code of the class calls `super(BytesGenerator, self)`, which then
+    recurses.
 
     The bytes lose nothing the message would carry: mails are read through the
     factory of their box, which leaves out the `From ` line, flags, sequences and
     labels that a format keeps beside each mail.
 
     ```{todo}
-    Add every mail as a message once all supported Python versions carry a fix for
-    [python/cpython#136686](https://github.com/python/cpython/issues/136686).
+    Add every mail as a message once all supported Python versions parse and write
+    back a multipart part with no subpart whole, which needs
+    [python/cpython#136686](https://github.com/python/cpython/issues/136686) fixed.
     ```
     """
-    if not has_8bit_partless_multipart(mail):
+    if not has_partless_multipart(mail):
         box.add(mail)
         return
 
@@ -562,7 +567,7 @@ def add_mail(box: Mailbox, mail: DedupMailMixin) -> None:
     assert mail.box is not None
     assert mail.mail_id is not None
 
-    logging.debug(f"Add {mail!r} as the bytes of its box: Python cannot write it.")
+    logging.debug(f"Add {mail!r} as the bytes of its box: Python cannot rebuild it.")
     box.add(mail.box.get_bytes(mail.mail_id).replace(b"\r\n", b"\n"))
 
 

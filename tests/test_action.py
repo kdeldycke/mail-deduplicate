@@ -28,7 +28,7 @@ from mail_deduplicate.mail_box import BoxFormat
 
 from .conftest import MailFactory, check_box, mail_files
 
-PARTLESS_MULTIPART = (
+PARTLESS_HEADERS = (
     b"Date: Thu, 11 Oct 2018 09:30:00 +0800\r\n"
     b"From: Clementine <clementine@orchard.example>\r\n"
     b"To: quince@orchard.example\r\n"
@@ -36,11 +36,10 @@ PARTLESS_MULTIPART = (
     b"Message-ID: <taipei-weather@orchard.example>\r\n"
     b"MIME-Version: 1.0\r\n"
     b'Content-Type: multipart/alternative; boundary="Kiwi-Boundary"\r\n'
-    b"\r\n" + "Taipei: 晴天, 28 °C.\r\nTainan: 多雲.\r\n".encode()
+    b"\r\n"
 )
-"""A multipart mail whose body never opens with its boundary, so it parses with no
-part, and holds 8-bit UTF-8 bytes, as in
-https://github.com/kdeldycke/mail-deduplicate/issues/1090"""
+"""Headers of a multipart mail whose body never opens with its boundary, so it
+parses with no subpart."""
 
 
 def test_action_definitions():
@@ -380,17 +379,24 @@ def test_hardlink_discarded_leaves_file_based_box_alone(invoke, make_box):
 
 @pytest.mark.parametrize("export_format", BoxFormat, ids=str)
 @pytest.mark.parametrize("action", ("copy-selected", "move-selected"))
-def test_export_keeps_8bit_body_of_partless_multipart(
-    invoke, tmp_path, action, export_format
-):
-    """A multipart mail parsed with no part reaches every export format byte for byte,
-    instead of stopping the run on a `UnicodeEncodeError`.
+@pytest.mark.parametrize(
+    "raw",
+    (
+        PARTLESS_HEADERS + "Taipei: 晴天, 28 °C.\r\nTainan: 多雲.\r\n".encode(),
+        PARTLESS_HEADERS + b"Sunny.\r\n--Kiwi-Boundary--\r\nRain.\r\n",
+    ),
+    ids=("8bit", "closed"),
+)
+def test_export_keeps_partless_multipart(invoke, tmp_path, raw, action, export_format):
+    """A multipart mail parsed with no subpart reaches every export format byte for
+    byte. Its 8-bit bytes no longer stop the run on a `UnicodeEncodeError`, and a
+    closing boundary no longer cuts its body short.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/1090
     """
     source_path = tmp_path / "source.mbox"
     source = mbox(source_path)
-    source.add(PARTLESS_MULTIPART)
+    source.add(raw)
     source.close()
     export_path = tmp_path / "export"
 
@@ -406,9 +412,7 @@ def test_export_keeps_8bit_body_of_partless_multipart(
     export = export_format.base_class(export_path, create=False)
     (key,) = export.keys()
     # The headers and the body are written with the line endings of the platform.
-    assert export.get_bytes(key).replace(b"\r\n", b"\n") == (
-        PARTLESS_MULTIPART.replace(b"\r\n", b"\n")
-    )
+    assert export.get_bytes(key).replace(b"\r\n", b"\n") == raw.replace(b"\r\n", b"\n")
 
 
 def test_unique_only_source_is_exported(invoke, make_box):

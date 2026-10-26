@@ -14,7 +14,7 @@
 - Ship the test suite in the PyPI sdist, so downstream packagers can build and test without a Git checkout.
 - Fix the per-mail lines of a dry run, which reported each mail as `deleted`, `copied`, `moved` or `hardlinked`: they now read `would be deleted`.
 - Fix a `UnicodeEncodeError` crash on multipart mails with non-ASCII bytes in their preamble or epilogue, which since `9.3.0` also hit runs with the default `--hash-body skip`. Closes [#1085](https://github.com/kdeldycke/mail-deduplicate/issues/1085).
-- Fix a `UnicodeEncodeError` that stopped copy and move actions on a multipart mail missing its start boundary and holding non-ASCII bytes. Closes [#1090](https://github.com/kdeldycke/mail-deduplicate/issues/1090).
+- Fix copy and move actions on a multipart mail missing its start boundary, which raised `UnicodeEncodeError` on non-ASCII bytes or lost the text after its closing boundary. Closes [#1090](https://github.com/kdeldycke/mail-deduplicate/issues/1090).
 - Unlock the source boxes of a run cut short by an error or Ctrl-C, so the next run no longer fails without `--force-unlock`.
 - Close the hash cache file when it turns out not to be a database, instead of holding it open for the rest of the run.
 - Refuse to run the CLI inside a `--jobs` worker, which a binary with an unguarded launcher did in each worker it started.
