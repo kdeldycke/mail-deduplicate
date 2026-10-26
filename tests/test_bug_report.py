@@ -25,7 +25,7 @@ from base64 import b64encode
 from collections import Counter
 from fractions import Fraction
 from importlib.metadata import metadata
-from mailbox import Mailbox, Maildir, mbox
+from mailbox import Maildir, mbox
 
 import pytest
 
@@ -387,8 +387,9 @@ def test_failure_describes_its_error(error, expected):
 
 
 def test_unknown_box_format_shows_its_class():
-    """A box of no known format shows in the report by the name of its class."""
-    assert bug_report.box_format_of(Mailbox("basket")) == "Mailbox"
+    """A mail from no known box format shows in the report by the name of its
+    class."""
+    assert bug_report.box_format_of(DedupMailMixin()) == "DedupMailMixin"
 
 
 def test_failure_log_keeps_a_few_samples():
