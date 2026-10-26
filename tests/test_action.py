@@ -222,25 +222,6 @@ def test_delete_selected_spares_mails_without_duplicates(invoke, make_box, jobs)
     )
 
 
-@pytest.mark.parametrize(
-    ("operator", "found", "retained"),
-    (
-        pytest.param(">=", 1, 5, id="ge-violated"),
-        pytest.param("==", 3, 5, id="eq-violated"),
-        pytest.param("bogus", 5, 5, id="unknown-operator"),
-    ),
-)
-def test_assert_stats_inconsistent_exits(config, operator, found, retained):
-    """An inconsistent, or uncomparable, metric aborts with the 115 exit code."""
-    dedup = Deduplicate(config)
-    dedup.stats[Stat.MAIL_FOUND] = found
-    dedup.stats[Stat.MAIL_RETAINED] = retained
-
-    with pytest.raises(SystemExit) as exc:
-        dedup.assert_stats(Stat.MAIL_FOUND, operator, Stat.MAIL_RETAINED)
-    assert exc.value.code == 115
-
-
 def test_assert_stats_consistent_passes(config):
     """A satisfied assertion returns quietly, without exiting."""
     dedup = Deduplicate(config)

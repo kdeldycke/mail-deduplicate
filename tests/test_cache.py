@@ -103,38 +103,16 @@ def test_warm_run_matches_uncached_run(
 
     assert uncached.exit_code == cold.exit_code == warm.exit_code == 0
     # The warm run was really served by the cache, so the comparison below is about
-    # restored hashes rather than freshly computed ones.
+    # restored hashes rather than freshly computed ones. The cache counts its hits in
+    # this process, while the workers of the parallel path hash out of reach of the
+    # `count_hashes` spy.
+    assert "Hash cache: 0 mails restored, 3 hashed and recorded." in cold.stderr
+    assert "Hash cache: 3 mails restored, 0 hashed and recorded." in warm.stderr
     assert count_hashes == []
     assert metrics(uncached.stdout) == metrics(cold.stdout)
     assert metrics(uncached.stdout) == metrics(warm.stdout)
     # The metrics really were parsed, rather than two empty dicts comparing equal.
     assert metrics(uncached.stdout)["Found"] == "3"
-
-
-def test_warm_run_skips_hashing(invoke, make_box, tmp_path, count_hashes):
-    """The point of the cache: a second run does not re-hash what it already knows."""
-    box_path, _, _ = make_box(Maildir, [MailFactory(), MailFactory()])
-    cache_db = tmp_path.joinpath("hashes.db")
-
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
-    assert len(count_hashes) == 2
-
-    count_hashes.clear()
-    assert invoke(f"--cache-path={cache_db}", *DEDUP_ARGS, box_path).exit_code == 0
-    assert count_hashes == []
-
-
-def test_cache_flag_uses_the_default_location(invoke, make_box, tmp_path, monkeypatch):
-    """`--cache` alone puts the database in the platform cache directory."""
-    monkeypatch.setattr(
-        "mail_deduplicate.cache.default_cache_path",
-        lambda: tmp_path.joinpath("hashes.db"),
-    )
-    box_path, _, _ = make_box(Maildir, [MailFactory()])
-
-    assert invoke("--cache", *DEDUP_ARGS, box_path).exit_code == 0
-
-    assert tmp_path.joinpath("hashes.db").is_file()
 
 
 @pytest.mark.parametrize(

@@ -593,21 +593,29 @@ def test_selection_worker_skips_its_set(
         )
 
 
-def test_statistics_self_check_reports_a_bug(config, caplog):
-    """Statistics that do not add up end the run with exit code 115 and a bug
-    report."""
+@pytest.mark.parametrize(
+    ("operator", "found", "retained"),
+    (
+        pytest.param(">=", 3, 5, id="ge-violated"),
+        pytest.param("==", 3, 5, id="eq-violated"),
+        pytest.param("bogus", 5, 5, id="unknown-operator"),
+    ),
+)
+def test_statistics_self_check_reports_a_bug(
+    config, caplog, operator, found, retained
+):
+    """Statistics that do not add up, or that the check cannot compare, end the run
+    with exit code 115 and a bug report."""
     dedup = Deduplicate(config)
-    dedup.stats[Stat.MAIL_FOUND] = 3
-    dedup.stats[Stat.MAIL_RETAINED] = 5
+    dedup.stats[Stat.MAIL_FOUND] = found
+    dedup.stats[Stat.MAIL_RETAINED] = retained
 
     with pytest.raises(SystemExit) as exc:
-        dedup.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_RETAINED)
+        dedup.assert_stats(Stat.MAIL_FOUND, operator, Stat.MAIL_RETAINED)
 
     assert exc.value.code == 115
-    assert (
-        report_url("Statistics do not add up: mail_found >= mail_retained")
-        in caplog.text
-    )
+    check = f"mail_found {operator} mail_retained"
+    assert report_url(f"Statistics do not add up: {check}") in caplog.text
     block = report_block(caplog.text)
-    assert "Failed check: mail_found >= mail_retained, 3 >= 5" in block
-    assert "Statistics: mail_found=3, mail_retained=5" in block
+    assert f"Failed check: {check}, {found} {operator} {retained}" in block
+    assert f"Statistics: mail_found={found}, mail_retained={retained}" in block

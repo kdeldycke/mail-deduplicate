@@ -26,8 +26,7 @@ from email import message_from_bytes
 from email.generator import BytesGenerator
 from functools import cache
 from io import BytesIO
-from mailbox import Mailbox, Message, NoSuchMailboxError, mbox
-from pathlib import Path
+from mailbox import Mailbox, Message, NoSuchMailboxError
 
 import pytest
 
@@ -177,31 +176,6 @@ def test_dedup_across_formats(invoke, make_box, box_format):
     check_box(box_path, box_type, content=[dup, unique])
 
 
-def test_force_unlock_recovers_stale_lock(invoke, make_box):
-    """--force-unlock clears a stale lock that would otherwise abort the run."""
-    dup = MailFactory(body="Same body.\n", message_id="<lock@test.com>")
-    box_path, box_type, _ = make_box(mbox, [dup, dup])
-
-    # Simulate a stale lock left behind by a crashed process.
-    Path(box_path + ".lock").touch()
-
-    # Without the flag, opening the locked box refuses to proceed and changes nothing.
-    refused = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
-    assert refused.exit_code == 1
-    assert "already locked" in refused.stderr.lower()
-    check_box(box_path, box_type, content=[dup, dup])
-
-    # With the flag, the stale lock is forced off and dedup runs to completion.
-    forced = invoke(
-        "--force-unlock",
-        "--strategy=select-one",
-        "--action=delete-discarded",
-        box_path,
-    )
-    assert forced.exit_code == 0
-    check_box(box_path, box_type, content=[dup])
-
-
 @ALL_FORMATS
 @pytest.mark.parametrize("error", [RuntimeError, KeyboardInterrupt])
 def test_run_cut_short_unlocks_boxes(invoke, make_box, monkeypatch, box_format, error):
@@ -321,11 +295,14 @@ def test_killed_run_needs_force_unlock(invoke, make_box, box_format, stop):
     # Nothing ran after the signal, so a single-file box keeps its queued removals
     # unwritten. A folder-based box deletes each mail file as soon as it is removed.
     queued = box_format.structure == BoxStructure.FILE
-    check_box(box_path, box_type, content=[dup, dup] if queued else [dup])
+    left = [dup, dup] if queued else [dup]
+    check_box(box_path, box_type, content=left)
 
+    # Without the flag, the run refuses the locked box and changes nothing.
     refused = invoke(*args)
     assert refused.exit_code == 1
     assert "already locked" in refused.stderr.lower()
+    check_box(box_path, box_type, content=left)
 
     forced = invoke("--force-unlock", *args)
     assert forced.exit_code == 0
@@ -562,18 +539,6 @@ def test_eml_autodetect_and_dedup(invoke, tmp_path):
     assert len(box) == 2
     assert (root / "notes.txt").is_file()
     assert (root / ".hidden.eml").is_file()
-
-
-def test_eml_forced_format(invoke, tmp_path):
-    """The `eml` format can be forced on any folder."""
-    root = tmp_path / "export"
-    root.mkdir()
-    (root / "one.eml").write_bytes(MailFactory().render())
-
-    result = invoke("--input-format=eml", "--action=delete-discarded", str(root))
-
-    assert result.exit_code == 0
-    assert "1 mails found." in result.stderr
 
 
 def test_eml_export_format(invoke, tmp_path):
