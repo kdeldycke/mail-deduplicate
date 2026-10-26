@@ -181,7 +181,8 @@ build-backend.source-exclude = [
 ]
 # Ship the test suite in the sdist, so distribution packagers can build and test
 # straight from the PyPI sdist instead of fetching a GitHub tag tarball. The tests
-# read no repository file besides pyproject.toml, which every sdist carries.
+# read no repository file besides pyproject.toml, which every sdist carries, except
+# the one that checks docs/tests.md and skips without it.
 # source-include feeds the sdist only: the wheel stays module-only.
 build-backend.source-include = [ "tests/**" ]
 
