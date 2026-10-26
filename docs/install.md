@@ -98,10 +98,6 @@ $ pacaur -S mail-deduplicate
 ```
 
 ```{code-block} shell-session
-$ pacman -S mail-deduplicate
-```
-
-```{code-block} shell-session
 $ paru -S mail-deduplicate
 ```
 
