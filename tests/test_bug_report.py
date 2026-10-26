@@ -285,7 +285,7 @@ def test_fingerprint_failure_is_reported(monkeypatch):
 def test_bytes_recovered_from_surrogates():
     """The surrogate parsing leaves for a non-ASCII byte turns back into that byte,
     and a surrogate from no byte shows as the invalid UTF-8 it is."""
-    assert bug_report.to_bytes(f"caf{chr(0xDCC3)}{chr(0xDCA9)}") == b"caf\xc3\xa9"
+    assert bug_report.to_bytes(f"calf{chr(0xDCC3)}{chr(0xDCA9)}") == b"calf\xc3\xa9"
     assert bug_report.to_bytes(chr(0xD800)) == b"\xed\xa0\x80"
 
 
