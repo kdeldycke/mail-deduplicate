@@ -14,7 +14,7 @@ project_path = Path(__file__).parent.parent.resolve()
 
 # Fetch general information about the project from pyproject.toml.
 toml_path = project_path / "pyproject.toml"
-toml_config = tomllib.loads(toml_path.read_text(encoding="utf-8"))
+toml_config = tomllib.loads(toml_path.read_text(encoding="UTF-8"))
 
 # Redistribute pyproject.toml config to Sphinx.
 project_id = toml_config["project"]["name"]
@@ -105,6 +105,12 @@ click_extra_enable_exec_directives = True
 exclude_patterns = ["_build", "_linkcheck", "Thumbs.db", ".DS_Store"]
 
 nitpicky = True
+# `AnyValueIn` subclasses cloup's `Predicate`, and autodoc lists that base class by
+# its full path. No inventory is mapped for cloup, so there is nothing to link to:
+# stop nitpicky mode asking for it.
+nitpick_ignore = [
+    ("py:class", "cloup.constraints.conditions.Predicate"),
+]
 
 # Only categories with no actionable source fix belong here. Re-audit on every
 # Sphinx or extension upgrade: build with each entry removed and drop the ones

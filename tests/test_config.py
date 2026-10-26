@@ -32,7 +32,7 @@ def make_config(tmp_path):
 
     def _make_config(content):
         conf_file = tmp_path.joinpath("mdedup.toml")
-        conf_file.write_text(dedent(content), encoding="utf-8")
+        conf_file.write_text(dedent(content), encoding="UTF-8")
         return str(conf_file)
 
     return _make_config
@@ -168,7 +168,7 @@ def test_pyproject_autodiscovery(invoke, make_box, monkeypatch, tmp_path):
             [tool.mdedup]
             hash_only = true
         """),
-        encoding="utf-8",
+        encoding="UTF-8",
     )
     monkeypatch.chdir(tmp_path)
 
@@ -185,7 +185,7 @@ def test_params_reflects_autodiscovered_config(invoke, monkeypatch, tmp_path):
             [tool.mdedup]
             size_threshold = 1024
         """),
-        encoding="utf-8",
+        encoding="UTF-8",
     )
     monkeypatch.chdir(tmp_path)
 
