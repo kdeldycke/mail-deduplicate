@@ -117,10 +117,6 @@ class Stat(Enum):
         "Total number of sets containing only a single mail with no applicable "
         "strategy. They were automatically kept in the final selection."
     )
-    SET_SKIPPED_ENCODING = (
-        "Number of sets skipped from the selection process because they had "
-        "encoding issues."
-    )
     SET_SKIPPED_SIZE = (
         "Number of sets skipped from the selection process because they were "
         "too dissimilar in size."
@@ -447,11 +443,6 @@ class DuplicateSet:
 
         try:
             evicted = self.check_differences()
-        except UnicodeDecodeError as expt:
-            logging.debug(f"{expt}")
-            return self.skip_set(
-                "unparsable mails due to bad encoding.", Stat.SET_SKIPPED_ENCODING
-            )
         except SizeDiffAboveThreshold:
             return self.skip_set(
                 "mails are too dissimilar in size.", Stat.SET_SKIPPED_SIZE
@@ -1660,7 +1651,6 @@ class Deduplicate:
             "==",
             (
                 Stat.SET_SINGLE,
-                Stat.SET_SKIPPED_ENCODING,
                 Stat.SET_SKIPPED_SIZE,
                 Stat.SET_SKIPPED_CONTENT,
                 Stat.SET_SKIPPED_TIMESTAMP,
