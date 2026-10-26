@@ -144,7 +144,7 @@ An error `mdedup` has no rule for is a bug, either in its code or in how it hand
 - In the action step, `mdedup` stops at the first such error, as a move or a deletion must not go on past a mail it cannot explain. It prints the same bug report, which names the mail the action was working on.
 - When the statistics self-check finds counts that do not add up, the run ends with exit code `115` and a bug report.
 
-The bug report holds a block to paste into a [GitHub issue](https://github.com/kdeldycke/mail-deduplicate/issues). The block gives the version of `mdedup`, Python and the platform, the options of the run, and the formats of its sources. Then comes the error, with its traceback reduced to module names and line numbers, and a fingerprint of the mails involved.
+The bug report links to the [bug report form](https://github.com/kdeldycke/mail-deduplicate/issues/new?template=bug-report.yml), with a title like `UnicodeEncodeError while copying` filled in. It holds a block to paste into the form. The block gives the version of `mdedup`, Python and the platform, the options of the run, and the formats of its sources. Then comes the error, with its traceback reduced to module names, line numbers and function names, and a fingerprint of the mails involved. At `--verbosity DEBUG`, the log also gives the full traceback of each failure the report details.
 
 A fingerprint describes the structure of a mail, never its content:
 

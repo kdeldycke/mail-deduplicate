@@ -6,7 +6,7 @@
 > This version is **not released yet** and is under active development.
 
 - Set aside the mails and duplicate sets that hit an unexpected error while hashing or selecting, and end the run with exit code `1`.
-- Print a bug report after an unexpected error, ready to paste into an issue, with a fingerprint of each failing mail that holds none of its content.
+- Print a bug report after an unexpected error, linking to the issue form, with a fingerprint of each failing mail that holds none of its content.
 - Report an unusable mail source, a locked box, a system error or an existing export box as a one-line error instead of a traceback.
 - Reject a mail that vanishes or cannot be read during a sequential run, as `--jobs` runs did, instead of failing the statistics self-check or crashing.
 - Depend on `extra-platforms` `13.4` directly, which `click-extra` already installed.

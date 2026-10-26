@@ -18,8 +18,10 @@ from __future__ import annotations
 
 import logging
 import re
+import sys
 from base64 import b64encode
 from collections import Counter
+from fractions import Fraction
 from importlib.metadata import metadata
 from mailbox import Maildir, mbox
 
@@ -27,14 +29,17 @@ import pytest
 
 from mail_deduplicate import bug_report, deduplicate
 from mail_deduplicate.bug_report import (
+    FAILURE_ATTRIBUTE,
     ISSUES_URL,
     REPORT_END,
     REPORT_START,
     SAMPLES,
     FailureLog,
+    blame,
     capture,
     fingerprint,
     render_report,
+    report_url,
 )
 from mail_deduplicate.deduplicate import (
     Deduplicate,
@@ -233,6 +238,24 @@ def test_traceback_holds_no_path():
     )
 
 
+def test_traceback_starts_in_the_blamed_block():
+    """The frame of `blame()` that catches the error stays out of the traceback,
+    which names a method with its class from Python 3.11 on."""
+    with (
+        pytest.raises(ValueError) as exc_info,
+        blame(MaildirDedupMail(), "copying"),
+    ):
+        Fraction("pear")
+
+    frames = getattr(exc_info.value, FAILURE_ATTRIBUTE).frames
+    assert re.fullmatch(
+        r"tests\.test_bug_report:\d+ in test_traceback_starts_in_the_blamed_block",
+        frames[0],
+    )
+    method = "Fraction.__new__" if sys.version_info >= (3, 11) else "__new__"
+    assert re.fullmatch(rf"fractions:\d+ in {re.escape(method)}", frames[-1])
+
+
 def test_failure_log_keeps_a_few_samples():
     """Every failure is counted, but only the first ones of a kind are kept, with
     their traceback."""
@@ -254,6 +277,8 @@ def test_failure_log_keeps_a_few_samples():
         "mdedup set aside 5 mails after unexpected errors, and acted on none of "
         "their mails."
     )
+    assert log.title() == "RuntimeError while hashing"
+    assert len(list(log.traces())) == SAMPLES
     lines = list(log.report_lines())
     assert "Failure 1 of 1, while hashing: 5 mails" in lines
     assert "RuntimeError: Unexpected kiwi." in lines
@@ -263,8 +288,9 @@ def test_failure_log_keeps_a_few_samples():
 def test_agents_ask_their_user_first(monkeypatch, agent):
     """An AI agent is asked to show the report to its user before filing it."""
     monkeypatch.setattr(bug_report, "is_any_agent", lambda: agent)
-    report = render_report("Headline.", ("Detail.",), Counter({"mbox": 2}))
+    report = render_report("Headline.", "Title.", ("Detail.",), Counter({"mbox": 2}))
     assert ("AI agent: show this report to your user" in report) is agent
+    assert f"\n{ISSUES_URL}/new?template=bug-report.yml&title=Title.\n" in report
     block = report_block(report)
     assert "Sources: 2 mbox" in block
     assert "Options: unknown" in block
@@ -300,7 +326,7 @@ def test_hashing_error_sets_the_mail_aside(invoke, make_box, monkeypatch, box_fo
     # One copy of the duplicate is deleted, and the failed mail is left alone.
     check_box(box_path, box_type, content=[dup, doomed])
 
-    assert ISSUES_URL in result.stderr
+    assert report_url("RuntimeError while hashing") in result.stderr
     block = report_block(result.stderr)
     assert f"Failure 1 of 1, while hashing: 1 mail ({box_format})" in block
     assert "RuntimeError: Unexpected tomato." in block
@@ -322,6 +348,19 @@ def test_hash_only_reports_failures(invoke, make_box, monkeypatch):
     assert result.exit_code == 1
     assert result.stdout.count("Hash: ") == 1
     assert "while hashing: 1 mail" in report_block(result.stderr)
+
+
+def test_debug_log_holds_traceback_of_samples(invoke, make_box, monkeypatch):
+    """At the debug level, the log holds the full traceback of each failure the
+    report details."""
+    box_path, _, _ = make_box(Maildir, [MailFactory(message_id=DOOMED_ID)])
+    fail_on_doomed(monkeypatch, "hash_key", "Unexpected tomato.")
+
+    result = invoke("--verbosity=DEBUG", "--hash-only", box_path)
+
+    assert result.exit_code == 1
+    assert "Traceback of a failure the report details:" in result.stderr
+    assert "raise RuntimeError(message)" in result.stderr
 
 
 def test_report_masks_paths_and_regexps(invoke, make_box, monkeypatch):
@@ -415,9 +454,11 @@ def test_action_error_names_its_mail(
     assert result.exit_code == 1
     assert f"Unexpected error while {step} <MaildirDedupMail " in result.stderr
     assert "Traceback (most recent call last):" in result.stderr
+    assert report_url(f"RuntimeError while {step}") in result.stderr
     block = report_block(result.stderr)
     assert f"Failure while {step} (maildir)" in block
     assert "RuntimeError: Unexpected fig." in block
+    assert "mail_deduplicate.bug_report:" not in block
     assert "Fingerprint of a mail involved:" in block
     assert box_path not in block
     assert [text for text in MAIL_FACTORY_CONTENT if text in block] == []
@@ -542,6 +583,10 @@ def test_statistics_self_check_reports_a_bug(config, caplog):
         dedup.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_RETAINED)
 
     assert exc.value.code == 115
+    assert (
+        report_url("Statistics do not add up: mail_found >= mail_retained")
+        in caplog.text
+    )
     block = report_block(caplog.text)
     assert "Failed check: mail_found >= mail_retained, 3 >= 5" in block
     assert "Statistics: mail_found=3, mail_retained=5" in block

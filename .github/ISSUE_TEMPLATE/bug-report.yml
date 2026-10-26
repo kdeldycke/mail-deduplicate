@@ -1,3 +1,5 @@
+# The bug report mdedup prints links to this form by its file name, with the title filled in: see
+# mail_deduplicate/bug_report.py.
 name: Bug report
 description: Report a bug in mail-deduplicate
 labels: ["🐛 bug"]
@@ -5,13 +7,14 @@ body:
   - type: markdown
     attributes:
       value: >
-        Thanks for reporting a bug! Before filing, please check if the issue
-        is already fixed in the latest development version:
+        Thanks for reporting a bug! Before filing, please check if the bug is
+        already fixed in the latest development version. Run your command again,
+        with this in place of `mdedup`:
 
 
         ```shell-session
 
-        $ uvx --from git+https://github.com/kdeldycke/mail-deduplicate -- mdedup --version
+        $ uvx --from git+https://github.com/kdeldycke/mail-deduplicate -- mdedup
 
         ```
 
@@ -24,6 +27,15 @@ body:
       description: What happened? What did you expect to happen?
     validations:
       required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Bug report
+      description: >
+        If `mdedup` printed a bug report, paste the lines between its two `8<`
+        markers. They give the version, the options of the run and the structure
+        of the failing mails, with none of their content.
+      render: text
   - type: textarea
     id: reproduction
     attributes:
@@ -41,25 +53,17 @@ body:
     id: version
     attributes:
       label: Version
-      description: Output of `mdedup --version`.
-      placeholder: "mdedup, version X.Y.Z"
-    validations:
-      required: true
-  - type: textarea
-    id: report
-    attributes:
-      label: Bug report
       description: >
-        If `mdedup` printed a bug report, paste the lines between its two `8<`
-        markers. They describe the failing mails by their structure, with none of
-        their content.
-      render: text
+        Output of `mdedup --version`. You can leave it empty if you pasted a bug
+        report: its first line gives the version.
+      placeholder: "mdedup, version X.Y.Z"
   - type: textarea
     id: logs
     attributes:
       label: Logs
       description: >
-        Relevant log output. Run with `--verbosity DEBUG` for full details. DEBUG
-        logs print header values, like addresses and subjects: remove them before
+        You can leave it empty if you pasted a bug report. Else, paste the
+        relevant output of the run with `--verbosity DEBUG`. DEBUG logs print file
+        paths and header values, like addresses and subjects: remove them before
         you post.
       render: text

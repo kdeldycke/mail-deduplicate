@@ -47,6 +47,7 @@ from dataclasses import dataclass, replace
 from email import message_from_bytes
 from email.message import Message
 from typing import cast
+from urllib.parse import urlencode
 
 from click.exceptions import Exit
 from click_extra import (
@@ -81,6 +82,9 @@ ISSUES_URL = "https://github.com/kdeldycke/mail-deduplicate/issues"
 Repeats the `Issues` URL of `pyproject.toml`, and a test keeps the two in sync: a
 binary built by Nuitka ships no package metadata to read it from.
 """
+
+REPORT_FORM = "bug-report.yml"
+"""File name of the issue form a report links to, in `.github/ISSUE_TEMPLATE/`."""
 
 REPORT_START = "----- 8< ----- mdedup bug report ----- 8< -----"
 """First line of the block a user pastes into an issue."""
@@ -440,10 +444,12 @@ def compact_frames(tb: TracebackType | None) -> tuple[str, ...]:
     """A traceback as `module:line in function` entries, outermost first.
 
     Module names say as much as file paths about the code, and nothing about where
-    it is installed, so they are what the report shows.
+    it is installed, so they are what the report shows. A method shows with its
+    class, like `Maildir.add`, from Python 3.11 on.
     """
     frames = [
-        f"{frame.f_globals.get('__name__', '?')}:{lineno} in {frame.f_code.co_name}"
+        f"{frame.f_globals.get('__name__', '?')}:{lineno} in "
+        f"{getattr(frame.f_code, 'co_qualname', frame.f_code.co_name)}"
         for frame, lineno in traceback.walk_tb(tb)
     ]
     if len(frames) > MAX_FRAMES:
@@ -493,6 +499,15 @@ class Failure:
             self.frames[-1] if self.frames else "",
         )
 
+    @property
+    def title(self) -> str:
+        """The title of an issue reporting the failure: its exception class and step.
+
+        Reports of the same bug get the same title, so GitHub lists the issue already
+        open for it while the next user types theirs.
+        """
+        return f"{self.kind[1]} while {self.step}"
+
 
 def capture(
     expt: BaseException,
@@ -505,10 +520,15 @@ def capture(
     Only a sample gets the fingerprints of its first mails and the full traceback:
     both cost far more than the rest.
     """
+    tb = expt.__traceback__
+    # `blame()` and `report_unexpected_errors()` catch the error once it was thrown
+    # back into their own frame, which then heads its traceback.
+    if tb is not None and tb.tb_frame.f_globals.get("__name__") == __name__:
+        tb = tb.tb_next
     failure = Failure(
         step=step,
         error=describe(expt),
-        frames=compact_frames(expt.__traceback__),
+        frames=compact_frames(tb),
         culprits=tuple(repr(mail) for mail in mails),
         formats=tuple(box_format_of(mail) for mail in mails),
     )
@@ -519,7 +539,7 @@ def capture(
         fingerprints=tuple(
             fingerprint_mail(mail) for mail in mails[:FINGERPRINTED_MAILS]
         ),
-        trace="".join(traceback.format_exception(type(expt), expt, expt.__traceback__)),
+        trace="".join(traceback.format_exception(type(expt), expt, tb)),
     )
 
 
@@ -588,6 +608,19 @@ class FailureLog:
             f"mdedup set aside {aside} after unexpected errors, and acted on none of "
             "their mails."
         )
+
+    def title(self) -> str:
+        """The title of the issue reporting the failures: that of their most frequent
+        kind."""
+        kind = max(self.counts, key=self.counts.__getitem__)
+        return self.samples[kind][0].title
+
+    def traces(self) -> Iterator[str]:
+        """The full traceback of each sample, for the debug log."""
+        for samples in self.samples.values():
+            for sample in samples:
+                if sample.trace:
+                    yield sample.trace
 
     def report_lines(self) -> Iterator[str]:
         """The lines of the report detailing each kind of failure, most frequent
@@ -660,18 +693,26 @@ def options_summary() -> str:
     return " ".join(words) or "none"
 
 
-def render_report(headline: str, details: Iterable[str], sources: Counter[str]) -> str:
+def report_url(title: str) -> str:
+    """The URL of the bug report form, with its title filled in."""
+    return f"{ISSUES_URL}/new?{urlencode({'template': REPORT_FORM, 'title': title})}"
+
+
+def render_report(
+    headline: str, title: str, details: Iterable[str], sources: Counter[str]
+) -> str:
     """The message inviting the user to file a bug report, with the block to paste.
 
-    The block opens with the version, the platform, the options and the formats of
-    the sources, then gives the `details` of the error.
+    It links to the bug report form, with `title` filled in. The block opens with the
+    version, the platform, the options and the formats of the sources, then gives
+    the `details` of the error.
     """
     lines = [
         headline,
-        "Please report it at:",
-        ISSUES_URL,
+        "Please report it with this form:",
+        report_url(title),
         (
-            "Paste the lines between the two 8< markers into the Bug report field. "
+            "Paste the lines between the two 8< markers into its Bug report field. "
             "They hold no mail content and no file path. Read the error lines first: "
             "an error message can quote a header value."
         ),
@@ -740,6 +781,7 @@ def report_unexpected_errors(dedup: Deduplicate) -> Generator[None, None, None]:
         logging.critical(
             render_report(
                 "mdedup stopped on this error, which is a bug.",
+                failure.title,
                 failure_lines((failure,), f"Failure while {failure.step}"),
                 dedup.source_formats,
             )

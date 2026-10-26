@@ -1512,9 +1512,12 @@ class Deduplicate:
         """
         if not self.failures:
             return False
+        for trace in self.failures.traces():
+            logging.debug(f"Traceback of a failure the report details:\n{trace}")
         logging.error(
             render_report(
                 self.failures.headline(),
+                self.failures.title(),
                 self.failures.report_lines(),
                 self.source_formats,
             )
@@ -1564,6 +1567,7 @@ class Deduplicate:
         logging.error(
             render_report(
                 "The statistics of the run do not add up, which is a bug.",
+                f"Statistics do not add up: {first_name} {operator} {second_name}",
                 (
                     "",
                     (
