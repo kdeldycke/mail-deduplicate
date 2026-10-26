@@ -151,7 +151,7 @@ This is the preferred way of testing `mdedup` without polluting your machine. Th
 | **macOS**   | [Download `mdedup-macos-arm64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-arm64.bin)     | [Download `mdedup-macos-x64.bin`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-macos-x64.bin)     |
 | **Windows** | [Download `mdedup-windows-arm64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-arm64.exe) | [Download `mdedup-windows-x64.exe`](https://github.com/kdeldycke/mail-deduplicate/releases/latest/download/mdedup-windows-x64.exe) |
 
-All links above points to the latest released version of `mdedup`.
+All links above point to the latest released version of `mdedup`.
 
 Binaries of all past releases, with their VirusTotal analyses, are cataloged on the [binaries page](binaries.md).
 
@@ -160,16 +160,19 @@ If you need to test previous versions for regression, compatibility or general t
 ```
 
 ```{caution} Development builds
-Each commit to the development branch triggers the compilation of binaries. This way you can easily test the bleeding edge version of `mdedup` and report any issue.
+The `Build & release` workflow compiles binaries of the development branch. Use them to test the unreleased version of `mdedup` and report any issue. The platforms a run carries depend on what started it:
 
-Look at the [list of latest binary builds](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/release.yaml?query=branch%3Amain+is%3Asuccess). Then select the latest `Build & release`/`release.yaml` workflow run and download the binary artifact corresponding to your platform and architecture.
+- A push to the development branch compiles the Linux arm64 binary only. It compiles none when the push changes only documentation.
+- A release commit, the weekly run on Mondays and a manual run compile the binaries of every platform and architecture.
+
+Look at the [list of latest binary builds](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/release.yaml?query=branch%3Amain+is%3Asuccess). Then select the latest `Build & release`/`release.yaml` workflow run that compiled your platform and architecture, and download its binary artifact.
 ```
 
 ````{note} ABI targets
 ```{code-block} shell-session
 $ file ./mdedup*
-./mdedup-linux-arm64.bin:   ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=520bfc6f2bb21f48ad568e46752888236552b26a, for GNU/Linux 3.7.0, stripped
-./mdedup-linux-x64.bin:     ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=56ba24bccfa917e6ce9009223e4e83924f616d46, for GNU/Linux 3.2.0, stripped
+./mdedup-linux-arm64.bin:   ELF 64-bit LSB executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=27b007c12b88749f6317f1f26a7b0c0159adbd52, for GNU/Linux 3.7.0, stripped
+./mdedup-linux-x64.bin:     ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=282bf373f84de056a3195fe821cb613e8a8bd793, for GNU/Linux 3.2.0, stripped
 ./mdedup-macos-arm64.bin:   Mach-O 64-bit executable arm64
 ./mdedup-macos-x64.bin:     Mach-O 64-bit executable x86_64
 ./mdedup-windows-arm64.exe: PE32+ executable (console) Aarch64, for MS Windows

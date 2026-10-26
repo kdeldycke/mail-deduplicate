@@ -136,15 +136,15 @@ Linked mails share one inode, and so share the permissions, ownership and modifi
 
 ## Errors and bug reports
 
-A problem you can fix ends the run with a one-line `Error:` message and exit code `1`, before any mail is touched: a source with no structure `mdedup` recognizes, a box another program locked, a source given twice, an export box that already exists, or a file the system refuses to read or write.
+A problem you can fix ends the run with a one-line `Error:` message and exit code `1`: a source with no structure `mdedup` recognizes, a box another program locked, a source given twice, an export box that already exists, or a system error, like a missing permission or a full disk, while `mdedup` opens a source or acts on the mails. The first four stop the run before `mdedup` touches any mail. A system error in the action step can come after the action handled some mails. Its message names the mail it stopped on, and the mails already handled stay handled.
 
 An error `mdedup` has no rule for is a bug, either in its code or in how it handles a mail shape it never met. What happens next depends on the step:
 
 - In the hashing and selection steps, `mdedup` sets aside the mail or the duplicate set that raised the error, and goes on with the others. No action touches what it set aside. The `Failed` and `Skipped - Error` rows of the statistics count them, and the run ends with a bug report and exit code `1`.
-- In the action step, `mdedup` stops at the first such error, as a move or a deletion must not go on past a mail it cannot explain. It prints the same bug report, which names the mail the action was working on.
+- In the action step, `mdedup` stops at the first such error, as a move or a deletion must not go on past a mail it cannot explain. It logs the mail the action was working on and the full traceback, then prints the same bug report.
 - When the statistics self-check finds counts that do not add up, the run ends with exit code `115` and a bug report.
 
-The bug report links to the [bug report form](https://github.com/kdeldycke/mail-deduplicate/issues/new?template=bug-report.yml), with a title like `UnicodeEncodeError while copying` filled in. It holds a block to paste into the form. The block gives the version of `mdedup`, Python and the platform, the options of the run, and the formats of its sources. A development version names its commit, as `mdedup --version` does. Then comes the error, with its traceback reduced to module names, line numbers and function names, and a fingerprint of the mails involved. At `--verbosity DEBUG`, the log also gives the full traceback of each failure the report details.
+The bug report links to the [bug report form](https://github.com/kdeldycke/mail-deduplicate/issues/new?template=bug-report.yml), with a title like `UnicodeEncodeError while copying` filled in. It holds a block to paste into the form. The block gives the version of `mdedup`, Python and the platform, the options of the run, and the formats of its sources. A development version names its commit, as `mdedup --version` does. Then comes the error, with its traceback reduced to module names, line numbers and function names, and a fingerprint of the mails involved. In the hashing and selection steps, `--verbosity DEBUG` also logs the full traceback of each failure the report details.
 
 A fingerprint describes the structure of a mail, never its content:
 

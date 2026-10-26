@@ -8,19 +8,18 @@
 - Set aside the mails and duplicate sets that hit an unexpected error while hashing or selecting, and end the run with exit code `1`.
 - Print a bug report after an unexpected error, linking to the issue form, with a fingerprint of each failing mail that holds none of its content.
 - Report an unusable mail source, a locked box, a system error or an existing export box as a one-line error instead of a traceback.
-- Reject a mail that vanishes or cannot be read during a sequential run, as `--jobs` runs did, instead of failing the statistics self-check or crashing.
+- Refuse to run the CLI inside a `--jobs` worker, which a binary with an unguarded launcher did in each worker it started.
+- Remove the `Skipped - Encoding` row of the statistics, which no duplicate set could reach.
+- Ship the test suite in the PyPI sdist, so downstream packagers can build and test without a Git checkout.
 - Depend on `extra-platforms` `13.4` directly, which `click-extra` already installed.
 - Require `click-extra` `9.4.1`: piped runs now print the per-mail `✓` lines and closing count of an action, and `python -c` runs no longer crash.
-- Ship the test suite in the PyPI sdist, so downstream packagers can build and test without a Git checkout.
-- Remove the `Skipped - Encoding` row of the statistics, which no duplicate set could reach.
+- Reject a mail that vanishes or cannot be read during a sequential run, as `--jobs` runs did, instead of failing the statistics self-check or crashing.
 - Fix the per-mail lines of a dry run, which reported each mail as `deleted`, `copied`, `moved` or `hardlinked`: they now read `would be deleted`.
 - Fix a `UnicodeEncodeError` crash on multipart mails with non-ASCII bytes in their preamble or epilogue, which since `9.3.0` also hit runs with the default `--hash-body skip`. Closes [#1085](https://github.com/kdeldycke/mail-deduplicate/issues/1085).
 - Fix copy and move actions on a multipart mail missing its start boundary, which raised `UnicodeEncodeError` on non-ASCII bytes or lost the text after its closing boundary. Closes [#1090](https://github.com/kdeldycke/mail-deduplicate/issues/1090).
 - Unlock the source boxes of a run cut short by an error or Ctrl-C, so the next run no longer fails without `--force-unlock`.
 - Close the hash cache file when it turns out not to be a database, instead of holding it open for the rest of the run.
-- Refuse to run the CLI inside a `--jobs` worker, which a binary with an unguarded launcher did in each worker it started.
 - Fix a `ValueError` crash on an empty `--hash-header` value, which is now refused as an invalid header ID.
-- Fix the bug report line counting the kinds of failure it leaves out, which read `1 more kinds`.
 - Fix `--show-diff`, which printed the changed lines of a diff run together on one line.
 - Publish a sitemap and a custom 404 page with the documentation, and stop publishing a copy of every documentation source under `_sources/`.
 - Fix the module sections of the test suite page in the documentation, which the build left empty without `pytest`.

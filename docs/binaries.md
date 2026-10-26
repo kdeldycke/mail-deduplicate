@@ -10,7 +10,9 @@ Compiled Python binaries are regularly flagged by heuristic antivirus engines, s
 
 ## Development builds
 
-Fresh binaries are compiled from every push to the default branch by the [release workflow](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/release.yaml). To try the latest development build: open the most recent successful run and download the artifact matching your platform (a GitHub account is required, and the binary comes wrapped in a zip). The same builds are also attached to a rolling dev pre-release, a draft only visible to repository maintainers.
+Fresh binaries are compiled by the [release workflow](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/release.yaml). A push to the default branch compiles the Linux arm64 binary only. It compiles none when the push changes only documentation. Release commits, the weekly run on Mondays and manual runs compile the binaries of every platform and architecture.
+
+To try the latest development build, open the most recent successful run that compiled your platform. Download its artifact: a GitHub account is required, and the binary comes wrapped in a zip. The same builds are also attached to a rolling dev pre-release, a draft only visible to repository maintainers.
 
 <!-- binaries-chart -->
 

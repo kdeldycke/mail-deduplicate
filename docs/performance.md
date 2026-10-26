@@ -65,10 +65,10 @@ Deduplicating one box at a time keeps the peak lower than passing every box in a
 
 ## What a run says
 
-At its default verbosity a run reports its steps, the strategies in play, and anything it had to skip, then closes with the statistics tables. Individual mails and duplicate sets are named at `--verbosity DEBUG` only: a corpus has as many sets as it has distinct mails, and narrating each one costs more than deciding it.
+At its default verbosity a run reports its steps, the strategies in play, and anything it had to skip, then closes with the statistics tables. Individual mails and duplicate sets are named at `--verbosity DEBUG` only: a corpus has as many sets as it has distinct mails, and narrating each one costs more than deciding it. The action step is the exception: it prints a `✓` line for each mail it handles, at any verbosity.
 
 ```{tip}
-Output is not free. Even reduced to what is worth reading, it accounts for roughly `8%` of a run whose hashes all come from the cache. `--verbosity WARNING` trims it to what went wrong, and a run whose output you are piping anywhere costs less again.
+Output is not free. Even reduced to what is worth reading, it accounts for roughly `8%` of a run whose hashes all come from the cache. `--verbosity WARNING` trims the log to what went wrong, and a run whose output you are piping anywhere costs less again.
 ```
 
 ## Running in parallel
