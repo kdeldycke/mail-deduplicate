@@ -37,6 +37,7 @@ from .mail import DedupMailMixin
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
+    from email.message import Message
 
 
 class MailSourceError(ClickException):
@@ -515,6 +516,54 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
                     sub_box = Maildir(sub_path, factory=box._factory, create=False)
                     folder_list += open_subfolders(sub_box, force_unlock)
     return folder_list
+
+
+def has_8bit_partless_multipart(mail: Message) -> bool:
+    """Whether the mail has a multipart part parsed with no subpart, with 8-bit bytes.
+
+    A multipart part whose body never opens with its boundary parses with no
+    subpart: its whole body becomes a string. `BytesGenerator` writes that string as
+    `get_payload()` returns it, decoded with the charset of the part. It then fails
+    to encode the 8-bit bytes to ASCII, with a `UnicodeEncodeError`: see
+    [python/cpython#136686](https://github.com/python/cpython/issues/136686).
+    """
+    for part in mail.walk():
+        if part.get_content_maintype() != "multipart":
+            continue
+        payload = part.get_payload()
+        if isinstance(payload, str) and not payload.isascii():
+            return True
+    return False
+
+
+def add_mail(box: Mailbox, mail: DedupMailMixin) -> None:
+    """Add a mail to a box, as the bytes its source box holds if the email package
+    cannot write it.
+
+    Every box format writes a mail with `BytesGenerator`, which fails on a mail that
+    `has_8bit_partless_multipart()`. Such a mail goes in as the bytes its source box
+    holds, with the LF line endings the generator gives to the other mails. See:
+    https://github.com/kdeldycke/mail-deduplicate/issues/1090
+
+    The bytes lose nothing the message would carry: mails are read through the
+    factory of their box, which leaves out the `From ` line, flags, sequences and
+    labels that a format keeps beside each mail.
+
+    ```{todo}
+    Add every mail as a message once all supported Python versions carry a fix for
+    [python/cpython#136686](https://github.com/python/cpython/issues/136686).
+    ```
+    """
+    if not has_8bit_partless_multipart(mail):
+        box.add(mail)
+        return
+
+    # Asserts to please the type checker.
+    assert mail.box is not None
+    assert mail.mail_id is not None
+
+    logging.debug(f"Add {mail!r} as the bytes of its box: Python cannot write it.")
+    box.add(mail.box.get_bytes(mail.mail_id).replace(b"\r\n", b"\n"))
 
 
 def create_box(

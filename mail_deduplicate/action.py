@@ -34,7 +34,7 @@ from click_extra import OperationTrail, format_size, get_current_theme
 from . import StrEnum
 from .bug_report import blame
 from .deduplicate import Stat
-from .mail_box import FOLDER_FORMAT_CLASSES, create_box
+from .mail_box import FOLDER_FORMAT_CLASSES, add_mail, create_box
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -93,7 +93,7 @@ def copy_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
                 # The box is only left closed on a dry run, ruled out just above.
                 assert box is not None
                 with blame(mail, dedup.step), mail.hydrated():
-                    box.add(mail)
+                    add_mail(box, mail)
             trail.mark(True, f"{mail!r} {outcome(dedup, 'copied')}")
     trail.finish(
         trail.ok_count == len(mails),
@@ -115,7 +115,7 @@ def move_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
                 assert box is not None
                 with blame(mail, dedup.step):
                     with mail.hydrated():
-                        box.add(mail)
+                        add_mail(box, mail)
                     # Identity attributes are set the moment a mail is read from its
                     # box, which every mail reaching an action has been.
                     dedup.sources[cast("str", mail.source_path)].remove(

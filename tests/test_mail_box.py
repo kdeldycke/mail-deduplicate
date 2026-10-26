@@ -21,7 +21,10 @@ import mailbox
 import os
 import subprocess
 import sys
+from email import message_from_bytes
+from email.generator import BytesGenerator
 from functools import cache
+from io import BytesIO
 from mailbox import Mailbox, Message, NoSuchMailboxError, mbox
 from pathlib import Path
 
@@ -38,6 +41,7 @@ from mail_deduplicate.mail_box import (
     BoxStructure,
     MailSourceError,
     create_box,
+    has_8bit_partless_multipart,
     lock_box,
 )
 
@@ -367,6 +371,56 @@ def test_create_box_refuses_to_clobber_existing(tmp_path):
     box = create_box(existing, BoxFormat.MBOX, export_append=True)
     box.unlock()
     box.close()
+
+
+PARTLESS_BODY = "Taipei: 晴天.\n".encode()
+"""8-bit UTF-8 bytes in the body of a multipart that never opens with its boundary."""
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    (
+        pytest.param(
+            b'Content-Type: multipart/alternative; boundary="Kiwi"\n\n' + PARTLESS_BODY,
+            True,
+            id="8bit",
+        ),
+        pytest.param(
+            b'Content-Type: multipart/mixed; boundary="Outer"\n'
+            b"\n"
+            b"--Outer\n"
+            b"Content-Type: text/plain\n"
+            b"\n"
+            b"Sunny.\n"
+            b"--Outer\n"
+            b'Content-Type: multipart/alternative; boundary="Inner"\n'
+            b"\n" + PARTLESS_BODY + b"--Outer--\n",
+            True,
+            id="nested",
+        ),
+        pytest.param(
+            b'Content-Type: multipart/alternative; boundary="Kiwi"\n\nSunny.\n',
+            False,
+            id="ascii",
+        ),
+        pytest.param(MailFactory().render(), False, id="well-formed"),
+    ),
+)
+def test_has_8bit_partless_multipart(raw, expected):
+    """The check flags the mails `BytesGenerator` fails on, and those only.
+
+    Once a Python release fixes https://github.com/python/cpython/issues/136686, the
+    flagged mails stop failing there: `add_mail()` can then add them as messages.
+    """
+    message = message_from_bytes(raw)
+
+    assert has_8bit_partless_multipart(message) is expected
+    generator = BytesGenerator(BytesIO(), False, 0)
+    if expected:
+        with pytest.raises(UnicodeEncodeError):
+            generator.flatten(message)
+    else:
+        generator.flatten(message)
 
 
 @pytest.mark.parametrize("source", ["./dummy_maildir/", "./__init__.py"])
