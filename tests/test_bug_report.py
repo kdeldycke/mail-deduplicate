@@ -305,6 +305,44 @@ def test_failure_log_keeps_a_few_samples():
     assert "RuntimeError: Unexpected kiwi." in lines
 
 
+KINDS_OF_ERROR = (
+    ValueError,
+    KeyError,
+    TypeError,
+    IndexError,
+    ZeroDivisionError,
+    OverflowError,
+    AttributeError,
+)
+"""Error classes raised from one line, each of which makes a kind of failure."""
+
+
+@pytest.mark.parametrize(
+    ("kinds", "summary"),
+    (
+        pytest.param(
+            bug_report.MAX_KINDS + 1, "1 more kind of failure: ", id="one-more"
+        ),
+        pytest.param(
+            bug_report.MAX_KINDS + 2, "2 more kinds of failure: ", id="two-more"
+        ),
+    ),
+)
+def test_failure_log_details_a_few_kinds(kinds, summary):
+    """The report details the most frequent kinds of failure, and counts the
+    others."""
+    log = FailureLog()
+    for error in KINDS_OF_ERROR[:kinds]:
+        try:
+            raise error("Unexpected kiwi.")
+        except KINDS_OF_ERROR as expt:
+            log.add(log.capture(expt, "hashing"))
+
+    lines = list(log.report_lines())
+    assert sum(line.startswith("Failure ") for line in lines) == bug_report.MAX_KINDS
+    assert lines[-1].startswith(summary)
+
+
 def test_report_version_matches_version_option():
     """The report gives the version `mdedup --version` prints, which names the
     commit of a development build.

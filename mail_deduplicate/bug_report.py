@@ -637,11 +637,9 @@ class FailureLog:
             title = f"Failure {index} of {len(kinds)}, while {kind[0]}: {unit}"
             yield from failure_lines(self.samples[kind], title)
         if len(kinds) > MAX_KINDS:
+            more = plural(len(kinds) - MAX_KINDS, "more kind", "more kinds")
             yield ""
-            yield (
-                f"{len(kinds) - MAX_KINDS} more kinds of failure: the warnings of the "
-                "run name their mails."
-            )
+            yield f"{more} of failure: the warnings of the run name their mails."
 
 
 def option_words(param: click.Parameter, value: object) -> list[str]:

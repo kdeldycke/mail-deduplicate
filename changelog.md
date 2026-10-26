@@ -20,6 +20,7 @@
 - Close the hash cache file when it turns out not to be a database, instead of holding it open for the rest of the run.
 - Refuse to run the CLI inside a `--jobs` worker, which a binary with an unguarded launcher did in each worker it started.
 - Fix a `ValueError` crash on an empty `--hash-header` value, which is now refused as an invalid header ID.
+- Fix the bug report line counting the kinds of failure it leaves out, which read `1 more kinds`.
 - Publish a sitemap and a custom 404 page with the documentation, and stop publishing a copy of every documentation source under `_sources/`.
 - Fix the module sections of the test suite page in the documentation, which the build left empty without `pytest`.
 
