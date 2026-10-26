@@ -399,8 +399,12 @@ class DuplicateSet:
         )
 
     def pretty_diff(self, mail_a: DedupMailMixin, mail_b: DedupMailMixin) -> str:
-        """Returns a verbose unified diff between two mails' normalized body."""
-        return "".join(
+        """Returns a verbose unified diff between two mails' normalized body.
+
+        The body lines carry no line ending, so no diff line gets one either: they
+        are joined with one instead.
+        """
+        return "\n".join(
             unified_diff(
                 mail_a.body_lines,
                 mail_b.body_lines,
@@ -413,7 +417,7 @@ class DuplicateSet:
                 if mail_b.timestamp is None
                 else f"{mail_b.timestamp:0.2f}",
                 n=0,
-                lineterm="\n",
+                lineterm="",
             ),
         )
 

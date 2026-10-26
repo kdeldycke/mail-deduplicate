@@ -21,6 +21,7 @@
 - Refuse to run the CLI inside a `--jobs` worker, which a binary with an unguarded launcher did in each worker it started.
 - Fix a `ValueError` crash on an empty `--hash-header` value, which is now refused as an invalid header ID.
 - Fix the bug report line counting the kinds of failure it leaves out, which read `1 more kinds`.
+- Fix `--show-diff`, which printed the changed lines of a diff run together on one line.
 - Publish a sitemap and a custom 404 page with the documentation, and stop publishing a copy of every documentation source under `_sources/`.
 - Fix the module sections of the test suite page in the documentation, which the build left empty without `pytest`.
 

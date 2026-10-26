@@ -682,4 +682,12 @@ def test_content_dissimilar_pair_skipped(invoke, make_box, show_diff):
     assert "too dissimilar in content" in result.stderr
     # The one-line bodies make a single hunk.
     assert ("@@ -1 +1 @@" in result.stderr) is show_diff
+    # Each changed line stands on a line of its own, whichever mail the diff starts
+    # from.
+    changed = sorted(
+        line[1:]
+        for line in result.stderr.splitlines()
+        if line.startswith(("-", "+")) and not line.startswith(("---", "+++"))
+    )
+    assert changed == (["aaaa bbbb", "cccc dddd"] if show_diff else [])
     check_box(box_path, box_type, content=[a, b])
