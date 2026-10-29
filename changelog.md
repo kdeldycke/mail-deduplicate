@@ -12,7 +12,7 @@
 - Fix `--show-diff` printing the diff of two mails in either direction, which changed between runs.
 - Fix the step headings styling the blank line above them, which left a style open in output read line by line.
 - Stop printing the progress bar labels and an empty `info:` line when the output is not a terminal.
-- Draw each progress bar at most 100 times, instead of once per mail.
+- Redraw each progress bar at most once every 0.1 seconds, instead of once per mail.
 - Replace the readme's 2022 CLI screenshots with SVG terminal windows recaptured from the current CLI by `docs/cli_screenshots_update.py`.
 - Illustrate the content safeguard, `--show-diff`, `--hash-only`, the hash cache and the bug report with captures in the readme and the docs.
 
