@@ -447,11 +447,10 @@ def compact_frames(tb: TracebackType | None) -> tuple[str, ...]:
 
     Module names say as much as file paths about the code, and nothing about where
     it is installed, so they are what the report shows. A method shows with its
-    class, like `Maildir.add`, from Python 3.11 on.
+    class, like `Maildir.add`.
     """
     frames = [
-        f"{frame.f_globals.get('__name__', '?')}:{lineno} in "
-        f"{getattr(frame.f_code, 'co_qualname', frame.f_code.co_name)}"
+        f"{frame.f_globals.get('__name__', '?')}:{lineno} in {frame.f_code.co_qualname}"
         for frame, lineno in traceback.walk_tb(tb)
     ]
     if len(frames) > MAX_FRAMES:

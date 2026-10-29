@@ -26,15 +26,14 @@ import logging
 import os
 import re
 from contextlib import contextmanager, suppress
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.header import Header
 from functools import cached_property
 from mailbox import Message
+from enum import StrEnum
 from typing import cast
 
 from click_extra import get_current_context, render_table
-
-from . import StrEnum
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -604,7 +603,7 @@ class DedupMailMixin(Message):
         ```
         """
         if self.parsed_date is not None:
-            utc_date = datetime.fromtimestamp(self.parsed_date, tz=timezone.utc).date()
+            utc_date = datetime.fromtimestamp(self.parsed_date, tz=UTC).date()
             return utc_date.isoformat()
         return value
 

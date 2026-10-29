@@ -5,6 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- **Breaking:** Drop support for Python 3.10, which reached its end of life. Python 3.11 is now the minimum.
 - Color the `--show-diff` output with the active theme, the way `git diff` colors its own.
 - Read a `Date` header with an out-of-range year, like `99999`, as no date, instead of setting the mail aside with a bug report.
 - Fix the Arch Linux install steps, which ran `pacman -S` on a package that only the AUR carries.

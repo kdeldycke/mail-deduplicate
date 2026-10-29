@@ -326,8 +326,10 @@ def test_traceback_holds_no_path():
 
 
 def test_traceback_starts_in_the_blamed_block():
-    """The frame of `blame()` that catches the error stays out of the traceback,
-    which names a method with its class from Python 3.11 on."""
+    """The frame of `blame()` that catches the error stays out of the traceback.
+
+    The traceback names a method with its class.
+    """
     with (
         pytest.raises(ValueError) as exc_info,
         blame(MaildirDedupMail(), "copying"),
@@ -339,8 +341,7 @@ def test_traceback_starts_in_the_blamed_block():
         r"tests\.test_bug_report:\d+ in test_traceback_starts_in_the_blamed_block",
         frames[0],
     )
-    method = "Fraction.__new__" if sys.version_info >= (3, 11) else "__new__"
-    assert re.fullmatch(rf"fractions:\d+ in {re.escape(method)}", frames[-1])
+    assert re.fullmatch(r"fractions:\d+ in Fraction\.__new__", frames[-1])
 
 
 def dive(depth: int) -> None:

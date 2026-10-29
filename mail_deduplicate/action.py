@@ -26,12 +26,12 @@ import logging
 import os
 from collections import Counter
 from contextlib import contextmanager
+from enum import StrEnum
 from typing import cast
 from uuid import uuid4
 
 from click_extra import OperationTrail, format_size, get_current_theme
 
-from . import StrEnum
 from .bug_report import blame
 from .deduplicate import Stat
 from .mail_box import FOLDER_FORMAT_CLASSES, add_mail, create_box

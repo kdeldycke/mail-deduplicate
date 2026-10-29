@@ -39,8 +39,8 @@ RETAINED_BYTES_CEILING = 2000
 
 Deliberately loose. A mail stub is mostly its instance dictionary, whose size depends
 on the interpreter: the same corpus measures 630 to 675 bytes per mail here on Python
-3.14, around 1,100 on 3.10, and has been seen at 1,343 on a CI runner of the very
-version that gives 675 locally. A ceiling tight enough to pin any of those is a
+3.14, and has been seen at 1,343 on a CI runner of the very version that gives 675
+locally. A ceiling tight enough to pin any of those is a
 ceiling that fails somewhere else.
 
 So this only catches a stub that grew by an order of magnitude, which is what

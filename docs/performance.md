@@ -47,10 +47,6 @@ A body-hashing run therefore keeps its size safeguard for free, and only has to 
 
 A mail is reduced to a lightweight stub as soon as it is hashed, so memory tracks the *number* of mails rather than their size. About **600 bytes are retained per mail**, which a run's transient allocations round up to roughly 1 KB of resident memory.
 
-```{note}
-That figure assumes Python 3.11 or later. A stub is mostly its instance dictionary, and 3.11 made those share their keys between instances, so the same corpus retains close to twice as much on Python 3.10: about 1.1 KB per mail. Upgrading the interpreter is the cheapest way to halve the memory of a large run.
-```
-
 | Mails  | Box size | Peak resident memory |
 | ------ | -------- | -------------------- |
 | 1,500  | 215 MB   | 46 MB                |

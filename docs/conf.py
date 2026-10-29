@@ -1,10 +1,7 @@
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
-
-# The docs build runs only on Python >= 3.14 (uv's dependency-groups.docs floor), where
-# tomllib is stdlib; mypy analyzes at the 3.10 project floor, where it is absent.
-import tomllib  # type: ignore[import-not-found]
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:

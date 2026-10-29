@@ -29,7 +29,7 @@ from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import contextmanager
 from difflib import unified_diff
-from enum import Enum, unique
+from enum import Enum, StrEnum, unique
 from functools import cached_property
 from itertools import combinations, islice
 from mailbox import Error as MailboxError
@@ -43,7 +43,6 @@ from click_extra import (
     progressbar,
 )
 
-from . import StrEnum
 from .bug_report import Failure, FailureLog, box_format_of, render_report
 from .cache import CacheEntry, HashCache, open_cache
 from .mail import TimeSource, TooFewHeaders
