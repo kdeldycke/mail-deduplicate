@@ -26,7 +26,7 @@ from mailbox import Maildir, mbox
 from pathlib import Path
 
 import pytest
-from click_extra import BUILTIN_THEMES
+from click_extra import BUILTIN_THEMES, unstyle
 from click_extra.test_suite import load_test_suite, run_test_suite
 
 from mail_deduplicate.__main__ import WORKER_RERUN_ERROR, main
@@ -92,8 +92,16 @@ def test_theme_styles_runtime_output(invoke, make_box, theme_id):
     assert result.exit_code == 0
 
     # The Step #1 heading must carry the styling of the selected theme.
-    styled_heading = BUILTIN_THEMES[theme_id].heading("\n● Step #1 - Load mails")
+    styled_heading = BUILTIN_THEMES[theme_id].heading("● Step #1 - Load mails")
     assert styled_heading in result.stdout
+
+    # No style may span a line break: a line holding nothing but escapes opens a
+    # style the next line closes, which a tool cutting the output line by line
+    # (a capture's --head, grep) leaves open.
+    escape_only = [
+        line for line in result.stdout.splitlines() if line and not unstyle(line)
+    ]
+    assert not escape_only, escape_only
 
 
 @pytest.mark.once

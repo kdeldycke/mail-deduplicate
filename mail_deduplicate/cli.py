@@ -197,6 +197,20 @@ EXPORT_ACTIONS = (
 """Actions relying on the `-E`/`--export` parameter."""
 
 
+def echo_step(title: str) -> None:
+    """Print the heading of a pipeline step, after a blank line.
+
+    The blank line is printed on its own, outside the heading's style. Styled as
+    part of the heading, its escapes open the style on the line above the text, so
+    any tool reading the output line by line (a pager, `grep`, a capture cut with
+    `--head`) finds a style open on a line that closes it nowhere.
+
+    :param title: the step's name, after the bullet.
+    """
+    echo()
+    echo(get_current_theme().heading(f"\N{BLACK CIRCLE} {title}"))
+
+
 def human_join(items: Iterable) -> str:
     """Renders IDs as an English enumeration, for the help screen.
 
@@ -650,8 +664,7 @@ def mdedup(
     # and report them at the end. An error escaping the steps ends the run here,
     # with a one-line message or a bug report.
     with report_unexpected_errors(dedup):
-        theme = get_current_theme()
-        echo(theme.heading("\n● Step #1 - Load mails"))
+        echo_step("Step #1 - Load mails")
         with progressbar(
             mail_sources,
             length=len(mail_sources),
@@ -661,7 +674,7 @@ def mdedup(
             for source in progress:
                 dedup.add_source(source)
 
-        echo(theme.heading("\n● Step #2 - Compute hashes and group duplicates"))
+        echo_step("Step #2 - Compute hashes and group duplicates")
         dedup.hash_all()
 
         if hash_only:
@@ -684,14 +697,14 @@ def mdedup(
             dedup.close_all()
             ctx.exit(1 if dedup.report_failures() else 0)
 
-        echo(theme.heading("\n● Step #3 - Select mails in each group"))
+        echo_step("Step #3 - Select mails in each group")
         dedup.build_sets()
 
-        echo(theme.heading("\n● Step #4 - Perform action on selected mails"))
+        echo_step("Step #4 - Perform action on selected mails")
         action.perform(dedup)
         dedup.close_all()
 
-        echo(theme.heading("\n● Step #5 - Report and statistics"))
+        echo_step("Step #5 - Report and statistics")
         # Print deduplication statistics, then performs a self-check on them.
         echo(dedup.report())
         failed = dedup.report_failures()

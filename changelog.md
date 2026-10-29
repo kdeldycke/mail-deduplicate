@@ -8,6 +8,7 @@
 - Read a `Date` header with an out-of-range year, like `99999`, as no date, instead of setting the mail aside with a bug report.
 - Fix the Arch Linux install steps, which ran `pacman -S` on a package that only the AUR carries.
 - Fix the action trail listing its mails in an order that changed between runs, which no diff of two runs survived.
+- Fix the step headings styling the blank line above them, which left a style open in output read line by line.
 
 ## [`9.4.0` (2026-10-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.2...v9.4.0)
 
