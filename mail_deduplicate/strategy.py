@@ -158,7 +158,8 @@ def select_biggest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
 )
 def select_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all duplicates whose file path match the regular expression provided via
-    the --regexp parameter."""
+    the --regexp parameter.
+    """
     assert duplicates.conf["regexp"] is not None
     return {
         mail
@@ -172,7 +173,8 @@ def select_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
 )
 def select_non_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     """Select all duplicates whose file path doesn't match the regular expression
-    provided via the --regexp parameter."""
+    provided via the --regexp parameter.
+    """
     assert duplicates.conf["regexp"] is not None
     return {
         mail

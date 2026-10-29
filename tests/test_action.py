@@ -328,7 +328,8 @@ def test_hardlink_discarded_gates_on_byte_equality(
     invoke, make_box, extra_args, distinct_files
 ):
     """Copies that are not byte-for-byte identical are only linked when asked for,
-    as linking swaps the discarded mail's own content for the kept copy's."""
+    as linking swaps the discarded mail's own content for the kept copy's.
+    """
     box_path, _, _ = make_box(Maildir, DIFFERING_COPIES)
 
     result = invoke(
@@ -372,7 +373,8 @@ def test_hardlink_discarded_is_idempotent(invoke, make_box):
 
 def test_hardlink_that_cannot_be_created_leaves_the_mail(invoke, make_box, monkeypatch):
     """A link that cannot replace its mail leaves the mail as it was, removes the
-    temporary link it went through, and counts the mail as skipped."""
+    temporary link it went through, and counts the mail as skipped.
+    """
     box_path, box_type, _ = make_box(Maildir, FULL_BOX)
     before = {path: path.stat().st_ino for path in mail_files(box_path)}
     replace = os.replace
@@ -399,7 +401,8 @@ def test_hardlink_that_cannot_be_created_leaves_the_mail(invoke, make_box, monke
 
 def test_hardlink_discarded_leaves_file_based_box_alone(invoke, make_box):
     """A mail packed into the box's own file has nothing of its own to link, so the
-    box comes out byte for byte as it went in."""
+    box comes out byte for byte as it went in.
+    """
     box_path, box_type, _ = make_box(mbox, FULL_BOX)
     before = Path(box_path).read_bytes()
 

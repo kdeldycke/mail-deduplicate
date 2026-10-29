@@ -15,7 +15,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 """A mail wrapped with the deduplication-specific properties: canonical hash,
 normalized headers, timestamp, size, and the dehydration machinery keeping memory
-flat."""
+flat.
+"""
 
 from __future__ import annotations
 
@@ -26,7 +27,7 @@ import logging
 import os
 import re
 from contextlib import contextmanager, suppress
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.header import Header
 from functools import cached_property
 from mailbox import Message
@@ -401,7 +402,7 @@ class DedupMailMixin(Message):
         if (ctype and not ctype.startswith("text")) or (
             cte and cte[0][0].lower() == "8bit"
         ):
-            return cast(str, part.get_payload(decode=False))
+            return cast("str", part.get_payload(decode=False))
 
         # Try to decode with charset(s)
         charset = part.get_content_charset()
@@ -415,7 +416,7 @@ class DedupMailMixin(Message):
                 except (UnicodeDecodeError, LookupError):
                     continue
 
-        return cast(str, part.get_payload(decode=False))
+        return cast("str", part.get_payload(decode=False))
 
     def undo_surrogateescape(self, text: str) -> str:
         """Decode as UTF-8 the non-ASCII bytes that parsing left as lone surrogates.
@@ -604,7 +605,7 @@ class DedupMailMixin(Message):
         ```
         """
         if self.parsed_date is not None:
-            utc_date = datetime.fromtimestamp(self.parsed_date, tz=timezone.utc).date()
+            utc_date = datetime.fromtimestamp(self.parsed_date, tz=UTC).date()
             return utc_date.isoformat()
         return value
 

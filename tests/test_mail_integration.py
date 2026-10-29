@@ -15,7 +15,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 """End-to-end behavior of mail parsing, timestamps and hashing driven through the
-`mdedup` CLI. Unit-level tests of the mail object live in `test_mail.py`."""
+`mdedup` CLI. Unit-level tests of the mail object live in `test_mail.py`.
+"""
 
 from __future__ import annotations
 
@@ -70,7 +71,8 @@ date alone land in the same duplicate set."""
 )
 def test_invalid_date_parsing(invoke, make_box, hash_headers, remaining):
     """Mails with strange non-standard dates get parsed anyway and grouped into
-    duplicate sets."""
+    duplicate sets.
+    """
     box_path, box_type, _ = make_box(
         Maildir,
         [
@@ -176,7 +178,8 @@ def test_unparsable_date_skips_time_strategy(invoke, make_box, mails, args):
 
 def test_unparsable_date_show_diff(invoke, make_box):
     """Rendering the diff of mails without a parseable `Date` header does not
-    crash."""
+    crash.
+    """
     undated_variant = MailFactory(date_rfc2822="invalid date", body="A different body.")
     box_path, box_type, _ = make_box(Maildir, [undated_mail, undated_variant])
 
@@ -209,7 +212,8 @@ def test_unparsable_date_show_diff(invoke, make_box):
 def test_hash_body(invoke, make_box, hash_body, other_body, deduplicated):
     """--hash-body=skip groups mails by their headers alone, so mails with identical
     headers are duplicates whatever their bodies. =raw folds every byte of the body
-    into the hash, and =normalized folds it in but ignores whitespace."""
+    into the hash, and =normalized folds it in but ignores whitespace.
+    """
     a = MailFactory(
         date="2021-01-01", message_id="<n@nohost.com>", body="Hello world\n"
     )
@@ -229,7 +233,8 @@ def test_hash_body(invoke, make_box, hash_body, other_body, deduplicated):
 
 def test_ctime_time_source(invoke, make_box):
     """--time-source=ctime derives each mail's timestamp from its file's inode change
-    time, so a maildir with distinct file ctimes deduplicates by them."""
+    time, so a maildir with distinct file ctimes deduplicates by them.
+    """
     dup = MailFactory(body="Same body.\n", message_id="<ctime@nohost.com>")
 
     # Deliver the two identical copies more than a second apart, so the second file is

@@ -304,7 +304,8 @@ def test_too_few_headers_rejects_mail(invoke, make_box):
 def test_headers_table_rendered_only_when_logged(invoke, make_box, monkeypatch):
     """Rendering the canonical-headers table goes through `tabulate` and costs more
     than the hash itself, yet it is discarded at any level above debug. It must not
-    be built at all at the default verbosity."""
+    be built at all at the default verbosity.
+    """
     renders: list[str] = []
     original = DedupMailMixin.pretty_canonical_headers
 
@@ -356,7 +357,8 @@ def test_invalid_option_value_rejected(invoke, make_box, args, message):
 
 def test_duplicate_source_rejected(invoke, make_box):
     """The same mail source given twice is refused: the source path is the key used to
-    tie a mail back to its origin."""
+    tie a mail back to its origin.
+    """
     box_path, _, _ = make_box(Maildir, [MailFactory()])
 
     result = invoke(
@@ -369,7 +371,8 @@ def test_duplicate_source_rejected(invoke, make_box):
 
 def test_hash_only_warns_about_ignored_options(invoke, make_box):
     """--hash-only runs no selection or action, so options from those steps are
-    ignored, and any the user set are reported."""
+    ignored, and any the user set are reported.
+    """
     box_path, _, _ = make_box(Maildir, [MailFactory(message_id="<h@nohost.com>")])
 
     result = invoke("--hash-only", "--strategy=select-one", box_path)
@@ -381,7 +384,8 @@ def test_hash_only_warns_about_ignored_options(invoke, make_box):
 
 def test_main_entrypoint_reports_version(monkeypatch, capsys):
     """The `main()` indirection runs the CLI end to end: `--version` exits cleanly
-    through it."""
+    through it.
+    """
     monkeypatch.setattr(sys, "argv", ["mdedup", "--version"])
 
     with pytest.raises(SystemExit) as exc:

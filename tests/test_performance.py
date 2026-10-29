@@ -274,7 +274,8 @@ def test_step_falls_back_when_its_pool_will_not_start(
 
 def test_single_mail_sets_are_not_handed_to_workers(invoke, make_box, monkeypatch):
     """A set of one is settled without reading anything, so shipping it to a worker
-    would cost more than deciding it here."""
+    would cost more than deciding it here.
+    """
     handed: list[int] = []
     original = Deduplicate.adopt_selection
 

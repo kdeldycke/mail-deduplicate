@@ -22,7 +22,7 @@ import sys
 if sys.version_info >= (3, 11):
     from enum import StrEnum
 else:
-    from backports.strenum import StrEnum
+    from enum import StrEnum
 
 __version__ = "9.4.1.dev0"
 

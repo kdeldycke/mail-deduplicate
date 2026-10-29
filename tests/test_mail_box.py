@@ -93,7 +93,8 @@ def test_box_format_definition(box_format):
 
 def test_box_formats_cover_stdlib():
     """Box formats cover every box type of the standard library, on top of which
-    custom formats like eml are provided, and each format has one structure."""
+    custom formats like eml are provided, and each format has one structure.
+    """
     assert set(stdlib_box_types()) <= {box.base_class for box in BoxFormat}
 
     assert set(FOLDER_FORMATS).isdisjoint(FILE_FORMATS)
@@ -172,7 +173,8 @@ def test_dedup_across_formats(invoke, make_box, box_format):
 @pytest.mark.parametrize("error", [RuntimeError, KeyboardInterrupt])
 def test_run_cut_short_unlocks_boxes(invoke, make_box, monkeypatch, box_format, error):
     """A run cut short by an error or an interrupt still unlocks its source box, so
-    the next run needs no `--force-unlock`."""
+    the next run needs no `--force-unlock`.
+    """
     box_type = box_format.base_class
     dup = MailFactory(body="Same body.\n", message_id="<cut-short@test.com>")
     box_path, _, _ = make_box(box_type, [dup, dup])
@@ -320,7 +322,8 @@ def test_refused_lock_keeps_no_file_open(make_box, box_format):
 
 def test_refused_subfolder_lock_unlocks_the_folders_before_it(invoke, make_box):
     """A subfolder locked by another program stops the run, and the folders locked
-    before it are unlocked again: the next run needs no `--force-unlock`."""
+    before it are unlocked again: the next run needs no `--force-unlock`.
+    """
     box_path, _, _ = make_box(mailbox.MH, [MailFactory(message_id="<apple@test.com>")])
     root = mailbox.MH(box_path, create=False)
     root.add_folder("kiwi").add(MailFactory(message_id="<kiwi@test.com>").render())
@@ -347,7 +350,8 @@ def test_refused_subfolder_lock_unlocks_the_folders_before_it(invoke, make_box):
 
 def test_create_box_refuses_to_clobber_existing(tmp_path):
     """create_box refuses an existing path unless append is requested, guarding a
-    destination box even when reached directly."""
+    destination box even when reached directly.
+    """
     existing = tmp_path / "existing.mbox"
     existing.touch()
 
@@ -451,7 +455,8 @@ def test_nonexistent_path(invoke, source):
 )
 def test_unusable_source(invoke, args, messages):
     """A source that cannot be opened in its format stops the run before any mail is
-    touched."""
+    touched.
+    """
     result = invoke(*args, "--action=delete-discarded", ".")
     assert result.exit_code == 1
     assert "Step #1" in result.stdout
@@ -496,7 +501,8 @@ def test_verbatim_nested_maildirs(invoke, tmp_path):
 
 def test_verbatim_forced_maildir_format(invoke, tmp_path):
     """Forcing the maildir format on a Verbatim-style tree does not crash on the
-    mail-less root."""
+    mail-less root.
+    """
     root = tmp_path / "backup"
     root.mkdir()
     box = mailbox.Maildir(str(root / "INBOX"), create=True)

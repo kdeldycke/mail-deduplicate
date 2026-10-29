@@ -15,7 +15,8 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 """Checks on the documentation pages that list parts of the test suite, and on the
-assets the readme illustrates itself with."""
+assets the readme illustrates itself with.
+"""
 
 from __future__ import annotations
 

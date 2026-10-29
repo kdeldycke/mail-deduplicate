@@ -1235,7 +1235,8 @@ class Deduplicate:
 
         def absorb(outcome: HashOutcome) -> None:
             """Merge one hashed mail into the shared groups and stats. Called only from
-            the main process, keeping the parallel path and the cache race-free."""
+            the main process, keeping the parallel path and the cache race-free.
+            """
             mail, mail_hash, rejection, failure = outcome
             # Identity attributes are set the moment a mail is read from its box, or
             # stubbed for it, which every mail reaching this point has been.
@@ -1350,7 +1351,8 @@ class Deduplicate:
 
     def settle(self, hash_key: str, mail_set: list[DedupMailMixin]) -> None:
         """Run one duplicate set through the thresholds and the strategies, right in
-        this process, and merge its verdict into the run."""
+        this process, and merge its verdict into the run.
+        """
         self.log_set_heading(hash_key, len(mail_set))
         duplicates = DuplicateSet(hash_key, mail_set, self.conf)
         failure = duplicates.select_or_skip(self.failures)
@@ -1432,7 +1434,8 @@ class Deduplicate:
 
         def tasks():
             """Pairs each set worth handing out with its payload, settling the rest
-            on the way."""
+            on the way.
+            """
             for hash_key, mail_set in self.mails.items():
                 if len(mail_set) < 2:
                     self.settle(hash_key, mail_set)

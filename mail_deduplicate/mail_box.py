@@ -223,7 +223,8 @@ class EML(Mailbox):
 
     def list_folders(self) -> list[str]:
         """No dedicated subfolder objects: the recursive walk covers nested
-        directories."""
+        directories.
+        """
         return []
 
     def get_folder(self, folder):
@@ -321,7 +322,8 @@ MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 
 def is_maildir(path: Path) -> bool:
     """Returns `True` when the path holds all the sub-directories of a properly
-    structured maildir."""
+    structured maildir.
+    """
     return all(path.joinpath(subdir).is_dir() for subdir in MAILDIR_SUBDIRS)
 
 

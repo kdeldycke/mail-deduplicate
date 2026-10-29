@@ -190,7 +190,8 @@ def test_edited_file_based_box_invalidates_every_mail(
 ):
     """Mails of an mbox share the box's file and are keyed by byte offsets, which
     shift as soon as a mail is added or removed. Editing the box must therefore
-    invalidate all of its mails at once, not just the ones that moved."""
+    invalidate all of its mails at once, not just the ones that moved.
+    """
     box_path, _, _ = make_box(mbox, [MailFactory(), MailFactory()])
 
     assert cached_run(box_path).exit_code == 0
