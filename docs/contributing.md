@@ -1,7 +1,7 @@
 # {octicon}`git-pull-request` Contribution guide
 
-## `claude.md` file
+## `AGENTS.md` file
 
-```{include} ../claude.md
+```{include} ../AGENTS.md
 :start-line: 2
 ```
