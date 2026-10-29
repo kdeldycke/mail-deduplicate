@@ -4,12 +4,7 @@
   </a>
 </p>
 
-[![Last release](https://img.shields.io/pypi/v/mail-deduplicate.svg)](https://pypi.org/project/mail-deduplicate)
-[![Python versions](https://img.shields.io/pypi/pyversions/mail-deduplicate.svg)](https://pypi.org/project/mail-deduplicate)
-[![Downloads](https://static.pepy.tech/badge/mail-deduplicate/month)](https://pepy.tech/projects/mail-deduplicate)
-[![Unittests status](https://img.shields.io/github/actions/workflow/status/kdeldycke/mail-deduplicate/tests.yaml?branch=main&label=%F0%9F%94%AC%20Tests)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/tests.yaml?query=branch%3Amain)
-[![Documentation status](https://img.shields.io/github/actions/workflow/status/kdeldycke/mail-deduplicate/docs.yaml?branch=main&label=%F0%9F%93%9A%20Docs)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/docs.yaml?query=branch%3Amain)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7364256.svg)](https://doi.org/10.5281/zenodo.7364256)
+[![Last release](https://img.shields.io/pypi/v/mail-deduplicate.svg)](https://pypi.org/project/mail-deduplicate) [![Python versions](https://img.shields.io/pypi/pyversions/mail-deduplicate.svg)](https://pypi.org/project/mail-deduplicate) [![Downloads](https://static.pepy.tech/badge/mail-deduplicate/month)](https://pepy.tech/projects/mail-deduplicate) [![Unittests status](https://img.shields.io/github/actions/workflow/status/kdeldycke/mail-deduplicate/tests.yaml?branch=main&label=%F0%9F%94%AC%20Tests)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/tests.yaml?query=branch%3Amain) [![Documentation status](https://img.shields.io/github/actions/workflow/status/kdeldycke/mail-deduplicate/docs.yaml?branch=main&label=%F0%9F%93%9A%20Docs)](https://github.com/kdeldycke/mail-deduplicate/actions/workflows/docs.yaml?query=branch%3Amain) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7364256.svg)](https://doi.org/10.5281/zenodo.7364256)
 
 **What is Mail Deduplicate?**
 
@@ -27,8 +22,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 - Deduplication strategies based on size, timestamp, file path or random choice, chainable as fallbacks.
 - Copy, move, delete or hardlink the resulting set of duplicates.
 - Dry-run mode.
-- Protection against false-positives with safety checks on size and content differences. Two mails sharing every hashed header but not their body are left alone, while their real duplicate is acted on, here by `mdedup --strategy discard-matching-path --regexp old --action delete-discarded --dry-run new.mbox old.mbox`:
-  ![A dry run deleting one duplicate and skipping a set of two different mails](https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mdedup-safeguard-cli.svg)
+- Protection against false-positives with safety checks on size and content differences. Two mails sharing every hashed header but not their body are left alone, while their real duplicate is acted on, here by `mdedup --strategy discard-matching-path --regexp old --action delete-discarded --dry-run new.mbox old.mbox`: ![A dry run deleting one duplicate and skipping a set of two different mails](https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mdedup-safeguard-cli.svg)
 - Optional cache reusing the hashes computed by previous runs.
 - Parallel hashing and selection over several processes.
 - Supports macOS, Linux and Windows.

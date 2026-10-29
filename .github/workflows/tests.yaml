@@ -88,16 +88,16 @@ jobs:
       metadata: ${{ steps.metadata.outputs.metadata }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
         with:
-          version: "0.13.0"
+          version: "0.13.4"
       - name: Run repomatic show-metadata
         id: metadata
         run: >
           uvx --no-progress --exclude-newer-package repomatic=P0D 'repomatic==8.0.0' show-metadata
-          --format github-json --output "$GITHUB_OUTPUT"
-          cli_scripts package_name
-          test_matrix test_matrix_pr
+          --output-format github-json --output "$GITHUB_OUTPUT"
+          cli_scripts main_cli_script import_name package_name
+          test_matrix test_matrix_pr latest_stable_python
 
   tests:
     needs:
@@ -112,7 +112,7 @@ jobs:
         && fromJSON(needs.metadata.outputs.metadata).test_matrix
         || fromJSON(needs.metadata.outputs.metadata).test_matrix_pr }}
     # `python-label` is set by repomatic show-metadata only where the plain version
-    # would hide why a cell is continue-on-error (a prerelease reads `3.15-dev`);
+    # would hide why a cell is continue-on-error (a prerelease reads `3.16-dev`);
     # every other cell falls back to the version itself.
     # A cell carrying a `resolution` key appends it, which tells that cell from
     # the twin sharing its runner and Python.
@@ -125,41 +125,27 @@ jobs:
     continue-on-error: ${{ matrix.state == 'unstable' }}
     # Wider than the default: this job provisions a toolchain, so its runtime tracks how much it has to install.
     timeout-minutes: 30
+    env:
+      # Workaround for https://github.com/pallets/click/issues/2121: Windows GitHub Actions runners
+      # redirect command output to files, which sets the encoding to the system default (cp1252).
+      # Python CLI frameworks like Click then raise UnicodeEncodeError on non-ASCII output. The Linux
+      # and macOS runners already default to UTF-8, so the variable changes nothing there.
+      PYTHONIOENCODING: utf8
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-tags: true
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
         with:
-          version: "0.13.0"
-      - name: Force native ARM64 Python on Windows ARM64
-        # Workaround for https://github.com/astral-sh/uv/issues/12906: uv defaults to x86_64 Python on ARM64 Windows,
-        # relying on transparent emulation, so the windows-11-arm cell would silently test emulated x86_64 Python
-        # instead of native ARM64. Setting UV_PYTHON to an architecture-qualified specifier forces uv (and uvx) to use
-        # native ARM64 Python for all steps.
-        # XXX: delete this step once the uv pin above reaches `0.13.0`. See https://repomatic.net/upstream#test-matrix
-        if: runner.os == 'Windows' && runner.arch == 'ARM64'
-        shell: bash
-        env:
-          PYTHON_VERSION: ${{ matrix.python-version }}
-        run: echo "UV_PYTHON=cpython-${PYTHON_VERSION}-aarch64" >> "$GITHUB_ENV"
+          version: "0.13.4"
       - name: Install Python ${{ matrix.python-version }}
         # If UV cannot find the requested Python version, it exits with code 2, which let the job pass unnoticed on
-        # Windows. So we force the shell to bash, even on Windows, and "set -e" to ensure any error in the install
-        # process is caught and fails the job. It works because Windows runners too Git Bash available).
+        # Windows. So we force the shell to bash, even on Windows, whose runners ship Git Bash: GitHub runs a bash
+        # step with `-e`, so the failed install fails the job.
         shell: bash
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
-        run: |
-          set -e
-          uv --no-progress venv --python "${UV_PYTHON:-${PYTHON_VERSION}}"
-      - name: Force UTF-8 encoding on Windows
-        # Workaround for https://github.com/pallets/click/issues/2121: Windows GitHub Actions runners
-        # redirect command output to files, which sets the encoding to the system default (cp1252).
-        # Python CLI frameworks like Click then raise UnicodeEncodeError on non-ASCII output.
-        if: runner.os == 'Windows'
-        shell: bash
-        run: echo "PYTHONIOENCODING=utf8" >> "$GITHUB_ENV"
+        run: uv --no-progress venv --python "${PYTHON_VERSION}"
       - name: Install project
         run: uv --no-progress sync --frozen --all-extras --group test
       - name: Resolve again (${{ matrix.resolution || 'not requested' }})
@@ -178,12 +164,22 @@ jobs:
         # `once-tests` job below runs them on a single runner instead.
         #
         # The coverage floor is `[tool.coverage] report.fail_under`, which this
-        # full-matrix slice is the one job expected to clear. Nothing is passed
-        # here: a `--cov-fail-under` flag would outrank that config and shadow
-        # the knob pyproject.toml already carries.
+        # full-matrix slice is the one job expected to clear. No `--cov-fail-under`
+        # is passed here: it would outrank that config and shadow the knob
+        # pyproject.toml already carries. The JSON report feeds the next step.
         run: >
           uv --no-progress run --frozen -- pytest
           -m "not once"
+          --cov-report=json:${{ runner.temp }}/coverage.json
+
+      - name: Check the coverage floor
+        # Warns when the floor sits more than two points under the coverage total,
+        # so the ratchet gets raised instead of drifting. `!cancelled()` reads the
+        # report after a failed test too: its total stays sound.
+        if: ${{ !cancelled() }}
+        run: >
+          uvx --no-progress --exclude-newer-package repomatic=P0D 'repomatic==8.0.0' lint-coverage
+          --report "${{ runner.temp }}/coverage.json" --no-fatal
 
       - name: Self-tests against test suite via console script
         # click-extra owns the test-suite engine and CLI; it reads the suite from
@@ -198,28 +194,25 @@ jobs:
         # check different things, and letting a unit-test failure skip the
         # self-test hides CLI drift until the next green run. Wrapped in
         # `${{ }}` because a bare leading `!` is a YAML tag.
-        # `cli_scripts` reaches this job as one space-separated string, which an
-        # expression cannot index: the `if:` reads it whole, and the shell takes
-        # its first word.
-        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).cli_scripts }}
+        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).main_cli_script }}
         env:
-          CLI_SCRIPTS: ${{ fromJSON(needs.metadata.outputs.metadata).cli_scripts }}
+          CLI_SCRIPT: ${{ fromJSON(needs.metadata.outputs.metadata).main_cli_script }}
         shell: bash
-        run: |
-          read -r script _ <<< "${CLI_SCRIPTS}"
-          uv --no-progress run --frozen -- click-extra test-suite --command "${script}" --jobs max
+        run: >
+          uv --no-progress run --frozen -- click-extra test-suite
+          --command "${CLI_SCRIPT}" --jobs max
       - name: Self-tests against test suite via python -m
         # Same suite as above, driven through the interpreter's `-m` entry
         # point so `__main__` stays exercised against the checkout on every
         # cell (the package-install job only covers it for released builds).
         # `!cancelled()` for the same reason as the step above.
-        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).cli_scripts }}
+        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).main_cli_script }}
         env:
-          PACKAGE: ${{ fromJSON(needs.metadata.outputs.metadata).package_name }}
+          IMPORT_NAME: ${{ fromJSON(needs.metadata.outputs.metadata).import_name }}
         shell: bash
-        run: |
-          module=$(echo "$PACKAGE" | tr '-' '_')
-          uv --no-progress run --frozen -- click-extra test-suite --command "python -m ${module}" --jobs max
+        run: >
+          uv --no-progress run --frozen -- click-extra test-suite
+          --command "python -m ${IMPORT_NAME}" --jobs max
 
   once-tests:
     name: 1️⃣ Run-once tests
@@ -232,11 +225,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-tags: true
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
         with:
-          version: "0.13.0"
+          version: "0.13.4"
       - name: Install Python
-        run: uv --no-progress venv --python 3.14
+        env:
+          PYTHON_VERSION: ${{ fromJSON(needs.metadata.outputs.metadata).latest_stable_python }}
+        run: uv --no-progress venv --python "${PYTHON_VERSION}"
       - name: Install project
         run: uv --no-progress sync --frozen --all-extras --group test
       - name: Run-once unittests
@@ -263,7 +258,9 @@ jobs:
     env:
       CLI_SCRIPTS: ${{ fromJSON(needs.metadata.outputs.metadata).cli_scripts }}
       GIT_URL: git+https://github.com/${{ github.repository }}
+      IMPORT_NAME: ${{ fromJSON(needs.metadata.outputs.metadata).import_name }}
       PACKAGE: ${{ fromJSON(needs.metadata.outputs.metadata).package_name }}
+      PYTHON_VERSION: ${{ fromJSON(needs.metadata.outputs.metadata).latest_stable_python }}
       # The one job that opts out of the workflow-wide supply-chain cooldown, by
       # setting a zero-length window. Its subject IS the freshly published
       # artifact: it answers "does the release that shipped minutes ago install
@@ -276,11 +273,11 @@ jobs:
       # exemptions.
       UV_EXCLUDE_NEWER: P0D
     steps:
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
         with:
-          version: "0.13.0"
+          version: "0.13.4"
       - name: Install Python
-        run: uv --no-progress venv --python 3.14
+        run: uv --no-progress venv --python "${PYTHON_VERSION}"
       - name: Run stable CLI
         run: |
           for script in $CLI_SCRIPTS; do
@@ -293,16 +290,14 @@ jobs:
             uvx --from "$PACKAGE" -- "$script" --version
             uv run --with "$PACKAGE" -- "$script" --version
           done
-          module=$(echo "$PACKAGE" | tr '-' '_')
-          uv run --with "$PACKAGE" -m "$module" --version
-          uv run --with "$PACKAGE" python -m "$module" --version
+          uv run --with "$PACKAGE" -m "$IMPORT_NAME" --version
+          uv run --with "$PACKAGE" python -m "$IMPORT_NAME" --version
       - name: Run dev CLI
         run: |
           for script in $CLI_SCRIPTS; do
             uvx --from "$GIT_URL" -- "$script" --version
           done
-          module=$(echo "$PACKAGE" | tr '-' '_')
-          uvx --from "$GIT_URL" -- python -m "$module" --version
+          uvx --from "$GIT_URL" -- python -m "$IMPORT_NAME" --version
       - name: Run stable CLI via uv tool
         run: |
           uv --no-progress tool install "$PACKAGE"

@@ -119,7 +119,7 @@ test = [
   # 3.3.0 for a run without xdist.
   "pytest-randomly>=3.3.1",
   # pytest-xdist < 3.7 fails on Python 3.14 (no requires-python guard in older releases);
-  # [psutil] extra needed for --numprocesses=auto.
+  # [psutil] extra needed for --numprocesses=logical.
   "pytest-xdist[psutil]>=3.7",
   # Test-only: fixtures build RFC-2822 dates with Instant/Date/Time (conftest.py,
   # test_strategy.py). whenever's pre-1.0 API still renames methods between
@@ -261,8 +261,13 @@ addopts = [
   # [tool.coverage].
   "--cov",
   "--cov-report=term",
-  # Run tests in parallel across all logical cores (pytest-xdist).
-  "--numprocesses=auto",
+  # Run tests in parallel, one worker per logical CPU. `auto` counts physical
+  # cores once the pytest-xdist[psutil] test dependency is installed, which
+  # halves the workers on a runner with SMT, like the x86 GitHub images.
+  "--numprocesses=logical",
+  # `loadgroup` is `load` plus the `xdist_group` marker: every test of a group
+  # runs on one worker. The default `load` ignores the marker.
+  "--dist=loadgroup",
   # Import test modules via importlib instead of prepending their root dir to
   # sys.path. Avoids "import file mismatch" collection errors when an installed
   # copy of the package coexists with the source tree, as in distro builds.
@@ -271,6 +276,10 @@ addopts = [
 markers = [
   "once: Tests that only need to run once, not across the full CI matrix.",
 ]
+# A config key pytest does not know, and a marker this file does not declare,
+# fail collection instead of printing a warning that scrolls past.
+strict_config = true
+strict_markers = true
 # Restrict collection to the test suite, so pytest never descends into the
 # package or an installed copy of it in dual-copy builds.
 testpaths = [ "tests" ]
@@ -413,6 +422,10 @@ exclude = [
 
 [tool.mdformat]
 number = true
+# Join the lines of a paragraph, so prose is never hard-wrapped at a column: the
+# renderer wraps it to the reader's width, and a reflow then never shows up as a
+# diff of every line in the paragraph.
+wrap = "no"
 # Disable URL validation so mdformat-recover-urls can decode percent-encoded
 # non-ASCII characters in link destinations back to their original form.
 # See https://github.com/hukkin/mdformat/issues/312 and

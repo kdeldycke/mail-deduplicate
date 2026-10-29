@@ -225,8 +225,7 @@ eval (env _MDEDUP_COMPLETE=fish_source mdedup)
 
 `````
 
-Alternatively, export the generated completion code as a static script to be
-executed:
+Alternatively, export the generated completion code as a static script to be executed:
 
 `````{tab-set}
 
