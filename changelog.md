@@ -5,6 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Color the `--show-diff` output with the active theme, the way `git diff` colors its own.
 - Read a `Date` header with an out-of-range year, like `99999`, as no date, instead of setting the mail aside with a bug report.
 - Fix the Arch Linux install steps, which ran `pacman -S` on a package that only the AUR carries.
 - Fix the action trail listing its mails in an order that changed between runs, which no diff of two runs survived.

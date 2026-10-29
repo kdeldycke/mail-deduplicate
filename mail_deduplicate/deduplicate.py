@@ -433,9 +433,28 @@ class DuplicateSet:
 
         The body lines carry no line ending, so no diff line gets one either: they
         are joined with one instead.
+
+        Each line is styled by the active theme, the way `git diff` colors its
+        own: a removed line as an error, an added one as a success, the hunk range
+        as a range, and the two file headers as structure. The log handler strips
+        the styling wherever color is off.
         """
+        theme = get_current_theme()
+
+        def paint(line: str) -> str:
+            if line.startswith(("---", "+++")):
+                return theme.bracket(line)
+            if line.startswith("@@"):
+                return theme.range_label(line)
+            if line.startswith("-"):
+                return theme.error(line)
+            if line.startswith("+"):
+                return theme.success(line)
+            return line
+
         return "\n".join(
-            unified_diff(
+            paint(line)
+            for line in unified_diff(
                 mail_a.body_lines,
                 mail_b.body_lines,
                 fromfile=f"Normalized body of {mail_a!r}",
@@ -448,7 +467,7 @@ class DuplicateSet:
                 else f"{mail_b.timestamp:0.2f}",
                 n=0,
                 lineterm="",
-            ),
+            )
         )
 
     def skip_set(self, reason: str, stat: Stat) -> None:

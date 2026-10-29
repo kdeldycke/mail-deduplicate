@@ -20,6 +20,7 @@ from mailbox import Maildir
 from string import ascii_lowercase
 
 import pytest
+from click_extra import BUILTIN_THEMES, unstyle
 from whenever import Instant
 
 from mail_deduplicate.strategy import Strategy
@@ -658,6 +659,38 @@ def test_no_strategy_skips_duplicate_sets(invoke, make_box):
     assert result.exit_code == 0
     assert "no strategy to apply" in result.stderr
     check_box(box_path, box_type, content=[random_mail_1, random_mail_1])
+
+
+def test_show_diff_is_colored_by_the_theme(invoke, make_box):
+    """Each line of the diff takes the theme slot its kind reads as, like `git diff`
+    colors its own."""
+    a = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="aaaa bbbb\n")
+    b = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="cccc dddd\n")
+    box_path, _, _ = make_box(Maildir, [a, b])
+
+    result = invoke(
+        "--color=always",
+        "--content-threshold=0",
+        "--show-diff",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        box_path,
+        color=True,
+    )
+
+    assert result.exit_code == 0
+    theme = BUILTIN_THEMES["dark"]
+    lines = result.stderr.splitlines()
+    assert theme.range_label("@@ -1 +1 @@") in lines
+    headers = [line for line in lines if unstyle(line).startswith(("---", "+++"))]
+    assert len(headers) == 2
+    assert all(line == theme.bracket(unstyle(line)) for line in headers), headers
+    # Which mail the diff starts from varies, so each body may be either side.
+    removed = [line for line in lines if unstyle(line) in ("-aaaa bbbb", "-cccc dddd")]
+    added = [line for line in lines if unstyle(line) in ("+aaaa bbbb", "+cccc dddd")]
+    assert len(removed) == len(added) == 1, lines
+    assert removed[0] == theme.error(unstyle(removed[0]))
+    assert added[0] == theme.success(unstyle(added[0]))
 
 
 @pytest.mark.parametrize("show_diff", (False, True), ids=("no-diff", "show-diff"))
