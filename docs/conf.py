@@ -107,8 +107,10 @@ exclude_patterns = ["_build", "_linkcheck", "Thumbs.db", ".DS_Store"]
 nitpicky = True
 # `AnyValueIn` subclasses cloup's `Predicate`, and autodoc lists that base class by
 # its full path. No inventory is mapped for cloup, so there is nothing to link to:
-# stop nitpicky mode asking for it.
+# stop nitpicky mode asking for it. Click's `ProgressBar`, which `step_progressbar()`
+# returns, lives in a private module its documentation never lists.
 nitpick_ignore = [
+    ("py:class", "click._termui_impl.ProgressBar"),
     ("py:class", "cloup.constraints.conditions.Predicate"),
 ]
 

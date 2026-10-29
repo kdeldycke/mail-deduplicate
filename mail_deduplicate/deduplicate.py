@@ -67,6 +67,15 @@ if TYPE_CHECKING:
     from .mail import DedupMailMixin
 
 
+BAR_REDRAWS = 100
+"""Most times a step's progress bar is drawn, whatever the number of mails.
+
+Click redraws a bar on every step by default, which is once per mail: 20,000 writes
+to the terminal for a 20,000-mail box. A hundred keeps the bar moving by the
+percent.
+"""
+
+
 def step_progressbar(**kwargs: Any) -> ProgressBar[Any]:
     """A progress bar for one step of the run, drawn on a terminal only.
 
@@ -75,10 +84,14 @@ def step_progressbar(**kwargs: Any) -> ProgressBar[Any]:
     capture the label is a bare line repeating it. Hiding the bar there drops
     that line, and leaves a terminal the bar `--progress` asks for.
 
+    On a terminal, the bar is drawn at most {data}`BAR_REDRAWS` times.
+
     :param kwargs: what {func}`click_extra.progressbar` takes.
     """
     if not getattr(sys.stdout, "isatty", lambda: False)():
         kwargs["hidden"] = True
+    if kwargs.get("length"):
+        kwargs.setdefault("update_min_steps", max(1, kwargs["length"] // BAR_REDRAWS))
     return progressbar(**kwargs)
 
 
