@@ -29,8 +29,9 @@ $ uv run --group test -- pytest
 # Run a single test.
 $ uv run --group test -- pytest tests/test_strategy.py::test_name
 
-# Type-check with the CI-pinned mypy and minimum Python version.
-$ uvx repomatic run mypy -- mail_deduplicate tests
+# Type-check with the CI-pinned mypy and minimum Python version. With no target,
+# the runner checks what CI checks, `docs/` scripts included.
+$ uvx repomatic run mypy
 
 # Build the documentation into the gitignored output directory.
 $ uv run --group docs -- sphinx-build -b html ./docs ./docs/_build/html

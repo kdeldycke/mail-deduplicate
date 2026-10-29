@@ -73,6 +73,7 @@ import subprocess
 import sys
 import tempfile
 from email.message import EmailMessage
+from functools import partial
 from pathlib import Path
 from typing import NamedTuple
 
@@ -290,17 +291,19 @@ def lookalikes_playground() -> None:
     other a weather log. Their sizes are close enough to pass the size threshold,
     so only the content threshold can tell them apart.
     """
-    menu = {
-        "subject": "Sunday menu",
-        "date": "Sun, 07 Apr 2024 09:00:00 +0000",
-        "msg_id": "<menu-2024-04-07@example.com>",
-        "body": "Leek soup, then a plum tart.\n",
-    }
-    notes = {
-        "subject": "Weekly notes",
-        "date": "Mon, 08 Apr 2024 07:30:00 +0000",
-        "msg_id": "<notes@example.com>",
-    }
+    menu = partial(
+        make_mail,
+        "Sunday menu",
+        "Sun, 07 Apr 2024 09:00:00 +0000",
+        "<menu-2024-04-07@example.com>",
+        "Leek soup, then a plum tart.\n",
+    )
+    notes = partial(
+        make_mail,
+        "Weekly notes",
+        "Mon, 08 Apr 2024 07:30:00 +0000",
+        "<notes@example.com>",
+    )
     recipe = "".join(
         f"Step {n}: simmer the leeks and potatoes for {n + 4} minutes.\n"
         for n in range(1, 13)
@@ -309,8 +312,8 @@ def lookalikes_playground() -> None:
         f"Day {n}: light rain over Lisbon, {14 + n} degrees by noon.\n"
         for n in range(1, 13)
     )
-    write_mbox("new.mbox", [make_mail(**menu), make_mail(**notes, body=recipe)])
-    write_mbox("old.mbox", [make_mail(**menu), make_mail(**notes, body=weather)])
+    write_mbox("new.mbox", [menu(), notes(body=recipe)])
+    write_mbox("old.mbox", [menu(), notes(body=weather)])
 
 
 def mailing_list_playground() -> None:
@@ -321,24 +324,22 @@ def mailing_list_playground() -> None:
     and an unsubscribe footer. None of those changes reach the hash.
     """
     body = "This week's harvest: plums and quinces.\n"
-    original = {
-        "date": "Mon, 05 Feb 2024 09:00:00 +0000",
-        "msg_id": "<digest-2024-02-05@example.com>",
-    }
-    write_mbox("sent.mbox", [make_mail("Weekly digest", body=body, **original)])
+    date = "Mon, 05 Feb 2024 09:00:00 +0000"
+    msg_id = "<digest-2024-02-05@example.com>"
+    write_mbox("sent.mbox", [make_mail("Weekly digest", date, msg_id, body)])
     write_mbox(
         "garden-club.mbox",
         [
             make_mail(
                 "[garden-club] Weekly digest",
-                body=body
-                + "\n--\nUnsubscribe: https://lists.example.com/garden-club\n",
+                date,
+                msg_id,
+                body + "\n--\nUnsubscribe: https://lists.example.com/garden-club\n",
                 extra_headers=(
                     ("List-Id", "<garden-club.lists.example.com>"),
                     ("Precedence", "list"),
                     ("X-BeenThere", "garden-club@lists.example.com"),
                 ),
-                **original,
             ),
         ],
     )
