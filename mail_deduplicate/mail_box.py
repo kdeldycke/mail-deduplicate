@@ -419,7 +419,7 @@ def open_box(
     If `box_format` is provided, forces the opening of the box in the specified format.
     Else, defaults to autodetection.
     """
-    logging.info(f"\nOpening {get_current_theme().choice(str(path))} ...")
+    logging.info(f"Opening {get_current_theme().choice(str(path))} ...")
     if not box_format:
         box_format = autodetect_box_type(path)
     else:

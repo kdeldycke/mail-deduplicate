@@ -39,7 +39,6 @@ from click_extra import (
     option_group,
     pass_context,
     path,
-    progressbar,
 )
 from cloup.constraints import If, accept_none, require_all
 from cloup.constraints.conditions import Predicate
@@ -47,7 +46,7 @@ from cloup.constraints.conditions import Predicate
 from .action import Action
 from .bug_report import report_unexpected_errors
 from .cache import default_cache_path
-from .deduplicate import BodyHasher, Deduplicate
+from .deduplicate import BodyHasher, Deduplicate, step_progressbar
 from .mail import TimeSource
 from .mail_box import FILE_FORMATS, FOLDER_FORMATS, BoxFormat
 from .strategy import Strategy
@@ -665,8 +664,8 @@ def mdedup(
     # with a one-line message or a bug report.
     with report_unexpected_errors(dedup):
         echo_step("Step #1 - Load mails")
-        with progressbar(
-            mail_sources,
+        with step_progressbar(
+            iterable=mail_sources,
             length=len(mail_sources),
             label="Mail sources",
             show_pos=True,

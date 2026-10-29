@@ -34,7 +34,7 @@ from functools import cached_property
 from itertools import combinations, islice
 from mailbox import Error as MailboxError
 from pathlib import Path
-from typing import NamedTuple, cast
+from typing import Any, NamedTuple, cast
 
 from click_extra import (
     context,
@@ -61,8 +61,25 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterable, Iterator
     from mailbox import Mailbox
 
+    from click._termui_impl import ProgressBar
+
     from .cli import Config
     from .mail import DedupMailMixin
+
+
+def step_progressbar(**kwargs: Any) -> ProgressBar[Any]:
+    """A progress bar for one step of the run, drawn on a terminal only.
+
+    Off a terminal, Click prints a bar's label once instead of the bar. Each step
+    already opens on a heading saying the same thing, so in a log, a pipe or a
+    capture the label is a bare line repeating it. Hiding the bar there drops
+    that line, and leaves a terminal the bar `--progress` asks for.
+
+    :param kwargs: what {func}`click_extra.progressbar` takes.
+    """
+    if not getattr(sys.stdout, "isatty", lambda: False)():
+        kwargs["hidden"] = True
+    return progressbar(**kwargs)
 
 
 @unique
@@ -1230,7 +1247,7 @@ class Deduplicate:
 
         jobs = self.jobs
 
-        with progressbar(
+        with step_progressbar(
             length=self.stats[Stat.MAIL_FOUND],
             label="Hashed mails",
             show_pos=True,
@@ -1291,7 +1308,7 @@ class Deduplicate:
         # Sets are announced individually at debug level only, so a plain run needs
         # something to watch: this step re-reads mails and is the longest one left
         # once the hashes come from the cache.
-        with progressbar(
+        with step_progressbar(
             length=len(self.mails),
             label="Deduplicated sets",
             show_pos=True,

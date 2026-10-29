@@ -41,6 +41,28 @@ def test_bare_call(invoke):
     assert "Usage:" in result.stdout
 
 
+@pytest.mark.parametrize("label", ("Mail sources", "Hashed mails", "Deduplicated sets"))
+def test_no_progress_bar_label_off_a_terminal(invoke, make_box, label):
+    """Off a terminal, a run prints no progress bar, and so none of its labels.
+
+    Click prints a hidden bar's label once instead of the bar, which put a bare
+    line repeating the step heading in every log, pipe and capture.
+    """
+    box_path, _, export_path = make_box(Maildir)
+    result = invoke("--strategy=select-one", f"--export={export_path}", box_path)
+    assert result.exit_code == 0
+    lines = [line.strip() for line in result.output.splitlines()]
+    assert label not in lines
+
+
+def test_no_log_line_is_left_empty(invoke, make_box):
+    """Every log line carries its message on the line of its level prefix."""
+    box_path, _, export_path = make_box(Maildir)
+    result = invoke("--strategy=select-one", f"--export={export_path}", box_path)
+    assert result.exit_code == 0
+    assert "info:" not in [line.strip() for line in result.stderr.splitlines()]
+
+
 def test_early_export_file_check(invoke, make_box, tmp_path):
     """Ensures the export file is tested for existence before any process is ran.
 
