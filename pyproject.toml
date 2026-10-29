@@ -170,7 +170,6 @@ dependency-groups.docs = { requires-python = ">= 3.14" }
 sources.click-extra = { git = "https://github.com/kdeldycke/click-extra", branch = "main" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
-exclude-newer-package = { certifi = "2026-10-22T00:00:00Z" }
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
 build-backend.source-exclude = [
