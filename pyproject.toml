@@ -168,7 +168,7 @@ typing = [
 [tool.uv]
 # Floor uv at the minimum resolver relied on, with no upper bound. CI installs
 # the exact uv each astral-sh/setup-uv step pins, which must satisfy this floor.
-required-version = ">=0.11.15"
+required-version = ">=0.12.22"
 # The docs are only built on modern Python, letting the docs group adopt
 # packages (like myst-parser 5.1) that dropped support for our older floors.
 dependency-groups.docs = { requires-python = ">= 3.14" }
@@ -397,15 +397,16 @@ exclude = [
   "^https://(www\\.)?medium\\.com(/.*)?$",
   # npmjs.com returns 403 to bots.
   "^https://www\\.npmjs\\.com/package/.*$",
+  # githubstatus.com returns 405 to HEAD requests from bots.
+  "githubstatus\\.com",
+  # claude.ai sits behind a Cloudflare challenge that answers 403 to some
+  # crawlers. The stock header of an agent instructions file links it.
+  "^https://claude\\.ai/.*$",
   # star-history.com builds its chart and its anchor with JavaScript, so both
   # the link and its fragment are invisible to lychee. The `benchmark-update`
   # skill now draws its chart locally, but a `docs/benchmark.md` it wrote
   # earlier may still embed one of these.
   "^https://star-history\\.com/.*$",
-  # githubstatus.com returns 405 to HEAD requests from bots.
-  "githubstatus\\.com",
-  # claude.ai sits behind Cloudflare and answers 403 to crawlers.
-  "^https://claude\\.ai/.*$",
   # Allow redirects to the official pip documentation.
   "^https://pip.pypa.io/.*$",
 ]
