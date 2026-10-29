@@ -63,8 +63,8 @@ def main():
 
         - plain inline package call: `python -m mail_deduplicate`,
         - `pyproject.toml` entry point: `mdedup = 'mail_deduplicate.__main__:main`,
-        - Nuitka's entry point:
-          `python -m nuitka (...) --main-entry-point=mdedup=mail_deduplicate.__main__:main`
+        - Nuitka's entry point: `python -m nuitka (...)
+          --main-entry-point=mdedup=mail_deduplicate.__main__:main`
 
     That way we can deduce all three cases from the entry point.
 
@@ -82,7 +82,8 @@ def main():
     if in_worker_process():
         sys.exit(WORKER_RERUN_ERROR)
 
-    from mail_deduplicate.cli import mdedup
+    # Imported only here, past the worker guard, so a worker never loads the CLI.
+    from mail_deduplicate.cli import mdedup  # noqa: PLC0415
 
     mdedup()
 

@@ -92,8 +92,10 @@ def test_box_format_definition(box_format):
 
 
 def test_box_formats_cover_stdlib():
-    """Box formats cover every box type of the standard library, on top of which
-    custom formats like eml are provided, and each format has one structure."""
+    """Box formats cover every box type of the standard library, plus custom ones.
+
+    Custom formats like eml come on top, and each format has one structure.
+    """
     assert set(stdlib_box_types()) <= {box.base_class for box in BoxFormat}
 
     assert set(FOLDER_FORMATS).isdisjoint(FILE_FORMATS)
@@ -118,8 +120,9 @@ def test_box_formats_cover_stdlib():
     ),
 )
 def test_box_roundtrip(make_box, box_format, mails):
-    """Mails survive a build/read round-trip in each format, which opens through its
-    own custom DedupMail factory.
+    """Mails survive a build/read round-trip in each format.
+
+    Each format opens through its own custom DedupMail factory.
 
     The duplicates of the mixed box check that no layer collapses identical mails.
     """
@@ -171,8 +174,10 @@ def test_dedup_across_formats(invoke, make_box, box_format):
 @ALL_FORMATS
 @pytest.mark.parametrize("error", [RuntimeError, KeyboardInterrupt])
 def test_run_cut_short_unlocks_boxes(invoke, make_box, monkeypatch, box_format, error):
-    """A run cut short by an error or an interrupt still unlocks its source box, so
-    the next run needs no `--force-unlock`."""
+    """A run cut short by an error or an interrupt still unlocks its source box.
+
+    The next run needs no `--force-unlock`.
+    """
     box_type = box_format.base_class
     dup = MailFactory(body="Same body.\n", message_id="<cut-short@test.com>")
     box_path, _, _ = make_box(box_type, [dup, dup])
@@ -239,8 +244,9 @@ mdedup(sys.argv[1:])
     ],
 )
 def test_killed_run_needs_force_unlock(invoke, make_box, box_format, stop):
-    """A run stopped by `SIGTERM` or `SIGKILL` exits before any cleanup: its box stays
-    locked, and only `--force-unlock` lets the next run through.
+    """A run stopped by `SIGTERM` or `SIGKILL` exits before any cleanup.
+
+    Its box stays locked, and only `--force-unlock` lets the next run through.
 
     On Windows, `terminate()` and `kill()` both call `TerminateProcess()`, which skips
     the cleanup too.
@@ -319,8 +325,11 @@ def test_refused_lock_keeps_no_file_open(make_box, box_format):
 
 
 def test_refused_subfolder_lock_unlocks_the_folders_before_it(invoke, make_box):
-    """A subfolder locked by another program stops the run, and the folders locked
-    before it are unlocked again: the next run needs no `--force-unlock`."""
+    """A subfolder locked by another program stops the run.
+
+    The folders locked before it are unlocked again: the next run needs no
+    `--force-unlock`.
+    """
     box_path, _, _ = make_box(mailbox.MH, [MailFactory(message_id="<apple@test.com>")])
     root = mailbox.MH(box_path, create=False)
     root.add_folder("kiwi").add(MailFactory(message_id="<kiwi@test.com>").render())
@@ -346,8 +355,10 @@ def test_refused_subfolder_lock_unlocks_the_folders_before_it(invoke, make_box):
 
 
 def test_create_box_refuses_to_clobber_existing(tmp_path):
-    """create_box refuses an existing path unless append is requested, guarding a
-    destination box even when reached directly."""
+    """create_box refuses an existing path unless append is requested.
+
+    This guards a destination box even when reached directly.
+    """
     existing = tmp_path / "existing.mbox"
     existing.touch()
 
@@ -415,8 +426,10 @@ def test_has_partless_multipart(raw, expected):
     "raw", (PARTLESS_8BIT, PARTLESS_CLOSED), ids=("8bit", "closed")
 )
 def test_python_cannot_rebuild_partless_multipart(raw):
-    """Python fails to write back a multipart parsed with no subpart, or drops part of
-    it: `add_mail()` copies such a mail as raw bytes for this reason.
+    """Python cannot write back in full a multipart parsed with no subpart.
+
+    It fails or drops part of it: `add_mail()` copies such a mail as raw bytes for
+    this reason.
 
     A Python release that rebuilds one of these mails whole fails this test, and
     lets `add_mail()` drop that case. See:
@@ -450,8 +463,10 @@ def test_nonexistent_path(invoke, source):
     ),
 )
 def test_unusable_source(invoke, args, messages):
-    """A source that cannot be opened in its format stops the run before any mail is
-    touched."""
+    """A source that cannot be opened in its format stops the run.
+
+    No mail is touched.
+    """
     result = invoke(*args, "--action=delete-discarded", ".")
     assert result.exit_code == 1
     assert "Step #1" in result.stdout
@@ -460,8 +475,9 @@ def test_unusable_source(invoke, args, messages):
 
 
 def test_verbatim_nested_maildirs(invoke, tmp_path):
-    """Nested plain-directory maildir folders (isync's Verbatim naming style) are
-    discovered at any depth, without requiring the root to be a maildir itself.
+    """Nested plain-directory maildir folders (isync's Verbatim style) are discovered.
+
+    They are found at any depth, without requiring the root to be a maildir itself.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/973
     """
@@ -495,8 +511,7 @@ def test_verbatim_nested_maildirs(invoke, tmp_path):
 
 
 def test_verbatim_forced_maildir_format(invoke, tmp_path):
-    """Forcing the maildir format on a Verbatim-style tree does not crash on the
-    mail-less root."""
+    """Forcing maildir on a Verbatim-style tree does not crash on the mail-less root."""
     root = tmp_path / "backup"
     root.mkdir()
     box = mailbox.Maildir(str(root / "INBOX"), create=True)
@@ -510,9 +525,10 @@ def test_verbatim_forced_maildir_format(invoke, tmp_path):
 
 
 def test_mixed_maildir_folder_conventions(invoke, tmp_path):
-    """Maildir++ dot-folders and Verbatim plain folders coexist under the same
-    maildir root, each opened exactly once. Guards against subfolders being skipped
-    so only the root INBOX is processed.
+    """Maildir++ dot-folders and Verbatim plain folders coexist under one root.
+
+    Each opens exactly once. Guards against subfolders being skipped so only the root
+    INBOX is processed.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/123
     """
@@ -532,8 +548,9 @@ def test_mixed_maildir_folder_conventions(invoke, tmp_path):
 
 
 def test_eml_autodetect_and_dedup(invoke, tmp_path):
-    """A folder of loose `.eml` files is autodetected and deduplicated, nested
-    directories included.
+    """A folder of loose `.eml` files is autodetected and deduplicated.
+
+    Nested directories are included.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/760
     """

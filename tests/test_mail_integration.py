@@ -14,8 +14,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-"""End-to-end behavior of mail parsing, timestamps and hashing driven through the
-`mdedup` CLI. Unit-level tests of the mail object live in `test_mail.py`."""
+"""End-to-end behavior of mail parsing, timestamps and hashing, through `mdedup`.
+
+Unit-level tests of the mail object live in `test_mail.py`.
+"""
 
 from __future__ import annotations
 
@@ -69,8 +71,7 @@ date alone land in the same duplicate set."""
     ),
 )
 def test_invalid_date_parsing(invoke, make_box, hash_headers, remaining):
-    """Mails with strange non-standard dates get parsed anyway and grouped into
-    duplicate sets."""
+    """Mails with odd non-standard dates are parsed and grouped into duplicate sets."""
     box_path, box_type, _ = make_box(
         Maildir,
         [
@@ -101,9 +102,10 @@ dated_mail = MailFactory(date="2021-01-01")
 
 
 def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
-    """Duplicate mails without any `Date` header, as saved into mbox files by some
-    clients, are skipped by time-based strategies instead of crashing. The run also
-    names the offending mail rather than failing the whole mailbox silently.
+    """Duplicates with no `Date` header are skipped by time-based strategies.
+
+    Some clients save such mails into mbox files. The run does not crash, and names the
+    offending mail rather than failing the whole mailbox silently.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/600 and
     https://github.com/kdeldycke/mail-deduplicate/issues/954
@@ -157,8 +159,9 @@ def test_missing_date_header_skips_time_strategy(invoke, tmp_path):
     ),
 )
 def test_unparsable_date_skips_time_strategy(invoke, make_box, mails, args):
-    """Time-based strategies skip duplicate sets containing mails without a parseable
-    `Date` header, and name the offending mails instead of crashing.
+    """Time-based strategies skip sets holding mails with no parseable `Date` header.
+
+    They name the offending mails instead of crashing.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/132
     """
@@ -175,8 +178,7 @@ def test_unparsable_date_skips_time_strategy(invoke, make_box, mails, args):
 
 
 def test_unparsable_date_show_diff(invoke, make_box):
-    """Rendering the diff of mails without a parseable `Date` header does not
-    crash."""
+    """Rendering the diff of mails with no parseable `Date` header does not crash."""
     undated_variant = MailFactory(date_rfc2822="invalid date", body="A different body.")
     box_path, box_type, _ = make_box(Maildir, [undated_mail, undated_variant])
 
@@ -207,9 +209,11 @@ def test_unparsable_date_show_diff(invoke, make_box):
     ),
 )
 def test_hash_body(invoke, make_box, hash_body, other_body, deduplicated):
-    """--hash-body=skip groups mails by their headers alone, so mails with identical
-    headers are duplicates whatever their bodies. =raw folds every byte of the body
-    into the hash, and =normalized folds it in but ignores whitespace."""
+    """--hash-body=skip groups mails by their headers alone, whatever their bodies.
+
+    =raw folds every byte of the body into the hash, and =normalized folds it in but
+    ignores whitespace.
+    """
     a = MailFactory(
         date="2021-01-01", message_id="<n@nohost.com>", body="Hello world\n"
     )
@@ -228,8 +232,10 @@ def test_hash_body(invoke, make_box, hash_body, other_body, deduplicated):
 
 
 def test_ctime_time_source(invoke, make_box):
-    """--time-source=ctime derives each mail's timestamp from its file's inode change
-    time, so a maildir with distinct file ctimes deduplicates by them."""
+    """--time-source=ctime dates each mail by the inode change time of its file.
+
+    A maildir with distinct file ctimes deduplicates by them.
+    """
     dup = MailFactory(body="Same body.\n", message_id="<ctime@nohost.com>")
 
     # Deliver the two identical copies more than a second apart, so the second file is
@@ -257,8 +263,9 @@ def test_ctime_time_source(invoke, make_box):
 
 
 def test_mail_rejected_when_too_few_headers(invoke, tmp_path):
-    """A mail carrying fewer than the minimal hashable headers is rejected, not
-    hashed, and left untouched, instead of crashing the whole run.
+    """A mail with fewer than the minimal hashable headers is rejected, not hashed.
+
+    It is left untouched, and the whole run does not crash.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/27
     """
@@ -277,8 +284,9 @@ def test_mail_rejected_when_too_few_headers(invoke, tmp_path):
 
 
 def test_crlf_and_lf_bodies_are_duplicates(invoke, tmp_path):
-    """Two mails identical but for LF vs CRLF line endings are recognized as
-    duplicates: line endings must not count toward size or content differences.
+    """Two mails that differ only by LF or CRLF line endings are duplicates.
+
+    Line endings must not count toward size or content differences.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/844 (fixed by PR 845).
     """

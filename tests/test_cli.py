@@ -275,8 +275,9 @@ def test_single_hash_header_needs_no_minimal_flag(invoke, make_box):
 
 
 def test_too_few_headers_rejects_mail(invoke, make_box):
-    """A mail carrying fewer hash headers than the floor is rejected, and the warning
-    renders the headers that were found so the mail can be inspected.
+    """A mail carrying fewer hash headers than the floor is rejected.
+
+    The warning renders the headers that were found, so the mail can be inspected.
 
     The floor is derived as `min(4, number of --hash-header values)`, so asking for
     four headers the mail does not carry leaves it one below the floor.
@@ -302,9 +303,11 @@ def test_too_few_headers_rejects_mail(invoke, make_box):
 
 
 def test_headers_table_rendered_only_when_logged(invoke, make_box, monkeypatch):
-    """Rendering the canonical-headers table goes through `tabulate` and costs more
-    than the hash itself, yet it is discarded at any level above debug. It must not
-    be built at all at the default verbosity."""
+    """The canonical-headers table is not built at the default verbosity.
+
+    Rendering it goes through `tabulate` and costs more than the hash itself, yet any
+    level above debug discards it.
+    """
     renders: list[str] = []
     original = DedupMailMixin.pretty_canonical_headers
 
@@ -355,8 +358,10 @@ def test_invalid_option_value_rejected(invoke, make_box, args, message):
 
 
 def test_duplicate_source_rejected(invoke, make_box):
-    """The same mail source given twice is refused: the source path is the key used to
-    tie a mail back to its origin."""
+    """The same mail source given twice is refused.
+
+    The source path is the key that ties a mail back to its origin.
+    """
     box_path, _, _ = make_box(Maildir, [MailFactory()])
 
     result = invoke(
@@ -368,8 +373,10 @@ def test_duplicate_source_rejected(invoke, make_box):
 
 
 def test_hash_only_warns_about_ignored_options(invoke, make_box):
-    """--hash-only runs no selection or action, so options from those steps are
-    ignored, and any the user set are reported."""
+    """--hash-only ignores the options of the selection and action steps it skips.
+
+    Any of them the user set is reported.
+    """
     box_path, _, _ = make_box(Maildir, [MailFactory(message_id="<h@nohost.com>")])
 
     result = invoke("--hash-only", "--strategy=select-one", box_path)
@@ -380,8 +387,7 @@ def test_hash_only_warns_about_ignored_options(invoke, make_box):
 
 
 def test_main_entrypoint_reports_version(monkeypatch, capsys):
-    """The `main()` indirection runs the CLI end to end: `--version` exits cleanly
-    through it."""
+    """The `main()` indirection runs the CLI end to end: `--version` exits cleanly."""
     monkeypatch.setattr(sys, "argv", ["mdedup", "--version"])
 
     with pytest.raises(SystemExit) as exc:
@@ -438,8 +444,10 @@ sys.exit(user_main.main())
 
 
 def test_unguarded_launcher_stops_in_each_worker(tmp_path):
-    """A launcher that calls `main()` when imported stops in each `--jobs` worker,
-    before the CLI there opens a box. The parent then fails on its broken pool.
+    """A launcher calling `main()` on import stops in each `--jobs` worker.
+
+    It stops before the CLI there opens a box. The parent then fails on its broken
+    pool.
 
     The run cannot multiply processes, guard or not: CPython refuses to start a
     process from a worker that is still importing its parent's main module.

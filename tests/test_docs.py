@@ -14,8 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-"""Checks on the documentation pages that list parts of the test suite, and on the
-assets the readme illustrates itself with."""
+"""Checks on the docs pages that list the test suite, and on the readme assets."""
 
 from __future__ import annotations
 
@@ -53,8 +52,7 @@ def _cli_screenshots():
 
 @pytest.mark.once
 def test_every_test_module_has_a_section():
-    """`docs/tests.md` has one section for each module of the test suite, and no
-    other.
+    """`docs/tests.md` has one section per module of the test suite, and no other.
 
     No job generates those sections: a module added to `tests/` stays out of the
     published page until someone writes its section.
@@ -89,9 +87,10 @@ def _pages_embedding(stem: str) -> list[Path]:
 
 @pytest.mark.once
 def test_every_cli_capture_is_embedded():
-    """Each capture `docs/cli_screenshots_update.py` writes is embedded in the
-    readme or a docs page, and no SVG in `docs/assets/` outlives the capture that
-    produced it.
+    """Each capture `docs/cli_screenshots_update.py` writes is embedded in a page.
+
+    That page is the readme or a docs page, and no SVG in `docs/assets/` outlives the
+    capture that produced it.
 
     The stems of the captures are the file names the pages link, so renaming one
     in the script breaks a page silently: GitHub serves a 404 where the readme's
@@ -165,8 +164,9 @@ def test_cli_capture_prompts_fit_their_window():
 
 @pytest.mark.once
 def test_self_referencing_urls_name_a_file_the_tree_holds():
-    """A `raw.githubusercontent.com` URL pointing at this repository's own `main`
-    names a file the tree still carries.
+    """A `raw.githubusercontent.com` URL to this repository names a file it carries.
+
+    This covers the URLs that point at the `main` branch.
 
     Nothing else resolves these: they are fetched by a reader far from any test,
     on GitHub and on PyPI, where the readme is the whole page. Renaming a file

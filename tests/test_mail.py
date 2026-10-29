@@ -36,7 +36,7 @@ def create_mail_from_bytes(raw: bytes) -> DedupMailMixin:
     Keeps the parsed payload, so the body-derived properties (`body_lines`, `size`,
     the body hashes) can be exercised.
     """
-    mail = cast(DedupMailMixin, email.message_from_bytes(raw))
+    mail = cast("DedupMailMixin", email.message_from_bytes(raw))
     mail.__class__ = DedupMailMixin
     # Swapping __class__ bypasses __init__, so mirror the box metadata defaults it
     # sets, as they are required to render the mail's repr.
@@ -57,13 +57,15 @@ def create_mail_with_headers(
     mail = create_mail_from_bytes(b"Subject: placeholder\n\nTest body")
     # Replace headers with provided ones
     if headers:
-        cast(Any, mail)._headers = list(headers)
+        cast("Any", mail)._headers = list(headers)
     return mail
 
 
 def test_body_hashes_distinguish_and_normalize():
-    """`hash_raw_body` reflects any byte difference; `hash_normalized_body` ignores
-    whitespace but still separates genuinely different bodies."""
+    """`hash_raw_body` reflects any byte difference.
+
+    `hash_normalized_body` ignores whitespace, but still separates different bodies.
+    """
     base = create_mail_from_bytes(b"Subject: s\n\nHello world\n")
     spaced = create_mail_from_bytes(b"Subject: s\n\nHello    world\n")
     different = create_mail_from_bytes(b"Subject: s\n\nGoodbye world\n")
@@ -79,8 +81,10 @@ def test_body_hashes_distinguish_and_normalize():
 
 
 def test_body_lines_gathers_multipart_preamble_and_epilogue():
-    """`body_lines` collects the preamble, every leaf part and the epilogue, skipping
-    the multipart container itself."""
+    """`body_lines` collects the preamble, every leaf part and the epilogue.
+
+    It skips the multipart container itself.
+    """
     raw = (
         b"Subject: multi\n"
         b'Content-Type: multipart/mixed; boundary="BOUND"\n'
@@ -172,8 +176,9 @@ def multipart_mail(
     ],
 )
 def test_body_lines_decodes_each_part(raw, expected):
-    """Every part of a mail is decoded into its body lines, whatever its bytes, and
-    both body hashes are computed from them.
+    """Every part of a mail is decoded into its body lines, whatever its bytes.
+
+    Both body hashes are computed from them.
 
     The parser keeps each non-ASCII byte as a lone surrogate. `get_payload()` decodes
     the parts, and `body_lines` decodes the preamble and epilogue as UTF-8, instead of
@@ -604,16 +609,16 @@ def test_header_normalization(header_name, values, expected):
     ),
 )
 def test_unparsable_date_returns_none(header):
-    """A missing, unparsable or out-of-range `Date` header produces no timestamp
-    instead of crashing."""
+    """A missing, unparsable or out-of-range `Date` gives no timestamp, not a crash."""
     mail = create_mail_with_headers(header)
     assert mail.parsed_date is None
 
 
 @ALL_FORMATS
 def test_mail_path_derived_from_box(make_box, box_format):
-    """A mail's location comes from its box's own index, not from opening its file,
-    and its repr renders that location, ready to be copy-pasted for inspection.
+    """A mail's location comes from its box's own index, not from opening its file.
+
+    Its repr renders that location, ready to be copy-pasted for inspection.
 
     Folder-based boxes give every mail its own file, so their mails carry distinct
     paths below the box's directory, which their repr shows. File-based boxes pack
@@ -664,9 +669,10 @@ def load_single_mail(make_box, config, box_format):
 
 @pytest.mark.parametrize("box_format", (BoxFormat.MAILDIR, BoxFormat.MBOX), ids=str)
 def test_dehydrate_hydrate_roundtrip(make_box, config, box_format):
-    """Dehydration must drop the parsed message but keep the scalars used by the
-    selection strategies, and content-dependent properties must transparently
-    restore the exact same content from the source box.
+    """Dehydration drops the parsed message, but keeps the scalars of the strategies.
+
+    Content-dependent properties must transparently restore the exact same content
+    from the source box.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/761
     """
@@ -700,8 +706,10 @@ def test_dehydrate_hydrate_roundtrip(make_box, config, box_format):
 
 @pytest.mark.parametrize("box_format", (BoxFormat.MAILDIR, BoxFormat.MBOX), ids=str)
 def test_dehydrated_mail_defers_body_reads(make_box, config, box_format):
-    """A mail dehydrated before its body was ever decoded must re-read its message
-    from the source box on the first body-dependent access."""
+    """A mail dehydrated before its body was decoded re-reads its message on access.
+
+    The first body-dependent access reads it from the source box.
+    """
     box, mail_id, mail = load_single_mail(make_box, config, box_format)
     twin = box[mail_id]
     twin.conf = config

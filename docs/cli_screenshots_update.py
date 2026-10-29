@@ -180,7 +180,9 @@ original = DedupMailMixin.hash_key
 
 def hash_key(self):
     if self.get("Message-ID") == "<reset-2025-03-11@example.com>":
-        raise UnicodeEncodeError("ascii", "à bientôt", 0, 1, "ordinal not in range(128)")
+        raise UnicodeEncodeError(
+            "ascii", "à bientôt", 0, 1, "ordinal not in range(128)"
+        )
     return original(self)
 
 
@@ -600,7 +602,7 @@ the file even when the CLI did not change. Each also builds a maildir of
 
 
 def capture_environment() -> dict[str, str]:
-    """The environment every capture runs in: this one, minus {data}`AGENT_VARIABLES`."""
+    """The environment of every capture: this one, minus {data}`AGENT_VARIABLES`."""
     return {
         name: value for name, value in os.environ.items() if name not in AGENT_VARIABLES
     }

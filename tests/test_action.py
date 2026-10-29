@@ -114,8 +114,9 @@ https://github.com/kdeldycke/mail-deduplicate/issues/1053
 def test_action_matrix(
     invoke, make_box, action, needs_export, source_after, export_after, dry_run
 ):
-    """Every action lands the right mails in the right box, and the stats self-check
-    stays consistent, in real and dry-run mode alike.
+    """Every action lands the right mails in the right box.
+
+    The stats self-check stays consistent, in real and dry-run mode alike.
 
     Copy actions leave the source intact; move and delete actions strip it down to
     whichever subset they did not act on, with `delete-selected` also leaving the
@@ -211,8 +212,7 @@ def test_trail_lists_mails_in_a_stable_order(invoke, make_box, box_type):
 
 @pytest.mark.parametrize("jobs", [1, 2], ids=["sequential", "parallel"])
 def test_delete_selected_spares_mails_without_duplicates(invoke, make_box, jobs):
-    """A mail that has no duplicate survives a `delete-selected` run that has nothing
-    else to act on.
+    """A unique mail survives a `delete-selected` run that has nothing else to act on.
 
     The two copies here differ by far more than the default size threshold, as a mail
     carrying an attachment differs from the same mail without one. Their set is
@@ -268,8 +268,9 @@ def inodes(box_path) -> set[int]:
 
 @pytest.mark.parametrize("jobs", [1, 2], ids=["sequential", "parallel"])
 def test_hardlink_discarded_collapses_copies_onto_one_file(invoke, make_box, jobs):
-    """Discarded copies keep their own name and place, but end up backed by the file
-    of the copy kept in their set, while the unique mail keeps a file to itself.
+    """Discarded copies keep their own name and place, backed by the kept copy's file.
+
+    The unique mail keeps a file to itself.
 
     Runs over both selection paths: pairing each discarded mail with the copy it is
     linked to is recorded per duplicate set, which a parallel run settles in worker
@@ -327,8 +328,10 @@ files differing byte for byte."""
 def test_hardlink_discarded_gates_on_byte_equality(
     invoke, make_box, extra_args, distinct_files
 ):
-    """Copies that are not byte-for-byte identical are only linked when asked for,
-    as linking swaps the discarded mail's own content for the kept copy's."""
+    """Copies that are not byte-for-byte identical are only linked when asked for.
+
+    Linking swaps the discarded mail's own content for the kept copy's.
+    """
     box_path, _, _ = make_box(Maildir, DIFFERING_COPIES)
 
     result = invoke(
@@ -371,8 +374,10 @@ def test_hardlink_discarded_is_idempotent(invoke, make_box):
 
 
 def test_hardlink_that_cannot_be_created_leaves_the_mail(invoke, make_box, monkeypatch):
-    """A link that cannot replace its mail leaves the mail as it was, removes the
-    temporary link it went through, and counts the mail as skipped."""
+    """A link that cannot replace its mail leaves the mail as it was.
+
+    It removes the temporary link it went through, and counts the mail as skipped.
+    """
     box_path, box_type, _ = make_box(Maildir, FULL_BOX)
     before = {path: path.stat().st_ino for path in mail_files(box_path)}
     replace = os.replace
@@ -398,8 +403,10 @@ def test_hardlink_that_cannot_be_created_leaves_the_mail(invoke, make_box, monke
 
 
 def test_hardlink_discarded_leaves_file_based_box_alone(invoke, make_box):
-    """A mail packed into the box's own file has nothing of its own to link, so the
-    box comes out byte for byte as it went in."""
+    """A mail packed into the box's own file has nothing of its own to link.
+
+    The box comes out byte for byte as it went in.
+    """
     box_path, box_type, _ = make_box(mbox, FULL_BOX)
     before = Path(box_path).read_bytes()
 
@@ -423,8 +430,9 @@ def test_hardlink_discarded_leaves_file_based_box_alone(invoke, make_box):
     ids=("8bit", "closed"),
 )
 def test_export_keeps_partless_multipart(invoke, tmp_path, raw, action, export_format):
-    """A multipart mail parsed with no subpart reaches every export format byte for
-    byte, whether its body holds 8-bit bytes or a closing boundary.
+    """A multipart mail parsed with no subpart reaches every export format intact.
+
+    Its bytes stay the same, whether its body holds 8-bit bytes or a closing boundary.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/1090
     """
@@ -451,8 +459,9 @@ def test_export_keeps_partless_multipart(invoke, tmp_path, raw, action, export_f
 
 
 def test_unique_only_source_is_exported(invoke, make_box):
-    """A source made only of unique mails still exports all of them: a set of one mail
-    is auto-selected, not skipped as "all mails were selected".
+    """A source made only of unique mails still exports all of them.
+
+    A set of one mail is auto-selected, not skipped as "all mails were selected".
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/843 and
     https://github.com/kdeldycke/mail-deduplicate/issues/599

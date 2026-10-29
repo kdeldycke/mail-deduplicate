@@ -13,9 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-"""A mail wrapped with the deduplication-specific properties: canonical hash,
-normalized headers, timestamp, size, and the dehydration machinery keeping memory
-flat."""
+"""A mail wrapped with the properties deduplication needs.
+
+They are the canonical hash, the normalized headers, the timestamp, the size, and the
+dehydration that keeps memory flat.
+"""
 
 from __future__ import annotations
 
@@ -28,9 +30,9 @@ import re
 from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 from email.header import Header
+from enum import StrEnum
 from functools import cached_property
 from mailbox import Message
-from enum import StrEnum
 from typing import cast
 
 from click_extra import get_current_context, render_table
@@ -192,8 +194,7 @@ class DedupMailMixin(Message):
         return self.resolve_path(self.box, self.mail_id)
 
     def add_box_metadata(self, box: Mailbox, mail_id: str) -> None:
-        """Post-instantiation utility to attach to mail some metadata derived from its
-        parent box.
+        """Attach to the mail some metadata derived from its parent box.
 
         Called right after the `__init__()` constructor.
 
@@ -293,8 +294,9 @@ class DedupMailMixin(Message):
             self.dehydrate()
 
     def __repr__(self) -> str:
-        """Renders the fully-qualified path of the mail's own file, so it can be
-        copy-pasted as-is for direct inspection.
+        """Renders the fully-qualified path of the mail's own file.
+
+        The path can be copy-pasted as-is for direct inspection.
 
         Mails from file-based boxes share the box's path, so the mail ID is appended
         to tell them apart. See:
@@ -400,7 +402,7 @@ class DedupMailMixin(Message):
         if (ctype and not ctype.startswith("text")) or (
             cte and cte[0][0].lower() == "8bit"
         ):
-            return cast(str, part.get_payload(decode=False))
+            return cast("str", part.get_payload(decode=False))
 
         # Try to decode with charset(s)
         charset = part.get_content_charset()
@@ -414,7 +416,7 @@ class DedupMailMixin(Message):
                 except (UnicodeDecodeError, LookupError):
                     continue
 
-        return cast(str, part.get_payload(decode=False))
+        return cast("str", part.get_payload(decode=False))
 
     def undo_surrogateescape(self, text: str) -> str:
         """Decode as UTF-8 the non-ASCII bytes that parsing left as lone surrogates.
@@ -464,8 +466,7 @@ class DedupMailMixin(Message):
 
     @cached_property
     def canonical_headers(self) -> tuple[tuple[str, str], ...]:
-        """Returns the full list of all canonical headers names and values in
-        preparation for hashing.
+        """Returns the canonical header names and values, ready for hashing.
 
         Self-hydrating: re-reads the message from its box if it was dehydrated.
         """
@@ -640,8 +641,8 @@ class DedupMailMixin(Message):
         Only strips if the value matches `<something>` with no commas.
 
         ```{note}
-        Sometimes `email.parser` strips the `<>` brackets from a `To:` header which has a
-        single address. I have seen this happen for only one mail in a duplicate pair.
+        Sometimes `email.parser` strips the `<>` brackets from a `To:` header which has
+        a single address. I have seen this happen for only one mail in a duplicate pair.
         I'm not sure why (presumably the parser uses `email.utils.unquote` somewhere in
         its code path which was only triggered by that mail and not its sister mail),
         but to be safe, we should always strip the `<>` brackets to avoid this

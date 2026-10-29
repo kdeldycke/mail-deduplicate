@@ -611,8 +611,7 @@ class FailureLog:
         )
 
     def title(self) -> str:
-        """The title of the issue reporting the failures: that of their most frequent
-        kind."""
+        """The title of the issue: that of the most frequent kind of failure."""
         kind = max(self.counts, key=self.counts.__getitem__)
         return self.samples[kind][0].title
 
@@ -624,8 +623,7 @@ class FailureLog:
                     yield sample.trace
 
     def report_lines(self) -> Iterator[str]:
-        """The lines of the report detailing each kind of failure, most frequent
-        first."""
+        """The report lines detailing each kind of failure, most frequent first."""
         kinds = sorted(self.counts, key=self.counts.__getitem__, reverse=True)
         for index, kind in enumerate(kinds[:MAX_KINDS], 1):
             count = self.counts[kind]

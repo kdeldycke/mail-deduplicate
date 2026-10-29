@@ -168,8 +168,9 @@ def test_retained_memory_stays_flat_as_the_corpus_grows(
 
 
 def test_retained_memory_does_not_track_mail_size(invoke, make_box, index_footprint):
-    """Mails are dehydrated once hashed, so a corpus of huge mails must retain no
-    more than a corpus of small ones.
+    """A corpus of huge mails must retain no more than a corpus of small ones.
+
+    Mails are dehydrated once hashed.
 
     Regression test for the out-of-memory reports on big boxes: mails used to be
     kept fully parsed for the whole run.
@@ -273,8 +274,10 @@ def test_step_falls_back_when_its_pool_will_not_start(
 
 
 def test_single_mail_sets_are_not_handed_to_workers(invoke, make_box, monkeypatch):
-    """A set of one is settled without reading anything, so shipping it to a worker
-    would cost more than deciding it here."""
+    """A set of one is settled here, without reading anything.
+
+    Shipping it to a worker would cost more than deciding it here.
+    """
     handed: list[int] = []
     original = Deduplicate.adopt_selection
 

@@ -37,8 +37,10 @@ def test_strategy_enum_has_no_hidden_alias():
 
 @pytest.mark.parametrize("strategy", Strategy, ids=str)
 def test_strategy_definition(strategy):
-    """Each strategy has a lowercase ID matching its name, and runs a documented
-    function named after one of the strategies."""
+    """Each strategy has a lowercase ID matching its name.
+
+    It runs a documented function named after one of the strategies.
+    """
     assert isinstance(strategy.value, str | int)
 
     assert strategy.name.lower().replace("_", "-") == str(strategy)
@@ -393,8 +395,9 @@ derived."""
 
 
 def test_strategy_fallback_resolves_identical_copies(invoke, make_box):
-    """Time-based strategies cannot discriminate byte-identical copies: the next
-    strategy of the cascade takes over the sets they fail on.
+    """Time-based strategies cannot discriminate byte-identical copies.
+
+    The next strategy of the cascade takes over the sets they fail on.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/647
     """
@@ -425,8 +428,10 @@ def test_strategy_fallback_resolves_identical_copies(invoke, make_box):
 
 
 def test_strategy_fallback_on_missing_timestamp(invoke, make_box):
-    """A set whose mails have no parseable timestamp is handed over to the next
-    strategy of the cascade instead of being skipped."""
+    """A set whose mails have no parseable timestamp goes to the next strategy.
+
+    The set is not skipped.
+    """
     box_path, box_type, _ = make_box(Maildir, [undated_mail, undated_mail])
 
     result = invoke(
@@ -460,8 +465,9 @@ def test_strategy_cascade_exhausted(invoke, make_box):
 
 
 def test_time_strategy_alone_cannot_split_same_timestamp_set(invoke, make_box):
-    """A time-based strategy selects the whole set when every mail shares a timestamp,
-    which discriminates nothing, so the set is skipped and no mail is deleted. A
+    """A time-based strategy that selects the whole set skips it, and deletes no mail.
+
+    This happens when every mail shares a timestamp, which discriminates nothing. A
     fallback strategy is the documented way to resolve such sets.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/270 and
@@ -533,8 +539,10 @@ PATH_STRATEGIES = (
     ),
 )
 def test_strategy_cascade_regexp(invoke, make_box, args, messages):
-    """--regexp is required as soon as a path-based strategy is part of the cascade,
-    and rejected when no strategy of the cascade makes use of it."""
+    """--regexp is required as soon as a path-based strategy is part of the cascade.
+
+    It is rejected when no strategy of the cascade makes use of it.
+    """
     box_path, _, _ = make_box(Maildir, [random_mail_1, random_mail_1])
 
     result = invoke(*args, "--action=delete-discarded", box_path)
@@ -550,8 +558,9 @@ other fixtures."""
 
 
 def test_outlier_eviction_keeps_core_dedup(invoke, make_box):
-    """A mail exceeding the thresholds against its set no longer prevents the
-    deduplication of the true copies sharing the set.
+    """An outlier mail no longer prevents the deduplication of the true copies.
+
+    The outlier exceeds the thresholds against its set.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/851
     """
@@ -571,8 +580,10 @@ def test_outlier_eviction_keeps_core_dedup(invoke, make_box):
 
 
 def test_dissimilar_pair_still_skipped(invoke, make_box):
-    """A set with no coherent core of at least 2 similar mails is skipped as a whole,
-    like before outlier eviction was introduced."""
+    """A set with no coherent core of at least 2 similar mails is skipped as a whole.
+
+    This is the behavior from before outlier eviction.
+    """
     box_path, box_type, _ = make_box(Maildir, [smallest_mail, outlier_mail])
 
     result = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
@@ -585,9 +596,11 @@ def test_dissimilar_pair_still_skipped(invoke, make_box):
 
 
 def test_eviction_is_not_transitive(invoke, make_box):
-    """A chain of mails, each within threshold of the next but not of the whole set,
-    is not collapsed into a single group: an endpoint is set aside, and the coherent
-    remainder is deduplicated."""
+    """A chain of mails, each within threshold of the next, is not one group.
+
+    The mails are not all within threshold of each other. An endpoint is set aside,
+    and the coherent remainder is deduplicated.
+    """
     chain = [
         MailFactory(body="z" * 100),
         MailFactory(body="z" * 500),
@@ -651,8 +664,10 @@ def test_threshold_checks_disabled(
 
 
 def test_no_strategy_skips_duplicate_sets(invoke, make_box):
-    """With no --strategy, duplicate sets are grouped and counted, then skipped whole,
-    so every mail stays in place."""
+    """With no --strategy, duplicate sets are grouped and counted, then skipped whole.
+
+    Every mail stays in place.
+    """
     box_path, box_type, _ = make_box(Maildir, [random_mail_1, random_mail_1])
 
     result = invoke("--action=delete-discarded", box_path)
@@ -690,8 +705,10 @@ def test_show_diff_starts_from_the_lowest_path(invoke, make_box):
 
 
 def test_show_diff_is_colored_by_the_theme(invoke, make_box):
-    """Each line of the diff takes the theme slot its kind reads as, like `git diff`
-    colors its own."""
+    """Each line of the diff takes the theme slot its kind reads as.
+
+    This is how `git diff` colors its own.
+    """
     a = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="aaaa bbbb\n")
     b = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="cccc dddd\n")
     box_path, _, _ = make_box(Maildir, [a, b])
@@ -723,8 +740,10 @@ def test_show_diff_is_colored_by_the_theme(invoke, make_box):
 
 @pytest.mark.parametrize("show_diff", (False, True), ids=("no-diff", "show-diff"))
 def test_content_dissimilar_pair_skipped(invoke, make_box, show_diff):
-    """A content-dissimilar set is skipped whole, and --show-diff prints the unified
-    diff of its mails."""
+    """A content-dissimilar set is skipped whole.
+
+    --show-diff prints the unified diff of its mails.
+    """
     # Same headers group them; equal-length bodies keep the size check quiet so the
     # content check is what trips.
     a = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="aaaa bbbb\n")

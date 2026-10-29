@@ -188,9 +188,11 @@ def test_modified_mail_is_rehashed(cached_run, make_box, count_hashes):
 def test_edited_file_based_box_invalidates_every_mail(
     cached_run, make_box, count_hashes
 ):
-    """Mails of an mbox share the box's file and are keyed by byte offsets, which
-    shift as soon as a mail is added or removed. Editing the box must therefore
-    invalidate all of its mails at once, not just the ones that moved."""
+    """Editing an mbox invalidates all of its mails, not just the ones that moved.
+
+    Mails of an mbox share the box's file and are keyed by byte offsets, which shift as
+    soon as a mail is added or removed.
+    """
     box_path, _, _ = make_box(mbox, [MailFactory(), MailFactory()])
 
     assert cached_run(box_path).exit_code == 0
@@ -271,8 +273,9 @@ def test_unusable_cache_does_not_abort_the_run(invoke, make_box, tmp_path):
 def test_corrupt_cache_is_skipped_and_closed(
     cached_run, cache_db, make_box, monkeypatch
 ):
-    """A file that is not a database is reported and skipped, and its connection is
-    closed.
+    """A file that is not a database is reported and skipped.
+
+    Its connection is closed.
 
     SQLite opens any file, and only fails on the first statement it runs there, so
     the connection exists by then and must not stay open for the rest of the run.

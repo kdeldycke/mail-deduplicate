@@ -146,8 +146,9 @@ class EML(Mailbox):
     without the `.eml` extension (case-insensitive) are ignored, as well as
     hidden files and directories.
 
-    Follows the interface of Python's [mailbox.Mailbox](https://docs.python.org/3/library/mailbox.html#mailbox.Mailbox). Like
-    `maildir`, the one-file-per-mail storage needs no locking.
+    Follows the interface of Python's
+    [mailbox.Mailbox](https://docs.python.org/3/library/mailbox.html#mailbox.Mailbox).
+    Like `maildir`, the one-file-per-mail storage needs no locking.
     """
 
     def __init__(self, dirname, factory=None, create=True) -> None:
@@ -222,8 +223,7 @@ class EML(Mailbox):
         raise NotImplementedError("EML mails are added and removed, not replaced.")
 
     def list_folders(self) -> list[str]:
-        """No dedicated subfolder objects: the recursive walk covers nested
-        directories."""
+        """No subfolder objects: the recursive walk covers nested directories."""
         return []
 
     def get_folder(self, folder):
@@ -320,8 +320,7 @@ MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 
 
 def is_maildir(path: Path) -> bool:
-    """Returns `True` when the path holds all the sub-directories of a properly
-    structured maildir."""
+    """Returns `True` when the path holds all the sub-directories of a maildir."""
     return all(path.joinpath(subdir).is_dir() for subdir in MAILDIR_SUBDIRS)
 
 
@@ -329,8 +328,9 @@ def contains_maildir(path: Path) -> bool:
     """Returns `True` when the path is a maildir or holds one at any depth.
 
     Allows the discovery of nested maildir folders stored as plain directories, as
-    produced by [isync/mbsync's Verbatim naming style](https://isync.sourceforge.io/mbsync.html). See:
-    https://github.com/kdeldycke/mail-deduplicate/issues/973
+    produced by
+    [isync/mbsync's Verbatim naming style](https://isync.sourceforge.io/mbsync.html).
+    See: https://github.com/kdeldycke/mail-deduplicate/issues/973
 
     Dot-prefixed directories are ignored, as they are covered by the `Maildir++`
     folder convention. The mail-holding sub-directories of maildirs are not
@@ -545,8 +545,9 @@ def has_partless_multipart(mail: Message) -> bool:
 
 
 def add_mail(box: Mailbox, mail: DedupMailMixin) -> None:
-    """Add a mail to a box, as the bytes its source box holds if Python cannot
-    rebuild it.
+    """Add a mail to a box.
+
+    Python cannot rebuild some mails: those go in as the bytes their source box holds.
 
     Every box format writes a mail with `BytesGenerator`, from the message parsed
     out of it. A mail that `has_partless_multipart()` would come out short, or not

@@ -318,8 +318,7 @@ class Action(StrEnum):
 
     @property
     def acts_on_discarded(self) -> bool:
-        """Whether the action applies to the discarded mails rather than the selected
-        ones."""
+        """Whether the action applies to the discarded mails, not the selected ones."""
         return self.value.endswith("-discarded")
 
     @property

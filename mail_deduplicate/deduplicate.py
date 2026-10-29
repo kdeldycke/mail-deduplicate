@@ -13,8 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-"""The deduplication pipeline: group mails by hash, settle each duplicate set, keep
-score.
+"""The deduplication pipeline: group mails by hash, settle each set, keep score.
 
 The `Deduplicate` orchestrator drives the whole run. Both of its expensive steps,
 hashing and selection, can fan out across worker processes: the module-level
@@ -181,8 +180,7 @@ class ContentDiffAboveThreshold(Exception):
 
 
 class MissingTimestamps(Exception):
-    """Some mails of a duplicate set have no timestamp, so they cannot be compared by
-    time-based strategies.
+    """Some mails of a set have no timestamp for time-based strategies to compare.
 
     Happens for mails without a parseable `Date` header, when the timestamp is
     sourced from it.
@@ -305,8 +303,9 @@ class DuplicateSet:
         return min(mail.size for mail in self.pool)
 
     def check_differences(self) -> set[DedupMailMixin]:
-        """Checks all mails of the set against each other, for size and content
-        differences within the limits imposed by the thresholds.
+        """Checks the mails of the set against each other for size and content.
+
+        Their differences must stay within the limits the thresholds set.
 
         Instead of rejecting the whole set on the first offending pair, the mails
         involved in the most offending pairs are greedily set aside until every
@@ -860,8 +859,7 @@ def _select_in_worker(task: tuple[str, tuple[MailMeta, ...]]) -> SelectedSet:
 
 
 class Deduplicate:
-    """Load-up messages, search for duplicates, apply selection strategy and perform the
-    action.
+    """Load mails, search for duplicates, apply the strategies and perform the action.
 
     Similar messages sharing the same hash are grouped together in a `DuplicateSet`.
     """
@@ -1008,8 +1006,9 @@ class Deduplicate:
         verb: str,
         doing: str,
     ) -> Generator[ProcessPoolExecutor | None, None, None]:
-        """Hand out a pool of worker processes prepared by the initializer, and shut
-        it down however the block it wraps ends.
+        """Hand out a pool of worker processes prepared by the initializer.
+
+        The pool shuts down however the block it wraps ends.
 
         Yields `None` instead when the pool cannot be started, which is the case in
         some frozen or sandboxed environments: the initializer is then run right
@@ -1166,8 +1165,7 @@ class Deduplicate:
             raise MailSourceError(f"Cannot read {path}: {expt}") from expt
 
     def hash_all(self) -> None:
-        """Browse all mails from all registered sources, compute hashes and group mails
-        by hash.
+        """Read the mails of all sources, compute their hashes and group them by hash.
 
         Displays a progress bar as the operation might be slow.
 
@@ -1185,8 +1183,8 @@ class Deduplicate:
         self.step = "hashing"
         theme = get_current_theme()
         logging.info(
-            f"Use [{', '.join(map(theme.choice, self.conf['hash_headers']))}] headers to "
-            "compute hashes.",
+            f"Use [{', '.join(map(theme.choice, self.conf['hash_headers']))}] "
+            "headers to compute hashes.",
         )
 
         body_hasher = self.conf["hash_body"].function
@@ -1233,8 +1231,11 @@ class Deduplicate:
             return compute(box, mail_id, mail)
 
         def absorb(outcome: HashOutcome) -> None:
-            """Merge one hashed mail into the shared groups and stats. Called only from
-            the main process, keeping the parallel path and the cache race-free."""
+            """Merge one hashed mail into the shared groups and stats.
+
+            Only the main process calls it, which keeps the parallel path and the cache
+            race-free.
+            """
             mail, mail_hash, rejection, failure = outcome
             # Identity attributes are set the moment a mail is read from its box, or
             # stubbed for it, which every mail reaching this point has been.
@@ -1348,8 +1349,10 @@ class Deduplicate:
                 progress.update(1)
 
     def settle(self, hash_key: str, mail_set: list[DedupMailMixin]) -> None:
-        """Run one duplicate set through the thresholds and the strategies, right in
-        this process, and merge its verdict into the run."""
+        """Settle one set in this process, and merge its verdict into the run.
+
+        The set goes through the thresholds and the strategies.
+        """
         self.log_set_heading(hash_key, len(mail_set))
         duplicates = DuplicateSet(hash_key, mail_set, self.conf)
         failure = duplicates.select_or_skip(self.failures)
@@ -1430,8 +1433,7 @@ class Deduplicate:
         level = logging.getLogger().getEffectiveLevel()
 
         def tasks():
-            """Pairs each set worth handing out with its payload, settling the rest
-            on the way."""
+            """Pair each set worth a worker with its payload, and settle the rest."""
             for hash_key, mail_set in self.mails.items():
                 if len(mail_set) < 2:
                     self.settle(hash_key, mail_set)

@@ -153,8 +153,7 @@ def worker_state(monkeypatch):
 
 @pytest.mark.parametrize("raw", (PREAMBLE_MAIL, EIGHT_BIT_MAIL), ids=("mime", "8bit"))
 def test_fingerprint_shows_no_content(raw):
-    """A fingerprint never shows a name, an address, a subject, a body or a file
-    name, whatever the mail spells out."""
+    """A fingerprint shows no name, address, subject, body or file name."""
     present = [text for text in PERSONAL if text.encode() in raw]
     # The control: the mail does hold the personal data a leak would show.
     assert len(present) >= 5
@@ -163,8 +162,11 @@ def test_fingerprint_shows_no_content(raw):
 
 
 def test_fingerprint_shows_mime_structure():
-    """The structure of a multipart mail shows, down to the preamble that
-    https://github.com/kdeldycke/mail-deduplicate/issues/1085 tripped on."""
+    """The structure of a multipart mail shows, down to its preamble.
+
+    The preamble is what https://github.com/kdeldycke/mail-deduplicate/issues/1085
+    tripped on.
+    """
     print_ = fingerprint(PREAMBLE_MAIL)
     assert print_.startswith(f"size: {len(PREAMBLE_MAIL)} B, line endings: CRLF\n")
     assert "  Date: 'Thu, 11 Oct 2018 09:30:00 +0800'" in print_
@@ -177,8 +179,10 @@ def test_fingerprint_shows_mime_structure():
 
 
 def test_fingerprint_shows_8bit_values():
-    """8-bit header values and an undecodable body show by their kind of bytes, and
-    a `Date` shows as it is, even when it is no date."""
+    """8-bit header values and an undecodable body show by their kind of bytes.
+
+    A `Date` shows as it is, even when it is no date.
+    """
     print_ = fingerprint(EIGHT_BIT_MAIL)
     assert "line endings: LF" in print_
     assert "  Date: '[mail_date]'" in print_
@@ -270,14 +274,18 @@ def test_fingerprint_describes_broken_mails(raw, expected):
     ),
 )
 def test_fingerprint_shows_header_values(raw, expected):
-    """Header values show by their shape, a `Date` shows as it is up to a capped
-    length, and a `Content-Type` shows by its structure."""
+    """Header values show by their shape, and a `Content-Type` by its structure.
+
+    A `Date` shows as it is, up to a capped length.
+    """
     assert expected in fingerprint(raw)
 
 
 def test_fingerprint_failure_is_reported(monkeypatch):
-    """A mail the fingerprint cannot describe gets a line saying so, instead of
-    taking the bug report down with it."""
+    """A mail the fingerprint cannot describe gets a line saying so.
+
+    The bug report still renders.
+    """
 
     def fail(*args, **kwargs):
         raise RuntimeError("Unexpected quince.")
@@ -290,8 +298,10 @@ def test_fingerprint_failure_is_reported(monkeypatch):
 
 
 def test_bytes_recovered_from_surrogates():
-    """The surrogate parsing leaves for a non-ASCII byte turns back into that byte,
-    and a surrogate from no byte shows as the invalid UTF-8 it is."""
+    """The surrogate parsing leaves for a non-ASCII byte turns back into that byte.
+
+    A surrogate from no byte shows as the invalid UTF-8 it is.
+    """
     assert bug_report.to_bytes(f"touch{chr(0xDCC3)}{chr(0xDCA9)}") == b"touch\xc3\xa9"
     assert bug_report.to_bytes(chr(0xD800)) == b"\xed\xa0\x80"
 
@@ -352,8 +362,7 @@ def dive(depth: int) -> None:
 
 
 def test_traceback_keeps_the_innermost_frames():
-    """A deep traceback keeps the frames closest to the error, and counts the outer
-    ones it drops."""
+    """A deep traceback keeps the frames closest to the error, and counts the rest."""
     depth = 20
     try:
         dive(depth)
@@ -389,20 +398,23 @@ def test_traceback_keeps_the_innermost_frames():
     ),
 )
 def test_failure_describes_its_error(error, expected):
-    """A failure names the class of its error, with its module outside the builtins,
-    then its message, on one line of capped length."""
+    """A failure names the class of its error, then its message, on one capped line.
+
+    The module of the class shows, outside the builtins.
+    """
     assert capture(error, "hashing").error == expected
 
 
 def test_unknown_box_format_shows_its_class():
-    """A mail from no known box format shows in the report by the name of its
-    class."""
+    """A mail from no known box format shows in the report by its class name."""
     assert bug_report.box_format_of(DedupMailMixin()) == "DedupMailMixin"
 
 
 def test_failure_log_keeps_a_few_samples():
-    """Every failure is counted, but only the first ones of a kind are kept, with
-    their traceback."""
+    """Every failure is counted, but only the first ones of a kind are kept.
+
+    The kept ones carry their traceback.
+    """
     log = FailureLog()
     failures = []
     for _ in range(5):
@@ -452,8 +464,7 @@ KINDS_OF_ERROR = (
     ),
 )
 def test_failure_log_details_a_few_kinds(kinds, summary):
-    """The report details the most frequent kinds of failure, and counts the
-    others."""
+    """The report details the most frequent kinds of failure and counts the rest."""
     log = FailureLog()
     for error in KINDS_OF_ERROR[:kinds]:
         try:
@@ -467,11 +478,13 @@ def test_failure_log_details_a_few_kinds(kinds, summary):
 
 
 def test_report_version_matches_version_option():
-    """The report gives the version `mdedup --version` prints, which names the
-    commit of a development build.
+    """The report gives the version `mdedup --version` prints.
+
+    That version names the commit of a development build.
 
     A real run, as `--version` resolves the CLI from the stack, which a
-    `CliRunner` invoking the command from another module misleads."""
+    `CliRunner` invoking the command from another module misleads.
+    """
     result = subprocess.run(
         (sys.executable, "-m", "mail_deduplicate", "--no-color", "--version"),
         capture_output=True,
@@ -500,8 +513,10 @@ def test_agents_ask_their_user_first(monkeypatch, agent):
 
 @ALL_FORMATS
 def test_hashing_error_sets_the_mail_aside(invoke, make_box, monkeypatch, box_format):
-    """A mail that fails hashing is set aside and left untouched, the others are
-    deduplicated, and the run ends with a bug report."""
+    """A mail that fails hashing is set aside and left untouched.
+
+    The others are deduplicated, and the run ends with a bug report.
+    """
     box_type = box_format.base_class
     dup = MailFactory(message_id="<plum@orchard.example>")
     doomed = MailFactory(message_id=DOOMED_ID)
@@ -570,8 +585,10 @@ def test_hashing_error_sets_the_mail_aside(invoke, make_box, monkeypatch, box_fo
 def test_mail_failing_to_read_is_rejected_or_set_aside(
     invoke, make_box, monkeypatch, failing, error, outcome, exit_code, counted
 ):
-    """A mail that cannot be read is rejected on a system error, and set aside on any
-    other one. Either way, it is left untouched while the others are deduplicated."""
+    """A mail that cannot be read is rejected on a system error, or else set aside.
+
+    Either way, it is left untouched while the others are deduplicated.
+    """
     dup = MailFactory(message_id="<plum@orchard.example>")
     doomed = MailFactory(message_id=DOOMED_ID)
     box_path, box_type, _ = make_box(Maildir, [dup, dup, doomed])
@@ -619,8 +636,10 @@ def test_hash_only_reports_failures(invoke, make_box, monkeypatch):
 
 
 def test_debug_log_holds_traceback_of_samples(invoke, make_box, monkeypatch):
-    """At the debug level, the log holds the full traceback of each failure the
-    report details."""
+    """At the debug level, the log holds the full traceback of each failure.
+
+    These are the failures the report details.
+    """
     box_path, _, _ = make_box(Maildir, [MailFactory(message_id=DOOMED_ID)])
     fail_on_doomed(monkeypatch, "hash_key", RuntimeError("Unexpected tomato."))
 
@@ -633,8 +652,10 @@ def test_debug_log_holds_traceback_of_samples(invoke, make_box, monkeypatch):
 
 
 def test_report_masks_paths_and_regexps(invoke, make_box, monkeypatch):
-    """The options of a report show the values that drive the run, and replace the
-    paths and regular expressions, which can name folders and people."""
+    """The options of a report show the values that drive the run.
+
+    Paths and regular expressions, which can name folders and people, are replaced.
+    """
     dup = MailFactory(message_id="<plum@orchard.example>")
     box_path, _, _ = make_box(Maildir, [dup, dup, MailFactory(message_id=DOOMED_ID)])
     fail_on_doomed(monkeypatch, "hash_key", RuntimeError("Unexpected tomato."))
@@ -668,8 +689,7 @@ def test_report_masks_paths_and_regexps(invoke, make_box, monkeypatch):
 
 @pytest.mark.parametrize("box_type", (Maildir, mbox), ids=lambda t: t.__name__)
 def test_selection_error_skips_the_set(invoke, make_box, monkeypatch, box_type):
-    """A duplicate set that fails selection is skipped, and none of its mails is
-    acted upon."""
+    """A set that fails selection is skipped, and none of its mails is acted upon."""
     dup = MailFactory(message_id="<plum@orchard.example>")
     unique = MailFactory(message_id="<apricot@orchard.example>")
     box_path, _, _ = make_box(box_type, [dup, dup, unique])
@@ -710,8 +730,10 @@ def test_selection_error_skips_the_set(invoke, make_box, monkeypatch, box_type):
 def test_action_error_names_its_mail(
     invoke, make_box, monkeypatch, tmp_path, action, patched, step
 ):
-    """An unexpected error in an action stops the run, with a bug report naming and
-    describing the mail the action was working on."""
+    """An unexpected error in an action stops the run with a bug report.
+
+    The report names and describes the mail the action was working on.
+    """
     dup = MailFactory(message_id="<plum@orchard.example>")
     box_path, _, _ = make_box(Maildir, [dup, dup])
 
@@ -739,8 +761,10 @@ def test_action_error_names_its_mail(
 
 
 def test_action_system_error_is_one_line(invoke, make_box, monkeypatch):
-    """An `OSError` in an action is a problem of the system, which the user can fix:
-    the run ends with a one-line error naming the mail, and no bug report."""
+    """An `OSError` in an action is a system problem, which the user can fix.
+
+    The run ends with a one-line error naming the mail, and no bug report.
+    """
     dup = MailFactory(message_id="<plum@orchard.example>")
     box_path, box_type, _ = make_box(Maildir, [dup, dup])
 
@@ -792,9 +816,11 @@ def test_action_system_error_is_one_line(invoke, make_box, monkeypatch):
 def test_hashing_worker_rejects_or_sets_aside_its_mail(
     config, make_box, monkeypatch, worker_state, failing, error, rejection
 ):
-    """A worker process answers with strings: one mail failing does not take the pool
-    down with it. It rejects a mail it cannot read or hash for a reason the user can
-    fix, as this process does, and sends any other error back as a failure."""
+    """A worker process answers with strings, so one failing mail spares the pool.
+
+    It rejects a mail it cannot read or hash for a reason the user can fix, as this
+    process does, and sends any other error back as a failure.
+    """
     box_path, _, _ = make_box(Maildir, [MailFactory(message_id=DOOMED_ID)])
     box = BoxFormat.MAILDIR.constructor(box_path, create=False)
     mail_id = next(iter(box.keys()))
@@ -836,8 +862,10 @@ def test_hashing_worker_rejects_or_sets_aside_its_mail(
 def test_selection_worker_skips_its_set(
     config, make_box, monkeypatch, worker_state, failing
 ):
-    """A worker skips a set it cannot settle, and accounts for all of its mails. The
-    parent merges that verdict back, and keeps the failure of a bug for the report."""
+    """A worker skips a set it cannot settle, and accounts for all of its mails.
+
+    The parent merges that verdict back, and keeps the failure of a bug for the report.
+    """
     dup = MailFactory(message_id="<plum@orchard.example>")
     box_path, _, _ = make_box(Maildir, [dup, dup])
     box = BoxFormat.MAILDIR.constructor(box_path, create=False)
@@ -893,8 +921,10 @@ def test_selection_worker_skips_its_set(
     ),
 )
 def test_statistics_self_check_reports_a_bug(config, caplog, operator, found, retained):
-    """Statistics that do not add up, or that the check cannot compare, end the run
-    with exit code 115 and a bug report."""
+    """Statistics that do not add up, or that the check cannot compare, end the run.
+
+    The run exits with code 115 and a bug report.
+    """
     dedup = Deduplicate(config)
     dedup.stats[Stat.MAIL_FOUND] = found
     dedup.stats[Stat.MAIL_RETAINED] = retained
