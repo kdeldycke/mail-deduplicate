@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import re
 from mailbox import Maildir
 from string import ascii_lowercase
 
@@ -659,6 +660,33 @@ def test_no_strategy_skips_duplicate_sets(invoke, make_box):
     assert result.exit_code == 0
     assert "no strategy to apply" in result.stderr
     check_box(box_path, box_type, content=[random_mail_1, random_mail_1])
+
+
+def test_show_diff_starts_from_the_lowest_path(invoke, make_box):
+    """The diff of two mails always runs from the one with the lowest path.
+
+    The pairs were walked in the order of a set, which changes from one run to the
+    next, so two runs on the same box printed the same diff in either direction.
+    """
+    a = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="aaaa bbbb\n")
+    b = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="cccc dddd\n")
+    box_path, _, _ = make_box(Maildir, [a, b])
+
+    result = invoke(
+        "--content-threshold=0",
+        "--show-diff",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        "--dry-run",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    paths = re.findall(
+        r"^(?:---|\+\+\+) Normalized body of <\w+ ([^>]+)>", result.stderr, re.MULTILINE
+    )
+    assert len(paths) == 2, result.stderr
+    assert paths == sorted(paths)
 
 
 def test_show_diff_is_colored_by_the_theme(invoke, make_box):

@@ -355,7 +355,11 @@ class DuplicateSet:
         # of the mails carrying them, so each distinct pair of bodies is diffed once
         # however many mails share them. Diffing is the expensive part of this walk.
         diffs: dict[frozenset[str], int] = {}
-        for mail_a, mail_b in combinations(self.pool, 2):
+        # Walked in path order: the pool is a set, whose order changes from one run
+        # to the next, and the pair order decides which mail a --show-diff starts
+        # from.
+        ordered = sorted(self.pool, key=lambda mail: (mail.path, str(mail.mail_id)))
+        for mail_a, mail_b in combinations(ordered, 2):
             offense = False
             if size_threshold >= 0:
                 size_difference = abs(mail_a.size - mail_b.size)
