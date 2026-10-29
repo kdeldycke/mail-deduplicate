@@ -16,7 +16,7 @@
 Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/cli-coloured-header.png" alt="Mail Deduplicate">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mdedup-header-cli.svg" alt="The mdedup command line and the first steps of a run merging two archives">
 </p>
 
 ## Features
@@ -70,23 +70,29 @@ Duplicate mails pile up whenever boxes get copied around: backups of the same ac
 
 `mdedup` cleans this up. Point it at your boxes: it groups copies of the same mail by hashing a curated set of headers, applies a `--strategy` to pick which copy to keep in each group, then performs an `--action` on the result. The default action is the safest one: sources are only read, and the deduplicated selection is written to a brand new box.
 
-So to merge two overlapping archives into a single clean box:
+So to merge two overlapping archives, `2024.mbox` and `2025.mbox`, into a single clean box, keeping the copy each mail has in the older one:
 
 ```shell-session
-$ mdedup --strategy select-one --export merged.mbox archive-2024.mbox archive-2025.mbox
+$ mdedup --strategy select-matching-path --regexp 2024 --export merged.mbox 2024.mbox 2025.mbox
 ```
 
-Mails found in both archives are copied once into `merged.mbox`, along with all the mails that were unique to each source.
+Mails found in both archives are copied once into `merged.mbox`, along with all the mails that were unique to each source. Backups usually leave copies byte-identical, which no criterion splits apart: `select-one` then keeps an arbitrary copy of each mail.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/cli-coloured-run.png">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mdedup-run-cli.svg" alt="A whole mdedup run, ending on its two report tables">
 </p>
 
 To remove duplicates in place instead, switch to a destructive action, and rehearse with `--dry-run`:
 
 ```shell-session
-$ mdedup --strategy select-one --action delete-discarded --dry-run ~/Maildir
+$ mdedup --strategy select-matching-path --regexp 2024 --action delete-discarded --dry-run 2024.mbox 2025.mbox
 ```
+
+The trail names each mail the run would delete, and alters nothing.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mdedup-dry-run-cli.svg" alt="A mdedup dry run on the two archives">
+</p>
 
 The [hands-on tutorial](https://kdeldycke.github.io/mail-deduplicate/tutorial.html) builds a small playground of duplicated mails, then walks through strategies, actions and safeguards on it. The [design page](https://kdeldycke.github.io/mail-deduplicate/design.html) explains how duplicates are detected.
 

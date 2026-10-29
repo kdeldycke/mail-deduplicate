@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -267,8 +267,8 @@ wheels = [
 
 [[package]]
 name = "click-extra"
-version = "9.4.1"
-source = { registry = "https://pypi.org/simple" }
+version = "9.5.2.dev0"
+source = { git = "https://github.com/kdeldycke/click-extra?branch=main#8a688b4cf92748e7686675dddc9a2e8425ad9463" }
 dependencies = [
     { name = "boltons" },
     { name = "click" },
@@ -279,10 +279,6 @@ dependencies = [
     { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "wcmatch" },
     { name = "wcwidth" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/13/20/e2d60c90277a668b10a00f7a74cd52a87ab0c85afd5b8975cc582601eafc/click_extra-9.4.1.tar.gz", hash = "sha256:065df41b1c8f6601bd9e550d79ac34a73ba40bfc84cfdb320cdcfe066c40a6d1", size = 1759076, upload-time = "2026-10-04T20:44:16.522Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/53/56/32f36d2a5218c2d89c40802649b943f847162de8849850f6a26a88a23a83/click_extra-9.4.1-py3-none-any.whl", hash = "sha256:046c650c1bcbfd14d6836df64156891d18e73c23287ef7b4c19d839308cecda9", size = 665674, upload-time = "2026-10-04T20:44:14.372Z" },
 ]
 
 [package.optional-dependencies]
@@ -612,10 +608,13 @@ typing = [
     { name = "types-boltons" },
 ]
 
+[package.group-requires-python]
+docs = ">=3.14"
+
 [package.metadata]
 requires-dist = [
     { name = "backports-strenum", marker = "python_full_version < '3.11'", specifier = ">=1" },
-    { name = "click-extra", extras = ["toml"], specifier = ">=9.4.1" },
+    { name = "click-extra", extras = ["toml"], git = "https://github.com/kdeldycke/click-extra?branch=main" },
     { name = "extra-platforms", specifier = ">=13.4" },
     { name = "platformdirs", specifier = ">=4.5" },
 ]
@@ -623,8 +622,8 @@ requires-dist = [
 [package.metadata.requires-dev]
 docs = [
     { name = "boltons", marker = "python_full_version >= '3.14'", specifier = ">=25" },
-    { name = "click-extra", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=9.4.1" },
-    { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", specifier = ">=9.4.1" },
+    { name = "click-extra", extras = ["pytest"], marker = "python_full_version >= '3.14'", git = "https://github.com/kdeldycke/click-extra?branch=main" },
+    { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", git = "https://github.com/kdeldycke/click-extra?branch=main" },
     { name = "coverage", extras = ["toml"], marker = "python_full_version >= '3.14'", specifier = ">=7.11" },
     { name = "extra-platforms", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=13.4" },
     { name = "furo", marker = "python_full_version >= '3.14'", specifier = ">=2025.9.25" },
@@ -645,7 +644,7 @@ docs = [
 ]
 test = [
     { name = "boltons", specifier = ">=25" },
-    { name = "click-extra", extras = ["pytest"], specifier = ">=9.4.1" },
+    { name = "click-extra", extras = ["pytest"], git = "https://github.com/kdeldycke/click-extra?branch=main" },
     { name = "coverage", extras = ["toml"], specifier = ">=7.11" },
     { name = "extra-platforms", extras = ["pytest"], specifier = ">=13.4" },
     { name = "pytest", specifier = ">=9" },

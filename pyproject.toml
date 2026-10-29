@@ -130,8 +130,10 @@ docs = [
   # docs/tests.md documents the tests/ modules, which autodoc can only import with
   # the test dependencies installed.
   { include-group = "test" },
-  # Aligned to the runtime click-extra floor.
-  "click-extra[sphinx]>=9.4.1",
+  # docs/cli_screenshots_update.py draws the readme captures with --wrap-marker, which
+  # click-extra adds in 9.5.2. Tracked from its main branch until that release ships:
+  # see [tool.uv.sources].
+  "click-extra[sphinx]>=9.5.2.dev0",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
@@ -170,6 +172,9 @@ required-version = ">=0.11.15"
 # The docs are only built on modern Python, letting the docs group adopt
 # packages (like myst-parser 5.1) that dropped support for our older floors.
 dependency-groups.docs = { requires-python = ">= 3.14" }
+# click-extra is tracked from its main branch until 9.5.2 ships, paired with the
+# .dev floor of the docs group: sync-dep-sources swaps it back once released.
+sources.click-extra = { git = "https://github.com/kdeldycke/click-extra", branch = "main" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
 exclude-newer-package = { certifi = "2026-10-22T00:00:00Z" }
