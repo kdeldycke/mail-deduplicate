@@ -339,6 +339,14 @@ Several safeguards run before any mail is acted upon, each detailed in the [desi
 - Unique mails are always part of the final selection, so a merge never drops them.
 - A mail or a set that hits an unexpected error is set aside and left untouched, and the run ends with a bug report to paste into an issue. See [errors and bug reports](https://kdeldycke.github.io/mail-deduplicate/design.html#errors-and-bug-reports).
 
+`--show-diff` prints the difference that made a set fail the content threshold. Here two mails share every hashed header, `Message-ID` included, but one holds a soup recipe and the other a weather log:
+
+```shell-session
+$ mdedup --show-diff --strategy select-one --export merged.mbox new.mbox old.mbox
+```
+
+![The unified diff of two mails sharing their headers, and the set skipped for it](assets/mdedup-show-diff-cli.svg)
+
 ## When nothing gets deduplicated
 
 A run that changes nothing is the number one source of confusion, so map the statistics report to its cause:

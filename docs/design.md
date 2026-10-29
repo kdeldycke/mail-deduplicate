@@ -57,6 +57,14 @@ This set was crafted to limit the effects of mailing-lists on both the mail head
 - adding plenty of other random headers which a copy saved locally at sending-time would not have, such as `X-Mailman-Version`, `Precedence`, `X-BeenThere`, `List-*`, `Sender`, `Errors-To`, and so on;
 - adding a prefix to the `Subject` header.
 
+`--hash-only` prints what each mail hashes to, without selecting or acting. Here a mail as it was sent, and the copy a mailing list sent back with a `[garden-club]` subject prefix, its own headers and an unsubscribe footer, reduce to the same canonical headers and the same hash:
+
+```shell-session
+$ mdedup --hash-only sent.mbox garden-club.mbox
+```
+
+![Two mails reduced to the same canonical headers and the same hash](assets/mdedup-hash-only-cli.svg)
+
 ### ❎ Safeguard: minimal headers
 
 To avoid hashing mails with too few headers (like corrupted mails), a minimal number of the selected headers must be present in a mail before its hash is trusted.
@@ -96,6 +104,14 @@ The default size threshold is **512 bytes**, and can be changed via the `--size-
 Similarly to the size threshold, we generate unified diffs of duplicates and ensure that the diff is not greater than a certain size to limit false-positives.
 
 The default content threshold is **768 bytes**, and can be changed via the `--content-threshold` option. Its `0` and `-1` values mean what they mean for the size threshold.
+
+Here two boxes hold a real duplicate, and two mails that share every hashed header, `Message-ID` included, but not their body. The dry run deletes the duplicate, and skips the other set, which the `Skipped - Content` row counts:
+
+```shell-session
+$ mdedup --strategy discard-matching-path --regexp old --action delete-discarded --dry-run new.mbox old.mbox
+```
+
+![A dry run deleting one duplicate and skipping a set of two different mails](assets/mdedup-safeguard-cli.svg)
 
 ## Step 4: Performing actions
 
@@ -145,6 +161,10 @@ An error `mdedup` has no rule for is a bug, either in its code or in how it hand
 - When the statistics self-check finds counts that do not add up, the run ends with exit code `115` and a bug report.
 
 The bug report links to the [bug report form](https://github.com/kdeldycke/mail-deduplicate/issues/new?template=bug-report.yml), with a title like `UnicodeEncodeError while copying` filled in. It holds a block to paste into the form. The block gives the version of `mdedup`, Python and the platform, the options of the run, and the formats of its sources. A development version names its commit, as `mdedup --version` does. Then comes the error, with its traceback reduced to module names, line numbers and function names, and a fingerprint of the mails involved. In the hashing and selection steps, `--verbosity DEBUG` also logs the full traceback of each failure the report details.
+
+Here is the end of a run whose hashing step met such an error. The error was forced on purpose, on the mail with the `Password reset` subject, to show the report. The forced function is the `__main__` line of its traceback:
+
+![A run setting a mail aside, then printing the bug report](assets/mdedup-bug-report-cli.svg)
 
 A fingerprint describes the structure of a mail, never its content:
 

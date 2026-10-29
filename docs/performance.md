@@ -120,6 +120,16 @@ On the 20,000-mail corpus, a second run takes roughly half the time of an uncach
 
 It is off by default. `--cache-path` points at another database and enables it on its own.
 
+The two recordings below run the same command twice on a `maildir` of 20,000 mails, with `--hash-body normalized` so hashing reads every body. The first run fills `cache.db`, and the second reads its hashes back:
+
+```shell-session
+$ mdedup --hash-body normalized --cache-path cache.db --strategy select-one --action delete-discarded Archive
+```
+
+![A first run hashing 20,000 mails and filling the cache](assets/mdedup-cache-cold-cli.svg)
+
+![The same run reading its hashes back from the cache](assets/mdedup-cache-warm-cli.svg)
+
 ### What invalidates an entry
 
 Two independent guards decide whether an entry can still be trusted.

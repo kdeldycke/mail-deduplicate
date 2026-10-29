@@ -77,50 +77,66 @@ def test_every_test_module_has_a_section():
     assert not stale, f"`docs/tests.md` documents modules that do not exist: {stale}."
 
 
-@pytest.mark.once
-def test_readme_links_every_cli_capture():
-    """Each capture `docs/cli_screenshots_update.py` writes is embedded in the
-    readme, and no SVG in `docs/assets/` outlives the capture that produced it.
+def _pages_embedding(stem: str) -> list[Path]:
+    """The readme and docs pages that embed the capture named `stem`."""
+    pages = [PROJECT_ROOT / "readme.md", *sorted((PROJECT_ROOT / "docs").glob("*.md"))]
+    return [
+        page
+        for page in pages
+        if f"assets/{stem}.svg" in page.read_text(encoding="UTF-8")
+    ]
 
-    The stems of the captures are the file names the readme links by raw GitHub
-    URL, so renaming one in the script breaks the readme silently: GitHub serves
-    a 404 where the picture was, and nothing in a docs build reads that URL. The
-    reverse direction rots the same way: a capture dropped from the script leaves
-    its SVG in the tree, unreferenced and never refreshed again.
+
+@pytest.mark.once
+def test_every_cli_capture_is_embedded():
+    """Each capture `docs/cli_screenshots_update.py` writes is embedded in the
+    readme or a docs page, and no SVG in `docs/assets/` outlives the capture that
+    produced it.
+
+    The stems of the captures are the file names the pages link, so renaming one
+    in the script breaks a page silently: GitHub serves a 404 where the readme's
+    picture was, and nothing in a docs build reads that URL. The reverse direction
+    rots the same way: a capture dropped from the script leaves its SVG in the
+    tree, unreferenced and never refreshed again.
     """
     if not ASSETS_DIR.is_dir():
         pytest.skip("The documentation sources are not part of this tree.")
 
     captures = _cli_screenshots().CAPTURES
     assert captures, "no capture left in docs/cli_screenshots_update.py"
-    readme = (PROJECT_ROOT / "readme.md").read_text(encoding="UTF-8")
 
-    unlinked = [
-        stem for stem, *_rest in captures if f"docs/assets/{stem}.svg" not in readme
-    ]
-    assert not unlinked, f"the readme embeds no picture of: {unlinked}."
+    unlinked = [entry.stem for entry in captures if not _pages_embedding(entry.stem)]
+    assert not unlinked, f"no page embeds a picture of: {unlinked}."
 
-    stems = {stem for stem, *_rest in captures}
+    stems = {entry.stem for entry in captures}
     orphans = [path.name for path in ASSETS_DIR.glob("*.svg") if path.stem not in stems]
     assert not orphans, f"SVGs no capture produces: {orphans}."
 
 
 @pytest.mark.once
-def test_readme_runs_the_command_its_picture_shows():
-    """Each captured command line is the one the readme's code block tells the
-    reader to run.
+def test_pages_show_the_command_their_picture_runs():
+    """A page embedding a capture shows the command line the capture ran.
 
-    The picture and the snippet sit one above the other, and a reader compares
-    them: an option changed in one and not the other reads as the picture
-    disagreeing with the instructions. Nothing compares the two, since the
-    snippet is prose to every other check here.
+    The picture and the command sit side by side, and a reader compares them: an
+    option changed in one and not the other reads as the picture disagreeing with
+    the instructions. Nothing compares the two, since the command is prose to
+    every other check here.
+
+    A capture forcing an error is the exception: its command reproduces nothing
+    on a reader's boxes, so its page explains the picture instead.
     """
-    readme = (PROJECT_ROOT / "readme.md").read_text(encoding="UTF-8")
-    for stem, args, _title, _extra in _cli_screenshots().CAPTURES:
-        command = f"$ {shlex.join(('mdedup', *args))}"
-        assert command in readme, (
-            f"the readme runs no `{command}` line, which is what {stem} pictures"
-        )
+    if not ASSETS_DIR.is_dir():
+        pytest.skip("The documentation sources are not part of this tree.")
+
+    for entry in _cli_screenshots().CAPTURES:
+        if entry.injected:
+            continue
+        command = shlex.join(("mdedup", *entry.args))
+        for page in _pages_embedding(entry.stem):
+            assert command in page.read_text(encoding="UTF-8"), (
+                f"{page.relative_to(PROJECT_ROOT)} embeds {entry.stem} but never "
+                f"shows the command it pictures: {command}"
+            )
 
 
 @pytest.mark.once
@@ -136,17 +152,14 @@ def test_cli_capture_prompts_fit_their_window():
     the picture would teach an invocation nobody can type.
     """
     module = _cli_screenshots()
-    for stem, args, _title, extra in module.CAPTURES:
-        # A capture may state its own width, which then replaces the default.
-        columns = module.COLUMNS
-        if "--columns" in extra:
-            columns = int(extra[tuple(extra).index("--columns") + 1])
-        # The wrap marker takes the last cell of a row, the prompt's included.
-        budget = module.prompt_budget(columns)
-        row = module.PROMPT_SIGIL + shlex.join(("mdedup", *args))
+    for entry in module.CAPTURES:
+        # A still capture's wrap marker takes the last cell of every row, the
+        # prompt's included. A recording draws none.
+        budget = module.prompt_budget(entry)
+        row = module.PROMPT_SIGIL + shlex.join(("mdedup", *entry.args))
         assert len(row) <= budget, (
-            f"the prompt of {stem} measures {len(row)} characters against the "
-            f"{budget} its window leaves, so it wraps onto a second row: {row}"
+            f"the prompt of {entry.stem} measures {len(row)} characters against "
+            f"the {budget} its window leaves, so it wraps onto a second row: {row}"
         )
 
 

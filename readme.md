@@ -27,7 +27,8 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 - Deduplication strategies based on size, timestamp, file path or random choice, chainable as fallbacks.
 - Copy, move, delete or hardlink the resulting set of duplicates.
 - Dry-run mode.
-- Protection against false-positives with safety checks on size and content differences.
+- Protection against false-positives with safety checks on size and content differences. Two mails sharing every hashed header but not their body are left alone, while their real duplicate is acted on, here by `mdedup --strategy discard-matching-path --regexp old --action delete-discarded --dry-run new.mbox old.mbox`:
+  ![A dry run deleting one duplicate and skipping a set of two different mails](https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mdedup-safeguard-cli.svg)
 - Optional cache reusing the hashes computed by previous runs.
 - Parallel hashing and selection over several processes.
 - Supports macOS, Linux and Windows.
