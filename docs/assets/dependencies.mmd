@@ -4,7 +4,6 @@ flowchart LR
     subgraph primary-deps [Primary dependencies]
         click_extra{{"`click-extra`"}}
         extra_platforms{{"`extra-platforms`"}}
-        backports_strenum{{"`backports-strenum`"}}
         platformdirs{{"`platformdirs`"}}
     end
 
@@ -16,11 +15,9 @@ flowchart LR
     cloup(["`cloup`"])
     docutils(["`docutils`"])
     markdown_it_py(["`markdown-it-py`"])
-    tomli(["`tomli`"])
     accessible_pygments(["`accessible-pygments`"])
     click_0(["`click`"])
     colorama(["`colorama`"])
-    exceptiongroup(["`exceptiongroup`"])
     mdit_py_plugins(["`mdit-py-plugins`"])
     packaging(["`packaging`"])
     pluggy(["`pluggy`"])
@@ -28,6 +25,7 @@ flowchart LR
     sphinx_basic_ng(["`sphinx-basic-ng`"])
     sphinx_last_updated_by_git(["`sphinx-last-updated-by-git`"])
     tabulate(["`tabulate`"])
+    tomlrt(["`tomlrt`"])
     tzdata(["`tzdata`"])
     tzlocal(["`tzlocal`"])
     wcmatch(["`wcmatch`"])
@@ -55,7 +53,7 @@ flowchart LR
     sphinxcontrib_jsmath(["`sphinxcontrib-jsmath`"])
     sphinxcontrib_qthelp(["`sphinxcontrib-qthelp`"])
     sphinxcontrib_serializinghtml(["`sphinxcontrib-serializinghtml`"])
-    tomlkit(["`tomlkit`"])
+    tomli(["`tomli`"])
     urllib3(["`urllib3`"])
 
     subgraph grp_docs [--group docs]
@@ -91,9 +89,8 @@ flowchart LR
         types_boltons{{"`types-boltons >=25.0.0.20250822`"}}
     end
 
-    mail_deduplicate ==>|" >=9.4.1 "| click_extra
+    mail_deduplicate ==> click_extra
     mail_deduplicate ==>|" >=13.4 "| extra_platforms
-    mail_deduplicate ==>|" >=1 "| backports_strenum
     mail_deduplicate ==>|" >=4.5 "| platformdirs
     sphinx --> pygments
     sphinx --> requests
@@ -114,22 +111,20 @@ flowchart LR
     sphinx --> sphinxcontrib_serializinghtml
     click_extra --> sphinx
     click_extra --> pytest
+    click_extra --> myst_parser
     click_extra --> pygments
     click_extra --> cloup
     click_extra --> docutils
     click_extra --> extra_platforms
-    click_extra --> tomli
     click_extra --> click_0
     click_extra --> tabulate
+    click_extra --> tomlrt
     click_extra --> wcmatch
     click_extra --> wcwidth
     click_extra --> boltons
     click_extra --> deepmerge
-    click_extra --> tomlkit
     pytest --> pygments
-    pytest --> tomli
     pytest --> colorama
-    pytest --> exceptiongroup
     pytest --> packaging
     pytest --> pluggy
     pytest --> iniconfig
@@ -176,11 +171,11 @@ flowchart LR
     cloup --> click_0
     markdown_it_py --> mdurl
     accessible_pygments --> pygments
-    exceptiongroup --> typing_extensions
     mdit_py_plugins --> markdown_it_py
     sphinx_basic_ng --> sphinx
     sphinx_last_updated_by_git --> sphinx
     tabulate --> wcwidth
+    tomlrt --> typing_extensions
     tzlocal --> tzdata
     wcmatch --> bracex
     mail_deduplicate -.-> grp_docs
@@ -197,7 +192,6 @@ flowchart LR
     click accessible_pygments "https://pypi.org/project/accessible-pygments/" _blank
     click alabaster "https://pypi.org/project/alabaster/" _blank
     click babel "https://pypi.org/project/babel/" _blank
-    click backports_strenum "https://pypi.org/project/backports-strenum/" _blank
     click beautifulsoup4 "https://pypi.org/project/beautifulsoup4/" _blank
     click boltons "https://pypi.org/project/boltons/" _blank
     click bracex "https://pypi.org/project/bracex/" _blank
@@ -210,7 +204,6 @@ flowchart LR
     click coverage "https://pypi.org/project/coverage/" _blank
     click deepmerge "https://pypi.org/project/deepmerge/" _blank
     click docutils "https://pypi.org/project/docutils/" _blank
-    click exceptiongroup "https://pypi.org/project/exceptiongroup/" _blank
     click execnet "https://pypi.org/project/execnet/" _blank
     click extra_platforms "https://pypi.org/project/extra-platforms/" _blank
     click furo "https://pypi.org/project/furo/" _blank
@@ -256,7 +249,7 @@ flowchart LR
     click sphinxext_opengraph "https://pypi.org/project/sphinxext-opengraph/" _blank
     click tabulate "https://pypi.org/project/tabulate/" _blank
     click tomli "https://pypi.org/project/tomli/" _blank
-    click tomlkit "https://pypi.org/project/tomlkit/" _blank
+    click tomlrt "https://pypi.org/project/tomlrt/" _blank
     click types_boltons "https://pypi.org/project/types-boltons/" _blank
     click typing_extensions "https://pypi.org/project/typing-extensions/" _blank
     click tzdata "https://pypi.org/project/tzdata/" _blank
@@ -274,7 +267,6 @@ flowchart LR
     click grp_test_pytest_randomly "https://pypi.org/project/pytest-randomly/" _blank
 
     style mail_deduplicate stroke-width:3px
-    style backports_strenum stroke-width:3px
     style click_extra stroke-width:3px
     style coverage stroke-width:3px
     style extra_platforms stroke-width:3px
