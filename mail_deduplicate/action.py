@@ -356,7 +356,13 @@ class Action(StrEnum):
             return
         logging.info(f"{selection_count} mails selected for action.")
 
-        targets = self.targets(dedup)
+        # A set iterates in an order that changes from one run to the next, so the
+        # trail below would list the same mails differently on every run, and two
+        # runs on the same boxes would not diff. Sort them the way
+        # Deduplicate.record_link_targets() ranks a hardlink target.
+        targets = sorted(
+            self.targets(dedup), key=lambda mail: (mail.path, str(mail.mail_id))
+        )
         if self.spares_unique and dedup.unique:
             # Said before the count below, which it accounts for.
             logging.warning(

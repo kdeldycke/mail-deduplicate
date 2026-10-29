@@ -183,6 +183,32 @@ def test_trail_lines_tell_a_dry_run_apart(
     assert all(line.endswith(expected) for line in lines), lines
 
 
+@pytest.mark.parametrize("box_type", [Maildir, mbox], ids=["maildir", "mbox"])
+def test_trail_lists_mails_in_a_stable_order(invoke, make_box, box_type):
+    """The action trail lists its mails in the same order on every run.
+
+    The targets of an action are a set, whose iteration order changes from one
+    process to the next: left unsorted, two runs on the same boxes printed the
+    same lines in different orders, which no diff of two runs survives. The order
+    the run sorts them by is the one a reader compares two runs with: the box
+    path, then the mail's ID within it.
+    """
+    box_path, _, export_path = make_box(box_type, [duplicate_mail] * 4)
+    result = invoke(
+        "--strategy=select-one",
+        "--action=copy-discarded",
+        box_path,
+        f"--export={export_path}",
+    )
+
+    assert result.exit_code == 0
+    # Four identical copies: select-one keeps one, so three are discarded, which
+    # is enough trail lines for a set order to differ from the sorted one.
+    lines = [line for line in result.stderr.splitlines() if line[:3] == "✓ <"]
+    assert len(lines) == 3
+    assert lines == sorted(lines)
+
+
 @pytest.mark.parametrize("jobs", [1, 2], ids=["sequential", "parallel"])
 def test_delete_selected_spares_mails_without_duplicates(invoke, make_box, jobs):
     """A mail that has no duplicate survives a `delete-selected` run that has nothing
