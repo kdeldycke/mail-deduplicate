@@ -66,12 +66,12 @@ classifiers = [
 # - aligns minimal Python requirements to ours,
 # - adds new explicit support Python version.
 dependencies = [
-  # Below 9.4.1, a run started from `python -c` crashes on a RuntimeError while it
-  # parses its options: test_killed_run_needs_force_unlock starts its runs that way.
-  # The [toml] extra pulls tomlkit for --export-config toml.
-  "click-extra[toml]>=9.4.1",
+  # 10.0.0 is the first release whose [toml] extra writes --export-config toml with
+  # tomlrt instead of tomlkit. Tracked from its main branch until that release ships:
+  # see [tool.uv.sources].
+  "click-extra[toml]>=10.0.0.dev0",
   # bug_report.py asks is_any_agent(), added in 10.0.0. Aligned to the 13.4 floor
-  # of click-extra 9.4.1, the lowest release any install can resolve.
+  # of click-extra 10.0.0, the lowest release any install can resolve.
   "extra-platforms>=13.4",
   # Resolves the per-platform cache directory holding the hash cache database
   # (cache.py). 4.5.0 is the first release requiring Python 3.10.
@@ -127,9 +127,9 @@ docs = [
   # the test dependencies installed.
   { include-group = "test" },
   # docs/cli_screenshots_update.py draws the readme captures with --wrap-marker, which
-  # click-extra adds in 9.5.2. Tracked from its main branch until that release ships:
+  # click-extra adds in 10.0.0. Tracked from its main branch until that release ships:
   # see [tool.uv.sources].
-  "click-extra[sphinx]>=9.5.2.dev0",
+  "click-extra[sphinx]>=10.0.0.dev0",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
@@ -164,8 +164,9 @@ required-version = ">=0.12.22"
 # The docs are only built on modern Python, letting the docs group adopt
 # packages (like myst-parser 5.1) that dropped support for our older floors.
 dependency-groups.docs = { requires-python = ">= 3.14" }
-# click-extra is tracked from its main branch until 9.5.2 ships, paired with the
-# .dev floor of the docs group: sync-dep-sources swaps it back once released.
+# click-extra is tracked from its main branch until 10.0.0 ships, paired with the
+# .dev floors of the runtime and docs dependencies: sync-dep-sources swaps it back
+# once released.
 sources.click-extra = { git = "https://github.com/kdeldycke/click-extra", branch = "main" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
