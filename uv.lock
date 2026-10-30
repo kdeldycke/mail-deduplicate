@@ -504,7 +504,7 @@ wheels = [
 
 [[package]]
 name = "mail-deduplicate"
-version = "9.4.1.dev0"
+version = "9.5.0.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "click-extra", extra = ["toml"] },
