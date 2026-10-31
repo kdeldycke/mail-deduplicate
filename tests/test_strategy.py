@@ -24,7 +24,8 @@ import pytest
 from click_extra import BUILTIN_THEMES, unstyle
 from whenever import Instant
 
-from mail_deduplicate.deduplicate import DuplicateSet
+from mail_deduplicate.deduplicate import BodyHasher, DuplicateSet
+from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.strategy import Strategy
 
 from .conftest import MailFactory, check_box
@@ -753,6 +754,40 @@ def test_content_difference_counts_bytes(config):
     duplicates = DuplicateSet("kiwi", [base, ascii_only, accented], config)
 
     assert duplicates.diff(base, accented) == duplicates.diff(base, ascii_only) + 2
+
+
+@pytest.mark.parametrize(
+    ("hash_body", "reads"),
+    (
+        pytest.param(BodyHasher.SKIP, True, id="skip"),
+        pytest.param(BodyHasher.RAW, False, id="raw"),
+        pytest.param(BodyHasher.DECODED, False, id="decoded"),
+        pytest.param(BodyHasher.NORMALIZED, True, id="normalized"),
+    ),
+)
+def test_thresholds_read_no_body_the_hash_already_covers(
+    config, monkeypatch, hash_body, reads
+):
+    """A set hashed on its bytes or its decoded body is settled without a read.
+
+    Every mail of such a set shares the body that was hashed, so the size and
+    content checks have nothing to compare. A set hashed on headers alone, or on a
+    body stripped of its whitespace, still gets its bodies read and compared.
+    """
+    config["hash_body"] = hash_body
+    mails = [create_mail_from_bytes(b"Subject: s\n\nRain.\n") for _ in range(2)]
+
+    def forbidden(self):
+        raise AssertionError("A body was read.")
+
+    monkeypatch.setattr(DedupMailMixin, "body_lines", property(forbidden))
+    duplicates = DuplicateSet("kiwi", mails, config)
+
+    if reads:
+        with pytest.raises(AssertionError, match="A body was read"):
+            duplicates.check_differences()
+    else:
+        assert duplicates.check_differences() == set()
 
 
 @pytest.mark.parametrize("show_diff", (False, True), ids=("no-diff", "show-diff"))

@@ -335,6 +335,14 @@ class DuplicateSet:
         if size_threshold < 0 and content_threshold < 0:
             return set()
 
+        # Every mail of the set shares the body that was hashed: its bytes under
+        # `raw`, its decoded text under `decoded`. The size spread is then zero and
+        # the diff empty by construction, and both checks would only re-read each
+        # body to prove it. `normalized` folds whitespace away, so its copies may
+        # still differ, and get checked.
+        if self.conf["hash_body"] in (BodyHasher.RAW, BodyHasher.DECODED):
+            return set()
+
         # Every pair is within the size threshold as soon as the extremes are, and
         # mails sharing a body cannot differ in content. Deciding both of those over
         # the whole set is linear, where confirming them pair by pair is not, and a

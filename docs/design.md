@@ -105,6 +105,8 @@ Similarly to the size threshold, we generate unified diffs of duplicates and ens
 
 The default content threshold is **768 bytes**, and can be changed via the `--content-threshold` option. Its `0` and `-1` values mean what they mean for the size threshold.
 
+When the body took part in the hash, as `--hash-body raw` or `decoded`, every mail of a set already shares it, and both thresholds are settled without reading a mail again. Under `normalized`, copies may differ in their whitespace, so the checks still run.
+
 Here two boxes hold a real duplicate, and two mails that share every hashed header, `Message-ID` included, but not their body. The dry run deletes the duplicate, and skips the other set, which the `Skipped - Content` row counts:
 
 ```shell-session

@@ -34,14 +34,7 @@ Both thresholds exist to catch mails that hash alike without being copies, so tu
 
 That middle row is the surprise: dropping the content check alone changes nothing under the default `--hash-body skip`. A mail's size is the byte length of its decoded body, and skip mode never reads bodies while hashing, so the *size* check drags them back on its own.
 
-Hash the decoded body and that stops being true. `decoded` and `normalized` compute each mail's size while hashing, so the cache stores it and the size check is served from the database. `raw` decodes nothing, so its size check re-reads the bodies like `skip`'s does:
-
-| Warm run, `--hash-body decoded` | Total | Mails re-read |
-| ------------------------------- | ----- | ------------- |
-| Default thresholds              | 1.8s  | 8,000         |
-| `--content-threshold=-1` alone  | 1.0s  | 0             |
-
-A body-hashing run therefore keeps its size safeguard for free, and only has to give up the content comparison to avoid the second pass entirely.
+Hash the body and the second pass goes away on its own. Under `raw` and `decoded`, every mail of a set shares the body that was hashed, so both thresholds are settled without reading a mail again, with the safeguards still on. Under `normalized`, copies may still differ in their whitespace, so the thresholds compare them: the size was computed while hashing and the cache stores it, and only the content check re-reads the bodies.
 
 ## Memory
 
