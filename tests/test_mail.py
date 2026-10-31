@@ -19,6 +19,7 @@ from __future__ import annotations
 import base64
 import email
 import email.header
+import quopri
 from pathlib import Path
 from typing import Any, cast
 
@@ -78,6 +79,33 @@ def test_body_hashes_distinguish_and_normalize():
     # the base, but a real word change still differs.
     assert base.hash_normalized_body == spaced.hash_normalized_body
     assert base.hash_normalized_body != different.hash_normalized_body
+
+
+def test_size_counts_the_bytes_of_the_decoded_body():
+    """`size` is the UTF-8 byte length of the decoded body, not its character count.
+
+    Copies of a mail that differ in their transfer encoding alone measure the same.
+    """
+    text = "Les cerises mûres tombent.\n" * 3
+    headers = b"Subject: s\nContent-Type: text/plain; charset=utf-8\n"
+    eight_bit = create_mail_from_bytes(
+        headers + b"Content-Transfer-Encoding: 8bit\n\n" + text.encode()
+    )
+    quoted = create_mail_from_bytes(
+        headers
+        + b"Content-Transfer-Encoding: quoted-printable\n\n"
+        + quopri.encodestring(text.encode())
+    )
+    base_64 = create_mail_from_bytes(
+        headers
+        + b"Content-Transfer-Encoding: base64\n\n"
+        + base64.encodebytes(text.encode())
+    )
+
+    # Line breaks are not counted, and each `û` weighs its two UTF-8 bytes.
+    assert eight_bit.size == len(text.replace("\n", "").encode("utf-8"))
+    assert eight_bit.size > len(text.replace("\n", ""))
+    assert eight_bit.size == quoted.size == base_64.size
 
 
 def test_body_lines_gathers_multipart_preamble_and_epilogue():
@@ -248,14 +276,14 @@ def test_body_lines_decodes_each_part(raw, expected):
         # A mail parsed from bytes keeps each non-ASCII byte as a lone surrogate.
         pytest.param(
             "Subject",
-            ["Caf" + chr(0xDCC3) + chr(0xDCA9)],
-            ["Café"],
+            ["Noël".encode().decode("ascii", "surrogateescape")],
+            ["Noël"],
             id="raw-utf8-bytes-decoded",
         ),
         pytest.param(
             "Subject",
-            ["Caf" + chr(0xDCE9)],
-            ["Caf\\xe9"],
+            ["Noël".encode("latin-1").decode("ascii", "surrogateescape")],
+            ["No\\xebl"],
             id="raw-latin1-byte-escaped",
         ),
         # === Empty/missing value filtering ===
@@ -610,15 +638,15 @@ def test_raw_8bit_headers_hash_apart():
     """Two headers that differ in their raw 8-bit bytes alone hash apart.
 
     `get_all()` hands such a header over with every non-ASCII byte replaced by
-    `U+FFFD`, under which `Café` and `Cafí` in latin-1 read alike.
+    `U+FFFD`, under which `Noël` and `Noêl` in latin-1 read alike.
     """
-    latin_e = create_mail_from_bytes(b"Subject: " + "Café".encode("latin-1") + b"\n")
-    latin_i = create_mail_from_bytes(b"Subject: " + "Cafí".encode("latin-1") + b"\n")
-    utf8 = create_mail_from_bytes(b"Subject: " + "Café".encode() + b"\n")
+    diaeresis = create_mail_from_bytes(b"Subject: " + "Noël".encode("latin-1") + b"\n")
+    circumflex = create_mail_from_bytes(b"Subject: " + "Noêl".encode("latin-1") + b"\n")
+    utf8 = create_mail_from_bytes(b"Subject: " + "Noël".encode() + b"\n")
 
-    assert list(latin_e.normalized_header_values("subject")) == ["Caf\\xe9"]
-    assert list(latin_i.normalized_header_values("subject")) == ["Caf\\xed"]
-    assert list(utf8.normalized_header_values("subject")) == ["Café"]
+    assert list(diaeresis.normalized_header_values("subject")) == ["No\\xebl"]
+    assert list(circumflex.normalized_header_values("subject")) == ["No\\xeal"]
+    assert list(utf8.normalized_header_values("subject")) == ["Noël"]
 
 
 @pytest.mark.parametrize(
@@ -748,6 +776,6 @@ def test_dehydrated_mail_defers_body_reads(make_box, config, box_format):
     assert "size" not in vars(mail)
     assert "body_lines" not in vars(mail)
 
-    assert mail.size == len("".join(twin.body_lines))
+    assert mail.size == len("".join(twin.body_lines).encode("utf-8"))
     assert mail.is_hydrated
     box.close()

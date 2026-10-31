@@ -32,7 +32,7 @@ Both thresholds exist to catch mails that hash alike without being copies, so tu
 | `--content-threshold=-1` alone | 1.8s  | 8,000         |
 | Both set to `-1`               | 1.0s  | 0             |
 
-That middle row is the surprise: dropping the content check alone changes nothing under the default `--hash-body skip`. A mail's size is the length of its body, and skip mode never reads bodies while hashing, so the *size* check drags them back on its own.
+That middle row is the surprise: dropping the content check alone changes nothing under the default `--hash-body skip`. A mail's size is the byte length of its decoded body, and skip mode never reads bodies while hashing, so the *size* check drags them back on its own.
 
 Hash the body and that stops being true. `raw` and `normalized` compute each mail's size while hashing, so the cache stores it and the size check is served from the database:
 

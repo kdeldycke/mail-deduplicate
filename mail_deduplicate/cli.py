@@ -455,7 +455,8 @@ def ignored_step_options(ctx) -> list[str]:
         type=IntRange(min=-1),
         metavar="BYTES",
         default=512,
-        help="Maximum difference allowed in size between mails sharing the same hash. "
+        help="Maximum difference allowed in size between mails sharing the same hash, "
+        "in bytes of their decoded bodies. "
         "Mails in an offending pair are set aside until the rest all pass. The "
         "subset is skipped if fewer than 2 remain. "
         "Set to 0 to enforce strictness and apply selection "
@@ -469,7 +470,8 @@ def ignored_step_options(ctx) -> list[str]:
         metavar="BYTES",
         default=768,
         help="Maximum difference allowed in content between mails sharing the same "
-        "hash. Mails in an offending pair are set aside until the rest all pass. The "
+        "hash, in bytes of the diff of their decoded bodies. "
+        "Mails in an offending pair are set aside until the rest all pass. The "
         "subset is skipped if fewer than 2 remain. "
         "Set to 0 to enforce strictness and apply "
         "selection strategy on the subset only if all mails are exactly the same. Set "

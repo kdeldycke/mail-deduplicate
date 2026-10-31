@@ -399,7 +399,10 @@ class DuplicateSet:
         return evicted
 
     def diff(self, mail_a: DedupMailMixin, mail_b: DedupMailMixin) -> int:
-        """Return difference in bytes between two mails' normalized body.
+        """Return the difference between two mails' decoded body, in bytes.
+
+        The unified diff of the two bodies is measured in UTF-8, the unit of
+        `--content-threshold` and of `size`.
 
         ```{todo}
         Rewrite the diff algorithm to not rely on naive unified diff result parsing.
@@ -418,7 +421,7 @@ class DuplicateSet:
                     n=0,
                     lineterm="\n",
                 ),
-            ),
+            ).encode("utf-8"),
         )
 
     def pretty_diff(self, mail_a: DedupMailMixin, mail_b: DedupMailMixin) -> str:

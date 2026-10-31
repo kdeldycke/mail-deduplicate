@@ -360,18 +360,20 @@ class DedupMailMixin(Message):
 
     @cached_property
     def size(self) -> int:
-        """Returns canonical mail size.
+        """Returns the canonical size of the mail, in bytes.
 
-        Size is computed as the length of the message body, i.e. the payload of the mail
-        stripped of all its headers, not from the mail file persisting on the file-
-        system.
+        The size is the byte length, in UTF-8, of the decoded body: the payload of
+        the mail stripped of its headers, its transfer encodings undone and its text
+        decoded, never the size of the mail on disk. Copies of a mail that differ in
+        their transfer encoding alone measure the same, and `--size-threshold`
+        compares them in the unit it names.
 
         ```{todo}
         Allow customization of the way the size is computed, by getting the file
         size instead, for example with `os.path.getsize(mail_file)`.
         ```
         """
-        return len("".join(self.body_lines))
+        return len("".join(self.body_lines).encode("utf-8"))
 
     @cached_property
     def body_lines(self) -> list[str]:

@@ -12,6 +12,7 @@
 - Color the `--show-diff` output with the active theme, the way `git diff` colors its own.
 - Read a `Date` header with an out-of-range year, like `99999`, as no date, instead of setting the mail aside with a bug report.
 - Hash a header holding raw 8-bit bytes as those bytes, instead of replacing each with `U+FFFD` first, which made different headers share a hash.
+- Measure the size of a mail, and the difference between two mails, in bytes of their decoded bodies, as the threshold options say, instead of characters.
 - Discard the hash cache written by earlier versions, as their hashes and sizes are computed differently.
 - Fix the binaries failing when `--jobs` is above `1`, ending with a bug report that names `BrokenProcessPool`.
 - Fix the Arch Linux install steps, which ran `pacman -S` on a package that only the AUR carries.

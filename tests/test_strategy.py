@@ -24,9 +24,11 @@ import pytest
 from click_extra import BUILTIN_THEMES, unstyle
 from whenever import Instant
 
+from mail_deduplicate.deduplicate import DuplicateSet
 from mail_deduplicate.strategy import Strategy
 
 from .conftest import MailFactory, check_box
+from .test_mail import create_mail_from_bytes
 
 
 def test_strategy_enum_has_no_hidden_alias():
@@ -736,6 +738,21 @@ def test_show_diff_is_colored_by_the_theme(invoke, make_box):
     assert len(removed) == len(added) == 1, lines
     assert removed[0] == theme.error(unstyle(removed[0]))
     assert added[0] == theme.success(unstyle(added[0]))
+
+
+def test_content_difference_counts_bytes(config):
+    """The content difference of two mails is measured in bytes, not characters.
+
+    Two bodies of the same length in characters weigh more bytes when one holds
+    non-ASCII characters, and the difference grows by that many bytes.
+    """
+    headers = b"Subject: s\nContent-Type: text/plain; charset=utf-8\n\n"
+    base = create_mail_from_bytes(headers + b"Pommes.\n")
+    ascii_only = create_mail_from_bytes(headers + b"Peches mures.\n")
+    accented = create_mail_from_bytes(headers + "Pêches mûres.\n".encode())
+    duplicates = DuplicateSet("kiwi", [base, ascii_only, accented], config)
+
+    assert duplicates.diff(base, accented) == duplicates.diff(base, ascii_only) + 2
 
 
 @pytest.mark.parametrize("show_diff", (False, True), ids=("no-diff", "show-diff"))
