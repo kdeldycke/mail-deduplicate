@@ -2,7 +2,7 @@
 
 How long a run takes, how much memory it holds, and how to make the next run faster.
 
-Every timing below comes from one batch of runs on an Apple silicon SSD, over a synthetic maildir of 20,000 mails of about 4 KB each, one fifth of them exact duplicates. They are only meaningful against each other: the same corpus measures twice as slow on an x86 interpreter under Rosetta as on a native one, so read the proportions and the ratios, which held steady across every machine tried, rather than the seconds themselves. Counts of mails read are exact, and depend on your corpus alone.
+Every timing below but the body-hashing table comes from one batch of runs on an Apple silicon SSD, over a synthetic maildir of 20,000 mails of about 4 KB each, one fifth of them exact duplicates. They are only meaningful against each other: the same corpus measures twice as slow on an x86 interpreter under Rosetta as on a native one, so read the proportions and the ratios, which held steady across every machine tried, rather than the seconds themselves. Counts of mails read are exact, and depend on your corpus alone.
 
 ## Where a run spends its time
 
@@ -173,13 +173,13 @@ Several runs can point at the same database. They only contend on the single wri
 
 ## Body hashing
 
-`--hash-body` decides whether mail bodies take part in the hash, and it is the single biggest lever on hashing cost after the cache.
+`--hash-body` decides whether mail bodies take part in the hash, and it is the single biggest lever on hashing cost after the cache. This table comes from a batch of its own, on a maildir of the same shape: ten samples per mode, in a rotating order, with the median of each mode given relative to `skip`.
 
-| Mode         | 20,000 mails | Notes                                                                                |
-| ------------ | ------------ | ------------------------------------------------------------------------------------ |
-| `skip`       | `3.4s`       | The default. Headers alone are usually enough to identify duplicates.                |
-| `raw`        | not timed    | Hashes the body bytes as the box holds them, line endings aside. Decodes nothing.    |
-| `decoded`    | `3.7s`       | Hashes the body with its transfer encodings undone and its text decoded.             |
-| `normalized` | `4.8s`       | Strips line breaks and spaces first, catching copies that differ only in whitespace. |
+| Mode         | Relative to `skip` | Notes                                                                                |
+| ------------ | ------------------ | ------------------------------------------------------------------------------------ |
+| `skip`       | `1.00x`            | The default. Headers alone are usually enough to identify duplicates.                |
+| `raw`        | `1.12x`            | Hashes the body bytes as the box holds them, line endings aside. Decodes nothing.    |
+| `decoded`    | `1.12x`            | Hashes the body with its transfer encodings undone and its text decoded.             |
+| `normalized` | `1.48x`            | Strips line breaks and spaces first, catching copies that differ only in whitespace. |
 
-Reach for `raw`, `decoded` or `normalized` when header-based hashing groups mails you do not consider duplicates, rather than as a default. `raw` groups the copies that are the same bytes, and reads each mail a second time rather than decoding it.
+Reach for `raw`, `decoded` or `normalized` when header-based hashing groups mails you do not consider duplicates, rather than as a default. `raw` groups the copies that are the same bytes, and costs what `decoded` does: reading each mail a second time weighs about as much as decoding its text.
