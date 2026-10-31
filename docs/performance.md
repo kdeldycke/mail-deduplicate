@@ -96,14 +96,6 @@ Two limits are worth knowing. Only folder-based boxes (`maildir`, `MH`, `eml`) c
 
 If a pool cannot be started at all, which happens in some sandboxed environments, the run says so and does the work in-process instead.
 
-```{caution}
-A compiled binary can fail with `--jobs` above `1`. When its launcher has no `__name__ == "__main__"` guard, each worker starts the CLI again. `mdedup` stops such a worker before it opens a box. The pool then breaks, and the run ends with exit code `1` and a bug report that names `BrokenProcessPool`. The failure comes from the binary, not from your mails: run it with `--jobs=1`, or [install `mdedup` from PyPI](install.md).
-```
-
-```{todo}
-Delete the caution above once the binaries are built with a launcher that guards its call. That needs a `repomatic` release that carries [kdeldycke/repomatic@1ff425d](https://github.com/kdeldycke/repomatic/commit/1ff425db56944435de56001ff78efee7c732fa28). [Nuitka/Nuitka#4136](https://github.com/Nuitka/Nuitka/issues/4136) reports the cause upstream.
-```
-
 ## Reusing hashes between runs
 
 The same mail, hashed with the same options, always produces the same result. `--cache` keeps those results in a local SQLite database so a later run skips reading and parsing the mails it has already seen.

@@ -9,6 +9,7 @@
 - Write the `--export-config toml` output with `tomlrt` in place of `tomlkit`, through the `toml` extra of `click-extra` `10.0.0`.
 - Color the `--show-diff` output with the active theme, the way `git diff` colors its own.
 - Read a `Date` header with an out-of-range year, like `99999`, as no date, instead of setting the mail aside with a bug report.
+- Fix the binaries failing when `--jobs` is above `1`, ending with a bug report that names `BrokenProcessPool`.
 - Fix the Arch Linux install steps, which ran `pacman -S` on a package that only the AUR carries.
 - Fix the action trail listing its mails in an order that changed between runs, which no diff of two runs survived.
 - Fix `--show-diff` printing the diff of two mails in either direction, which changed between runs.
