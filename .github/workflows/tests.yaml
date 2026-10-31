@@ -90,7 +90,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
-          version: "0.13.4"
+          version: "0.13.5"
       - name: Run repomatic show-metadata
         id: metadata
         run: >
@@ -137,7 +137,7 @@ jobs:
           fetch-tags: true
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
-          version: "0.13.4"
+          version: "0.13.5"
       - name: Install Python ${{ matrix.python-version }}
         # If UV cannot find the requested Python version, it exits with code 2, which let the job pass unnoticed on
         # Windows. So we force the shell to bash, even on Windows, whose runners ship Git Bash: GitHub runs a bash
@@ -227,7 +227,7 @@ jobs:
           fetch-tags: true
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
-          version: "0.13.4"
+          version: "0.13.5"
       - name: Install Python
         env:
           PYTHON_VERSION: ${{ fromJSON(needs.metadata.outputs.metadata).latest_stable_python }}
@@ -275,7 +275,7 @@ jobs:
     steps:
       - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
         with:
-          version: "0.13.4"
+          version: "0.13.5"
       - name: Install Python
         run: uv --no-progress venv --python "${PYTHON_VERSION}"
       - name: Run stable CLI
