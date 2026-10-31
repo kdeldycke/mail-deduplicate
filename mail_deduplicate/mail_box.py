@@ -23,6 +23,7 @@ from __future__ import annotations
 import logging
 import mailbox
 import os
+from email.generator import BytesGenerator
 from enum import Enum, auto
 from functools import partial
 from mailbox import MH, MMDF, Babyl, ExternalClashError, Mailbox, Maildir, mbox
@@ -195,14 +196,19 @@ class EML(Mailbox):
 
     def add(self, message) -> str:
         key = f"{uuid4().hex}.eml"
-        # Write the raw message bytes with LF line endings. The stdlib
+        # Bytes are written as they are, with LF line endings. The stdlib
         # `_dump_message` rewrites `\n` to `os.linesep`, which emits CRLF on Windows
         # and makes the same mail serialize (and hash) differently across platforms.
         with open(self._full_path(key), "wb") as file:
             if isinstance(message, (bytes, bytearray)):
                 file.write(message)
             else:
-                file.write(message.as_bytes())
+                # A message is written as `_dump_message` writes one: `maxheaderlen=0`
+                # keeps each header folded as it was parsed, where `as_bytes()` would
+                # refold them at the 78 columns of the default policy.
+                BytesGenerator(file, mangle_from_=False, maxheaderlen=0).flatten(
+                    message
+                )
         return key
 
     def remove(self, key) -> None:

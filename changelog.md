@@ -12,6 +12,7 @@
 - Read a `Date` header with an out-of-range year, like `99999`, as no date, instead of setting the mail aside with a bug report.
 - Fix the binaries failing when `--jobs` is above `1`, ending with a bug report that names `BrokenProcessPool`.
 - Fix the Arch Linux install steps, which ran `pacman -S` on a package that only the AUR carries.
+- Fix the `eml` export refolding each header longer than 78 columns.
 - Fix the action trail listing its mails in an order that changed between runs, which no diff of two runs survived.
 - Fix `--show-diff` printing the diff of two mails in either direction, which changed between runs.
 - Fix the step headings styling the blank line above them, which left a style open in output read line by line.

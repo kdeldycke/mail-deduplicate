@@ -21,6 +21,7 @@ import mailbox
 import os
 import subprocess
 import sys
+from email import message_from_bytes
 from functools import cache
 from mailbox import Mailbox, Message, NoSuchMailboxError
 
@@ -526,6 +527,26 @@ def test_eml_export_format(invoke, tmp_path):
     box = EML(str(dest), create=False)
     assert len(box) == 1
     assert [box.get_bytes(key) for key in box.iterkeys()] == [dup_mail.render()]
+
+
+def test_eml_add_keeps_header_folding(tmp_path):
+    """`EML.add()` writes a message with its headers folded as they were parsed.
+
+    `Message.as_bytes()` refolds every header past 78 columns, where the stdlib boxes
+    write them as they are.
+    """
+    raw = (
+        b"Received: from mx.orchard.example by mail.orchard.example with ESMTPS id "
+        b"abc123 for <quince@orchard.example>; Thu, 11 Oct 2018 09:30:01 +0800\n"
+        b"Subject: Harvest\n"
+        b"\n"
+        b"Rain.\n"
+    )
+    box = EML(str(tmp_path / "box"))
+
+    key = box.add(message_from_bytes(raw))
+
+    assert box.get_bytes(key) == raw
 
 
 def test_eml_nonexistent_box_raises(tmp_path):
