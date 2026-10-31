@@ -1,9 +1,6 @@
 # Changelog
 
-## [`9.5.0.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.4.0...main)
-
-> [!WARNING]
-> This version is **not released yet** and is under active development.
+## [`9.5.0` (2026-10-31)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.4.0...v9.5.0)
 
 - **Breaking:** Drop support for Python 3.10, which reached its end of life. Python 3.11 is now the minimum.
 - **Breaking:** `--hash-body raw` now hashes the body bytes as the box holds them, with no decoding. The former `raw` behavior is `--hash-body decoded`.
