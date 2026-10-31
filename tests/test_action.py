@@ -586,7 +586,9 @@ def test_export_keeps_mh_sequences(invoke, tmp_path, action):
     The stdlib enrolls a mail given as bytes in no sequence.
     """
     source = MH(tmp_path / "source")
-    key = int(source.add(PLAIN_HEADERS + b"Rain.\r\n"))
+    # LF bytes: `MH.add()` writes each LF as the line separator of the platform,
+    # which on Windows doubles the CR of a CRLF ending and cuts the headers short.
+    key = int(source.add(PLAIN_HEADERS.replace(b"\r\n", b"\n") + b"Rain.\n"))
     source.set_sequences({"unseen": [key], "flagged": [key]})
     source.close()
     export_path = tmp_path / "export"
