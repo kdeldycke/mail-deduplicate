@@ -66,9 +66,9 @@ classifiers = [
 # - aligns minimal Python requirements to ours,
 # - adds new explicit support Python version.
 dependencies = [
-  # 10.0.0 is the first release whose [toml] extra writes --export-config toml with
-  # tomlrt instead of tomlkit. Tracked from its main branch until that release ships:
-  # see [tool.uv.sources].
+  # 10.0.0 adds the get_cache_dir() that cache.py calls, and its [toml] extra writes
+  # --export-config toml with tomlrt. Tracked from its main branch until that release
+  # ships: see [tool.uv.sources].
   "click-extra[toml]>=10.0.0.dev0",
   # bug_report.py asks is_any_agent(), added in 10.0.0. Aligned to the 13.4 floor
   # of click-extra 10.0.0, the lowest release any install can resolve.

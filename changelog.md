@@ -10,7 +10,7 @@
 - Write each exported mail as the bytes its source box holds, instead of a message rebuilt from its parsed form, which redrew boundaries and line endings.
 - Keep the folder, flags and delivery time of a `maildir` mail, the envelope line of an `mbox` mail and the sequences of an `MH` mail in an export of the same format.
 - Write the `--export-config toml` output with `tomlrt` in place of `tomlkit`, through the `toml` extra of `click-extra` `10.0.0`.
-- Drop the `platformdirs` dependency, and the `whenever` and `boltons` test dependencies: the standard library replaces them.
+- Drop the `platformdirs` dependency, and the `whenever` and `boltons` test dependencies.
 - Color the `--show-diff` output with the active theme, the way `git diff` colors its own.
 - Read a `Date` header with an out-of-range year, like `99999`, as no date, instead of setting the mail aside with a bug report.
 - Hash a header holding raw 8-bit bytes as those bytes, instead of replacing each with `U+FFFD` first, which made different headers share a hash.

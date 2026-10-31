@@ -93,24 +93,19 @@ def test_cache_is_off_by_default(invoke, make_box, tmp_path, monkeypatch):
         ("macos", "/orchard/cache", None, "/orchard/cache/mdedup"),
         ("linux", None, None, "/home/fig/.cache/mdedup"),
         ("linux", "/orchard/cache", None, "/orchard/cache/mdedup"),
-        ("linux", "  /orchard/cache/  ", None, "/orchard/cache/mdedup"),
-        # The XDG specification says to ignore a relative path.
-        ("macos", "orchard/cache", None, "/home/fig/Library/Caches/mdedup"),
-        ("linux", "orchard/cache", None, "/home/fig/.cache/mdedup"),
-        ("linux", "~/cache", None, "/home/fig/.cache/mdedup"),
-        ("linux", "   ", None, "/home/fig/.cache/mdedup"),
         ("windows", "/orchard/cache", "/orchard/local", "/orchard/local/mdedup/Cache"),
-        ("windows", None, None, "/home/fig/AppData/Local/mdedup/Cache"),
     ),
 )
 def test_default_cache_dir(
     monkeypatch, platform, xdg_cache_home, local_app_data, expected
 ):
-    """Each platform's convention, with `XDG_CACHE_HOME` first outside Windows."""
-    monkeypatch.setattr("mail_deduplicate.cache.is_macos", lambda: platform == "macos")
-    monkeypatch.setattr(
-        "mail_deduplicate.cache.is_windows", lambda: platform == "windows"
-    )
+    """The locations `docs/performance.md` lists for each platform.
+
+    click-extra tests the edge cases of `get_cache_dir()`, like a relative
+    `XDG_CACHE_HOME`.
+    """
+    monkeypatch.setattr("extra_platforms.is_macos", lambda: platform == "macos")
+    monkeypatch.setattr("extra_platforms.is_windows", lambda: platform == "windows")
     # Path.home() reads HOME on POSIX and USERPROFILE on Windows.
     monkeypatch.setenv("HOME", "/home/fig")
     monkeypatch.setenv("USERPROFILE", "/home/fig")
