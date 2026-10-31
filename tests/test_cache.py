@@ -136,7 +136,7 @@ def test_warm_run_matches_uncached_run(
     "changed_option",
     (
         "--hash-header=message-id",
-        "--hash-body=raw",
+        "--hash-body=decoded",
         "--time-source=ctime",
     ),
 )

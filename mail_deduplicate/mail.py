@@ -112,7 +112,7 @@ class DedupMailMixin(Message):
     CONTENT_CACHES: tuple[str, ...] = (
         "body_lines",
         "canonical_headers",
-        "hash_raw_body",
+        "hash_decoded_body",
         "hash_normalized_body",
     )
     """Memoized properties derived from the message content.
@@ -377,7 +377,12 @@ class DedupMailMixin(Message):
 
     @cached_property
     def body_lines(self) -> list[str]:
-        """Return a normalized list of lines from message's body.
+        """Return the lines of the decoded body of the message.
+
+        Each text part has its transfer encoding undone and its text decoded with
+        its charset, so copies of a mail that differ in their encoding alone read the
+        same. A part that is not text is kept as the mail carries it. The preamble
+        and epilogue of a multipart are read as UTF-8.
 
         Self-hydrating: re-reads the message from its box if it was dehydrated.
         """
@@ -450,16 +455,16 @@ class DedupMailMixin(Message):
         return hash_value
 
     @cached_property
-    def hash_raw_body(self) -> str:
-        """Returns the canonical body hash of a mail."""
-        serialized_raw_body = "\n".join(self.body_lines).encode("utf-8")
-        hash_value = hashlib.sha224(serialized_raw_body).hexdigest()
-        logging.debug(f"Body raw hash: {hash_value}")
+    def hash_decoded_body(self) -> str:
+        """Returns the hash of the decoded body of a mail, line by line."""
+        serialized_decoded_body = "\n".join(self.body_lines).encode("utf-8")
+        hash_value = hashlib.sha224(serialized_decoded_body).hexdigest()
+        logging.debug(f"Body decoded hash: {hash_value}")
         return hash_value
 
     @cached_property
     def hash_normalized_body(self) -> str:
-        """Returns the normalized body hash of a mail."""
+        """Returns the hash of the decoded body of a mail, stripped of whitespace."""
         serialized_normalized_body = "".join(
             [re.sub(r"\s", "", line) for line in self.body_lines],
         ).encode("utf-8")

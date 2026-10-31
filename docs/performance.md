@@ -34,12 +34,12 @@ Both thresholds exist to catch mails that hash alike without being copies, so tu
 
 That middle row is the surprise: dropping the content check alone changes nothing under the default `--hash-body skip`. A mail's size is the byte length of its decoded body, and skip mode never reads bodies while hashing, so the *size* check drags them back on its own.
 
-Hash the body and that stops being true. `raw` and `normalized` compute each mail's size while hashing, so the cache stores it and the size check is served from the database:
+Hash the body and that stops being true. `decoded` and `normalized` compute each mail's size while hashing, so the cache stores it and the size check is served from the database:
 
-| Warm run, `--hash-body raw`    | Total | Mails re-read |
-| ------------------------------ | ----- | ------------- |
-| Default thresholds             | 1.8s  | 8,000         |
-| `--content-threshold=-1` alone | 1.0s  | 0             |
+| Warm run, `--hash-body decoded` | Total | Mails re-read |
+| ------------------------------- | ----- | ------------- |
+| Default thresholds              | 1.8s  | 8,000         |
+| `--content-threshold=-1` alone  | 1.0s  | 0             |
 
 A body-hashing run therefore keeps its size safeguard for free, and only has to give up the content comparison to avoid the second pass entirely.
 
@@ -78,7 +78,7 @@ Output is not free. Even reduced to what is worth reading, it accounts for rough
 | **A first run**         | **3.4s**   | **1.8s**   |
 | **A cached second run** | **1.9s**   | **1.3s**   |
 
-A first run gains most, since hashing is the bulk of it and parallelizes best: `2.6x` on that step with the default `--hash-body skip`, `3.0x` with `raw` and `4.0x` with `normalized`. Once the [cache](#reusing-hashes-between-runs) has removed the hashing, what remains is the selection, which gains about twice over.
+A first run gains most, since hashing is the bulk of it and parallelizes best: `2.6x` on that step with the default `--hash-body skip`, `3.0x` with `decoded` and `4.0x` with `normalized`. Once the [cache](#reusing-hashes-between-runs) has removed the hashing, what remains is the selection, which gains about twice over.
 
 Returns flatten past four jobs, where reading the mails becomes the limit rather than deciding about them.
 
@@ -185,7 +185,7 @@ Several runs can point at the same database. They only contend on the single wri
 | Mode         | 20,000 mails | Notes                                                                                |
 | ------------ | ------------ | ------------------------------------------------------------------------------------ |
 | `skip`       | `3.4s`       | The default. Headers alone are usually enough to identify duplicates.                |
-| `raw`        | `3.7s`       | Hashes the body as it is.                                                            |
+| `decoded`    | `3.7s`       | Hashes the body with its transfer encodings undone and its text decoded.             |
 | `normalized` | `4.8s`       | Strips line breaks and spaces first, catching copies that differ only in whitespace. |
 
-Reach for `raw` or `normalized` when header-based hashing groups mails you do not consider duplicates, rather than as a default.
+Reach for `decoded` or `normalized` when header-based hashing groups mails you do not consider duplicates, rather than as a default.

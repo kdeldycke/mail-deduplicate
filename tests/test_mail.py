@@ -63,7 +63,7 @@ def create_mail_with_headers(
 
 
 def test_body_hashes_distinguish_and_normalize():
-    """`hash_raw_body` reflects any byte difference.
+    """`hash_decoded_body` reflects any difference in the decoded body.
 
     `hash_normalized_body` ignores whitespace, but still separates different bodies.
     """
@@ -71,9 +71,9 @@ def test_body_hashes_distinguish_and_normalize():
     spaced = create_mail_from_bytes(b"Subject: s\n\nHello    world\n")
     different = create_mail_from_bytes(b"Subject: s\n\nGoodbye world\n")
 
-    # Raw hashing: even a whitespace difference yields a different hash.
-    assert base.hash_raw_body != spaced.hash_raw_body
-    assert base.hash_raw_body != different.hash_raw_body
+    # Decoded hashing: even a whitespace difference yields a different hash.
+    assert base.hash_decoded_body != spaced.hash_decoded_body
+    assert base.hash_decoded_body != different.hash_decoded_body
 
     # Normalized hashing: whitespace is stripped, so the spaced variant collapses onto
     # the base, but a real word change still differs.
@@ -222,7 +222,7 @@ def test_body_lines_decodes_each_part(raw, expected):
     mail = create_mail_from_bytes(raw)
 
     assert expected in mail.body_lines
-    assert mail.hash_raw_body
+    assert mail.hash_decoded_body
     assert mail.hash_normalized_body
 
 

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TypedDict
+from typing import Any, TypedDict, cast
 
 from click_extra import (
     BadParameter,
@@ -127,6 +127,28 @@ class Config(TypedDict):
     export_append: bool
     hardlink_differing: bool
     dry_run: bool
+
+
+class BodyHasherChoice(EnumChoice):
+    """The `--hash-body` choices, still reading `raw` as `decoded`.
+
+    `raw` named the body hash that undoes the transfer encodings and decodes the
+    text, which `decoded` now says. The old spelling resolves until `10.0.0`, with
+    a warning on the error stream, as Click words its own deprecations.
+    """
+
+    def convert(
+        self, value: Any, param: click.Parameter | None, ctx: click.Context | None
+    ) -> BodyHasher:
+        if isinstance(value, str) and value.lower() == "raw":
+            hint = param.get_error_hint(ctx) if param and ctx else "--hash-body"
+            echo(
+                f"DeprecationWarning: The 'raw' value of {hint} is renamed "
+                f"'{BodyHasher.DECODED}', and is removed in 10.0.0.",
+                err=True,
+            )
+            value = str(BodyHasher.DECODED)
+        return cast("BodyHasher", super().convert(value, param, ctx))
 
 
 def normalize_headers(
@@ -369,12 +391,13 @@ def ignored_step_options(ctx) -> list[str]:
         "-b",
         "--hash-body",
         default=BodyHasher.SKIP,
-        type=EnumChoice(BodyHasher),
+        type=BodyHasherChoice(BodyHasher),
         help=f"Method used to hash the body of mails. Defaults to {BodyHasher.SKIP}, "
         "which doesn't hash the body at all: it is the fastest method and header-based "
-        f"hash should be sufficient to determine duplicate set. {BodyHasher.RAW} use "
-        f"the body as it is (slow). {BodyHasher.NORMALIZED} pre-process the body "
-        "before hashing, by removing all line breaks and spaces (slowest).",
+        f"hash should be sufficient to determine duplicate set. {BodyHasher.DECODED} "
+        "hashes the body with its transfer encodings undone and its text decoded, so "
+        "copies that differ in their encoding alone hash the same (slow). "
+        f"{BodyHasher.NORMALIZED} also strips all whitespace first (slowest).",
     ),
     option(
         "-H",
@@ -582,7 +605,7 @@ def ignored_step_options(ctx) -> list[str]:
         "sets (step #3). Accepts an integer, 'auto' (the host's logical CPUs, "
         "minus one when there are three or more) or 'max'. Defaults to 1 "
         "(sequential). Only folder-based boxes fan out; higher values speed up "
-        "--hash-body raw/normalized and boxes holding many duplicate sets."
+        "--hash-body decoded/normalized and boxes holding many duplicate sets."
     ),
 )
 @pass_context

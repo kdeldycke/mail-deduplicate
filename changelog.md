@@ -6,6 +6,7 @@
 > This version is **not released yet** and is under active development.
 
 - **Breaking:** Drop support for Python 3.10, which reached its end of life. Python 3.11 is now the minimum.
+- **Deprecated:** Rename the `raw` value of `--hash-body` to `decoded`, as it hashes the body with its transfer encodings undone and its text decoded. `raw` still works until `10.0.0`.
 - Write each exported mail as the bytes its source box holds, instead of a message rebuilt from its parsed form, which redrew boundaries and line endings.
 - Keep the folder, flags and delivery time of a `maildir` mail, the envelope line of an `mbox` mail and the sequences of an `MH` mail in an export of the same format.
 - Write the `--export-config toml` output with `tomlrt` in place of `tomlkit`, through the `toml` extra of `click-extra` `10.0.0`.

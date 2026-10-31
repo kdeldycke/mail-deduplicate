@@ -188,10 +188,15 @@ class MissingTimestamps(Exception):
 
 
 class BodyHasher(StrEnum):
-    """Enumeration of available body hashing methods."""
+    """Enumeration of available body hashing methods.
+
+    `decoded` and `normalized` both hash the decoded body of a mail, with its
+    transfer encodings undone and its text decoded, so copies that differ in their
+    encoding alone hash the same. `normalized` also strips all whitespace first.
+    """
 
     SKIP = "skip"
-    RAW = "raw"
+    DECODED = "decoded"
     NORMALIZED = "normalized"
 
     @property
@@ -199,7 +204,7 @@ class BodyHasher(StrEnum):
         """The callable producing this member's body hash for one mail."""
         return {
             BodyHasher.SKIP: lambda _: "",
-            BodyHasher.RAW: lambda mail: mail.hash_raw_body,
+            BodyHasher.DECODED: lambda mail: mail.hash_decoded_body,
             BodyHasher.NORMALIZED: lambda mail: mail.hash_normalized_body,
         }[self]
 
@@ -333,7 +338,7 @@ class DuplicateSet:
         spread_ok = size_threshold < 0 or (
             self.biggest_size - self.smallest_size <= size_threshold
         )
-        bodies = {mail.hash_raw_body for mail in self.pool}
+        bodies = {mail.hash_decoded_body for mail in self.pool}
         if spread_ok and (content_threshold < 0 or len(bodies) == 1):
             return set()
 
@@ -360,7 +365,7 @@ class DuplicateSet:
                     offense = size_offense = True
 
             if not offense and content_threshold >= 0:
-                pair = frozenset((mail_a.hash_raw_body, mail_b.hash_raw_body))
+                pair = frozenset((mail_a.hash_decoded_body, mail_b.hash_decoded_body))
                 if pair not in diffs:
                     # A single body means both mails carry it: nothing to diff.
                     diffs[pair] = 0 if len(pair) == 1 else self.diff(mail_a, mail_b)
@@ -1181,7 +1186,7 @@ class Deduplicate:
         process one at a time, which is also the lowest-memory path. Box listing and
         the hash cache always stay in this process, as neither is safe for
         concurrent access, so the speedup is largest where the hashing itself is the
-        cost, with `--hash-body raw`/`normalized`.
+        cost, with `--hash-body decoded`/`normalized`.
         """
         self.step = "hashing"
         theme = get_current_theme()

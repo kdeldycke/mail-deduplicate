@@ -386,6 +386,27 @@ def test_hash_only_warns_about_ignored_options(invoke, make_box):
     assert "--strategy" in result.stderr
 
 
+def test_hash_body_raw_is_deprecated(invoke, make_box):
+    """`--hash-body raw` still runs as `decoded`, and says so on the error stream.
+
+    The spelling is removed in `10.0.0`, and the help screen no longer lists it.
+    """
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+
+    result = invoke("--hash-body=raw", "--hash-only", box_path)
+
+    assert result.exit_code == 0
+    assert (
+        "DeprecationWarning: The 'raw' value of '-b' / '--hash-body' is renamed "
+        "'decoded', and is removed in 10.0.0." in result.stderr
+    )
+    assert "Hash:" in result.stdout
+
+    help_screen = invoke("--help").stdout
+    assert "[skip|decoded|normalized]" in help_screen
+    assert "raw" not in help_screen
+
+
 def test_main_entrypoint_reports_version(monkeypatch, capsys):
     """The `main()` indirection runs the CLI end to end: `--version` exits cleanly."""
     monkeypatch.setattr(sys, "argv", ["mdedup", "--version"])
