@@ -6,6 +6,7 @@
 > This version is **not released yet** and is under active development.
 
 - **Breaking:** Drop support for Python 3.10, which reached its end of life. Python 3.11 is now the minimum.
+- Write each exported mail as the bytes its source box holds, instead of a message rebuilt from its parsed form, which redrew boundaries and line endings.
 - Write the `--export-config toml` output with `tomlrt` in place of `tomlkit`, through the `toml` extra of `click-extra` `10.0.0`.
 - Color the `--show-diff` output with the active theme, the way `git diff` colors its own.
 - Read a `Date` header with an out-of-range year, like `99999`, as no date, instead of setting the mail aside with a bug report.

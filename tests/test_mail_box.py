@@ -21,11 +21,7 @@ import mailbox
 import os
 import subprocess
 import sys
-from contextlib import suppress
-from email import message_from_bytes
-from email.generator import BytesGenerator
 from functools import cache
-from io import BytesIO
 from mailbox import Mailbox, Message, NoSuchMailboxError
 
 import pytest
@@ -40,7 +36,6 @@ from mail_deduplicate.mail_box import (
     BoxStructure,
     MailSourceError,
     create_box,
-    has_partless_multipart,
     lock_box,
 )
 
@@ -371,76 +366,6 @@ def test_create_box_refuses_to_clobber_existing(tmp_path):
     box.close()
 
 
-PARTLESS_8BIT = (
-    b'Content-Type: multipart/alternative; boundary="Kiwi"\n\n'
-    + "Taipei: 晴天.\n".encode()
-)
-"""A multipart that never opens with its boundary, with 8-bit bytes in its body."""
-
-PARTLESS_CLOSED = (
-    b'Content-Type: multipart/alternative; boundary="Kiwi"\n'
-    b"\n"
-    b"Sunny in Taipei.\n"
-    b"--Kiwi--\n"
-    b"Rain in Tainan.\n"
-)
-"""A multipart that closes its boundary without ever opening it."""
-
-
-@pytest.mark.parametrize(
-    ("raw", "expected"),
-    (
-        pytest.param(PARTLESS_8BIT, True, id="8bit"),
-        pytest.param(PARTLESS_CLOSED, True, id="closed"),
-        pytest.param(
-            b'Content-Type: multipart/mixed; boundary="Outer"\n'
-            b"\n"
-            b"--Outer\n"
-            b'Content-Type: multipart/alternative; boundary="Inner"\n'
-            b"\n"
-            b"Sunny.\n"
-            b"--Outer--\n",
-            True,
-            id="nested",
-        ),
-        pytest.param(
-            b'Content-Type: multipart/alternative; boundary="Kiwi"\n'
-            b"\n"
-            b"--Kiwi\n"
-            b"Content-Type: text/plain\n"
-            b"\n"
-            b"Sunny.\n"
-            b"--Kiwi--\n",
-            False,
-            id="multipart",
-        ),
-        pytest.param(MailFactory().render(), False, id="text"),
-    ),
-)
-def test_has_partless_multipart(raw, expected):
-    """The check flags a multipart part parsed with no subpart, at any depth."""
-    assert has_partless_multipart(message_from_bytes(raw)) is expected
-
-
-@pytest.mark.parametrize(
-    "raw", (PARTLESS_8BIT, PARTLESS_CLOSED), ids=("8bit", "closed")
-)
-def test_python_cannot_rebuild_partless_multipart(raw):
-    """Python cannot write back in full a multipart parsed with no subpart.
-
-    It fails or drops part of it: `add_mail()` copies such a mail as raw bytes for
-    this reason.
-
-    A Python release that rebuilds one of these mails whole fails this test, and
-    lets `add_mail()` drop that case. See:
-    https://github.com/python/cpython/issues/136686
-    """
-    buffer = BytesIO()
-    with suppress(UnicodeEncodeError):
-        BytesGenerator(buffer, False, 0).flatten(message_from_bytes(raw))
-    assert buffer.getvalue() != raw
-
-
 @pytest.mark.parametrize("source", ["./dummy_maildir/", "./__init__.py"])
 def test_nonexistent_path(invoke, source):
     result = invoke(source)
@@ -600,9 +525,7 @@ def test_eml_export_format(invoke, tmp_path):
 
     box = EML(str(dest), create=False)
     assert len(box) == 1
-    assert [str(box.get_message(key)) for key in box.iterkeys()] == [
-        str(dup_mail.as_message())
-    ]
+    assert [box.get_bytes(key) for key in box.iterkeys()] == [dup_mail.render()]
 
 
 def test_eml_nonexistent_box_raises(tmp_path):

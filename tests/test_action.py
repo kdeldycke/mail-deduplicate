@@ -29,18 +29,70 @@ from mail_deduplicate.mail_box import EML, BoxFormat
 
 from .conftest import MailFactory, check_box, mail_files
 
-PARTLESS_HEADERS = (
+BASE_HEADERS = (
     b"Date: Thu, 11 Oct 2018 09:30:00 +0800\r\n"
     b"From: Clementine <clementine@orchard.example>\r\n"
     b"To: quince@orchard.example\r\n"
     b"Subject: Weather in Taipei\r\n"
     b"Message-ID: <taipei-weather@orchard.example>\r\n"
     b"MIME-Version: 1.0\r\n"
-    b'Content-Type: multipart/alternative; boundary="Kiwi-Boundary"\r\n'
-    b"\r\n"
+)
+"""Headers of a mail written by hand, with CRLF line endings, up to its body type."""
+
+PLAIN_HEADERS = BASE_HEADERS + b"Content-Type: text/plain; charset=utf-8\r\n\r\n"
+"""Headers of a plain text mail."""
+
+PARTLESS_HEADERS = (
+    BASE_HEADERS
+    + b'Content-Type: multipart/alternative; boundary="Kiwi-Boundary"\r\n'
+    + b"\r\n"
 )
 """Headers of a multipart mail whose body never opens with its boundary, so it
 parses with no subpart."""
+
+REWRITTEN_BY_THE_GENERATOR = (
+    pytest.param(
+        PARTLESS_HEADERS + "Taipei: 晴天, 28 °C.\r\nTainan: 多雲.\r\n".encode(),
+        id="partless-8bit",
+    ),
+    pytest.param(
+        PARTLESS_HEADERS + b"Sunny.\r\n--Kiwi-Boundary--\r\nRain.\r\n",
+        id="partless-closed",
+    ),
+    pytest.param(
+        PARTLESS_HEADERS + b"Preamble.\r\n"
+        b"--Kiwi-Boundary  \r\n"
+        b"Content-Type: text/plain\r\n"
+        b"\r\n"
+        b"Sunny.\r\n"
+        b"--Kiwi-Boundary\r\n"
+        b"Content-Type: text/html\r\n"
+        b"\r\n"
+        b"<p>Sunny.</p>\r\n",
+        id="padded-boundary-left-open",
+    ),
+    pytest.param(
+        PLAIN_HEADERS + b"Taipei: sunny\rTainan: cloudy\r\nKaohsiung: rain\r\n",
+        id="bare-cr",
+    ),
+    pytest.param(
+        PLAIN_HEADERS + b"From the north came hail.\r\nFrom the south, sun.\r\n",
+        id="from-lines",
+    ),
+    pytest.param(
+        b"Received: from mx.orchard.example by mail.orchard.example with ESMTPS id "
+        b"abc123 for <quince@orchard.example>; Thu, 11 Oct 2018 09:30:01 +0800\r\n"
+        + PLAIN_HEADERS
+        + b"Rain.\r\n",
+        id="long-header",
+    ),
+)
+"""Mails that Python's `email` generator would not write back as they are.
+
+It drops the content of a multipart parsed with no subpart, or fails on it; strips
+the padding after a boundary and closes a boundary left open; turns a bare CR into a
+line break; and refolds a header past 78 columns.
+"""
 
 
 @pytest.mark.parametrize("action", Action, ids=str)
@@ -120,8 +172,8 @@ def test_action_matrix(
 
     Copy actions leave the source intact; move and delete actions strip it down to
     whichever subset they did not act on, with `delete-selected` also leaving the
-    mail that has no duplicate. Export actions also cover the re-reading of
-    full messages from the source boxes, as mails are dehydrated to lightweight stubs
+    mail that has no duplicate. Export actions also cover the re-reading of each
+    mail's bytes from the source boxes, as mails are dehydrated to lightweight stubs
     once hashed: a regression there would export empty or truncated mails.
     """
     box_path, box_type, export_path = make_box(Maildir, FULL_BOX)
@@ -346,9 +398,9 @@ def test_hardlink_discarded_gates_on_byte_equality(
     assert len(inodes(box_path)) == distinct_files
 
     box = Maildir(box_path, create=False)
-    found = {str(mail) for mail in box}
+    found = {box.get_bytes(key) for key in box.iterkeys()}
     box.close()
-    originals = {str(mail.as_message()) for mail in DIFFERING_COPIES}
+    originals = {mail.render() for mail in DIFFERING_COPIES}
     if extra_args:
         # Both mails now read as whichever copy the selection kept.
         assert found < originals
@@ -421,18 +473,12 @@ def test_hardlink_discarded_leaves_file_based_box_alone(invoke, make_box):
 
 @pytest.mark.parametrize("export_format", BoxFormat, ids=str)
 @pytest.mark.parametrize("action", ("copy-selected", "move-selected"))
-@pytest.mark.parametrize(
-    "raw",
-    (
-        PARTLESS_HEADERS + "Taipei: 晴天, 28 °C.\r\nTainan: 多雲.\r\n".encode(),
-        PARTLESS_HEADERS + b"Sunny.\r\n--Kiwi-Boundary--\r\nRain.\r\n",
-    ),
-    ids=("8bit", "closed"),
-)
-def test_export_keeps_partless_multipart(invoke, tmp_path, raw, action, export_format):
-    """A multipart mail parsed with no subpart reaches every export format intact.
+@pytest.mark.parametrize("raw", REWRITTEN_BY_THE_GENERATOR)
+def test_export_keeps_mail_bytes(invoke, tmp_path, raw, action, export_format):
+    """A mail reaches every export format as the bytes its source holds.
 
-    Its bytes stay the same, whether its body holds 8-bit bytes or a closing boundary.
+    Only its line endings are reduced to LF, and an `mbox` or `mmdf` box quotes the
+    body lines starting with `From `, as its format requires.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/1090
     """
@@ -454,8 +500,11 @@ def test_export_keeps_partless_multipart(invoke, tmp_path, raw, action, export_f
     assert result.exit_code == 0
     export = export_format.base_class(export_path, create=False)
     (key,) = export.keys()
+    expected = raw.replace(b"\r\n", b"\n")
+    if export_format in (BoxFormat.MBOX, BoxFormat.MMDF):
+        expected = expected.replace(b"\nFrom ", b"\n>From ")
     # The headers and the body are written with the line endings of the platform.
-    assert export.get_bytes(key).replace(b"\r\n", b"\n") == raw.replace(b"\r\n", b"\n")
+    assert export.get_bytes(key).replace(b"\r\n", b"\n") == expected
 
 
 def test_unique_only_source_is_exported(invoke, make_box):

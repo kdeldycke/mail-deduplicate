@@ -37,7 +37,6 @@ from .mail import DedupMailMixin
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
-    from email.message import Message
 
 
 class MailSourceError(ClickException):
@@ -528,57 +527,33 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     return folder_list
 
 
-def has_partless_multipart(mail: Message) -> bool:
-    """Whether the mail has a multipart part that parsed with no subpart.
-
-    A multipart part whose body never opens with its boundary parses with no
-    subpart. The parser keeps its body as a string, up to a closing boundary if one
-    comes: that boundary and all that follows it are dropped. `BytesGenerator` then
-    writes the string as `get_payload()` returns it, decoded with the charset of the
-    part, and fails to encode 8-bit bytes to ASCII, with a `UnicodeEncodeError`: see
-    [python/cpython#136686](https://github.com/python/cpython/issues/136686).
-    """
-    return any(
-        part.get_content_maintype() == "multipart" and not part.is_multipart()
-        for part in mail.walk()
-    )
-
-
 def add_mail(box: Mailbox, mail: DedupMailMixin) -> None:
-    """Add a mail to a box.
+    r"""Add a mail to a box, as the bytes its source box holds.
 
-    Python cannot rebuild some mails: those go in as the bytes their source box holds.
-
-    Every box format writes a mail with `BytesGenerator`, from the message parsed
-    out of it. A mail that `has_partless_multipart()` would come out short, or not
-    at all. It goes in as the bytes its source box holds instead, with the LF line
-    endings the generator gives to the other mails. See:
+    Every box format writes a mail handed over as a message with `BytesGenerator`,
+    from the message parsed out of it. The generator does not write the mail back:
+    it rebuilds it. It redraws each multipart boundary, closes one left open, turns
+    a bare `\r` into a line break, and cannot write at all a multipart part parsed
+    with no subpart, which
+    [python/cpython#136686](https://github.com/python/cpython/issues/136686) tracks.
+    Deduplicating a mail is no reason to repair it, so every mail goes in as bytes,
+    which each format writes as they are. See:
     https://github.com/kdeldycke/mail-deduplicate/issues/1090
 
-    A fixed subclass of `BytesGenerator` would not bring back what the parser
-    dropped. It also cannot take the place of the class in `email.generator`: the
-    stdlib code of the class calls `super(BytesGenerator, self)`, which then
-    recurses.
+    Line endings are the one conversion left. They are reduced to LF before the
+    write, as every box format but `eml` writes `\n` as the line separator of the
+    platform, and would double the CR of a CRLF ending on Windows. An mbox or MMDF
+    box also quotes the body lines starting with `From `, as its format requires.
 
-    The bytes lose nothing the message would carry: mails are read through the
-    factory of their box, which leaves out the `From ` line, flags, sequences and
-    labels that a format keeps beside each mail.
-
-    ```{todo}
-    Add every mail as a message once all supported Python versions parse and write
-    back a multipart part with no subpart whole, which needs
-    [python/cpython#136686](https://github.com/python/cpython/issues/136686) fixed.
-    ```
+    The bytes do not include what a format keeps beside each mail: the envelope
+    `From ` line of an mbox mail, the folder, flags and modification time of a
+    maildir mail, the sequences of an MH mail, the labels of a Babyl mail.
     """
-    if not has_partless_multipart(mail):
-        box.add(mail)
-        return
-
-    # Asserts to please the type checker.
+    # Asserts to please the type checker: every mail reaching an action was read
+    # from its box.
     assert mail.box is not None
     assert mail.mail_id is not None
 
-    logging.debug(f"Add {mail!r} as the bytes of its box: Python cannot rebuild it.")
     box.add(mail.box.get_bytes(mail.mail_id).replace(b"\r\n", b"\n"))
 
 

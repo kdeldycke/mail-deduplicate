@@ -92,7 +92,7 @@ def copy_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
             if not dedup.conf["dry_run"]:
                 # The box is only left closed on a dry run, ruled out just above.
                 assert box is not None
-                with blame(mail, dedup.step), mail.hydrated():
+                with blame(mail, dedup.step):
                     add_mail(box, mail)
             trail.mark(True, f"{mail!r} {outcome(dedup, 'copied')}")
     trail.finish(
@@ -114,8 +114,7 @@ def move_mails(dedup: Deduplicate, mails: Collection[DedupMailMixin]) -> None:
                 # The box is only left closed on a dry run, ruled out just above.
                 assert box is not None
                 with blame(mail, dedup.step):
-                    with mail.hydrated():
-                        add_mail(box, mail)
+                    add_mail(box, mail)
                     # Identity attributes are set the moment a mail is read from its
                     # box, which every mail reaching an action has been.
                     dedup.sources[cast("str", mail.source_path)].remove(

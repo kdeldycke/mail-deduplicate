@@ -22,7 +22,7 @@ import string
 from collections import Counter
 from email.utils import formatdate as maildate
 from functools import partial
-from mailbox import Mailbox, Message
+from mailbox import Mailbox, Message, mbox
 from pathlib import Path
 from textwrap import dedent
 from uuid import uuid4
@@ -231,10 +231,13 @@ def mail_files(box_path: str) -> list[Path]:
 def check_box(box_path, box_type, content=None):
     """Check the content of a mail box, in any of the `BOX_TYPES` formats.
 
+    Compares the bytes of each mail, as its box hands them out, with the bytes the
+    expected mail was rendered from: a mail rewritten on its way into the box fails
+    the check, where comparing parsed messages would hide the rewrite. An `mbox`
+    ends every mail with a line break, so an expected mail lacking one gets it.
+
     Counts the occurrences of each mail, so a copy missing from the box or added to
     it fails the check, where comparing sets would silently deduplicate them.
-    Translates all mails provided to `mailbox.Message` instances to provide fair
-    comparison in a normalized space.
     """
     # Check provided parameters.
     assert isinstance(box_path, str)
@@ -244,11 +247,18 @@ def check_box(box_path, box_type, content=None):
         content = []
     assert same(map(type, content), MailFactory)
 
+    expected: Counter[bytes] = Counter()
+    for mail in content:
+        raw = mail.render()
+        if box_type is mbox and not raw.endswith(b"\n"):
+            raw += b"\n"
+        expected[raw] += 1
+
     # Compares the content of the box.
     box = box_type(box_path, create=False)
-    found = Counter(str(mail) for mail in box)
+    found = Counter(box.get_bytes(key) for key in box.iterkeys())
     box.close()
-    assert found == Counter(str(mail.as_message()) for mail in content)
+    assert found == expected
 
 
 def assert_one_line_error(result, *messages: str) -> None:
