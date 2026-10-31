@@ -49,6 +49,14 @@ if TYPE_CHECKING:
     from .cli import Config
 
 
+HASHING_VERSION = "1"
+"""Bumped whenever a change to the hashing, or to the size it memoizes, makes the
+entries of earlier versions wrong.
+
+Such an entry reads as valid, and would group its mail differently from the mails
+hashed afresh: the whole database is discarded instead, as for a change of settings.
+"""
+
 SCHEMA_VERSION = "1"
 """Bumped whenever the table layout changes, to discard databases of older shapes."""
 
@@ -101,12 +109,18 @@ def default_cache_path() -> Path:
 
 
 def settings_fingerprint(conf: Config) -> str:
-    """Digest of every setting that changes what a cached entry would hold."""
+    """Digest of every setting that changes what a cached entry would hold.
+
+    The two versions go in with the settings, so a database of an earlier release
+    is discarded the same way when either moved.
+    """
     material = "\n".join(
         f"{key}={conf[key]!r}"  # type: ignore[literal-required]
         for key in CACHED_SETTINGS
     )
-    return hashlib.sha256(f"{SCHEMA_VERSION}\n{material}".encode()).hexdigest()
+    return hashlib.sha256(
+        f"{SCHEMA_VERSION}\n{HASHING_VERSION}\n{material}".encode()
+    ).hexdigest()
 
 
 def open_cache(conf: Config) -> HashCache | None:

@@ -122,7 +122,7 @@ $ mdedup --hash-body normalized --cache-path cache.db --strategy select-one --ac
 
 Two independent guards decide whether an entry can still be trusted.
 
-**The options feeding the hash.** `--hash-header`, `--hash-body` and `--time-source` are fingerprinted together. Changing any of them discards the whole database, since an entry produced under different options cannot be told apart from a valid one.
+**The options feeding the hash.** `--hash-header`, `--hash-body` and `--time-source` are fingerprinted together. Changing any of them discards the whole database, since an entry produced under different options cannot be told apart from a valid one. An upgrade of `mdedup` that changes how a hash or a size is computed discards it the same way.
 
 **The file backing the mail.** Its size and modification time are recorded, and re-checked before the entry is used. What this covers depends on the box structure:
 

@@ -242,8 +242,21 @@ def test_body_lines_decodes_each_part(raw, expected):
         pytest.param(
             "Custom",
             [b"\xff\xfe invalid utf-8"],
-            ["\ufffd\ufffd invalid utf-8"],
-            id="bytes-invalid-utf8-replaced",
+            ["\\xff\\xfe invalid utf-8"],
+            id="bytes-invalid-utf8-escaped",
+        ),
+        # A mail parsed from bytes keeps each non-ASCII byte as a lone surrogate.
+        pytest.param(
+            "Subject",
+            ["Caf" + chr(0xDCC3) + chr(0xDCA9)],
+            ["Café"],
+            id="raw-utf8-bytes-decoded",
+        ),
+        pytest.param(
+            "Subject",
+            ["Caf" + chr(0xDCE9)],
+            ["Caf\\xe9"],
+            id="raw-latin1-byte-escaped",
         ),
         # === Empty/missing value filtering ===
         pytest.param(
@@ -591,6 +604,21 @@ def test_header_normalization(header_name, values, expected):
     mail = create_mail_with_headers(*headers)
     result = list(mail.normalized_header_values(header_name.lower()))
     assert result == expected
+
+
+def test_raw_8bit_headers_hash_apart():
+    """Two headers that differ in their raw 8-bit bytes alone hash apart.
+
+    `get_all()` hands such a header over with every non-ASCII byte replaced by
+    `U+FFFD`, under which `Café` and `Cafí` in latin-1 read alike.
+    """
+    latin_e = create_mail_from_bytes(b"Subject: " + "Café".encode("latin-1") + b"\n")
+    latin_i = create_mail_from_bytes(b"Subject: " + "Cafí".encode("latin-1") + b"\n")
+    utf8 = create_mail_from_bytes(b"Subject: " + "Café".encode() + b"\n")
+
+    assert list(latin_e.normalized_header_values("subject")) == ["Caf\\xe9"]
+    assert list(latin_i.normalized_header_values("subject")) == ["Caf\\xed"]
+    assert list(utf8.normalized_header_values("subject")) == ["Café"]
 
 
 @pytest.mark.parametrize(

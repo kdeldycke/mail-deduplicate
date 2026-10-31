@@ -418,19 +418,20 @@ class DedupMailMixin(Message):
 
         return cast("str", part.get_payload(decode=False))
 
-    def undo_surrogateescape(self, text: str) -> str:
+    def undo_surrogateescape(self, text: str, errors: str = "replace") -> str:
         """Decode as UTF-8 the non-ASCII bytes that parsing left as lone surrogates.
 
         A mail parsed from bytes keeps each non-ASCII byte as a lone surrogate, and
         encoding such a string to UTF-8 raises `UnicodeEncodeError`. `get_payload()`
         undoes this for each part, with the charset of the part. The preamble and the
         epilogue have no charset, so they go through here instead. Bytes that are not
-        valid UTF-8 become `U+FFFD`, as `get_payload()` does with its charset.
+        valid UTF-8 become `U+FFFD`, as `get_payload()` does with its charset, unless
+        `errors` names another way out, like `backslashreplace`.
 
         Encoding with `utf-8` instead of `ascii` keeps the non-ASCII characters of a
         mail parsed from a string, which `ascii` rejects.
         """
-        return text.encode("utf-8", "surrogateescape").decode("utf-8", "replace")
+        return text.encode("utf-8", "surrogateescape").decode("utf-8", errors)
 
     def hash_key(self) -> str:
         """Returns the canonical hash of a mail.
@@ -535,20 +536,25 @@ class DedupMailMixin(Message):
         """Returns all normalized values of a header.
 
         Values are cleaned-up into their canonical form.
-        """
-        all_values = self.get_all(header_id)
-        if all_values is None:
-            return
 
-        for header_value in all_values:
+        A header holding raw 8-bit bytes is read as those bytes: decoded as UTF-8
+        where they are valid UTF-8, and escaped byte by byte elsewhere. `get_all()`
+        would hand it over as a `Header` whose text replaces every such byte with
+        `U+FFFD`, under which two headers differing in those bytes alone read, and
+        hash, alike.
+        """
+        header_id = header_id.lower()
+        for name, header_value in self.raw_items():
+            if name.lower() != header_id:
+                continue
             if isinstance(header_value, Header):  # type: ignore[unreachable]
                 value = str(header_value)  # type: ignore[unreachable]
             elif isinstance(header_value, bytes):  # type: ignore[unreachable]
                 value = header_value.decode(  # type: ignore[unreachable]
-                    "utf-8", "replace"
+                    "utf-8", "backslashreplace"
                 )
             else:
-                value = header_value
+                value = self.undo_surrogateescape(header_value, "backslashreplace")
 
             # Normalize whitespace
             value = " ".join(value.split())
