@@ -38,7 +38,7 @@ import sqlite3
 from pathlib import Path
 from typing import NamedTuple
 
-from click_extra.carapace import get_cache_dir
+from click_extra import get_cache_dir
 
 from .mail_box import resolve_mail_path
 
