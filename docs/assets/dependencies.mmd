@@ -4,7 +4,6 @@ flowchart LR
     subgraph primary-deps [Primary dependencies]
         click_extra{{"`click-extra`"}}
         extra_platforms{{"`extra-platforms`"}}
-        platformdirs{{"`platformdirs`"}}
     end
 
     pygments(["`pygments`"])
@@ -26,17 +25,13 @@ flowchart LR
     sphinx_last_updated_by_git(["`sphinx-last-updated-by-git`"])
     tabulate(["`tabulate`"])
     tomlrt(["`tomlrt`"])
-    tzdata(["`tzdata`"])
-    tzlocal(["`tzlocal`"])
     wcmatch(["`wcmatch`"])
     wcwidth(["`wcwidth`"])
     alabaster(["`alabaster`"])
     babel(["`babel`"])
-    boltons(["`boltons`"])
     bracex(["`bracex`"])
     certifi(["`certifi`"])
     charset_normalizer(["`charset-normalizer`"])
-    deepmerge(["`deepmerge`"])
     execnet(["`execnet`"])
     idna(["`idna`"])
     imagesize(["`imagesize`"])
@@ -66,7 +61,6 @@ flowchart LR
         sphinxcontrib_mermaid{{"`sphinxcontrib-mermaid >=1.2.3`"}}
         coverage{{"`coverage >=7.11`"}}
         sphinx_autodoc_typehints{{"`sphinx-autodoc-typehints >=2.4`"}}
-        whenever{{"`whenever >=0.10`"}}
         pytest_github_actions_annotate_failures{{"`pytest-github-actions-annotate-failures >=0.2`"}}
         pytest_randomly{{"`pytest-randomly >=3.3.1`"}}
         sphinx_copybutton{{"`sphinx-copybutton >=0.5.2`"}}
@@ -80,18 +74,12 @@ flowchart LR
         grp_test_pytest_cov{{"`pytest-cov >=7`"}}
         grp_test_pytest_xdist{{"`pytest-xdist >=3.7`"}}
         grp_test_coverage{{"`coverage >=7.11`"}}
-        grp_test_whenever{{"`whenever >=0.10`"}}
         grp_test_pytest_github_actions_annotate_failures{{"`pytest-github-actions-annotate-failures >=0.2`"}}
         grp_test_pytest_randomly{{"`pytest-randomly >=3.3.1`"}}
     end
 
-    subgraph grp_typing [--group typing]
-        types_boltons{{"`types-boltons >=25.0.0.20250822`"}}
-    end
-
     mail_deduplicate ==> click_extra
     mail_deduplicate ==>|" >=13.4 "| extra_platforms
-    mail_deduplicate ==>|" >=4.5 "| platformdirs
     sphinx --> pygments
     sphinx --> requests
     sphinx --> jinja2
@@ -121,8 +109,6 @@ flowchart LR
     click_extra --> tomlrt
     click_extra --> wcmatch
     click_extra --> wcwidth
-    click_extra --> boltons
-    click_extra --> deepmerge
     pytest --> pygments
     pytest --> colorama
     pytest --> packaging
@@ -152,8 +138,6 @@ flowchart LR
     extra_platforms --> pytest
     sphinx_autodoc_typehints --> sphinx
     sphinx_autodoc_typehints --> typing_extensions
-    whenever --> tzdata
-    whenever --> tzlocal
     pytest_github_actions_annotate_failures --> pytest
     pytest_randomly --> pytest
     sphinx_copybutton --> sphinx
@@ -176,16 +160,13 @@ flowchart LR
     sphinx_last_updated_by_git --> sphinx
     tabulate --> wcwidth
     tomlrt --> typing_extensions
-    tzlocal --> tzdata
     wcmatch --> bracex
     mail_deduplicate -.-> grp_docs
     mail_deduplicate -.-> grp_test
-    mail_deduplicate -.-> grp_typing
     grp_test_pytest -.- pytest
     grp_test_pytest_cov -.- pytest_cov
     grp_test_pytest_xdist -.- pytest_xdist
     grp_test_coverage -.- coverage
-    grp_test_whenever -.- whenever
     grp_test_pytest_github_actions_annotate_failures -.- pytest_github_actions_annotate_failures
     grp_test_pytest_randomly -.- pytest_randomly
 
@@ -193,7 +174,6 @@ flowchart LR
     click alabaster "https://pypi.org/project/alabaster/" _blank
     click babel "https://pypi.org/project/babel/" _blank
     click beautifulsoup4 "https://pypi.org/project/beautifulsoup4/" _blank
-    click boltons "https://pypi.org/project/boltons/" _blank
     click bracex "https://pypi.org/project/bracex/" _blank
     click certifi "https://pypi.org/project/certifi/" _blank
     click charset_normalizer "https://pypi.org/project/charset-normalizer/" _blank
@@ -202,7 +182,6 @@ flowchart LR
     click cloup "https://pypi.org/project/cloup/" _blank
     click colorama "https://pypi.org/project/colorama/" _blank
     click coverage "https://pypi.org/project/coverage/" _blank
-    click deepmerge "https://pypi.org/project/deepmerge/" _blank
     click docutils "https://pypi.org/project/docutils/" _blank
     click execnet "https://pypi.org/project/execnet/" _blank
     click extra_platforms "https://pypi.org/project/extra-platforms/" _blank
@@ -218,7 +197,6 @@ flowchart LR
     click mdurl "https://pypi.org/project/mdurl/" _blank
     click myst_parser "https://pypi.org/project/myst-parser/" _blank
     click packaging "https://pypi.org/project/packaging/" _blank
-    click platformdirs "https://pypi.org/project/platformdirs/" _blank
     click pluggy "https://pypi.org/project/pluggy/" _blank
     click psutil "https://pypi.org/project/psutil/" _blank
     click pygments "https://pypi.org/project/pygments/" _blank
@@ -250,19 +228,14 @@ flowchart LR
     click tabulate "https://pypi.org/project/tabulate/" _blank
     click tomli "https://pypi.org/project/tomli/" _blank
     click tomlrt "https://pypi.org/project/tomlrt/" _blank
-    click types_boltons "https://pypi.org/project/types-boltons/" _blank
     click typing_extensions "https://pypi.org/project/typing-extensions/" _blank
-    click tzdata "https://pypi.org/project/tzdata/" _blank
-    click tzlocal "https://pypi.org/project/tzlocal/" _blank
     click urllib3 "https://pypi.org/project/urllib3/" _blank
     click wcmatch "https://pypi.org/project/wcmatch/" _blank
     click wcwidth "https://pypi.org/project/wcwidth/" _blank
-    click whenever "https://pypi.org/project/whenever/" _blank
     click grp_test_pytest "https://pypi.org/project/pytest/" _blank
     click grp_test_pytest_cov "https://pypi.org/project/pytest-cov/" _blank
     click grp_test_pytest_xdist "https://pypi.org/project/pytest-xdist/" _blank
     click grp_test_coverage "https://pypi.org/project/coverage/" _blank
-    click grp_test_whenever "https://pypi.org/project/whenever/" _blank
     click grp_test_pytest_github_actions_annotate_failures "https://pypi.org/project/pytest-github-actions-annotate-failures/" _blank
     click grp_test_pytest_randomly "https://pypi.org/project/pytest-randomly/" _blank
 
@@ -272,7 +245,6 @@ flowchart LR
     style extra_platforms stroke-width:3px
     style furo stroke-width:3px
     style myst_parser stroke-width:3px
-    style platformdirs stroke-width:3px
     style pytest stroke-width:3px
     style pytest_cov stroke-width:3px
     style pytest_github_actions_annotate_failures stroke-width:3px
@@ -285,17 +257,13 @@ flowchart LR
     style sphinx_sitemap stroke-width:3px
     style sphinxcontrib_mermaid stroke-width:3px
     style sphinxext_opengraph stroke-width:3px
-    style types_boltons stroke-width:3px
-    style whenever stroke-width:3px
     style grp_test_pytest stroke-width:3px,stroke-dasharray:5 5
     style grp_test_pytest_cov stroke-width:3px,stroke-dasharray:5 5
     style grp_test_pytest_xdist stroke-width:3px,stroke-dasharray:5 5
     style grp_test_coverage stroke-width:3px,stroke-dasharray:5 5
-    style grp_test_whenever stroke-width:3px,stroke-dasharray:5 5
     style grp_test_pytest_github_actions_annotate_failures stroke-width:3px,stroke-dasharray:5 5
     style grp_test_pytest_randomly stroke-width:3px,stroke-dasharray:5 5
 
     style primary-deps fill:#1565C020,stroke:#42A5F5
     style grp_docs fill:#546E7A20,stroke:#90A4AE
     style grp_test fill:#546E7A20,stroke:#90A4AE
-    style grp_typing fill:#546E7A20,stroke:#90A4AE
