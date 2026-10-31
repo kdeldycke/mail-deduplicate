@@ -138,7 +138,13 @@ class MailFactory:
             self.fields["date_rfc2822"] = maildate(self.fields["date"].timestamp())
 
     def render(self):
-        """Returns the full, rendered content of the mail."""
+        """Returns the full, rendered content of the mail.
+
+        No blank line separates the headers from the body: the parser then ends the
+        headers on the first body line and records a `MissingHeaderBodySeparatorDefect`,
+        so every fixture built here exercises that path. A test that needs the
+        separator writes its bytes by hand.
+        """
         return dedent(
             """\
             Return-path: <none@nohost.com>
