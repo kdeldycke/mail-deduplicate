@@ -49,18 +49,22 @@ class MailSourceError(ClickException):
     """
 
 
-def maildir_mail_path(box: Mailbox, key: str) -> str:
-    """Location of a `maildir` mail, read from the box's table of contents.
+def maildir_subpath(box: Mailbox, key: str) -> str:
+    """Path of a `maildir` mail below its box, read from the table of contents.
 
     A maildir key drops the `:2,<flags>` suffix the file name carries, so the name
     cannot be rebuilt from the key alone. The box refreshed its table of contents to
     hand out the mail in the first place, so it is only re-validated on a miss.
     """
     try:
-        subpath = box._toc[key]  # type: ignore[attr-defined]
+        return cast("str", box._toc[key])  # type: ignore[attr-defined]
     except KeyError:
-        subpath = box._lookup(key)  # type: ignore[attr-defined]
-    return os.path.join(box._path, subpath)
+        return cast("str", box._lookup(key))  # type: ignore[attr-defined]
+
+
+def maildir_mail_path(box: Mailbox, key: str) -> str:
+    """Location of a `maildir` mail, read from the box's table of contents."""
+    return os.path.join(box._path, maildir_subpath(box, key))
 
 
 def keyed_mail_path(box: Mailbox, key: str) -> str:
@@ -324,6 +328,14 @@ MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
 """List of required sub-folders defining a properly structured maildir."""
 
 
+MBOX_FAMILY = (mbox, MMDF)
+"""Formats keeping an envelope `From ` line before each mail.
+
+The standard library reads and writes both with the same code, so the line travels
+from one to the other.
+"""
+
+
 def is_maildir(path: Path) -> bool:
     """Returns `True` when the path holds all the sub-directories of a maildir."""
     return all(path.joinpath(subdir).is_dir() for subdir in MAILDIR_SUBDIRS)
@@ -533,6 +545,46 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     return folder_list
 
 
+def carry_maildir_metadata(
+    source: Maildir, key: str, target: Maildir, new_key: str
+) -> None:
+    """Give a copied `maildir` mail the folder, flags and time of its original.
+
+    A maildir keeps the state of a mail outside of its content: the `new` or `cur`
+    folder says whether a client saw it, the `:2,` suffix of its file name holds its
+    flags, and the modification time of the file is its delivery time, which IMAP
+    servers like Dovecot serve as the internal date of the mail. `Maildir.add()`
+    takes them from a `MaildirMessage` alone, so a mail added as bytes lands in `new`
+    with no flags and the time of the run: it is renamed and re-dated afterwards.
+    """
+    subdir, name = os.path.split(maildir_subpath(source, key))
+    info = name.split(source.colon)[-1] if source.colon in name else ""
+    stat = os.stat(os.path.join(source._path, subdir, name))
+
+    suffix = f"{target.colon}{info}" if info else ""
+    dest = os.path.join(target._path, subdir, new_key + suffix)
+    # `Maildir.add()` files a mail given as bytes in `new`, under its key alone.
+    os.rename(os.path.join(target._path, "new", new_key), dest)
+    os.utime(dest, ns=(stat.st_atime_ns, stat.st_mtime_ns))
+
+
+def carry_mh_sequences(source: MH, key: str, target: MH, new_key: str) -> None:
+    """Enroll a copied `MH` mail in the sequences of its original.
+
+    MH keeps the state of a mail (`unseen`, `replied`, `flagged`) in the
+    `.mh_sequences` file of its folder, by the number of the mail. `MH.add()` takes
+    them from an `MHMessage` alone, so they are written here for a mail added as
+    bytes, the way `MH.add()` writes them.
+    """
+    names = [name for name, keys in source.get_sequences().items() if int(key) in keys]
+    if not names:
+        return
+    sequences = target.get_sequences()
+    for name in names:
+        sequences.setdefault(name, []).append(int(new_key))
+    target.set_sequences(sequences)
+
+
 def add_mail(box: Mailbox, mail: DedupMailMixin) -> None:
     r"""Add a mail to a box, as the bytes its source box holds.
 
@@ -552,15 +604,30 @@ def add_mail(box: Mailbox, mail: DedupMailMixin) -> None:
     box also quotes the body lines starting with `From `, as its format requires.
 
     The bytes do not include what a format keeps beside each mail: the envelope
-    `From ` line of an mbox mail, the folder, flags and modification time of a
-    maildir mail, the sequences of an MH mail, the labels of a Babyl mail.
+    `From ` line of an mbox or MMDF mail, the folder, flags and modification time of
+    a maildir mail, the sequences of an MH mail, the labels of a Babyl mail. The
+    first three travel with the mail into a box of the same format. A box of another
+    format has no place for them, and nothing is translated: a maildir mail copied
+    into an mbox gets no `Status` header. Babyl labels are not carried, as the
+    standard library takes them from a `BabylMessage` alone.
     """
+    source = mail.box
+    key = mail.mail_id
     # Asserts to please the type checker: every mail reaching an action was read
     # from its box.
-    assert mail.box is not None
-    assert mail.mail_id is not None
+    assert source is not None
+    assert key is not None
 
-    box.add(mail.box.get_bytes(mail.mail_id).replace(b"\r\n", b"\n"))
+    if isinstance(source, MBOX_FAMILY) and isinstance(box, MBOX_FAMILY):
+        raw = source.get_bytes(key, from_=True)
+    else:
+        raw = source.get_bytes(key)
+    new_key = box.add(raw.replace(b"\r\n", b"\n"))
+
+    if isinstance(source, Maildir) and isinstance(box, Maildir):
+        carry_maildir_metadata(source, key, box, new_key)
+    elif isinstance(source, MH) and isinstance(box, MH):
+        carry_mh_sequences(source, key, box, new_key)
 
 
 def create_box(

@@ -119,6 +119,8 @@ Once duplicates have been selected, an action is performed on them.
 
 The `copy-*` and `move-*` actions write each mail into the export box as the bytes its source box holds, never as a message rebuilt from its parsed form. Python's `email` generator redraws multipart boundaries, closes a boundary left open, turns a bare CR into a line break, and drops the content of a multipart part it parsed with no subpart: a deduplication is no reason to repair a mail. Line endings are the one conversion left. A mail is written with LF endings, which every format but `eml` turns into the line separator of the platform. An `mbox` or `mmdf` box also quotes the body lines starting with `From `, as its format requires.
 
+What a format keeps beside a mail travels with it into a box of the same format: the envelope `From ` line of an `mbox` or `mmdf` mail, the `new` or `cur` folder, the flags and the modification time of a `maildir` mail, and the sequences of an `mh` mail. A box of another format has no place for them, and nothing is translated: a `maildir` mail copied into an `mbox` gets no `Status` header, and loses its flags. The labels of a `babyl` mail are not carried.
+
 ### Reading a strategy against an action
 
 A strategy names the half of each set it selects, and an action names the half it applies to. The two are chosen apart, so read them together before running anything destructive.

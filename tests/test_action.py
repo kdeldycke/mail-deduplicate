@@ -17,11 +17,12 @@
 from __future__ import annotations
 
 import os
-from mailbox import Maildir, mbox
+from mailbox import MH, Maildir, mbox
 from pathlib import Path
 from string import ascii_lowercase
 
 import pytest
+from extra_platforms.pytest import skip_windows
 
 from mail_deduplicate.action import LINK_TEMP_PREFIX, OPERATIONS, Action
 from mail_deduplicate.deduplicate import Deduplicate, Stat
@@ -505,6 +506,132 @@ def test_export_keeps_mail_bytes(invoke, tmp_path, raw, action, export_format):
         expected = expected.replace(b"\nFrom ", b"\n>From ")
     # The headers and the body are written with the line endings of the platform.
     assert export.get_bytes(key).replace(b"\r\n", b"\n") == expected
+
+
+DELIVERY_TIME = 1_600_000_000
+"""Modification time of a mail file, far enough from now to tell the two apart."""
+
+
+@skip_windows(reason="A maildir file name holding a colon cannot be created.")
+@pytest.mark.parametrize("action", ("copy-selected", "move-selected"))
+@pytest.mark.parametrize(
+    ("subdir", "info"),
+    (
+        pytest.param("cur", "2,RS", id="seen-and-replied"),
+        pytest.param("cur", "", id="seen-without-flags"),
+        pytest.param("new", "", id="unseen"),
+    ),
+)
+def test_export_keeps_maildir_metadata(invoke, tmp_path, action, subdir, info):
+    """A maildir mail keeps its folder, flags and delivery time in a maildir export.
+
+    The stdlib files a mail given as bytes in `new`, with no flags and the time of
+    the run, which would mark every exported mail unread and delivered today.
+    """
+    source_path = tmp_path / "source"
+    Maildir(source_path).close()
+    name = f"orchard{Maildir.colon}{info}" if info else "orchard"
+    mail_path = source_path / subdir / name
+    mail_path.write_bytes(PLAIN_HEADERS + b"Rain.\r\n")
+    os.utime(mail_path, (DELIVERY_TIME, DELIVERY_TIME))
+    export_path = tmp_path / "export"
+
+    result = invoke(
+        "--strategy=select-one",
+        f"--action={action}",
+        f"--export={export_path}",
+        "--export-format=maildir",
+        str(source_path),
+    )
+
+    assert result.exit_code == 0
+    (exported,) = mail_files(str(export_path))
+    assert exported.parent.name == subdir
+    assert exported.name.split(Maildir.colon)[1:] == ([info] if info else [])
+    assert exported.stat().st_mtime == DELIVERY_TIME
+
+
+@pytest.mark.parametrize("export_format", (BoxFormat.MBOX, BoxFormat.MMDF), ids=str)
+@pytest.mark.parametrize("action", ("copy-selected", "move-selected"))
+def test_export_keeps_mbox_envelope(invoke, tmp_path, action, export_format):
+    """An mbox mail keeps its envelope `From ` line in an mbox or mmdf export.
+
+    The stdlib fabricates one naming `MAILER-DAEMON` and the time of the run for a
+    mail that comes without it.
+    """
+    envelope = b"From clementine@orchard.example Thu Oct 11 09:30:00 2018\n"
+    source_path = tmp_path / "source.mbox"
+    source_path.write_bytes(
+        envelope + PLAIN_HEADERS.replace(b"\r\n", b"\n") + b"Rain.\n"
+    )
+    export_path = tmp_path / "export"
+
+    result = invoke(
+        "--strategy=select-one",
+        f"--action={action}",
+        f"--export={export_path}",
+        f"--export-format={export_format}",
+        str(source_path),
+    )
+
+    assert result.exit_code == 0
+    assert envelope in export_path.read_bytes().replace(b"\r\n", b"\n")
+    assert b"MAILER-DAEMON" not in export_path.read_bytes()
+
+
+@pytest.mark.parametrize("action", ("copy-selected", "move-selected"))
+def test_export_keeps_mh_sequences(invoke, tmp_path, action):
+    """An MH mail keeps its sequences in an MH export.
+
+    The stdlib enrolls a mail given as bytes in no sequence.
+    """
+    source = MH(tmp_path / "source")
+    key = int(source.add(PLAIN_HEADERS + b"Rain.\r\n"))
+    source.set_sequences({"unseen": [key], "flagged": [key]})
+    source.close()
+    export_path = tmp_path / "export"
+
+    result = invoke(
+        "--strategy=select-one",
+        f"--action={action}",
+        f"--export={export_path}",
+        "--export-format=mh",
+        "--input-format=mh",
+        str(tmp_path / "source"),
+    )
+
+    assert result.exit_code == 0
+    export = MH(export_path, create=False)
+    (new_key,) = export.keys()
+    assert export.get_sequences() == {"unseen": [new_key], "flagged": [new_key]}
+
+
+@skip_windows(reason="A maildir file name holding a colon cannot be created.")
+def test_export_translates_no_metadata_across_formats(invoke, tmp_path):
+    """A maildir mail copied into an mbox carries its bytes and nothing else.
+
+    Its flags have no place in an mbox but a `Status` header, which would be an
+    addition to the mail: they are dropped, not translated.
+    """
+    source_path = tmp_path / "source"
+    Maildir(source_path).close()
+    raw = PLAIN_HEADERS + b"Rain.\r\n"
+    (source_path / "cur" / f"orchard{Maildir.colon}2,RS").write_bytes(raw)
+    export_path = tmp_path / "export.mbox"
+
+    result = invoke(
+        "--strategy=select-one",
+        "--action=copy-selected",
+        f"--export={export_path}",
+        "--export-format=mbox",
+        str(source_path),
+    )
+
+    assert result.exit_code == 0
+    export = mbox(export_path, create=False)
+    (key,) = export.keys()
+    assert export.get_bytes(key).replace(b"\r\n", b"\n") == raw.replace(b"\r\n", b"\n")
+    assert b"Status" not in export.get_bytes(key)
 
 
 def test_unique_only_source_is_exported(invoke, make_box):
