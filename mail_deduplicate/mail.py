@@ -102,6 +102,18 @@ configuration.
 """
 
 
+HEADER_LINE = re.compile(rb"\A(From |[!-9;-~]*:|[\t ])")
+"""A line of the header block, as the parser reads one: an envelope line, a header
+or a folded continuation.
+
+The parser ends the headers on the first blank line, or on the first line that is
+none of these when the blank line is missing. `raw_body()` follows the same rule.
+"""
+
+LINE = re.compile(rb"[^\n]*\n|[^\n]+\Z")
+"""One line of a mail with LF line endings, with its line break when it has one."""
+
+
 class DedupMailMixin(Message):
     """Message with deduplication-specific properties and utilities.
 
@@ -114,6 +126,7 @@ class DedupMailMixin(Message):
         "canonical_headers",
         "hash_decoded_body",
         "hash_normalized_body",
+        "hash_raw_body",
     )
     """Memoized properties derived from the message content.
 
@@ -278,6 +291,21 @@ class DedupMailMixin(Message):
         fresh = self.box[self.mail_id]
         for name in self.PARSED_MESSAGE_ATTRS:
             setattr(self, name, getattr(fresh, name))
+
+    def raw_bytes(self) -> bytes:
+        """Read the bytes of the mail again, from its own file or from its box.
+
+        The parser consumed them without keeping them. A mail a worker opened by
+        path is read from that file. A mail of the main process is read from its
+        box, which hands it out without the envelope line and the state its format
+        keeps beside each mail.
+        """
+        if self._path_override is not None:
+            with open(self._path_override, "rb") as file:
+                return file.read()
+        if self.box is None or self.mail_id is None:
+            raise LookupError("The mail has no box to be read from.")
+        return self.box.get_bytes(self.mail_id)
 
     @contextmanager
     def hydrated(self) -> Generator[DedupMailMixin, None, None]:
@@ -452,6 +480,39 @@ class DedupMailMixin(Message):
         logging.debug(f"Serialized headers: {serialized_headers!r}")
         hash_value = hashlib.sha224(serialized_headers).hexdigest()
         logging.debug(f"Hash: {hash_value}")
+        return hash_value
+
+    def raw_body(self) -> bytes:
+        """The body bytes of the mail, as the box holds them, with LF line endings.
+
+        Line endings are reduced to LF, as `add_mail()` writes them: every box format
+        rewrites them to the separator of the platform, and the mbox reader reduces
+        them on Windows, so a mail would otherwise never hash like its own export,
+        and a hash would depend on the platform.
+
+        The body starts after the first blank line, or at the first line that is
+        neither a header nor a continuation when that blank line is missing, where
+        the parser starts it too. A mail of headers alone has an empty body.
+        """
+        raw = self.raw_bytes().replace(b"\r\n", b"\n")
+        for match in LINE.finditer(raw):
+            line = match.group()
+            if line == b"\n":
+                return raw[match.end() :]
+            if not HEADER_LINE.match(line):
+                return raw[match.start() :]
+        return b""
+
+    @cached_property
+    def hash_raw_body(self) -> str:
+        """Returns the hash of the body bytes, as the box holds them.
+
+        Nothing but the line endings is interpreted, see `raw_body()`: a transfer
+        encoding, a charset, a bare CR and an mbox `>From ` quote all count, where
+        `hash_decoded_body` reads through the first two.
+        """
+        hash_value = hashlib.sha224(self.raw_body()).hexdigest()
+        logging.debug(f"Body raw hash: {hash_value}")
         return hash_value
 
     @cached_property

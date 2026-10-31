@@ -20,6 +20,7 @@ import base64
 import email
 import email.header
 import quopri
+from mailbox import Maildir
 from pathlib import Path
 from typing import Any, cast
 
@@ -79,6 +80,93 @@ def test_body_hashes_distinguish_and_normalize():
     # the base, but a real word change still differs.
     assert base.hash_normalized_body == spaced.hash_normalized_body
     assert base.hash_normalized_body != different.hash_normalized_body
+
+
+def test_raw_body_hash_reads_the_bytes_of_the_box(tmp_path, config):
+    """`hash_raw_body` hashes the body bytes as stored, line endings aside.
+
+    Two copies of a text in different transfer encodings hash apart under `raw`
+    and alike under `decoded`. Two copies differing in their line endings alone
+    hash alike under both, as every box format rewrites line endings.
+    """
+    headers = b"Subject: s\nContent-Type: text/plain; charset=utf-8\n"
+    # The accented letter is what quoted-printable rewrites.
+    text = "Les cerises mûres tombent.\n".encode()
+    copies = {
+        "eight-bit": headers + b"Content-Transfer-Encoding: 8bit\n\n" + text,
+        "quoted": headers
+        + b"Content-Transfer-Encoding: quoted-printable\n\n"
+        + quopri.encodestring(text),
+        "crlf": (headers + b"Content-Transfer-Encoding: 8bit\n\n" + text).replace(
+            b"\n", b"\r\n"
+        ),
+    }
+    box_path = tmp_path / "box"
+    Maildir(box_path).close()
+    for name, raw in copies.items():
+        (box_path / "new" / name).write_bytes(raw)
+
+    box = BoxFormat.MAILDIR.constructor(box_path, create=False)
+    mails = {}
+    for mail_id, mail in box.iteritems():
+        mail.add_box_metadata(box, mail_id)
+        mail.conf = config
+        mails[mail_id] = mail
+    box.close()
+
+    assert mails["eight-bit"].hash_raw_body != mails["quoted"].hash_raw_body
+    assert mails["eight-bit"].hash_decoded_body == mails["quoted"].hash_decoded_body
+    assert mails["eight-bit"].hash_raw_body == mails["crlf"].hash_raw_body
+    assert mails["eight-bit"].hash_decoded_body == mails["crlf"].hash_decoded_body
+
+
+def test_raw_bytes_come_from_the_file_or_the_box(tmp_path):
+    """A worker reads a mail's bytes from the path it opened, the parent from the box.
+
+    A mail attached to neither cannot be read again.
+    """
+    raw = b"Subject: s\n\nbody\n"
+    path = tmp_path / "mail"
+    path.write_bytes(raw)
+    mail = create_mail_from_bytes(raw)
+
+    with pytest.raises(LookupError):
+        mail.raw_bytes()
+
+    mail._path_override = str(path)
+    assert mail.raw_bytes() == raw
+
+
+@pytest.mark.parametrize(
+    ("raw", "body"),
+    (
+        pytest.param(b"Subject: s\n\nRain.\n", b"Rain.\n", id="blank-line"),
+        pytest.param(b"Subject: s\r\n\r\nRain.\r\n", b"Rain.\n", id="crlf"),
+        pytest.param(
+            b"Subject: s\n\tfolded\nX-Weather: sunny\nRain.\nMore.\n",
+            b"Rain.\nMore.\n",
+            id="missing-blank-line",
+        ),
+        pytest.param(
+            b"From orchard Thu Oct 11\nSubject: s\n\nRain.", b"Rain.", id="envelope"
+        ),
+        pytest.param(b"Subject: s\nX-Weather: sunny\n", b"", id="headers-only"),
+        pytest.param(b"\nRain.\n", b"Rain.\n", id="no-header"),
+        pytest.param(b"", b"", id="empty"),
+    ),
+)
+def test_raw_body_starts_where_the_parser_ends_the_headers(tmp_path, raw, body):
+    """`raw_body()` starts after the first blank line, or where a header line ends.
+
+    The parser treats a line that is neither a header nor a continuation as the
+    start of the body when the blank line is missing, and so does the raw body.
+    """
+    path = tmp_path / "mail"
+    path.write_bytes(raw)
+    mail = create_mail_from_bytes(raw)
+    mail._path_override = str(path)
+
+    assert mail.raw_body() == body
 
 
 def test_size_counts_the_bytes_of_the_decoded_body():

@@ -204,6 +204,8 @@ def test_unparsable_date_show_diff(invoke, make_box):
         pytest.param("skip", "Goodbye world\n", True, id="skip-different"),
         pytest.param("raw", "Hello   world\n", False, id="raw-spaced"),
         pytest.param("raw", "Goodbye world\n", False, id="raw-different"),
+        pytest.param("decoded", "Hello   world\n", False, id="decoded-spaced"),
+        pytest.param("decoded", "Goodbye world\n", False, id="decoded-different"),
         pytest.param("normalized", "Hello   world\n", True, id="normalized-spaced"),
         pytest.param("normalized", "Goodbye world\n", False, id="normalized-different"),
     ),
@@ -211,8 +213,8 @@ def test_unparsable_date_show_diff(invoke, make_box):
 def test_hash_body(invoke, make_box, hash_body, other_body, deduplicated):
     """--hash-body=skip groups mails by their headers alone, whatever their bodies.
 
-    =raw folds every byte of the body into the hash, and =normalized folds it in but
-    ignores whitespace.
+    =raw folds every byte of the body into the hash, =decoded folds in its decoded
+    text, and =normalized folds it in but ignores whitespace.
     """
     a = MailFactory(
         date="2021-01-01", message_id="<n@nohost.com>", body="Hello world\n"

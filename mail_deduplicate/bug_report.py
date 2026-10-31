@@ -400,23 +400,13 @@ def fingerprint(raw: bytes) -> str:
     return "\n".join(lines)
 
 
-def mail_bytes(mail: DedupMailMixin) -> bytes:
-    """Read the raw bytes of a mail again, from its own file or from its box."""
-    if mail._path_override is not None:
-        with open(mail._path_override, "rb") as file:
-            return file.read()
-    if mail.box is None or mail.mail_id is None:
-        raise LookupError("The mail has no box to be read from.")
-    return mail.box.get_bytes(mail.mail_id)
-
-
 def fingerprint_mail(mail: DedupMailMixin) -> str:
     """The `fingerprint()` of a mail, read again from its source.
 
     Never raises: a mail that cannot be read again gets a line saying so.
     """
     try:
-        raw = mail_bytes(mail)
+        raw = mail.raw_bytes()
     except Exception as expt:  # noqa: BLE001
         return f"Fingerprint unavailable: cannot read the mail ({type(expt).__name__})."
     return fingerprint(raw)

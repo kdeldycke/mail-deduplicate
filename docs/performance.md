@@ -34,7 +34,7 @@ Both thresholds exist to catch mails that hash alike without being copies, so tu
 
 That middle row is the surprise: dropping the content check alone changes nothing under the default `--hash-body skip`. A mail's size is the byte length of its decoded body, and skip mode never reads bodies while hashing, so the *size* check drags them back on its own.
 
-Hash the body and that stops being true. `decoded` and `normalized` compute each mail's size while hashing, so the cache stores it and the size check is served from the database:
+Hash the decoded body and that stops being true. `decoded` and `normalized` compute each mail's size while hashing, so the cache stores it and the size check is served from the database. `raw` decodes nothing, so its size check re-reads the bodies like `skip`'s does:
 
 | Warm run, `--hash-body decoded` | Total | Mails re-read |
 | ------------------------------- | ----- | ------------- |
@@ -185,7 +185,8 @@ Several runs can point at the same database. They only contend on the single wri
 | Mode         | 20,000 mails | Notes                                                                                |
 | ------------ | ------------ | ------------------------------------------------------------------------------------ |
 | `skip`       | `3.4s`       | The default. Headers alone are usually enough to identify duplicates.                |
+| `raw`        | not timed    | Hashes the body bytes as the box holds them, line endings aside. Decodes nothing.    |
 | `decoded`    | `3.7s`       | Hashes the body with its transfer encodings undone and its text decoded.             |
 | `normalized` | `4.8s`       | Strips line breaks and spaces first, catching copies that differ only in whitespace. |
 
-Reach for `decoded` or `normalized` when header-based hashing groups mails you do not consider duplicates, rather than as a default.
+Reach for `raw`, `decoded` or `normalized` when header-based hashing groups mails you do not consider duplicates, rather than as a default. `raw` groups the copies that are the same bytes, and reads each mail a second time rather than decoding it.

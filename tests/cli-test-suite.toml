@@ -19,7 +19,7 @@ stdout_contains = [
     "Usage: mdedup [OPTIONS] MAIL_SOURCE_1 MAIL_SOURCE_2",
 
     # Check that Enums are properly rendered in help.
-    "  -b, --hash-body [skip|decoded|normalized]",
+    "  -b, --hash-body [skip|raw|decoded|normalized]",
     "  [default: skip]",
     "  -e, --export-format [maildir|mbox|mh|babyl|mmdf|eml]",
     "  [default: mbox]",

@@ -190,12 +190,15 @@ class MissingTimestamps(Exception):
 class BodyHasher(StrEnum):
     """Enumeration of available body hashing methods.
 
-    `decoded` and `normalized` both hash the decoded body of a mail, with its
-    transfer encodings undone and its text decoded, so copies that differ in their
-    encoding alone hash the same. `normalized` also strips all whitespace first.
+    Each value interprets the body one step further than the one before it. `skip`
+    leaves the body out. `raw` hashes its bytes as the box holds them, with line
+    endings reduced to LF. `decoded` undoes the transfer encodings and decodes the
+    text, so copies that differ in their encoding alone hash the same. `normalized`
+    also strips all whitespace first.
     """
 
     SKIP = "skip"
+    RAW = "raw"
     DECODED = "decoded"
     NORMALIZED = "normalized"
 
@@ -204,6 +207,7 @@ class BodyHasher(StrEnum):
         """The callable producing this member's body hash for one mail."""
         return {
             BodyHasher.SKIP: lambda _: "",
+            BodyHasher.RAW: lambda mail: mail.hash_raw_body,
             BodyHasher.DECODED: lambda mail: mail.hash_decoded_body,
             BodyHasher.NORMALIZED: lambda mail: mail.hash_normalized_body,
         }[self]
