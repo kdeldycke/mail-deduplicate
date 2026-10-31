@@ -20,6 +20,7 @@ import random
 import re
 import string
 from collections import Counter
+from datetime import UTC, datetime
 from email.utils import formatdate as maildate
 from functools import partial
 from mailbox import Mailbox, Message, mbox
@@ -28,9 +29,7 @@ from textwrap import dedent
 from uuid import uuid4
 
 import pytest
-from boltons.iterutils import same
 from click_extra.pytest import runner  # noqa: F401
-from whenever import Date, Instant, Time
 
 from mail_deduplicate.action import Action
 from mail_deduplicate.bug_report import REPORT_START
@@ -113,7 +112,7 @@ class MailFactory:
         # Defaults fields values.
         self.fields = {
             "body": "Да, они летят.\n",
-            "date": Instant.now(),
+            "date": datetime.now(UTC),
             "date_rfc2822": None,
             "message_id": "<201111231111.abcdef101@mail.nohost.com>",
         }
@@ -121,20 +120,22 @@ class MailFactory:
         # Check all custom fields are recognized and supported.
         assert set(custom_fields).issubset(self.fields)
 
-        # Normalize the date to a whenever Instant. ISO date strings are anchored at
-        # midnight UTC; whenever instances are passed through untouched.
+        # Normalize the date to a datetime in UTC. ISO date strings are anchored at
+        # midnight UTC; datetime instances are passed through untouched.
         if "date" in custom_fields:
             date = custom_fields["date"]
             if isinstance(date, str):
-                date = Date.parse_iso(date).at(Time.MIDNIGHT).assume_utc()
+                date = datetime.fromisoformat(date).replace(tzinfo=UTC)
             custom_fields["date"] = date
 
         # Update default values with custom ones.
         self.fields.update(custom_fields)
 
-        # Derive RFC-2822 date from the Instant if not set.
+        # Derive RFC-2822 date from the datetime if not set. A naive one would be
+        # read in the local time zone of the machine running the tests.
         if not self.fields.get("date_rfc2822"):
-            assert isinstance(self.fields["date"], Instant)
+            assert isinstance(self.fields["date"], datetime)
+            assert self.fields["date"].tzinfo is not None
             self.fields["date_rfc2822"] = maildate(self.fields["date"].timestamp())
 
     def render(self):
@@ -195,7 +196,7 @@ def make_box(tmp_path):
 
         if not mails:
             mails = []
-        assert same(map(type, mails), MailFactory)
+        assert all(isinstance(mail, MailFactory) for mail in mails)
 
         # Create the container under a random name and put all provided mails there.
         box = box_type(tmp_path.joinpath(uuid4().hex), create=True)
@@ -251,7 +252,7 @@ def check_box(box_path, box_type, content=None):
     assert not isinstance(content, set)
     if content is None:
         content = []
-    assert same(map(type, content), MailFactory)
+    assert all(isinstance(mail, MailFactory) for mail in content)
 
     expected: Counter[bytes] = Counter()
     for mail in content:

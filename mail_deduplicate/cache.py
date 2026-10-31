@@ -34,11 +34,12 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import posixpath
 import sqlite3
 from pathlib import Path
 from typing import NamedTuple
 
-from platformdirs import user_cache_path
+from extra_platforms import is_macos, is_windows
 
 from .mail_box import resolve_mail_path
 
@@ -93,14 +94,24 @@ class CacheEntry(NamedTuple):
 def default_cache_dir() -> Path:
     r"""Location of the cache database, following each platform's conventions.
 
-    `~/Library/Caches/mdedup` on macOS, `$XDG_CACHE_HOME/mdedup` on other POSIX
-    systems, and `%LOCALAPPDATA%\mdedup\Cache` on Windows.
-
-    `appauthor` is turned off because there is no vendor to namespace under: leaving
-    it unset would have Windows fall back to the application name and nest the cache
-    one level deeper, under `mdedup\mdedup\Cache`.
+    `%LOCALAPPDATA%\mdedup\Cache` on Windows. On macOS and other POSIX systems,
+    `$XDG_CACHE_HOME/mdedup` when that variable holds an absolute path: a user who
+    sets it asks every tool to keep its cache there, macOS included. Else
+    `~/Library/Caches/mdedup` on macOS and `~/.cache/mdedup` on the others.
     """
-    return user_cache_path("mdedup", appauthor=False)
+    if is_windows():
+        local_app_data = os.environ.get("LOCALAPPDATA")
+        if local_app_data:
+            return Path(local_app_data, "mdedup", "Cache")
+        return Path.home().joinpath("AppData", "Local", "mdedup", "Cache")
+    # The XDG specification says to ignore a relative path. Its paths are POSIX
+    # paths, so posixpath checks them the same way on every host.
+    xdg_cache_home = os.environ.get("XDG_CACHE_HOME", "").strip()
+    if posixpath.isabs(xdg_cache_home):
+        return Path(xdg_cache_home, "mdedup")
+    if is_macos():
+        return Path.home().joinpath("Library", "Caches", "mdedup")
+    return Path.home().joinpath(".cache", "mdedup")
 
 
 def default_cache_path() -> Path:

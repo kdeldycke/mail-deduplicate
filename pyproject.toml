@@ -73,9 +73,6 @@ dependencies = [
   # bug_report.py asks is_any_agent(), added in 10.0.0. Aligned to the 13.4 floor
   # of click-extra 10.0.0, the lowest release any install can resolve.
   "extra-platforms>=13.4",
-  # Resolves the per-platform cache directory holding the hash cache database
-  # (cache.py). 4.5.0 is the first release requiring Python 3.10.
-  "platformdirs>=4.5",
 ]
 urls.Changelog = "https://github.com/kdeldycke/mail-deduplicate/blob/main/changelog.md"
 urls.Documentation = "https://kdeldycke.github.io/mail-deduplicate"
@@ -91,9 +88,6 @@ scripts.mdedup = "mail_deduplicate.__main__:main"
 ## exact versions and the sync-deps updaters manage bumps within the cooldown.
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
 test = [
-  # boltons 25.0.0 is the API the types-boltons stubs of the typing group cover.
-  # Test-only: conftest.py uses iterutils.same to check fixture homogeneity.
-  "boltons>=25",
   # Aligned to the runtime click-extra floor.
   "click-extra[pytest]>=9.4.1",
   # coverage 7.11.0 is the first release requiring Python 3.10.
@@ -117,10 +111,6 @@ test = [
   # pytest-xdist < 3.7 fails on Python 3.14 (no requires-python guard in older releases);
   # [psutil] extra needed for --numprocesses=logical.
   "pytest-xdist[psutil]>=3.7",
-  # Test-only: fixtures build RFC-2822 dates with Instant/Date/Time (conftest.py,
-  # test_strategy.py). whenever's pre-1.0 API still renames methods between
-  # releases, so pin to the 0.10 shape we build against.
-  "whenever>=0.10",
 ]
 docs = [
   # docs/tests.md documents the tests/ modules, which autodoc can only import with
@@ -150,11 +140,6 @@ docs = [
   "sphinxcontrib-mermaid>=1.2.3",
   # sphinxext-opengraph 0.13 stabilized OpenGraph metadata generation for Sphinx 8+.
   "sphinxext-opengraph>=0.13",
-]
-typing = [
-  # types-boltons 25.0.0.20250822 is the first stub release covering the boltons 25.0
-  # API. boltons is a test-only dependency, but mypy also checks the test suite.
-  "types-boltons>=25.0.0.20250822",
 ]
 
 [tool.uv]

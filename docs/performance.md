@@ -143,11 +143,11 @@ The cache only ever spares the hashing step. It does not reduce memory, and it d
 
 The database sits in your platform's cache directory:
 
-| Platform              | Location                                                                      |
-| --------------------- | ----------------------------------------------------------------------------- |
-| macOS                 | `~/Library/Caches/mdedup/hashes.db`                                           |
-| Linux and other POSIX | `$XDG_CACHE_HOME/mdedup/hashes.db`, defaulting to `~/.cache/mdedup/hashes.db` |
-| Windows               | `%LOCALAPPDATA%\mdedup\Cache\hashes.db`                                       |
+| Platform              | Location                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| macOS                 | `$XDG_CACHE_HOME/mdedup/hashes.db`, defaulting to `~/Library/Caches/mdedup/hashes.db` |
+| Linux and other POSIX | `$XDG_CACHE_HOME/mdedup/hashes.db`, defaulting to `~/.cache/mdedup/hashes.db`         |
+| Windows               | `%LOCALAPPDATA%\mdedup\Cache\hashes.db`                                               |
 
 Run `mdedup --help` to see the resolved path on your machine. It holds about 135 bytes per mail, so 20,000 mails cost around 2.7 MB.
 

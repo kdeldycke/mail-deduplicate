@@ -17,12 +17,12 @@
 from __future__ import annotations
 
 import re
+from datetime import UTC, datetime, timedelta
 from mailbox import Maildir
 from string import ascii_lowercase
 
 import pytest
 from click_extra import BUILTIN_THEMES, unstyle
-from whenever import Instant
 
 from mail_deduplicate.deduplicate import BodyHasher, DuplicateSet
 from mail_deduplicate.mail import DedupMailMixin
@@ -56,11 +56,11 @@ def test_strategy_definition(strategy):
 
 
 # Time-based collection of pre-defined fixtures.
-now = Instant.now()
+now = datetime.now(UTC)
 newest_mail = MailFactory(date=now)
-newer_mail = MailFactory(date=now.subtract(minutes=1))
-older_mail = MailFactory(date=now.subtract(minutes=2))
-oldest_mail = MailFactory(date=now.subtract(minutes=3))
+newer_mail = MailFactory(date=now - timedelta(minutes=1))
+older_mail = MailFactory(date=now - timedelta(minutes=2))
+oldest_mail = MailFactory(date=now - timedelta(minutes=3))
 
 
 # Size-based collection of pre-defined fixtures.
