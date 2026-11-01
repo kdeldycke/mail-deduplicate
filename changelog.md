@@ -9,6 +9,7 @@
 - **Breaking:** `--hash-body raw` now hashes the body bytes as the box holds them, with no decoding. The former `raw` behavior is `--hash-body decoded`.
 - Write each exported mail as the bytes its source box holds, instead of a message rebuilt from its parsed form, which redrew boundaries and line endings.
 - Keep the folder, flags and delivery time of a `maildir` mail, the envelope line of an `mbox` mail and the sequences of an `MH` mail in an export of the same format.
+- Require `click-extra` `10.0.0` and `extra-platforms` `14.0.0`.
 - Write the `--export-config toml` output with `tomlrt` in place of `tomlkit`, through the `toml` extra of `click-extra` `10.0.0`.
 - Drop the `platformdirs` dependency, and the `whenever` and `boltons` test dependencies.
 - Color the `--show-diff` output with the active theme, the way `git diff` colors its own.

@@ -77,8 +77,7 @@ from functools import partial
 from pathlib import Path
 from typing import NamedTuple
 
-from click_extra import AUTO_WRAP_MARKER, resolve_wrap_marker
-from click_extra.layout import cell_width
+from click_extra import AUTO_WRAP_MARKER, cell_width, resolve_wrap_marker
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -145,8 +144,8 @@ budget by one, the prompt's included: see {func}`prompt_budget`.
 """
 
 PROMPT_SIGIL = "$ "
-"""Characters the `macos` preset draws ahead of the command line, per
-{data}`~click_extra.screenshot_presets.MACOS_PRESET`.
+"""Characters the `macos` preset draws ahead of the command line, per its entry in
+{data}`~click_extra.capture.presets.PRESETS`.
 
 Counted against {data}`COLUMNS` beside the command line itself, so the row the
 prompt takes is measured whole.

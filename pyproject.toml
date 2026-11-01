@@ -67,12 +67,11 @@ classifiers = [
 # - adds new explicit support Python version.
 dependencies = [
   # 10.0.0 adds the get_cache_dir() that cache.py calls, and its [toml] extra writes
-  # --export-config toml with tomlrt. Tracked from its main branch until that release
-  # ships: see [tool.uv.sources].
-  "click-extra[toml]>=10.0.0.dev0",
-  # bug_report.py asks is_any_agent(), added in 10.0.0. Aligned to the 13.4 floor
+  # --export-config toml with tomlrt.
+  "click-extra[toml]>=10",
+  # bug_report.py asks is_any_agent(), added in 10.0.0. Aligned to the 14.0.0 floor
   # of click-extra 10.0.0, the lowest release any install can resolve.
-  "extra-platforms>=13.4",
+  "extra-platforms>=14",
 ]
 urls.Changelog = "https://github.com/kdeldycke/mail-deduplicate/blob/main/changelog.md"
 urls.Documentation = "https://kdeldycke.github.io/mail-deduplicate"
@@ -89,12 +88,12 @@ scripts.mdedup = "mail_deduplicate.__main__:main"
 ## Unless the package has been referenced in sections above, in which case we align the version specifier.
 test = [
   # Aligned to the runtime click-extra floor.
-  "click-extra[pytest]>=9.4.1",
+  "click-extra[pytest]>=10",
   # coverage 7.11.0 is the first release requiring Python 3.10.
   "coverage[toml]>=7.11",
   # Aligned to the runtime extra-platforms floor. The [pytest] extra provides the
   # skip_windows decorator that tests/test_mail.py imports.
-  "extra-platforms[pytest]>=13.4",
+  "extra-platforms[pytest]>=14",
   # Pytest 9.0.0 introduced support for native TOML configuration files.
   "pytest>=9",
   # Below 7.0.0, pytest-cov also measures the subprocesses that
@@ -117,9 +116,8 @@ docs = [
   # the test dependencies installed.
   { include-group = "test" },
   # docs/cli_screenshots_update.py draws the readme captures with --wrap-marker, which
-  # click-extra adds in 10.0.0. Tracked from its main branch until that release ships:
-  # see [tool.uv.sources].
-  "click-extra[sphinx]>=10.0.0.dev0",
+  # click-extra adds in 10.0.0.
+  "click-extra[sphinx]>=10",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
@@ -149,16 +147,13 @@ required-version = ">=0.12.22"
 # The docs are only built on modern Python, letting the docs group adopt
 # packages (like myst-parser 5.1) that dropped support for our older floors.
 dependency-groups.docs = { requires-python = ">= 3.14" }
-# click-extra is tracked from its main branch until 10.0.0 ships, paired with the
-# .dev floors of the runtime and docs dependencies: sync-dep-sources swaps it back
-# once released.
-sources.click-extra = { git = "https://github.com/kdeldycke/click-extra", branch = "main" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
-# extra-platforms is published by this repository's own maintainer: the cooldown
-# guards against a compromised upstream, which does not apply here, and it
-# otherwise holds each release back a week from the projects that consume it.
-exclude-newer-package = { extra-platforms = "0 days" }
+# click-extra and extra-platforms are published by this repository's own
+# maintainer: the cooldown guards against a compromised upstream, which does not
+# apply here, and it otherwise holds each release back a week from the projects
+# that consume it.
+exclude-newer-package = { click-extra = "0 days", extra-platforms = "0 days" }
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
 build-backend.source-exclude = [
