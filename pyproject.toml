@@ -416,6 +416,11 @@ abandoned-versions = [ "7.2.1", "7.2.2" ]
 # Opting in keeps `[tool.lychee]` in step with the bundled template. The sync
 # keeps the local entries and their comments, placed after the template's.
 include = [ "lychee" ]
+# click-extra 10.0.0 sits inside the cooldown until 2026-11-08, which blocks the
+# 9.5.0 release. It predates that release, so a resolver that gates every package
+# alike admits both or neither. The entry exempts every lint-deps finding of
+# click-extra, a git source included: remove it once 9.5.0 is on PyPI.
+lint-deps.allow = { click-extra = "10.0.0 predates this release: a cooldown that gates every package admits both or neither" }
 # Render the Click command tree as roff `.1` files and attach a
 # `mail-deduplicate-manpages.tar.gz` asset to every GitHub release. The script
 # target mirrors `click_extra_manpages` in `docs/conf.py`, so the release
