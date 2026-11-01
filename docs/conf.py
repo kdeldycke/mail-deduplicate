@@ -121,11 +121,6 @@ suppress_warnings = [
     # supplies the H1 from the repo name. The readme must render correctly on
     # GitHub, so its top heading stays H2 by design.
     "myst.header",
-    # `sphinx_autodoc_typehints` cannot resolve click's own forward reference
-    # `Context` when it documents the inherited `BadParameter` signature: the
-    # name is only defined under `TYPE_CHECKING` in `click.exceptions`. Third-
-    # party and cosmetic; our own annotations resolve.
-    "sphinx_autodoc_typehints.forward_reference",
 ]
 
 # Concatenates the docstrings of the class and the __init__ method.

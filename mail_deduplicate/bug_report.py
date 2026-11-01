@@ -684,14 +684,9 @@ def mdedup_version() -> str:
     """The version of mdedup, as `mdedup --version` prints it.
 
     Click Extra appends to a development version the short hash of its commit,
-    which it reads from `git`, a hash baked in at build time, or a `git archive`
-    export.
-
-    ```{todo}
-    Raise the `click-extra` floor to its first release that also reads the commit
-    of an install from a Git URL, so the report of a `uvx --from git+...` run names
-    its commit.
-    ```
+    which it reads from `git`, a hash baked in at build time, a `git archive`
+    export, or the record of an install from a Git URL, like a
+    `uvx --from git+...` run.
     """
     option = VersionOption()
     option.pin_field("module", sys.modules[__package__])

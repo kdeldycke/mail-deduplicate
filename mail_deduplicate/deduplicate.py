@@ -84,6 +84,15 @@ def step_progressbar(**kwargs: Any) -> ProgressBar[Any]:
     return progressbar(**kwargs)
 
 
+def path_order(mail: DedupMailMixin) -> tuple[str, str]:
+    """Sort key ranking mails by path, then by ID among the mails of one file.
+
+    A set of mails iterates in an order that changes from one run to the next.
+    Sorted by this key, the same mails come out in the same order on every run.
+    """
+    return (mail.path, str(mail.mail_id))
+
+
 @unique
 class Stat(Enum):
     """All tracked statistics.
@@ -335,12 +344,14 @@ class DuplicateSet:
         if size_threshold < 0 and content_threshold < 0:
             return set()
 
-        # Every mail of the set shares the body that was hashed: its bytes under
-        # `raw`, its decoded text under `decoded`. The size spread is then zero and
-        # the diff empty by construction, and both checks would only re-read each
-        # body to prove it. `normalized` folds whitespace away, so its copies may
-        # still differ, and get checked.
-        if self.conf["hash_body"] in (BodyHasher.RAW, BodyHasher.DECODED):
+        # Under `decoded`, every mail of the set shares the decoded body, from which
+        # the size and the diff both follow: the size spread is zero and the diff
+        # empty by construction, and both checks would only re-read each body to
+        # prove it. `raw` hashes the bytes before they are decoded, and the same
+        # bytes decode to different texts under different transfer encodings, a
+        # header no hash covers by default. `normalized` folds whitespace away. The
+        # copies of both may still differ, and get checked.
+        if self.conf["hash_body"] == BodyHasher.DECODED:
             return set()
 
         # Every pair is within the size threshold as soon as the extremes are, and
@@ -350,8 +361,10 @@ class DuplicateSet:
         spread_ok = size_threshold < 0 or (
             self.biggest_size - self.smallest_size <= size_threshold
         )
-        bodies = {mail.hash_decoded_body for mail in self.pool}
-        if spread_ok and (content_threshold < 0 or len(bodies) == 1):
+        if spread_ok and (
+            content_threshold < 0
+            or len({mail.hash_decoded_body for mail in self.pool}) == 1
+        ):
             return set()
 
         # Adjacency of mails linked by a pair exceeding a threshold.
@@ -361,11 +374,9 @@ class DuplicateSet:
         # of the mails carrying them, so each distinct pair of bodies is diffed once
         # however many mails share them. Diffing is the expensive part of this walk.
         diffs: dict[frozenset[str], int] = {}
-        # Walked in path order: the pool is a set, whose order changes from one run
-        # to the next, and the pair order decides which mail a --show-diff starts
-        # from.
-        ordered = sorted(self.pool, key=lambda mail: (mail.path, str(mail.mail_id)))
-        for mail_a, mail_b in combinations(ordered, 2):
+        # Walked in path order, as the pair order decides which mail a --show-diff
+        # starts from.
+        for mail_a, mail_b in combinations(sorted(self.pool, key=path_order), 2):
             offense = False
             if size_threshold >= 0:
                 size_difference = abs(mail_a.size - mail_b.size)
@@ -442,7 +453,7 @@ class DuplicateSet:
         )
 
     def pretty_diff(self, mail_a: DedupMailMixin, mail_b: DedupMailMixin) -> str:
-        """Returns a verbose unified diff between two mails' normalized body.
+        """Returns a verbose unified diff between two mails' decoded body.
 
         The body lines carry no line ending, so no diff line gets one either: they
         are joined with one instead.
@@ -1437,7 +1448,7 @@ class Deduplicate:
         if not kept or not discarded:
             return
 
-        target = min(kept, key=lambda mail: (mail.path, str(mail.mail_id)))
+        target = min(kept, key=path_order)
         for mail in discarded:
             self.link_targets[mail] = target
 

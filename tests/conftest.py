@@ -23,7 +23,7 @@ from collections import Counter
 from datetime import UTC, datetime
 from email.utils import formatdate as maildate
 from functools import partial
-from mailbox import Mailbox, Message, mbox
+from mailbox import Mailbox, mbox
 from pathlib import Path
 from textwrap import dedent
 from uuid import uuid4
@@ -169,10 +169,6 @@ class MailFactory:
                 **self.fields,
             ),
         ).encode("utf-8")
-
-    def as_message(self):
-        """Returns the mail as an instance of `mailbox.Message`."""
-        return Message(self.render())
 
     @staticmethod
     def random_string(length):

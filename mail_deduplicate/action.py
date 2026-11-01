@@ -33,7 +33,7 @@ from uuid import uuid4
 from click_extra import OperationTrail, format_size, get_current_theme
 
 from .bug_report import blame
-from .deduplicate import Stat
+from .deduplicate import Stat, path_order
 from .mail_box import FOLDER_FORMAT_CLASSES, add_mail, create_box
 
 TYPE_CHECKING = False
@@ -354,13 +354,9 @@ class Action(StrEnum):
             return
         logging.info(f"{selection_count} mails selected for action.")
 
-        # A set iterates in an order that changes from one run to the next, so the
-        # trail below would list the same mails differently on every run, and two
-        # runs on the same boxes would not diff. Sort them the way
-        # Deduplicate.record_link_targets() ranks a hardlink target.
-        targets = sorted(
-            self.targets(dedup), key=lambda mail: (mail.path, str(mail.mail_id))
-        )
+        # Sorted, so the trail below lists the same mails in the same order on every
+        # run, and two runs on the same boxes diff.
+        targets = sorted(self.targets(dedup), key=path_order)
         if self.spares_unique and dedup.unique:
             # Said before the count below, which it accounts for.
             logging.warning(

@@ -8,25 +8,26 @@
 - **Breaking:** Drop support for Python 3.10, which reached its end of life. Python 3.11 is now the minimum.
 - **Breaking:** `--hash-body raw` now hashes the body bytes as the box holds them, with no decoding. The former `raw` behavior is `--hash-body decoded`.
 - Write each exported mail as the bytes its source box holds, instead of a message rebuilt from its parsed form, which redrew boundaries and line endings.
-- Keep the folder, flags and delivery time of a `maildir` mail, the envelope line of an `mbox` mail and the sequences of an `MH` mail in an export of the same format.
+- Keep the folder, flags and delivery time of a `maildir` mail, the envelope line of an `mbox` or `MMDF` mail and the sequences of an `MH` mail in an export of the same format.
+- Read a configuration file written in JSONC or XML, which `click-extra` `10.0.0` parses with no extra dependency.
+- Color the `--show-diff` output with the active theme, the way `git diff` colors its own.
 - Require `click-extra` `10.0.0` and `extra-platforms` `14.0.0`.
 - Write the `--export-config toml` output with `tomlrt` in place of `tomlkit`, through the `toml` extra of `click-extra` `10.0.0`.
 - Drop the `platformdirs` dependency, and the `whenever` and `boltons` test dependencies.
-- Color the `--show-diff` output with the active theme, the way `git diff` colors its own.
+- Discard the hash cache written by earlier versions, as their hashes and sizes are computed differently.
+- Settle the size and content thresholds without re-reading a mail under `--hash-body decoded`, where every mail of a set shares the decoded body.
+- Redraw each progress bar at most once every 0.1 seconds, instead of once per mail.
+- Stop printing the progress bar labels and an empty `info:` line when the output is not a terminal.
 - Read a `Date` header with an out-of-range year, like `99999`, as no date, instead of setting the mail aside with a bug report.
 - Hash a header holding raw 8-bit bytes as those bytes, instead of replacing each with `U+FFFD` first, which made different headers share a hash.
 - Measure the size of a mail, and the difference between two mails, in bytes of their decoded bodies, as the threshold options say, instead of characters.
-- Settle the size and content thresholds without re-reading a mail under `--hash-body raw` and `decoded`, where every mail of a set shares the hashed body.
-- Discard the hash cache written by earlier versions, as their hashes and sizes are computed differently.
 - Fix the binaries failing when `--jobs` is above `1`, ending with a bug report that names `BrokenProcessPool`.
-- Fix the Arch Linux install steps, which ran `pacman -S` on a package that only the AUR carries.
-- Fix the documented location of the hash cache on macOS, which follows an absolute `XDG_CACHE_HOME` when one is set.
 - Fix the `eml` export refolding each header longer than 78 columns.
 - Fix the action trail listing its mails in an order that changed between runs, which no diff of two runs survived.
 - Fix `--show-diff` printing the diff of two mails in either direction, which changed between runs.
 - Fix the step headings styling the blank line above them, which left a style open in output read line by line.
-- Stop printing the progress bar labels and an empty `info:` line when the output is not a terminal.
-- Redraw each progress bar at most once every 0.1 seconds, instead of once per mail.
+- Fix the Arch Linux install steps, which ran `pacman -S` on a package that only the AUR carries.
+- Fix the documented location of the hash cache on macOS, which follows an absolute `XDG_CACHE_HOME` when one is set.
 - Replace the readme's 2022 CLI screenshots with SVG terminal windows recaptured from the current CLI by `docs/cli_screenshots_update.py`.
 - Illustrate the content safeguard, `--show-diff`, `--hash-only`, the hash cache and the bug report with captures in the readme and the docs.
 

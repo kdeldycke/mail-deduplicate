@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import base64
 import re
 from datetime import UTC, datetime, timedelta
 from mailbox import Maildir
@@ -28,7 +29,7 @@ from mail_deduplicate.deduplicate import BodyHasher, DuplicateSet
 from mail_deduplicate.mail import DedupMailMixin
 from mail_deduplicate.strategy import Strategy
 
-from .conftest import MailFactory, check_box
+from .conftest import MailFactory, check_box, mail_files
 from .test_mail import create_mail_from_bytes
 
 
@@ -680,15 +681,23 @@ def test_no_strategy_skips_duplicate_sets(invoke, make_box):
     check_box(box_path, box_type, content=[random_mail_1, random_mail_1])
 
 
+DISSIMILAR_PAIR = (
+    MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="aaaa bbbb\n"),
+    MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="cccc dddd\n"),
+)
+"""Two mails sharing every hashed header, with bodies of the same length.
+
+The equal lengths keep the size check quiet, so the content check is what trips.
+"""
+
+
 def test_show_diff_starts_from_the_lowest_path(invoke, make_box):
     """The diff of two mails always runs from the one with the lowest path.
 
     The pairs were walked in the order of a set, which changes from one run to the
     next, so two runs on the same box printed the same diff in either direction.
     """
-    a = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="aaaa bbbb\n")
-    b = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="cccc dddd\n")
-    box_path, _, _ = make_box(Maildir, [a, b])
+    box_path, _, _ = make_box(Maildir, DISSIMILAR_PAIR)
 
     result = invoke(
         "--content-threshold=0",
@@ -712,9 +721,7 @@ def test_show_diff_is_colored_by_the_theme(invoke, make_box):
 
     This is how `git diff` colors its own.
     """
-    a = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="aaaa bbbb\n")
-    b = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="cccc dddd\n")
-    box_path, _, _ = make_box(Maildir, [a, b])
+    box_path, _, _ = make_box(Maildir, DISSIMILAR_PAIR)
 
     result = invoke(
         "--color=always",
@@ -760,7 +767,7 @@ def test_content_difference_counts_bytes(config):
     ("hash_body", "reads"),
     (
         pytest.param(BodyHasher.SKIP, True, id="skip"),
-        pytest.param(BodyHasher.RAW, False, id="raw"),
+        pytest.param(BodyHasher.RAW, True, id="raw"),
         pytest.param(BodyHasher.DECODED, False, id="decoded"),
         pytest.param(BodyHasher.NORMALIZED, True, id="normalized"),
     ),
@@ -768,11 +775,12 @@ def test_content_difference_counts_bytes(config):
 def test_thresholds_read_no_body_the_hash_already_covers(
     config, monkeypatch, hash_body, reads
 ):
-    """A set hashed on its bytes or its decoded body is settled without a read.
+    """A set hashed on its decoded body is settled without a read.
 
-    Every mail of such a set shares the body that was hashed, so the size and
-    content checks have nothing to compare. A set hashed on headers alone, or on a
-    body stripped of its whitespace, still gets its bodies read and compared.
+    Every mail of such a set shares the decoded body, from which the size and the
+    diff both follow, so the checks have nothing to compare. A set hashed on
+    headers alone, on its bytes, or on a body stripped of its whitespace still
+    gets its bodies read and compared.
     """
     config["hash_body"] = hash_body
     mails = [create_mail_from_bytes(b"Subject: s\n\nRain.\n") for _ in range(2)]
@@ -790,17 +798,73 @@ def test_thresholds_read_no_body_the_hash_already_covers(
         assert duplicates.check_differences() == set()
 
 
+def test_size_check_alone_reads_no_body(config, monkeypatch):
+    """With the content check off, the sizes the hashing step kept settle the set.
+
+    No body is read again to compare contents that nothing compares.
+    """
+    config["hash_body"] = BodyHasher.NORMALIZED
+    config["content_threshold"] = -1
+    mails = [create_mail_from_bytes(b"Subject: s\n\nRain.\n") for _ in range(2)]
+    for mail in mails:
+        # Memoized, as hashing the body or reading the cache leaves it.
+        mail.__dict__["size"] = 5
+
+    def forbidden(self):
+        raise AssertionError("A body was read.")
+
+    monkeypatch.setattr(DedupMailMixin, "body_lines", property(forbidden))
+
+    assert DuplicateSet("kiwi", mails, config).check_differences() == set()
+
+
+@pytest.mark.parametrize("hash_body", ("skip", "raw"))
+def test_raw_hash_keeps_the_size_safeguard(invoke, tmp_path, hash_body):
+    """The size check still compares mails that share their body bytes.
+
+    The same bytes decode to different texts under different transfer encodings,
+    and no hash header covers the encoding by default. Hashed on their headers
+    alone, the control, or on their bytes, both copies land in one set, which
+    their decoded sizes keep from being deduplicated.
+    """
+    headers = (
+        b"Date: Thu, 11 Oct 2018 09:30:00 +0800\n"
+        b"From: Clementine <clementine@orchard.example>\n"
+        b"To: quince@orchard.example\n"
+        b"Subject: Weather in Taipei\n"
+        b"Message-ID: <taipei-weather@orchard.example>\n"
+        b"MIME-Version: 1.0\n"
+        b"Content-Type: text/plain; charset=utf-8\n"
+    )
+    # Long enough for the decoded sizes to differ by more than the default
+    # --size-threshold: base64 takes 4 bytes for every 3 it encodes.
+    body = base64.encodebytes(b"Rain over Taipei, then sun over Tainan.\n" * 60)
+    box_path = tmp_path / "box"
+    Maildir(box_path).close()
+    for name, encoding in (("encoded", b"base64"), ("plain", b"7bit")):
+        (box_path / "new" / name).write_bytes(
+            headers + b"Content-Transfer-Encoding: " + encoding + b"\n\n" + body
+        )
+
+    result = invoke(
+        f"--hash-body={hash_body}",
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        str(box_path),
+    )
+
+    assert result.exit_code == 0
+    assert "too dissimilar in size" in result.stderr
+    assert [path.name for path in mail_files(str(box_path))] == ["encoded", "plain"]
+
+
 @pytest.mark.parametrize("show_diff", (False, True), ids=("no-diff", "show-diff"))
 def test_content_dissimilar_pair_skipped(invoke, make_box, show_diff):
     """A content-dissimilar set is skipped whole.
 
     --show-diff prints the unified diff of its mails.
     """
-    # Same headers group them; equal-length bodies keep the size check quiet so the
-    # content check is what trips.
-    a = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="aaaa bbbb\n")
-    b = MailFactory(date="2021-01-01", message_id="<cd@nohost.com>", body="cccc dddd\n")
-    box_path, box_type, _ = make_box(Maildir, [a, b])
+    box_path, box_type, _ = make_box(Maildir, DISSIMILAR_PAIR)
 
     result = invoke(
         "--content-threshold=0",
@@ -822,4 +886,4 @@ def test_content_dissimilar_pair_skipped(invoke, make_box, show_diff):
         if line.startswith(("-", "+")) and not line.startswith(("---", "+++"))
     )
     assert changed == (["aaaa bbbb", "cccc dddd"] if show_diff else [])
-    check_box(box_path, box_type, content=[a, b])
+    check_box(box_path, box_type, content=DISSIMILAR_PAIR)

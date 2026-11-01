@@ -20,10 +20,12 @@ from __future__ import annotations
 
 import importlib.util
 import re
-import shlex
+from collections import UserDict
 from pathlib import Path
 
+import extra_platforms
 import pytest
+from extra_platforms import ALL_AGENTS
 
 TESTS_DIR = Path(__file__).parent
 """Directory of the test suite."""
@@ -37,12 +39,22 @@ TESTS_PAGE = PROJECT_ROOT / "docs" / "tests.md"
 ASSETS_DIR = PROJECT_ROOT / "docs" / "assets"
 """Directory holding the pictures the readme and the docs embed."""
 
+CAPTURE_SCRIPT = PROJECT_ROOT / "docs" / "cli_screenshots_update.py"
+"""Script drawing the CLI captures the readme and the docs embed."""
+
+NO_DOCS = "The documentation sources are not part of this tree."
+"""Why a test reading `docs/` skips in the sdist, which ships the tests alone."""
+
 
 def _cli_screenshots():
-    """Load `docs/cli_screenshots_update.py` by path, `docs` being no package."""
+    """Load `docs/cli_screenshots_update.py` by path, `docs` being no package.
+
+    Skips the calling test where the script is missing.
+    """
+    if not CAPTURE_SCRIPT.is_file():
+        pytest.skip(NO_DOCS)
     spec = importlib.util.spec_from_file_location(
-        "cli_screenshots_update",
-        PROJECT_ROOT / "docs" / "cli_screenshots_update.py",
+        "cli_screenshots_update", CAPTURE_SCRIPT
     )
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
@@ -57,9 +69,8 @@ def test_every_test_module_has_a_section():
     No job generates those sections: a module added to `tests/` stays out of the
     published page until someone writes its section.
     """
-    # The sdist ships the test suite but not the documentation sources.
     if not TESTS_PAGE.is_file():
-        pytest.skip("The documentation sources are not part of this tree.")
+        pytest.skip(NO_DOCS)
 
     page = TESTS_PAGE.read_text(encoding="UTF-8")
     documented = set(re.findall(r"^\.\. automodule:: (\S+)$", page, flags=re.MULTILINE))
@@ -99,7 +110,7 @@ def test_every_cli_capture_is_embedded():
     tree, unreferenced and never refreshed again.
     """
     if not ASSETS_DIR.is_dir():
-        pytest.skip("The documentation sources are not part of this tree.")
+        pytest.skip(NO_DOCS)
 
     captures = _cli_screenshots().CAPTURES
     assert captures, "no capture left in docs/cli_screenshots_update.py"
@@ -125,16 +136,15 @@ def test_pages_show_the_command_their_picture_runs():
     on a reader's boxes, so its page explains the picture instead.
     """
     if not ASSETS_DIR.is_dir():
-        pytest.skip("The documentation sources are not part of this tree.")
+        pytest.skip(NO_DOCS)
 
     for entry in _cli_screenshots().CAPTURES:
         if entry.injected:
             continue
-        command = shlex.join(("mdedup", *entry.args))
         for page in _pages_embedding(entry.stem):
-            assert command in page.read_text(encoding="UTF-8"), (
+            assert entry.command_line in page.read_text(encoding="UTF-8"), (
                 f"{page.relative_to(PROJECT_ROOT)} embeds {entry.stem} but never "
-                f"shows the command it pictures: {command}"
+                f"shows the command it pictures: {entry.command_line}"
             )
 
 
@@ -143,23 +153,55 @@ def test_cli_capture_prompts_fit_their_window():
     """Every captured command line fits its window on one row.
 
     `docs/cli_screenshots_update.py` rejects an over-long invocation before it
-    draws one, but the guard only runs when someone recaptures by hand. This
-    reads the same budget from the committed capture instead, so an option added
-    to a capture and not to its picture cannot land unnoticed.
+    draws one, but the guard only runs when someone recaptures by hand. This runs
+    the same guard over the committed captures instead, so an option added to a
+    capture and not to its picture cannot land unnoticed.
 
     A wrapped prompt reads as two commands, and the second one opens mid-option:
     the picture would teach an invocation nobody can type.
     """
     module = _cli_screenshots()
     for entry in module.CAPTURES:
-        # A still capture's wrap marker takes the last cell of every row, the
-        # prompt's included. A recording draws none.
-        budget = module.prompt_budget(entry)
-        row = module.PROMPT_SIGIL + shlex.join(("mdedup", *entry.args))
-        assert len(row) <= budget, (
-            f"the prompt of {entry.stem} measures {len(row)} characters against "
-            f"the {budget} its window leaves, so it wraps onto a second row: {row}"
-        )
+        # Exits with a message naming the row that overflows.
+        module.check_column_budget(entry)
+
+
+@pytest.mark.once
+def test_captures_run_outside_any_agent(monkeypatch):
+    """The captures run without any variable that makes `mdedup` detect an agent.
+
+    The bug report asks a detected agent to show it to its user, a line no person
+    running `mdedup` sees. Each agent `extra-platforms` detects reads a variable of
+    its own, so a new release can name one the capture script does not drop.
+    """
+    read: set[str] = set()
+
+    class Spy(UserDict):
+        """An empty environment that records every variable looked up in it."""
+
+        def __contains__(self, name):
+            read.add(name)
+            return False
+
+        def get(self, name, default=None):
+            read.add(name)
+            return default
+
+    names: set[str] = set()
+    with monkeypatch.context() as patch:
+        patch.setattr("extra_platforms.detection.environ", Spy())
+        for agent in ALL_AGENTS:
+            read.clear()
+            # The cached detection function would answer for this machine instead.
+            getattr(extra_platforms, agent.detection_func_id).__wrapped__()
+            # The control: the detection reads the environment through the spy.
+            assert read, f"{agent.id} read no variable through the spy."
+            names |= read
+
+    for name in names:
+        monkeypatch.setenv(name, "1")
+    leaked = names & set(_cli_screenshots().capture_environment())
+    assert not leaked, f"the captures keep the agent variables: {sorted(leaked)}."
 
 
 @pytest.mark.once
@@ -176,6 +218,9 @@ def test_self_referencing_urls_name_a_file_the_tree_holds():
     A URL pinned to a tag names a historical tree and is skipped, the working
     copy being no evidence about what that tag held.
     """
+    if not ASSETS_DIR.is_dir():
+        pytest.skip(NO_DOCS)
+
     url_re = re.compile(
         r"https://raw\.githubusercontent\.com/kdeldycke/mail-deduplicate/"
         r"(?:refs/heads/)?main/(?P<path>[^\s<>\"')|]+)"

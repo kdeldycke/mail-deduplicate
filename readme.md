@@ -71,7 +71,7 @@ So to merge two overlapping archives, `2024.mbox` and `2025.mbox`, into a single
 $ mdedup --strategy select-matching-path --regexp 2024 --export merged.mbox 2024.mbox 2025.mbox
 ```
 
-Mails found in both archives are copied once into `merged.mbox`, along with all the mails that were unique to each source. Backups usually leave copies byte-identical, which no criterion splits apart: `select-one` then keeps an arbitrary copy of each mail.
+Mails found in both archives are copied once into `merged.mbox`, along with all the mails that were unique to each source. Backups usually leave copies byte-identical, which no date or size strategy splits apart: `select-one` then keeps an arbitrary copy of each mail.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mdedup-run-cli.svg" alt="A whole mdedup run, ending on its two report tables">

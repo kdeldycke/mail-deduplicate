@@ -110,8 +110,11 @@ The parser ends the headers on the first blank line, or on the first line that i
 none of these when the blank line is missing. `raw_body()` follows the same rule.
 """
 
-LINE = re.compile(rb"[^\n]*\n|[^\n]+\Z")
-"""One line of a mail with LF line endings, with its line break when it has one."""
+LINE = re.compile(rb"[^\r\n]*[\r\n]|[^\r\n]+\Z")
+"""One line of a mail with LF line endings, with its line break when it has one.
+
+A bare CR also ends a line, as it does for the parser.
+"""
 
 
 class DedupMailMixin(Message):
@@ -497,7 +500,7 @@ class DedupMailMixin(Message):
         raw = self.raw_bytes().replace(b"\r\n", b"\n")
         for match in LINE.finditer(raw):
             line = match.group()
-            if line == b"\n":
+            if line in (b"\n", b"\r"):
                 return raw[match.end() :]
             if not HEADER_LINE.match(line):
                 return raw[match.start() :]

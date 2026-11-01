@@ -157,6 +157,7 @@ AGENT_VARIABLES = (
     "CLINE_ACTIVE",
     "CODEX_CI",
     "COPILOT_CLI",
+    "CRUSH",
     "CURSOR_AGENT",
     "GEMINI_CLI",
     "PI_CODING_AGENT",
@@ -456,6 +457,16 @@ class Capture(NamedTuple):
     showing the command.
     """
 
+    @property
+    def command_line(self) -> str:
+        """The `mdedup` command line the prompt draws, as a reader types it.
+
+        Quoted argument by argument: the drawn line is re-split on spaces before it
+        is rendered, so a spaced argument joined back with plain spaces would draw a
+        command line that no longer runs.
+        """
+        return shlex.join(("mdedup", *self.args))
+
 
 MERGE_ARGS = ("--strategy", "select-matching-path", "--regexp", "2024")
 """Options the captures of {func}`archives_playground` share.
@@ -633,7 +644,7 @@ def check_column_budget(capture: Capture) -> int:
 
     :param capture: the capture whose prompt is measured.
     """
-    row = PROMPT_SIGIL + shlex.join(("mdedup", *capture.args))
+    row = PROMPT_SIGIL + capture.command_line
     budget = prompt_budget(capture)
     if cell_width(row) > budget:
         sys.exit(
@@ -686,11 +697,8 @@ def capture(entry: Capture, mdedup: str) -> Path:
             entry.title,
             # The captured binary is reached by path, so that path would otherwise
             # be the command line drawn above the output. Draw what a reader types.
-            # Quoted argument by argument: the drawn line is re-split on spaces
-            # before it is rendered, so joining a spaced argument back with plain
-            # spaces draws a command line that no longer runs.
             "--prompt",
-            shlex.join(("mdedup", *entry.args)),
+            entry.command_line,
             # The renderer credits itself in the margin by default. The readme
             # embeds these small enough that the line is unreadable, and the
             # picture is this project's own CLI output, so nothing is owed.

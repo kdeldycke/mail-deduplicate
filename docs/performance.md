@@ -18,7 +18,7 @@ Hashing dominates a first run, and the [hash cache](#reusing-hashes-between-runs
 
 The cache cuts hashing by a factor of five, yet the run as a whole only gets twice as fast, because step 3 is left untouched and grows from a third of the run to nearly two thirds of it.
 
-Step 3 is worth understanding: a mail is [dehydrated](design.md) once hashed, so comparing it against `--size-threshold` and `--content-threshold` pulls its body back from disk. Only mails sharing their hash with another are compared, so the cost tracks how many duplicates you actually have. On this corpus that is **8,000 of the 20,000 mails read a second time**, a count that does not depend on your hardware and is the number to reason about.
+Step 3 is worth understanding: a mail is [dehydrated](design.md) once hashed, so with the default `--hash-body skip`, comparing it against `--size-threshold` and `--content-threshold` pulls its body back from disk. Only mails sharing their hash with another are compared, so the cost tracks how many duplicates you actually have. On this corpus that is **8,000 of the 20,000 mails read a second time**, a count that does not depend on your hardware and is the number to reason about.
 
 How many *copies* land in one set matters less than it looks. The thresholds are settled over the whole set before any pair is examined, and two mails carrying the same body are compared once however many of them there are, so a set of 200 identical copies costs about what a set of two does.
 
@@ -34,7 +34,7 @@ Both thresholds exist to catch mails that hash alike without being copies, so tu
 
 That middle row is the surprise: dropping the content check alone changes nothing under the default `--hash-body skip`. A mail's size is the byte length of its decoded body, and skip mode never reads bodies while hashing, so the *size* check drags them back on its own.
 
-Hash the body and the second pass goes away on its own. Under `raw` and `decoded`, every mail of a set shares the body that was hashed, so both thresholds are settled without reading a mail again, with the safeguards still on. Under `normalized`, copies may still differ in their whitespace, so the thresholds compare them: the size was computed while hashing and the cache stores it, and only the content check re-reads the bodies.
+Hash the body with `decoded` and the second pass goes away on its own. Every mail of a set then shares the decoded text that was hashed, so both thresholds are settled without reading a mail again. Under `raw`, copies share their bytes but can still differ in their transfer encoding or charset. Under `normalized`, copies can still differ in their whitespace. In both modes the thresholds still compare the copies, and the bodies are read again.
 
 ## Memory
 
@@ -173,13 +173,13 @@ Several runs can point at the same database. They only contend on the single wri
 
 ## Body hashing
 
-`--hash-body` decides whether mail bodies take part in the hash, and it is the single biggest lever on hashing cost after the cache. This table comes from a batch of its own, on a maildir of the same shape: ten samples per mode, in a rotating order, with the median of each mode given relative to `skip`.
+`--hash-body` decides whether mail bodies take part in the hash, and it is the single biggest lever on hashing cost after the cache. This table comes from a batch of its own, on a maildir of the same shape: ten samples per timed mode, in a rotating order, with the median of each given relative to `skip`.
 
 | Mode         | Relative to `skip` | Notes                                                                                |
 | ------------ | ------------------ | ------------------------------------------------------------------------------------ |
 | `skip`       | `1.00x`            | The default. Headers alone are usually enough to identify duplicates.                |
-| `raw`        | `1.12x`            | Hashes the body bytes as the box holds them, line endings aside. Decodes nothing.    |
+| `raw`        | not timed          | Hashes the body bytes as the box holds them, line endings aside. Decodes nothing.    |
 | `decoded`    | `1.12x`            | Hashes the body with its transfer encodings undone and its text decoded.             |
 | `normalized` | `1.48x`            | Strips line breaks and spaces first, catching copies that differ only in whitespace. |
 
-Reach for `raw`, `decoded` or `normalized` when header-based hashing groups mails you do not consider duplicates, rather than as a default. `raw` groups the copies that are the same bytes, and costs what `decoded` does: reading each mail a second time weighs about as much as decoding its text.
+Reach for `raw`, `decoded` or `normalized` when header-based hashing groups mails you do not consider duplicates, rather than as a default. `raw` groups the copies that are the same bytes.

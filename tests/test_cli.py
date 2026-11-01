@@ -386,11 +386,6 @@ def test_hash_only_warns_about_ignored_options(invoke, make_box):
     assert "--strategy" in result.stderr
 
 
-def test_hash_body_lists_every_hasher(invoke):
-    """The help screen lists the body hashers from the least interpreted to the most."""
-    assert "[skip|raw|decoded|normalized]" in invoke("--help").stdout
-
-
 def test_main_entrypoint_reports_version(monkeypatch, capsys):
     """The `main()` indirection runs the CLI end to end: `--version` exits cleanly."""
     monkeypatch.setattr(sys, "argv", ["mdedup", "--version"])

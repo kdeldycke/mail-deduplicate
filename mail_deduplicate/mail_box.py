@@ -606,10 +606,11 @@ def add_mail(box: Mailbox, mail: DedupMailMixin) -> None:
     The bytes do not include what a format keeps beside each mail: the envelope
     `From ` line of an mbox or MMDF mail, the folder, flags and modification time of
     a maildir mail, the sequences of an MH mail, the labels of a Babyl mail. The
-    first three travel with the mail into a box of the same format. A box of another
-    format has no place for them, and nothing is translated: a maildir mail copied
-    into an mbox gets no `Status` header. Babyl labels are not carried, as the
-    standard library takes them from a `BabylMessage` alone.
+    first three travel with the mail into a box of the same format, and the
+    envelope line also travels between mbox and MMDF, which keep it alike. A box of
+    another format has no place for them, and nothing is translated: a maildir mail
+    copied into an mbox gets no `Status` header. Babyl labels are not carried, as
+    the standard library takes them from a `BabylMessage` alone.
     """
     source = mail.box
     key = mail.mail_id

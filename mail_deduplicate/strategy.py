@@ -225,8 +225,8 @@ class Strategy(enum.Enum):
     ```
 
     ```{todo}
-    Revisit the aliasing arrangement on a Python floor bump: `Enum._add_alias_()`
-    (3.13+) accepts non-identifier names, so
+    Revisit the aliasing arrangement once the Python floor reaches 3.13, whose
+    `Enum._add_alias_()` accepts non-identifier names, so
     `SELECT_OLDER._add_alias_("discard-newest")` puts the CLI spelling straight into
     `__members__`, where
     `EnumChoice(Strategy, choice_source="name", show_aliases=True)` picks it up.

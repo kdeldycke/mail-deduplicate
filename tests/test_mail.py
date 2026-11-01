@@ -153,13 +153,19 @@ def test_raw_bytes_come_from_the_file_or_the_box(tmp_path):
         pytest.param(b"Subject: s\nX-Weather: sunny\n", b"", id="headers-only"),
         pytest.param(b"\nRain.\n", b"Rain.\n", id="no-header"),
         pytest.param(b"", b"", id="empty"),
+        pytest.param(b"Subject: s\r\rRain.\rMore.\r", b"Rain.\rMore.\r", id="bare-cr"),
+        pytest.param(
+            b"Subject: s\rX-Weather: sunny\rRain.\r", b"Rain.\r", id="bare-cr-no-blank"
+        ),
     ),
 )
 def test_raw_body_starts_where_the_parser_ends_the_headers(tmp_path, raw, body):
     """`raw_body()` starts after the first blank line, or where a header line ends.
 
     The parser treats a line that is neither a header nor a continuation as the
-    start of the body when the blank line is missing, and so does the raw body.
+    start of the body when the blank line is missing, and so does the raw body. A
+    bare CR ends a line for both, so the body of a mail with CR line endings is
+    not lost.
     """
     path = tmp_path / "mail"
     path.write_bytes(raw)

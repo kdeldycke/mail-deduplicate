@@ -89,10 +89,11 @@ scripts.mdedup = "mail_deduplicate.__main__:main"
 test = [
   # Aligned to the runtime click-extra floor.
   "click-extra[pytest]>=10",
-  # coverage 7.11.0 is the first release requiring Python 3.10.
+  # coverage 7.11.0 is the first release that declares support for Python 3.15,
+  # the newest version this project lists.
   "coverage[toml]>=7.11",
   # Aligned to the runtime extra-platforms floor. The [pytest] extra provides the
-  # skip_windows decorator that tests/test_mail.py imports.
+  # skip_windows decorator the tests import.
   "extra-platforms[pytest]>=14",
   # Pytest 9.0.0 introduced support for native TOML configuration files.
   "pytest>=9",
@@ -123,9 +124,11 @@ docs = [
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
   # that renders GitHub-style alerts as admonitions; earlier 5.x reject "alert".
   "myst-parser>=5.1",
-  # Sphinx  8.0.0 is the first version to drop Python 3.9, like us.
+  # Aligned to the Sphinx 8.0.0 floor of myst-parser 5.1 and of the sphinx extra of
+  # click-extra 10.0.0, the lowest release any install can resolve.
   "sphinx>=8",
-  # sphinx-autodoc-typehints 2.4.0 is the first version requiring Python 3.10.
+  # sphinx-autodoc-typehints 2.4.0 is the first release that requires Sphinx 8, the
+  # floor above.
   "sphinx-autodoc-typehints>=2.4",
   # sphinx-copybutton 0.5.2 stabilized the copy button behavior for code blocks.
   "sphinx-copybutton>=0.5.2",
@@ -145,7 +148,8 @@ docs = [
 # the exact uv each astral-sh/setup-uv step pins, which must satisfy this floor.
 required-version = ">=0.12.22"
 # The docs are only built on modern Python, letting the docs group adopt
-# packages (like myst-parser 5.1) that dropped support for our older floors.
+# packages (like Sphinx 9.2, which requires Python 3.13) that dropped support for
+# the project's floor.
 dependency-groups.docs = { requires-python = ">= 3.14" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
@@ -163,7 +167,7 @@ build-backend.source-exclude = [
 # Ship the test suite in the sdist, so distribution packagers can build and test
 # straight from the PyPI sdist instead of fetching a GitHub tag tarball. The tests
 # read no repository file besides pyproject.toml, which every sdist carries, except
-# the one that checks docs/tests.md and skips without it.
+# the ones that check docs/ and skip without it.
 # source-include feeds the sdist only: the wheel stays module-only.
 build-backend.source-include = [ "tests/**" ]
 
