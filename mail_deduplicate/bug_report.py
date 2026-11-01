@@ -58,9 +58,9 @@ from click_extra import (
     Path as PathType,
     VersionOption,
     context,
+    env_summary,
     get_current_context,
 )
-from click_extra.version import env_summary
 from extra_platforms import is_any_agent
 
 from . import __version__

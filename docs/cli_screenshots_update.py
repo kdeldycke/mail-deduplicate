@@ -77,8 +77,8 @@ from functools import partial
 from pathlib import Path
 from typing import NamedTuple
 
+from click_extra import AUTO_WRAP_MARKER, resolve_wrap_marker
 from click_extra.layout import cell_width
-from click_extra.screenshot import AUTO_WRAP_MARKER, resolve_wrap_marker
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
