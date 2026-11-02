@@ -2,7 +2,7 @@
 
 How long a run takes, how much memory it holds, and how to make the next run faster.
 
-Every timing below comes from one batch of runs of `mdedup` `9.5.0` on Python 3.14, on an Apple M1 Pro with an SSD, over a synthetic maildir of 20,000 mails of about 4 KB each, one fifth of them exact copies of another. Each figure is the median of ten runs, interleaved with the runs of every other figure, with the output piped away. The seconds depend on the machine, so read the proportions and the ratios rather than the seconds themselves. Counts of mails read are exact, and depend on your corpus alone.
+Every timing below comes from one batch of runs of `mdedup` `9.5.0` on Python 3.14, on an Apple M1 Pro with an SSD, over a synthetic maildir of 20,000 mails of about 4 KB each, one fifth of them exact copies of another. Each figure is the median of ten runs, interleaved with the runs of every other figure, with the output piped away. The seconds depend on the machine, so read the proportions and the ratios rather than the seconds themselves. Counts of mails read are exact, and depend on your corpus alone. `docs/performance_update.py` builds the corpus and runs the batch again.
 
 ## Where a run spends its time
 
