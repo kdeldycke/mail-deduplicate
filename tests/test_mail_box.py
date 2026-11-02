@@ -19,6 +19,7 @@ from __future__ import annotations
 import inspect
 import mailbox
 import os
+import signal
 import subprocess
 import sys
 from email import message_from_bytes
@@ -206,10 +207,14 @@ def test_run_cut_short_unlocks_boxes(invoke, make_box, monkeypatch, box_format, 
 
 
 STOP_POINT = "Removals queued, waiting to be stopped."
-"""Line printed by `STOPPABLE_RUN` once its action has queued its removals."""
+"""Line printed by `STOPPABLE_RUN` once its action has queued its removals.
+
+The ID of the interpreter process follows it, on the same line.
+"""
 
 
 STOPPABLE_RUN = f"""
+import os
 import sys
 import time
 
@@ -221,7 +226,7 @@ perform = Action.perform
 
 def perform_then_wait(self, dedup):
     perform(self, dedup)
-    print({STOP_POINT!r}, flush=True)
+    print({STOP_POINT!r}, os.getpid(), flush=True)
     time.sleep(60)
 
 
@@ -235,8 +240,10 @@ mdedup(sys.argv[1:])
 @pytest.mark.parametrize(
     "stop",
     [
-        pytest.param(subprocess.Popen.terminate, id="sigterm"),
-        pytest.param(subprocess.Popen.kill, id="sigkill"),
+        pytest.param(signal.SIGTERM, id="sigterm"),
+        # Windows has no SIGKILL, and needs none: there, `os.kill()` ends a process
+        # the same way whatever the signal.
+        pytest.param(getattr(signal, "SIGKILL", signal.SIGTERM), id="sigkill"),
     ],
 )
 def test_killed_run_needs_force_unlock(invoke, make_box, box_format, stop):
@@ -244,7 +251,7 @@ def test_killed_run_needs_force_unlock(invoke, make_box, box_format, stop):
 
     Its box stays locked, and only `--force-unlock` lets the next run through.
 
-    On Windows, `terminate()` and `kill()` both call `TerminateProcess()`, which skips
+    On Windows, `os.kill()` calls `TerminateProcess()` for any signal, which skips
     the cleanup too.
     """
     box_type = box_format.base_class
@@ -275,7 +282,12 @@ def test_killed_run_needs_force_unlock(invoke, make_box, box_format, stop):
                     break
             else:
                 pytest.fail(f"The run ended before its action:\n{output}")
-            stop(process)
+            # Signal the interpreter, not the process started above. On Windows, the
+            # `python` of a virtual environment is a launcher, which runs the
+            # interpreter in a child process and exits after it, so the wait below
+            # covers the interpreter. Stopped first, the launcher would leave the
+            # interpreter to die later, still holding the box open.
+            os.kill(int(line.split()[-1]), stop)
             process.wait(timeout=30)
         finally:
             process.kill()
