@@ -32,6 +32,7 @@
 - Replace the readme's 2022 CLI screenshots with SVG terminal windows recaptured from the current CLI by `docs/cli_screenshots_update.py`.
 - Illustrate the content safeguard, `--show-diff`, `--hash-only`, the hash cache and the bug report with captures in the readme and the docs.
 - Document how to read, render and install the man page, and link its HTML rendering from a page of its own.
+- Re-measure every timing of the performance page on this release, `--hash-body raw` included.
 
 ## [`9.4.0` (2026-10-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.2...v9.4.0)
 
