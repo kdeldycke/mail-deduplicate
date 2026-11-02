@@ -116,9 +116,9 @@ docs = [
   # docs/tests.md documents the tests/ modules, which autodoc can only import with
   # the test dependencies installed.
   { include-group = "test" },
-  # docs/cli_screenshots_update.py draws the readme captures with --wrap-marker, which
-  # click-extra adds in 10.0.0.
-  "click-extra[sphinx]>=10",
+  # 10.1.0 keeps linkcheck off the man page links of the click-extra-manpages
+  # directive in docs/man.md, which it reported broken.
+  "click-extra[sphinx]>=10.1",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)

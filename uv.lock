@@ -550,7 +550,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 docs = [
     { name = "click-extra", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=10" },
-    { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", specifier = ">=10" },
+    { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", specifier = ">=10.1" },
     { name = "coverage", marker = "python_full_version >= '3.14'", specifier = ">=7.11" },
     { name = "extra-platforms", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=14" },
     { name = "furo", marker = "python_full_version >= '3.14'", specifier = ">=2025.9.25" },
