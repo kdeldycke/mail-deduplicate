@@ -163,6 +163,10 @@ linkcheck_ignore = [
     # These sites return 403 to bots but are valid.
     r"https://claude\.ai/code",
     r"https://isync\.sourceforge\.io",
+    # The `click-extra-manpages` directive of `docs/man.md` links the HTML man pages
+    # the build writes into its output, where linkcheck never looks: it checks a
+    # relative link against the source tree.
+    r"^man/",
 ]
 
 # Sphinx emits a `<link rel="canonical">` on every page from this base, and
