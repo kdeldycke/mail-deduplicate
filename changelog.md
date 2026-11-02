@@ -7,6 +7,9 @@
 
 ## [`9.5.0` (2026-11-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.4.0...v9.5.0)
 
+> [!NOTE]
+> `9.5.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/9.5.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.5.0).
+
 - **Breaking:** Drop support for Python 3.10, which reached its end of life. Python 3.11 is now the minimum.
 - **Breaking:** `--hash-body raw` now hashes the body bytes as the box holds them, with no decoding. The former `raw` behavior is `--hash-body decoded`.
 - Write each exported mail as the bytes its source box holds, instead of a message rebuilt from its parsed form, which redrew boundaries and line endings.
