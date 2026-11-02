@@ -117,7 +117,7 @@ $ brew install mail-deduplicate
 
 ## Python compatibility
 
-The table below shows which Python versions each `mail-deduplicate` release range supports, derived from the declarations in each git tag's `pyproject.toml`. It is refreshed by [click-extra's `{matrix}` directive machinery](https://kdeldycke.github.io/click-extra/sphinx.html#matrix-directives) through the `update-docs` job.
+The table below shows which Python versions each `mail-deduplicate` release range supports, derived from the declarations in each git tag's `pyproject.toml`. It is refreshed by [click-extra's `{matrix}` directive machinery](https://kdeldycke.github.io/click-extra/python-directives.html#matrix-directives) through the `update-docs` job.
 
 <!-- matrix python -->
 
@@ -264,6 +264,25 @@ _MDEDUP_COMPLETE=fish_source mdedup > ~/.config/fish/completions/mdedup.fish
 ````
 
 `````
+
+## Man pages
+
+`mdedup` has a `--man` option, which shows its manual in a pager, the way `man` does:
+
+```shell-session
+$ mdedup --man
+```
+
+To get the roff source of the page instead, ask for the `man` rendering of `--help-format`:
+
+```shell-session
+$ mdedup --help-format man > mdedup.1
+```
+
+The page is also published as a static `mdedup.1` file:
+
+- Bundled as `mail-deduplicate-manpages.tar.gz` on every [GitHub release](https://github.com/kdeldycke/mail-deduplicate/releases). Extract it, then copy `man/mdedup.1` into a `man1` folder of your `MANPATH`, like `/usr/local/share/man/man1/`.
+- Rendered as HTML on the [man pages](man.md) page of this site.
 
 ## Python dependencies
 

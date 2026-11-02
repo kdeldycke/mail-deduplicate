@@ -12,6 +12,7 @@ install
 tutorial
 design
 cli
+man
 configuration
 performance
 ```

@@ -481,8 +481,8 @@ class DuplicateSet:
             for line in unified_diff(
                 mail_a.body_lines,
                 mail_b.body_lines,
-                fromfile=f"Normalized body of {mail_a!r}",
-                tofile=f"Normalized body of {mail_b!r}",
+                fromfile=f"Decoded body of {mail_a!r}",
+                tofile=f"Decoded body of {mail_b!r}",
                 fromfiledate=""
                 if mail_a.timestamp is None
                 else f"{mail_a.timestamp:0.2f}",

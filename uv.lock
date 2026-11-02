@@ -551,7 +551,7 @@ requires-dist = [
 docs = [
     { name = "click-extra", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=10" },
     { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", specifier = ">=10" },
-    { name = "coverage", extras = ["toml"], marker = "python_full_version >= '3.14'", specifier = ">=7.11" },
+    { name = "coverage", marker = "python_full_version >= '3.14'", specifier = ">=7.11" },
     { name = "extra-platforms", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=14" },
     { name = "furo", marker = "python_full_version >= '3.14'", specifier = ">=2025.9.25" },
     { name = "myst-parser", marker = "python_full_version >= '3.14'", specifier = ">=5.1" },
@@ -570,7 +570,7 @@ docs = [
 ]
 test = [
     { name = "click-extra", extras = ["pytest"], specifier = ">=10" },
-    { name = "coverage", extras = ["toml"], specifier = ">=7.11" },
+    { name = "coverage", specifier = ">=7.11" },
     { name = "extra-platforms", extras = ["pytest"], specifier = ">=14" },
     { name = "pytest", specifier = ">=9" },
     { name = "pytest-cov", specifier = ">=7" },

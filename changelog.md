@@ -13,7 +13,7 @@
 - Color the `--show-diff` output with the active theme, the way `git diff` colors its own.
 - Require `click-extra` `10.0.0` and `extra-platforms` `14.0.0`.
 - Write the `--export-config toml` output with `tomlrt` in place of `tomlkit`, through the `toml` extra of `click-extra` `10.0.0`.
-- Drop the `platformdirs` dependency, and the `whenever` and `boltons` test dependencies.
+- Drop the `platformdirs` dependency, the `whenever` and `boltons` test dependencies, and the `toml` extra of `coverage`, which installs nothing on Python 3.11.
 - Discard the hash cache written by earlier versions, as their hashes and sizes are computed differently.
 - Settle the size and content thresholds without re-reading a mail under `--hash-body decoded`, where every mail of a set shares the decoded body.
 - Redraw each progress bar at most once every 0.1 seconds, instead of once per mail.
@@ -26,10 +26,12 @@
 - Fix the action trail listing its mails in an order that changed between runs, which no diff of two runs survived.
 - Fix `--show-diff` printing the diff of two mails in either direction, which changed between runs.
 - Fix the step headings styling the blank line above them, which left a style open in output read line by line.
+- Fix `--show-diff` labeling each side as the normalized body, where it shows the decoded body.
 - Fix the Arch Linux install steps, which ran `pacman -S` on a package that only the AUR carries.
 - Fix the documented location of the hash cache on macOS, which follows an absolute `XDG_CACHE_HOME` when one is set.
 - Replace the readme's 2022 CLI screenshots with SVG terminal windows recaptured from the current CLI by `docs/cli_screenshots_update.py`.
 - Illustrate the content safeguard, `--show-diff`, `--hash-only`, the hash cache and the bug report with captures in the readme and the docs.
+- Document how to read, render and install the man page, and link its HTML rendering from a page of its own.
 
 ## [`9.4.0` (2026-10-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.2...v9.4.0)
 

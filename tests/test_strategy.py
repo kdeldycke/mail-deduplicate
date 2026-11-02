@@ -710,7 +710,7 @@ def test_show_diff_starts_from_the_lowest_path(invoke, make_box):
 
     assert result.exit_code == 0
     paths = re.findall(
-        r"^(?:---|\+\+\+) Normalized body of <\w+ ([^>]+)>", result.stderr, re.MULTILINE
+        r"^(?:---|\+\+\+) Decoded body of <\w+ ([^>]+)>", result.stderr, re.MULTILINE
     )
     assert len(paths) == 2, result.stderr
     assert paths == sorted(paths)

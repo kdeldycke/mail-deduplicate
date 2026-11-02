@@ -31,7 +31,7 @@ The configuration file is searched in this order:
 
 1. The location passed to `--config`, which accepts a local path, a glob pattern, or a remote URL.
 2. A `pyproject.toml` holding a `[tool.mdedup]` section, looked up from the current directory upward to the nearest VCS root, following the discovery behavior of `uv`, `ruff` and `mypy`.
-3. The default configuration folder, whose location depends on the OS (see the [`click-extra` documentation](https://kdeldycke.github.io/click-extra/config.html#default-folder)):
+3. The default configuration folder, whose location depends on the OS (see the [`click-extra` documentation](https://kdeldycke.github.io/click-extra/config-discovery.html#default-folder)):
 
 | Platform | Folder                                    |
 | :------- | :---------------------------------------- |
