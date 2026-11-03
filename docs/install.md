@@ -297,11 +297,3 @@ The page is also published as a static `mdedup.1` file:
 
 - Bundled as `mail-deduplicate-manpages.tar.gz` on every [GitHub release](https://github.com/kdeldycke/mail-deduplicate/releases). Extract it, then copy `man/mdedup.1` into a `man1` folder of your `MANPATH`, like `/usr/local/share/man/man1/`.
 - Rendered as HTML on the [man pages](man.md) page of this site.
-
-## Python dependencies
-
-FYI, here is a graph of Python package dependencies:
-
-```mermaid assets/dependencies.mmd
-:align: center
-```

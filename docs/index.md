@@ -18,18 +18,38 @@ performance
 ```
 
 ```{toctree}
-:caption: Development
+:caption: Contributing
 :maxdepth: 2
 :hidden:
 contributing
-API <mail_deduplicate>
+code-of-conduct
+```
+
+```{toctree}
+:caption: API reference
+:maxdepth: 2
+:hidden:
+mail_deduplicate
 tests
 genindex
 modindex
-todolist
+```
+
+```{toctree}
+:caption: Release and hosting
+:maxdepth: 2
+:hidden:
+binaries
+packaging
+```
+
+```{toctree}
+:caption: Project
+:maxdepth: 2
+:hidden:
 changelog
 history
-code-of-conduct
+todolist
 license
 GitHub repository <https://github.com/kdeldycke/mail-deduplicate>
 Funding <https://github.com/sponsors/kdeldycke>
