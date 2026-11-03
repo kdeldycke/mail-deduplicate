@@ -247,12 +247,23 @@ sitemap_url_scheme = "{link}"
 # Absolute base of the OpenGraph tags. It reads the same constant as html_baseurl,
 # so og:url and the canonical link always name the same page.
 ogp_site_url = docs_site_url
+# The social card, served by the site itself: sphinxext.opengraph joins it onto
+# ogp_site_url, and its html_static_path entry below puts the file under _static/.
+ogp_image = "_static/banner-social-light.png"
+ogp_image_alt = project
 
 # Theme config.
 html_theme = "furo"
 html_title = project
-html_logo = "assets/mail-deduplicate-logo-square.png"
+# The mark is a raster illustration with no SVG source, so the favicon is its
+# transparent PNG icon, the same file the binaries embed.
+html_favicon = "assets/icon.png"
 html_theme_options = {
+    # Furo's logo pair, resolved against _static/. Never html_logo, which Furo
+    # prefers to the pair. The logo is transparent and its yellow lettering reads on
+    # both themes, so one file serves both.
+    "light_logo": "mail-deduplicate-logo-square.png",
+    "dark_logo": "mail-deduplicate-logo-square.png",
     "sidebar_hide_name": True,
     # Activates edit links.
     "source_repository": f"https://github.com/{github_user}/{project_id}",
@@ -291,6 +302,16 @@ html_show_sourcelink = False
 # Copied verbatim to the root of the build, where GitHub Pages looks for a custom
 # `404.html`. html_static_path would put it under `_static/` instead.
 html_extra_path = ["404.html"]
+
+# Individual files land at the root of _static/, where Furo looks for the logo pair
+# and where ogp_image points. Listing docs/assets/ whole would copy every capture.
+html_static_path = [
+    "_static",
+    "assets/banner-social-light.png",
+    "assets/mail-deduplicate-logo-square.png",
+]
+# Hides the readme banner on the front page, where the sidebar already shows the logo.
+html_css_files = ["custom.css"]
 
 
 def prune_build_artifacts(app: Sphinx, exception: Exception | None) -> None:

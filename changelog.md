@@ -8,6 +8,7 @@
 - Make the binaries catalog of the documentation searchable and sortable.
 - Document how to verify the build attestation of a binary with `gh attestation verify`.
 - Group the documentation sidebar into sections, and move the dependency graph to a new packaging page.
+- Give the documentation a favicon and a social preview card, and hide the readme banner its sidebar logo repeats.
 
 ## [`9.5.0` (2026-11-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.4.0...v9.5.0)
 

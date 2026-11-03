@@ -1,0 +1,4 @@
+/* Hide the readme banner on the Sphinx front page (logo already in sidebar). */
+article p[align="center"]:has(img[alt="Mail Deduplicate"]) {
+    display: none;
+}
