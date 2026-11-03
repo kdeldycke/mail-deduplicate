@@ -1,5 +1,7 @@
 # The bug report mdedup prints links to this form by its file name, with the title filled in: see
 # mail_deduplicate/bug_report.py.
+# The development-version command below carries no `--exclude-newer` cooldown: the development floor can name a
+# click-extra release younger than the window, and the flag then makes the command fail to resolve.
 name: Bug report
 description: Report a bug in mail-deduplicate
 labels: ["🐛 bug"]
