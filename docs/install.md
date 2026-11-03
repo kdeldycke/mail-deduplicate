@@ -4,6 +4,8 @@
 [![Packaging status](https://repology.org/badge/vertical-allrepos/mail-deduplicate.svg)](https://repology.org/project/mail-deduplicate/versions)
 ```
 
+## Quick start
+
 Mail Deduplicate is [distributed on PyPI](https://pypi.org/project/mail-deduplicate/).
 
 Install the latest stable release with [`uv`](https://docs.astral.sh/uv/):
@@ -12,7 +14,7 @@ Install the latest stable release with [`uv`](https://docs.astral.sh/uv/):
 $ uv tool install mail-deduplicate
 ```
 
-## Try it
+## Try it now
 
 You can try Mail Deduplicate right now in your terminal, without installing any dependency or virtual env [thanks to `uvx`](https://docs.astral.sh/uv/guides/tools/):
 
@@ -176,6 +178,18 @@ $ file ./mdedup*
 ./mdedup-windows-x64.exe:   PE32+ executable (console) x86-64, for MS Windows
 ```
 ````
+
+## Release verification
+
+Each release signs its binaries with a [build provenance attestation](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations). After you download a binary, verify it with the [`gh` CLI](https://cli.github.com):
+
+```{code-block} shell-session
+$ gh attestation verify mdedup-linux-arm64.bin --repo kdeldycke/mail-deduplicate --signer-repo kdeldycke/repomatic
+```
+
+`--signer-repo kdeldycke/repomatic` is required: the release runs in the reusable `_release-engine.yaml` workflow of `kdeldycke/repomatic`, whose identity signs the attestation. Each release attaches every binary twice, once with the version in its name: both copies hold the same bytes, and verify the same way.
+
+The PyPI distributions carry their own [PEP 740](https://peps.python.org/pep-0740/) attestations, which the [PyPI project page](https://pypi.org/project/mail-deduplicate/) shows and verifies.
 
 ## Python module usage
 
