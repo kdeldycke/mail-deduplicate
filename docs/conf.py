@@ -17,7 +17,6 @@ toml_config = tomllib.loads(toml_path.read_text(encoding="UTF-8"))
 # Redistribute pyproject.toml config to Sphinx.
 project_id = toml_config["project"]["name"]
 version = release = toml_config["project"]["version"]
-url = toml_config["project"]["urls"]["Homepage"]
 author = ", ".join(author["name"] for author in toml_config["project"]["authors"])
 
 # Canonical origin of the published site. The trailing slash is mandatory:
@@ -33,14 +32,15 @@ project = " ".join(word.title() for word in project_id.split("-"))
 # the announcement banner below. Floored, so the figure is never ahead of the
 # anniversary it claims.
 maintained_years = (datetime.now(tz=UTC).date() - date(2010, 6, 8)).days // 365
-htmlhelp_basename = project_id
 
-# Addons.
 extensions = [
+    # Core Sphinx.
     "sphinx.ext.autodoc",
-    "sphinx.ext.todo",
+    "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    # UI/UX add-ons.
     # Adds a copy button to code blocks.
     "sphinx_copybutton",
     "sphinx_design",
@@ -48,8 +48,8 @@ extensions = [
     # instead of having to discover it by following links.
     "sphinx_sitemap",
     "sphinxext.opengraph",
+    # MyST and live CLI rendering.
     "myst_parser",
-    "sphinx.ext.autosectionlabel",
     # Docstrings are authored in MyST; this extension converts them to reST at
     # build time. It hooks autodoc-process-docstring at priority 400 (vs the
     # default 500) so it always runs before sphinx_autodoc_typehints. Listing it
@@ -79,20 +79,24 @@ myst_enable_extensions = [
     "strikethrough",
     "tasklist",
 ]
-# XXX Allow ```mermaid``` directive to be used without curly braces
-# (```{mermaid}```), see:
-# https://github.com/mgaitan/sphinxcontrib-mermaid/issues/99#issuecomment-2339587001
+# Allow plain mermaid fences (without curly braces), see
+# <https://github.com/mgaitan/sphinxcontrib-mermaid/issues/99#issuecomment-2339587001>.
 myst_fence_as_directive = ["mermaid"]
 
 # Generate implicit anchors for headings (down to H6) so same-page `#slug` links in
 # included Markdown resolve in the build (like readme.md's `#executables`), matching
 # GitHub. Drop to 3 if deeper headings ever collide into duplicate-anchor warnings.
 myst_heading_anchors = 6
+# Slug the anchors the way docutils builds section IDs, so the two always match.
+myst_heading_slug_func = "docutils.nodes.make_id"
 
-# Fail the build on a fragment link that lands nowhere. myst-parser logs a
-# `myst.xref_missing` warning for a `#anchor` that matches no heading slug or
-# `(target)=` label, and ships the link as written. Sphinx exits 0 on warnings.
-click_extra_fail_on_warnings = ["myst.xref_missing"]
+# Fail the build on a warning a plain local build would let pass. myst-parser logs
+# a `myst.xref_missing` warning for a `#anchor` that matches no heading slug or
+# `(target)=` label, and ships the link as written. click-extra logs a
+# `click_extra.todo_unrendered` warning for a `{todo}` that no page renders. Sphinx
+# exits 0 on warnings, unless the `sphinx.fail-on-warning` setting of the CI build
+# adds `--fail-on-warning`.
+click_extra_fail_on_warnings = ["click_extra.todo_unrendered", "myst.xref_missing"]
 
 mermaid_d3_zoom = True
 
@@ -166,7 +170,7 @@ click_extra_manpages = [
 # use {click:run} to render live CLI output, so it must be turned on here.
 click_extra_enable_exec_directives = True
 
-exclude_patterns = ["_build", "_linkcheck", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "_linkcheck", "html", "Thumbs.db", ".DS_Store"]
 
 nitpicky = True
 # `AnyValueIn` subclasses cloup's `Predicate`, and autodoc lists that base class by
@@ -226,8 +230,9 @@ linkcheck_anchors_ignore_for_url = [
 linkcheck_retries = 3
 
 linkcheck_ignore = [
-    # These sites return 403 to bots but are valid.
+    # claude.ai/code requires authentication.
     r"https://claude\.ai/code",
+    # isync.sourceforge.io returns 403 to bots but is valid.
     r"https://isync\.sourceforge\.io",
 ]
 
