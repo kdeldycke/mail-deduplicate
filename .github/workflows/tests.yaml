@@ -114,12 +114,13 @@ jobs:
     # `python-label` is set by repomatic show-metadata only where the plain version
     # would hide why a cell is continue-on-error (a prerelease reads `3.16-dev`);
     # every other cell falls back to the version itself.
-    # A cell carrying a `resolution` key appends it, which tells that cell from
-    # the twin sharing its runner and Python.
+    # A cell carrying a `resolution` or a `source` key appends it, which tells
+    # that cell from the twin sharing its runner and Python.
     name: >-
       ${{ matrix.state == 'stable' && '✅' || '⁉️' }} ${{ matrix.os }} /
       py${{ matrix.python-label || matrix.python-version }}${{
-      matrix.resolution && format(' / {0}', matrix.resolution) || '' }}
+      matrix.resolution && format(' / {0}', matrix.resolution) || '' }}${{
+      matrix.source && format(' / {0}', matrix.source) || '' }}
     runs-on: ${{ matrix.os }}
     # We keep going when a job flagged as not stable fails.
     continue-on-error: ${{ matrix.state == 'unstable' }}
@@ -147,6 +148,7 @@ jobs:
           PYTHON_VERSION: ${{ matrix.python-version }}
         run: uv --no-progress venv --python "${PYTHON_VERSION}"
       - name: Install project
+        if: matrix.source != 'sdist'
         run: uv --no-progress sync --frozen --all-extras --group test
       - name: Resolve again (${{ matrix.resolution || 'not requested' }})
         # A cell carrying a `resolution` key resolves the project again with it: `lowest-direct` installs every direct
@@ -158,6 +160,24 @@ jobs:
         env:
           RESOLUTION: ${{ matrix.resolution }}
         run: uv --no-progress sync --resolution "${RESOLUTION}" --all-extras --group test
+      - name: Unpack the source distribution
+        # A cell carrying `source = "sdist"` tests the project the way a distribution builds it: from the sdist,
+        # outside any git checkout, against the newest dependency releases the cooldown admits instead of the lockfile.
+        # See https://repomatic.net/test-matrix#test-the-source-distribution-like-a-distribution
+        if: matrix.source == 'sdist'
+        shell: bash
+        run: |
+          uv --no-progress build --sdist --out-dir "${RUNNER_TEMP}/dist"
+          mkdir "${RUNNER_TEMP}/sdist"
+          tar --extract --file "${RUNNER_TEMP}"/dist/*.tar.gz --directory "${RUNNER_TEMP}/sdist" --strip-components 1
+      - name: Install the source distribution
+        # `--upgrade` resolves past a `uv.lock` the sdist may ship, so every dependency installs at its newest release.
+        if: matrix.source == 'sdist'
+        working-directory: ${{ runner.temp }}/sdist
+        shell: bash
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+        run: uv --no-progress sync --upgrade --python "${PYTHON_VERSION}" --all-extras --group test
 
       - name: Unittests
         # `once`-marked tests are excluded from every matrix cell: the dedicated
@@ -167,16 +187,23 @@ jobs:
         # full-matrix slice is the one job expected to clear. No `--cov-fail-under`
         # is passed here: it would outrank that config and shadow the knob
         # pyproject.toml already carries. The JSON report feeds the next step.
+        if: matrix.source != 'sdist'
         run: >
           uv --no-progress run --frozen -- pytest
           -m "not once"
           --cov-report=json:${{ runner.temp }}/coverage.json
+      - name: Unittests from the source distribution
+        # The guards of a git checkout skip in an sdist, so this slice covers less than the full matrix, and
+        # `--cov-fail-under=0` opts it out of the coverage floor, like the `once-tests` job.
+        if: matrix.source == 'sdist'
+        working-directory: ${{ runner.temp }}/sdist
+        run: uv --no-progress run --frozen -- pytest -m "not once" --cov-fail-under=0
 
       - name: Check the coverage floor
         # Warns when the floor sits more than two points under the coverage total,
         # so the ratchet gets raised instead of drifting. `!cancelled()` reads the
         # report after a failed test too: its total stays sound.
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && matrix.source != 'sdist' }}
         run: >
           uvx --no-progress --exclude-newer-package repomatic=P0D 'repomatic==8.1.0' lint-coverage
           --report "${{ runner.temp }}/coverage.json" --no-fatal
@@ -194,7 +221,8 @@ jobs:
         # check different things, and letting a unit-test failure skip the
         # self-test hides CLI drift until the next green run. Wrapped in
         # `${{ }}` because a bare leading `!` is a YAML tag.
-        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).main_cli_script }}
+        # An sdist cell skips both self-tests: they drive the checkout's environment, which that cell never installs.
+        if: ${{ !cancelled() && matrix.source != 'sdist' && fromJSON(needs.metadata.outputs.metadata).main_cli_script }}
         env:
           CLI_SCRIPT: ${{ fromJSON(needs.metadata.outputs.metadata).main_cli_script }}
         shell: bash
@@ -206,7 +234,7 @@ jobs:
         # point so `__main__` stays exercised against the checkout on every
         # cell (the package-install job only covers it for released builds).
         # `!cancelled()` for the same reason as the step above.
-        if: ${{ !cancelled() && fromJSON(needs.metadata.outputs.metadata).main_cli_script }}
+        if: ${{ !cancelled() && matrix.source != 'sdist' && fromJSON(needs.metadata.outputs.metadata).main_cli_script }}
         env:
           IMPORT_NAME: ${{ fromJSON(needs.metadata.outputs.metadata).import_name }}
         shell: bash
