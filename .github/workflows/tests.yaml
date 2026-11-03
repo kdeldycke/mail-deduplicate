@@ -94,7 +94,7 @@ jobs:
       - name: Run repomatic show-metadata
         id: metadata
         run: >
-          uvx --no-progress --exclude-newer-package repomatic=P0D 'repomatic==8.0.0' show-metadata
+          uvx --no-progress --exclude-newer-package repomatic=P0D 'repomatic==8.1.0' show-metadata
           --output-format github-json --output "$GITHUB_OUTPUT"
           cli_scripts main_cli_script import_name package_name
           test_matrix test_matrix_pr latest_stable_python
@@ -178,7 +178,7 @@ jobs:
         # report after a failed test too: its total stays sound.
         if: ${{ !cancelled() }}
         run: >
-          uvx --no-progress --exclude-newer-package repomatic=P0D 'repomatic==8.0.0' lint-coverage
+          uvx --no-progress --exclude-newer-package repomatic=P0D 'repomatic==8.1.0' lint-coverage
           --report "${{ runner.temp }}/coverage.json" --no-fatal
 
       - name: Self-tests against test suite via console script
