@@ -22,23 +22,7 @@ Record only conventions, rationale and non-obvious rules that cannot be discover
 
 ## Commands
 
-```shell-session
-# Run the test suite (test dependencies live in the `test` group).
-$ uv run --group test -- pytest
-
-# Run a single test.
-$ uv run --group test -- pytest tests/test_strategy.py::test_name
-
-# Type-check with the CI-pinned mypy and minimum Python version. With no target,
-# the runner checks what CI checks, `docs/` scripts included.
-$ uvx repomatic run mypy
-
-# Build the documentation into the gitignored output directory.
-$ uv run --group docs -- sphinx-build -b html ./docs ./docs/_build/html
-
-# Run the CLI from the working tree.
-$ uv run -- mdedup --help
-```
+The contribution guide (`docs/contributing.md`) lists the commands that run the tests, check the types, build the documentation and run the CLI.
 
 ## Architecture
 
