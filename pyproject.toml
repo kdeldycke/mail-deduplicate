@@ -132,11 +132,18 @@ docs = [
   "sphinx-autodoc-typehints>=2.4",
   # sphinx-copybutton 0.5.2 stabilized the copy button behavior for code blocks.
   "sphinx-copybutton>=0.5.2",
+  # sphinx-datatables 1.0.0 is the first stable release. It makes the binaries
+  # catalog a searchable, sortable table.
+  "sphinx-datatables>=1",
   # sphinx-design 0.6 introduced the current directive syntax for cards, grids, and tabs.
   "sphinx-design>=0.6",
   # sphinx-sitemap 2.7.0 and 2.7.1 turn sitemap_show_lastmod on by default, which
   # dates every page from its git history. 2.7.2 turns it back off.
   "sphinx-sitemap>=2.7.2",
+  # sphinxcontrib-jquery 4.0 stopped enforcing subresource-integrity checks by
+  # default: under 3.0, a build opened from the local filesystem cannot load
+  # jQuery. Declared because docs/conf.py loads it itself.
+  "sphinxcontrib-jquery>=4",
   # sphinxcontrib-mermaid 1.2.3 fixed mermaid_d3_zoom configuration support.
   "sphinxcontrib-mermaid>=1.2.3",
   # sphinxext-opengraph 0.13 stabilized OpenGraph metadata generation for Sphinx 8+.

@@ -5,6 +5,8 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Make the binaries catalog of the documentation searchable and sortable.
+
 ## [`9.5.0` (2026-11-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.4.0...v9.5.0)
 
 > [!NOTE]

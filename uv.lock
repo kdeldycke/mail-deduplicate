@@ -13,6 +13,7 @@ exclude-newer-span = "P1W"
 [options.exclude-newer-package]
 click-extra = "2026-11-03T00:00:00Z"
 extra-platforms = "2026-11-02T00:00:00Z"
+nuitka = "2026-10-31T00:00:00Z"
 
 [[package]]
 name = "accessible-pygments"
@@ -522,8 +523,10 @@ docs = [
     { name = "sphinx", marker = "python_full_version >= '3.14'" },
     { name = "sphinx-autodoc-typehints", marker = "python_full_version >= '3.14'" },
     { name = "sphinx-copybutton", marker = "python_full_version >= '3.14'" },
+    { name = "sphinx-datatables", marker = "python_full_version >= '3.14'" },
     { name = "sphinx-design", marker = "python_full_version >= '3.14'" },
     { name = "sphinx-sitemap", marker = "python_full_version >= '3.14'" },
+    { name = "sphinxcontrib-jquery", marker = "python_full_version >= '3.14'" },
     { name = "sphinxcontrib-mermaid", marker = "python_full_version >= '3.14'" },
     { name = "sphinxext-opengraph", marker = "python_full_version >= '3.14'" },
 ]
@@ -563,8 +566,10 @@ docs = [
     { name = "sphinx", marker = "python_full_version >= '3.14'", specifier = ">=8" },
     { name = "sphinx-autodoc-typehints", marker = "python_full_version >= '3.14'", specifier = ">=2.4" },
     { name = "sphinx-copybutton", marker = "python_full_version >= '3.14'", specifier = ">=0.5.2" },
+    { name = "sphinx-datatables", marker = "python_full_version >= '3.14'", specifier = ">=1" },
     { name = "sphinx-design", marker = "python_full_version >= '3.14'", specifier = ">=0.6" },
     { name = "sphinx-sitemap", marker = "python_full_version >= '3.14'", specifier = ">=2.7.2" },
+    { name = "sphinxcontrib-jquery", marker = "python_full_version >= '3.14'", specifier = ">=4" },
     { name = "sphinxcontrib-mermaid", marker = "python_full_version >= '3.14'", specifier = ">=1.2.3" },
     { name = "sphinxext-opengraph", marker = "python_full_version >= '3.14'", specifier = ">=0.13" },
 ]
@@ -1047,6 +1052,20 @@ wheels = [
 ]
 
 [[package]]
+name = "sphinx-datatables"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "sphinx" },
+    { name = "sphinxcontrib-jquery" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/86/ee/7246d8b48187794bdeb7389d3bb1247850d3ae0015812e293182193715e1/sphinx_datatables-1.0.0.tar.gz", hash = "sha256:0d0aeccbcc3f4342e4f770848b00a074efb80f08e179a3330da57499cc47cc9d", size = 9548, upload-time = "2026-02-03T04:28:29.554Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/41/21/09a9e92d68e62642694cbd1bd76ba5a906e748c18904e95b7153e2af421e/sphinx_datatables-1.0.0-py3-none-any.whl", hash = "sha256:215a6245893605fe48c3e5a54dc5e66f29b3547e621bd5dd32aa748aac1f8c11", size = 8425, upload-time = "2026-02-03T04:28:28.33Z" },
+]
+
+[[package]]
 name = "sphinx-design"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1107,6 +1126,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/43/93/983afd9aa001e5201eab16b5a444ed5b9b0a7a010541e0ddfbbfd0b2470c/sphinxcontrib_htmlhelp-2.1.0.tar.gz", hash = "sha256:c9e2916ace8aad64cc13a0d233ee22317f2b9025b9cf3295249fa985cc7082e9", size = 22617, upload-time = "2024-07-29T01:09:37.889Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/7b/18a8c0bcec9182c05a0b3ec2a776bba4ead82750a55ff798e8d406dae604/sphinxcontrib_htmlhelp-2.1.0-py3-none-any.whl", hash = "sha256:166759820b47002d22914d64a075ce08f4c46818e17cfc9470a9786b759b19f8", size = 98705, upload-time = "2024-07-29T01:09:36.407Z" },
+]
+
+[[package]]
+name = "sphinxcontrib-jquery"
+version = "4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "sphinx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/de/f3/aa67467e051df70a6330fe7770894b3e4f09436dea6881ae0b4f3d87cad8/sphinxcontrib-jquery-4.1.tar.gz", hash = "sha256:1620739f04e36a2c779f1a131a2dfd49b2fd07351bf1968ced074365933abc7a", size = 122331, upload-time = "2023-03-14T15:01:01.944Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/76/85/749bd22d1a68db7291c89e2ebca53f4306c3f205853cf31e9de279034c3c/sphinxcontrib_jquery-4.1-py2.py3-none-any.whl", hash = "sha256:f936030d7d0147dd026a4f2b5a57343d233f1fc7b363f68b3d4f1cb0993878ae", size = 121104, upload-time = "2023-03-14T15:01:00.356Z" },
 ]
 
 [[package]]

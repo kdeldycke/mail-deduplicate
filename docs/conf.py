@@ -59,6 +59,11 @@ extensions = [
     "sphinx_autodoc_typehints",
     "click_extra.sphinx",
     "sphinxcontrib.mermaid",
+    # jQuery must be listed explicitly: sphinx-datatables only activates it
+    # from a html-page-context callback, too late for the jquery.js static
+    # file to be registered and copied, leaving `$` undefined at runtime.
+    "sphinxcontrib.jquery",
+    "sphinx_datatables",
 ]
 
 # https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
@@ -90,6 +95,61 @@ myst_heading_anchors = 6
 click_extra_fail_on_warnings = ["myst.xref_missing"]
 
 mermaid_d3_zoom = True
+
+# Applies to every table carrying the (default) `sphinx-datatable` class: only the
+# binaries catalog. An empty `order` keeps the newest-first rows of the CSV on load,
+# instead of DataTables' ascending sort on the first column. The render callback
+# adds a relative hint ("9 days ago") to the Released column (index 2) at display
+# time only, so sorting and searching keep the raw ISO dates, and the CSV holds no
+# hint that goes stale between releases. A raw JS string, because a JSON dict cannot
+# carry the function, and raw so the backslashes of the JS regex stay as written.
+datatables_options = r"""
+{
+    "order": [],
+    "pageLength": 25,
+    "columnDefs": [
+        {
+            "targets": 2,
+            "render": function (data, type, row) {
+                if (type !== "display" || !data) {
+                    return data;
+                }
+                // Cells arrive as rendered HTML (<p>2026-07-02</p>), so
+                // extract the date instead of parsing the markup.
+                const match = /\d{4}-\d{2}-\d{2}/.exec(data);
+                if (!match) {
+                    return data;
+                }
+                const days = Math.floor(
+                    (Date.now() - Date.parse(match[0])) / 86400000);
+                if (!isFinite(days)) {
+                    return data;
+                }
+                let hint;
+                if (days <= 0) {
+                    hint = "today";
+                } else if (days === 1) {
+                    hint = "a day ago";
+                } else if (days < 30) {
+                    hint = days + " days ago";
+                } else if (days < 350) {
+                    const months = Math.round(days / 30.44);
+                    hint = months === 1 ? "a month ago" : months + " months ago";
+                } else {
+                    const years = Math.round(days / 365.25);
+                    hint = years === 1 ? "a year ago" : years + " years ago";
+                }
+                // Inject inside the paragraph so the hint stays on the
+                // same line as the date.
+                const label = " (" + hint + ")";
+                return data.includes("</p>")
+                    ? data.replace("</p>", label + "</p>")
+                    : data + label;
+            }
+        }
+    ]
+}
+"""
 
 # Emit a roff man page (man/mdedup.1, plus an .html sibling when mandoc or groff is
 # on PATH) into the HTML build via click-extra's generator, giving packagers a .1
