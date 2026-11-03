@@ -39,8 +39,8 @@ def in_worker_process() -> bool:
     """Tell whether this process is a `--jobs` worker that has not started its task.
 
     A launcher without a `__name__ == "__main__"` guard calls {func}`main` again in
-    each worker it starts, as the one Nuitka writes for `--main-entry-point` does.
-    Two states reveal that call:
+    each worker it starts, as the one Nuitka writes for `--main-entry-point` did
+    before `4.3.3`. Two states reveal that call:
 
     - A spawn or forkserver worker imports the main module of its parent while
       `multiprocessing` sets the `_inheriting` flag of the process. CPython reads
@@ -77,8 +77,8 @@ def main():
     # call turns that launch into the worker and never returns. A no-op elsewhere.
     multiprocessing.freeze_support()
 
-    # Nuitka sets no `sys.frozen`, and its launcher can still call this function in
-    # each worker: stop there, before the CLI opens a box or starts more workers.
+    # Nuitka sets no `sys.frozen`, and its launcher before 4.3.3 calls this function
+    # in each worker: stop there, before the CLI opens a box or starts more workers.
     if in_worker_process():
         sys.exit(WORKER_RERUN_ERROR)
 
