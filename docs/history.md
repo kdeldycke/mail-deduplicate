@@ -1,4 +1,4 @@
-# {octicon}`log` History
+# {octicon}`milestone` History
 
 This script was [initially released in 2010](https://kevin.deldycke.com/2010/maildir-deduplication-script-python), and was living in a [messy GitHub repository](https://github.com/kdeldycke/scripts).
 

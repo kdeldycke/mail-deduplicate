@@ -214,13 +214,8 @@ autosectionlabel_prefix_document = True
 
 # Linkcheck configuration, mirroring the reference one from repomatic.
 # GitHub renders issue comments, readme tab anchors and blob line anchors with
-# JavaScript, so the linkcheck builder cannot find them in the static HTML.
-linkcheck_anchors_ignore = [
-    r"issuecomment-\d+",
-    r"readme",
-    r"L\d+",
-]
-
+# JavaScript, so the linkcheck builder cannot find them in the static HTML:
+# skip anchor checks for the whole host instead of stacking per-anchor patterns.
 linkcheck_anchors_ignore_for_url = [
     r"https://github\.com/",
 ]
@@ -250,7 +245,6 @@ ogp_site_url = docs_site_url
 # The social card, served by the site itself: sphinxext.opengraph joins it onto
 # ogp_site_url, and its html_static_path entry below puts the file under _static/.
 ogp_image = "_static/banner-social-light.png"
-ogp_image_alt = project
 
 # Theme config.
 html_theme = "furo"
