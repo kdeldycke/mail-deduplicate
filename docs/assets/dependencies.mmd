@@ -79,7 +79,7 @@ flowchart LR
         grp_test_pytest_randomly{{"`pytest-randomly >=3.3.1`"}}
     end
 
-    mail_deduplicate ==>|" >=10 "| click_extra
+    mail_deduplicate ==> click_extra
     mail_deduplicate ==>|" >=14 "| extra_platforms
     sphinx --> pygments
     sphinx --> requests
