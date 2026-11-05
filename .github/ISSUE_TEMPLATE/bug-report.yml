@@ -43,14 +43,14 @@ body:
     attributes:
       label: Steps to reproduce
       description: >
-        The full `mdedup` invocation you used, and the data set leading to the
-        bug. Try to reduce it to the minimal subset of mails that triggers the
-        problem (the `--hash-only` parameter helps isolate a duplicate set):
-        attaching those mails lets maintainers add the edge case to the test
-        suite and prevent regressions.
-      placeholder: $ mdedup --verbosity=DEBUG ./my_maildir/
-    validations:
-      required: true
+        You can leave it empty if you pasted a bug report: it gives the options of
+        the run and the structure of the failing mails. Else, give the full
+        `mdedup` invocation you used, and the data set leading to the bug. Try to
+        reduce it to the minimal subset of mails that triggers the problem (the
+        `--hash-only` parameter helps isolate a duplicate set). Attached mails are
+        public, so attach only the ones you can share: they let maintainers add
+        the edge case to the test suite.
+      placeholder: $ mdedup ./my_maildir/
   - type: input
     id: version
     attributes:
