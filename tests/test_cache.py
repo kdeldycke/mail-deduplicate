@@ -339,8 +339,8 @@ def test_corrupt_cache_is_skipped_and_closed(
         connections[0].execute("SELECT 1")
 
 
-def test_rejected_mails_are_not_cached(invoke, make_box, cache_db):
-    """A rejection depends on more than the hash, so it is recomputed every run."""
+def test_unhashed_mails_are_not_cached(invoke, make_box, cache_db):
+    """A mail with too few headers has no hash to store, so it is read every run."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])
     too_few = (
         "--hash-header=x-absent-one",
@@ -352,7 +352,7 @@ def test_rejected_mails_are_not_cached(invoke, make_box, cache_db):
     result = invoke(f"--cache-path={cache_db}", *too_few, "--hash-only", box_path)
 
     assert result.exit_code == 0
-    assert "Rejecting" in result.stderr
+    assert "with too few headers to hash it" in result.stderr
     assert cached_rows(cache_db) == 0
 
 

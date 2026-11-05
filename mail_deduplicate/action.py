@@ -297,9 +297,9 @@ class Action(StrEnum):
     `*-selected` actions act on the mails kept by the selection, the `*-discarded`
     ones on the mails it discarded.
 
-    The mails that have no duplicate belong to the selection, so the copy and move
-    actions carry them into the box they build. `spares_unique` explains why the
-    delete one leaves them behind.
+    The mails that have no duplicate belong to the selection, and so do the mails
+    with too few headers to be hashed: the copy and move actions carry them into the
+    box they build. `spares_unique` explains why the delete one leaves them behind.
     """
 
     COPY_SELECTED = "copy-selected"
@@ -325,7 +325,8 @@ class Action(StrEnum):
         """Whether the action must leave the mails that have no duplicate alone.
 
         A mail alone in its duplicate set is kept, so it belongs to the selection
-        every `*-selected` action targets. Copying and moving it is what makes the
+        every `*-selected` action targets. So does a mail with too few headers to be
+        hashed, which joins no set at all. Copying and moving it is what makes the
         exported box hold the whole deduplicated corpus rather than its duplicates
         only, and neither loses it. Deleting it does: no strategy ever ruled on that
         mail, nothing was written anywhere else, and there is no other copy of it to
@@ -360,8 +361,8 @@ class Action(StrEnum):
         if self.spares_unique and dedup.unique:
             # Said before the count below, which it accounts for.
             logging.warning(
-                f"{len(dedup.unique)} mails left untouched: they have no duplicate, "
-                "so deleting them would leave no copy behind.",
+                f"{len(dedup.unique)} mails left untouched: no strategy ruled on "
+                "them, so deleting one could remove its only copy.",
             )
 
         if dedup.conf["dry_run"]:
@@ -375,9 +376,10 @@ class Action(StrEnum):
 
         # Check the selection is consistent with the statistics gathered during
         # the selection phase.
-        assert (
-            selection_count
-            == dedup.stats[Stat.MAIL_SELECTED] + dedup.stats[Stat.MAIL_UNIQUE]
+        assert selection_count == (
+            dedup.stats[Stat.MAIL_SELECTED]
+            + dedup.stats[Stat.MAIL_UNIQUE]
+            + dedup.stats[Stat.MAIL_UNHASHED]
         )
 
         OPERATIONS[self.verb](dedup, targets)

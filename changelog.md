@@ -13,6 +13,7 @@
 - Say in the first line of a bug report that the run continued with the mails it did not set aside.
 - Save each bug report to a new file in the `reports` folder of the cache directory, and print the path of that file last.
 - Fix an `AttributeError` that set aside each mail whose `Date` header holds raw 8-bit bytes, like an accented time zone comment. Closes [#1117](https://github.com/kdeldycke/mail-deduplicate/issues/1117).
+- Fix a copy or a move leaving out of the export box each mail with too few headers to hash, now kept like a mail without duplicates.
 - Restructure the tutorial and the readme around a conservative first pass, then the options that see through the differences between copies.
 - Make the binaries catalog of the documentation searchable and sortable.
 - Document how to verify the build attestation of a binary with `gh attestation verify`.

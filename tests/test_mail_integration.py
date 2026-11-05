@@ -28,7 +28,7 @@ from textwrap import dedent
 import pytest
 from extra_platforms.pytest import skip_windows
 
-from .conftest import MailFactory, check_box
+from .conftest import MailFactory, check_box, metrics
 
 invalid_windows_dates = skip_windows(
     reason="Invalid dates produce negative timestamps on Windows."
@@ -264,10 +264,25 @@ def test_ctime_time_source(invoke, make_box):
     assert len(Maildir(box_path, create=False)) == 1
 
 
-def test_mail_rejected_when_too_few_headers(invoke, tmp_path):
-    """A mail with fewer than the minimal hashable headers is rejected, not hashed.
+@pytest.mark.parametrize("jobs", ("1", "2"))
+@pytest.mark.parametrize(
+    ("action", "left_in_box", "exported"),
+    (
+        pytest.param("copy-selected", 2, 2, id="copy-selected"),
+        pytest.param("move-selected", 0, 2, id="move-selected"),
+        pytest.param("delete-selected", 2, None, id="delete-selected"),
+        pytest.param("delete-discarded", 2, None, id="delete-discarded"),
+    ),
+)
+def test_mail_with_too_few_headers_is_kept(
+    invoke, tmp_path, action, left_in_box, exported, jobs
+):
+    """A mail with fewer than the minimal hashable headers gets no hash, and is kept.
 
-    It is left untouched, and the whole run does not crash.
+    It joins no duplicate set, so no strategy rules on it: every action treats it as
+    a mail without duplicates. A copy or a move carries it into the export box, and
+    no deletion removes it. Covers the hashing in worker processes too, which sends
+    the verdict back as a string.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/27
     """
@@ -275,14 +290,36 @@ def test_mail_rejected_when_too_few_headers(invoke, tmp_path):
     box = Maildir(box_path, create=True)
     # Subject is the only default hash header present, below the floor of 4.
     box.add(b"Subject: lonely mail\n\nA body.\n")
+    box.add(
+        b"Date: Mon, 05 Feb 2024 09:00:00 +0000\n"
+        b"From: fig@example.com\n"
+        b"To: plum@example.com\n"
+        b"Subject: harvest\n"
+        b"Message-ID: <harvest@example.com>\n"
+        b"\n"
+        b"Figs and plums.\n"
+    )
     box.close()
+    export_path = tmp_path / "export.mbox"
+    export_args = (f"--export={export_path}",) if exported else ()
 
-    result = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
+    result = invoke(
+        f"--jobs={jobs}",
+        "--strategy=select-one",
+        f"--action={action}",
+        *export_args,
+        box_path,
+    )
 
     assert result.exit_code == 0
-    assert "Rejecting" in result.stderr
-    # Nothing was hashed, so nothing is removed.
-    assert len(Maildir(box_path, create=False)) == 1
+    assert len(Maildir(box_path, create=False)) == left_in_box
+    if exported:
+        assert len(mbox(export_path)) == exported
+    assert "with too few headers to hash it" in result.stderr
+    assert "Metrics appear inconsistent" not in result.stderr
+    found = metrics(result.stdout)
+    assert found["Unhashed"] == "1"
+    assert found["Rejected"] == "0"
 
 
 @pytest.mark.parametrize(

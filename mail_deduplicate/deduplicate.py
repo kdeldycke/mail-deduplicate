@@ -103,8 +103,12 @@ class Stat(Enum):
 
     MAIL_FOUND = "Total number of mails encountered from all mail sources."
     MAIL_REJECTED = (
-        "Number of mails rejected individually because they could not be read, were "
-        "unparsable, or did not have enough metadata to compute hashes."
+        "Number of mails rejected individually because they could not be read."
+    )
+    MAIL_UNHASHED = (
+        "Number of mails with too few of the hashed headers to compute a hash. They "
+        "joined no duplicate set, and were kept in the final selection like unique "
+        "mails."
     )
     MAIL_FAILED = (
         "Number of mails set aside, and left untouched, because hashing them failed "
@@ -656,20 +660,23 @@ class HashedMail(NamedTuple):
     mail_size: int | None
     rejection: str | None
     failure: Failure | None = None
+    unhashed: str | None = None
 
 
 class HashOutcome(NamedTuple):
     """What the hashing step makes of one mail, ready to be merged into the run.
 
-    At most one of `mail_hash`, `rejection` and `failure` is set: a mail is retained,
-    rejected for a reason that needs no bug report, or set aside after an error that
-    does.
+    At most one of `mail_hash`, `rejection`, `failure` and `unhashed` is set: a mail
+    is retained, rejected for a reason that needs no bug report, set aside after an
+    error that does, or kept without a hash, as it has too few headers to compute
+    one.
     """
 
     mail: DedupMailMixin
     mail_hash: str | None
     rejection: str | None = None
     failure: Failure | None = None
+    unhashed: str | None = None
 
 
 def unreadable(expt: OSError) -> str:
@@ -757,7 +764,7 @@ def _hash_in_worker(task: tuple[str, str, str]) -> HashedMail:
         mail_hash = mail.hash_key() + _WORKER["body_hasher"](mail)
         mail.dehydrate()
     except TooFewHeaders as expt:
-        return HashedMail(None, None, None, expt.args[0])
+        return HashedMail(None, None, None, None, unhashed=expt.args[0])
     except OSError as expt:
         return HashedMail(None, None, None, unreadable(expt))
     except Exception as expt:  # noqa: BLE001
@@ -931,9 +938,11 @@ class Deduplicate:
         """Mails selected after application of selection strategy."""
 
         self.unique: set[DedupMailMixin] = set()
-        """The subset of the selection made of mails that have no duplicate.
+        """The subset of the selection no strategy ever ruled on.
 
-        See `DuplicateSet.unique`, which each duplicate set contributes here.
+        It holds the mails that have no duplicate, which each duplicate set
+        contributes here: see `DuplicateSet.unique`. It also holds the mails with
+        too few headers to be hashed, which join no duplicate set at all.
         """
 
         self.discard: set[DedupMailMixin] = set()
@@ -1154,9 +1163,17 @@ class Deduplicate:
         self, box: Mailbox, mail_id: str, result: HashedMail
     ) -> HashOutcome:
         """Turn a worker's answer back into the mail stub this process works with."""
-        if result.rejection is not None or result.failure is not None:
+        if (
+            result.rejection is not None
+            or result.failure is not None
+            or result.unhashed is not None
+        ):
             return HashOutcome(
-                self.blank_stub(box, mail_id), None, result.rejection, result.failure
+                self.blank_stub(box, mail_id),
+                None,
+                result.rejection,
+                result.failure,
+                result.unhashed,
             )
         return self.restore_cached(
             box,
@@ -1232,7 +1249,8 @@ class Deduplicate:
 
             A retained mail is dehydrated on the way out, so only its identity and
             memoized scalars survive the hashing step. A rejected or failed mail is
-            not retained at all.
+            not retained at all. A mail with too few headers to hash is kept by
+            `absorb()`.
             """
             mail.add_box_metadata(box, mail_id)
             mail.conf = self.conf
@@ -1240,7 +1258,7 @@ class Deduplicate:
                 mail_hash = mail.hash_key() + body_hasher(mail)
                 mail.dehydrate()
             except TooFewHeaders as expt:
-                return HashOutcome(mail, None, expt.args[0])
+                return HashOutcome(mail, None, unhashed=expt.args[0])
             except OSError as expt:
                 return HashOutcome(mail, None, unreadable(expt))
             except Exception as expt:  # noqa: BLE001
@@ -1274,7 +1292,7 @@ class Deduplicate:
             Only the main process calls it, which keeps the parallel path and the cache
             race-free.
             """
-            mail, mail_hash, rejection, failure = outcome
+            mail, mail_hash, rejection, failure, unhashed = outcome
             # Identity attributes are set the moment a mail is read from its box, or
             # stubbed for it, which every mail reaching this point has been.
             source_path = cast("str", mail.source_path)
@@ -1294,8 +1312,24 @@ class Deduplicate:
                 if self.cache:
                     # A rejection depends on more than the hash, so it is not cached.
                     self.cache.forget(source_path, mail_id)
+            elif unhashed is not None:
+                logging.warning(
+                    f"Keep {mail!r} as a mail without duplicates, with too few "
+                    f"headers to hash it: {unhashed}"
+                )
+                # No strategy can rule on a mail that joins no duplicate set, so it
+                # stays in the selection with the mails that have no duplicate: a
+                # copy or a move carries it, and deleting the selection spares it.
+                # Its identity is all an action needs to read it back from its box.
+                mail.dehydrate()
+                self.selection.add(mail)
+                self.unique.add(mail)
+                self.stats[Stat.MAIL_UNHASHED] += 1
+                if self.cache:
+                    # There is no hash to store, so the mail is read again next run.
+                    self.cache.forget(source_path, mail_id)
             else:
-                # A mail neither rejected nor failed always comes with its hash.
+                # A mail neither rejected, failed nor unhashed comes with its hash.
                 mail_hash = cast("str", mail_hash)
                 self.mails.setdefault(mail_hash, []).append(mail)
                 self.stats[Stat.MAIL_RETAINED] += 1
@@ -1674,12 +1708,18 @@ class Deduplicate:
         """
         # Box opening stats.
         self.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_REJECTED)
+        self.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_UNHASHED)
         self.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_FAILED)
         self.assert_stats(Stat.MAIL_FOUND, ">=", Stat.MAIL_RETAINED)
         self.assert_stats(
             Stat.MAIL_FOUND,
             "==",
-            (Stat.MAIL_REJECTED, Stat.MAIL_FAILED, Stat.MAIL_RETAINED),
+            (
+                Stat.MAIL_REJECTED,
+                Stat.MAIL_UNHASHED,
+                Stat.MAIL_FAILED,
+                Stat.MAIL_RETAINED,
+            ),
         )
 
         # Mail grouping by hash.
@@ -1705,10 +1745,10 @@ class Deduplicate:
             ),
         )
 
-        # Action stats. Each action targets a single subset of mails: the union of
-        # unique and selected mails for *-selected actions, the selected ones alone
-        # for the deletion sparing the mails that have no duplicate, and the
-        # discarded mails for *-discarded ones. The counters the action reports on
+        # Action stats. Each action targets a single subset of mails: the unique,
+        # unhashed and selected mails for *-selected actions, the selected ones
+        # alone for the deletion sparing the other two, and the discarded mails for
+        # *-discarded ones. The counters the action reports on
         # are expected to account for its target exactly, as they are incremented in
         # dry-run mode too.
         action = self.conf["action"]
@@ -1735,7 +1775,9 @@ class Deduplicate:
                 self.assert_stats(Stat.MAIL_SELECTED, "==", action_counter)
             else:
                 self.assert_stats(
-                    (Stat.MAIL_UNIQUE, Stat.MAIL_SELECTED), "==", action_counter
+                    (Stat.MAIL_UNIQUE, Stat.MAIL_UNHASHED, Stat.MAIL_SELECTED),
+                    "==",
+                    action_counter,
                 )
 
         # Sets accounting.

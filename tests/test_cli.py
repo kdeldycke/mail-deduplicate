@@ -276,13 +276,13 @@ def test_single_hash_header_needs_no_minimal_flag(invoke, make_box):
     )
 
     assert result.exit_code == 0
-    # The mail is hashed rather than rejected by the minimal-headers floor.
+    # The mail is hashed, where the minimal-headers floor would leave it unhashed.
     assert "Hash:" in result.stdout
-    assert "Rejecting" not in result.stderr
+    assert "too few headers" not in result.stderr
 
 
-def test_too_few_headers_rejects_mail(invoke, make_box):
-    """A mail carrying fewer hash headers than the floor is rejected.
+def test_too_few_headers_leaves_mail_unhashed(invoke, make_box):
+    """A mail carrying fewer hash headers than the floor gets no hash.
 
     The warning renders the headers that were found, so the mail can be inspected.
 
@@ -301,11 +301,10 @@ def test_too_few_headers_rejects_mail(invoke, make_box):
     )
 
     assert result.exit_code == 0
-    assert "Rejecting" in result.stderr
-    assert "1 headers found out of 4" in result.stderr
+    assert "with too few headers to hash it: 1 headers found out of 4" in result.stderr
     # The table of the headers that were found is rendered alongside the warning.
     assert "Header ID" in result.stderr
-    # Being rejected, the mail never reaches the hashing step.
+    # Unhashed, the mail has no hash to print.
     assert "Hash:" not in result.stdout
 
 
@@ -415,7 +414,7 @@ def test_conservative_hashes_a_mail_lacking_headers(invoke, tmp_path):
     result = invoke("--conservative", "--action=delete-discarded", box_path)
 
     assert result.exit_code == 0
-    assert "Rejecting" not in result.stderr
+    assert "too few headers" not in result.stderr
     assert len(Maildir(box_path, create=False)) == 1
 
 

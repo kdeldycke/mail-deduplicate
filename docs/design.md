@@ -77,6 +77,8 @@ $ mdedup --hash-only sent.mbox garden-club.mbox
 
 To avoid hashing mails with too few headers (like corrupted mails), a minimal number of the selected headers must be present in a mail before its hash is trusted.
 
+A mail below that floor gets no hash. It joins no duplicate set, so no strategy rules on it, and it stays in the selection like a mail without duplicates: a copy or a move carries it into the export box, and the `Unhashed` row of the statistics counts it.
+
 This floor is derived automatically as the smaller of **4** and the number of headers selected via `--hash-header`. The default ten-header set therefore requires at least four to be present, while narrowing the selection down to a single header relaxes the floor to match, so no dedicated option is needed.
 
 ### Reusing hashes between runs
@@ -143,7 +145,7 @@ A strategy names the half of each set it selects, and an action names the half i
 
 ### Mails without duplicates
 
-A mail alone in its duplicate set has no copy to be compared to, so no strategy ever rules on it. It is kept, and belongs to the selection the `*-selected` actions target: this is what makes `--action copy-selected` and `--action move-selected` produce a box holding the whole deduplicated corpus, and not its duplicates only.
+A mail alone in its duplicate set has no copy to be compared to, so no strategy ever rules on it. It is kept, and belongs to the selection the `*-selected` actions target: this is what makes `--action copy-selected` and `--action move-selected` produce a box holding the whole deduplicated corpus, and not its duplicates only. A mail with too few headers to be hashed is kept the same way, as no strategy can rule on it either.
 
 `--action delete-selected` is the one exception, and leaves those mails in place. Deleting one removes the only copy of it there is, and nothing was written anywhere else first. The deletion therefore applies to the mails a strategy really picked, and the run warns how many mails it left untouched before acting.
 

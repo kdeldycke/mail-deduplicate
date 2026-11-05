@@ -296,7 +296,7 @@ def test_delete_selected_spares_mails_without_duplicates(invoke, make_box, jobs)
     assert result.exit_code == 0
     assert "Metrics appear inconsistent" not in result.stderr
     assert "too dissimilar in size" in result.stderr
-    assert "left untouched: they have no duplicate" in result.stderr
+    assert "left untouched: no strategy ruled on them" in result.stderr
     check_box(
         box_path, box_type, content=[plain_copy, copy_with_attachment, unique_mail]
     )

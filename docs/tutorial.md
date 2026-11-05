@@ -368,10 +368,10 @@ Only copies identical byte for byte are linked by default. Two copies of a mail 
 
 Several safeguards run before any mail is acted upon, each detailed in the [design page](https://kdeldycke.github.io/mail-deduplicate/design.html). None of them has anything to check under `--conservative`, whose duplicate sets hold identical bytes by construction.
 
-- Mails with too few of the hashed headers are rejected as unparsable instead of being trusted.
+- A mail with too few of the hashed headers gets no hash, as a hash resting on so little cannot be trusted. It joins no duplicate set, and is kept like a mail without duplicates.
 - Mails differing too much in size or content from the rest of their set are considered suspicious: they are set aside, and only the mails that all match each other are deduplicated. The set is skipped as a whole when no such core remains. The `--size-threshold` and `--content-threshold` options tune these limits, and `--show-diff` prints the offending differences.
 - A strategy that would select all mails of a set, or none, achieves nothing: the set is handed over to the next `--strategy` if one was chained, and left untouched otherwise.
-- Unique mails are always part of the final selection, so a merge never drops them.
+- Unique mails, and mails with no hash, are always part of the final selection, so a merge never drops them.
 - A mail or a set that hits an unexpected error is set aside and left untouched, and the run ends with a bug report to paste into an issue. See [errors and bug reports](https://kdeldycke.github.io/mail-deduplicate/design.html#errors-and-bug-reports).
 
 `--show-diff` prints the difference that made a set fail the content threshold. Here two mails share every hashed header, `Message-ID` included, but one holds a soup recipe and the other a weather log:

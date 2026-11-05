@@ -53,6 +53,7 @@ from mail_deduplicate.cache import default_cache_dir
 from mail_deduplicate.deduplicate import (
     Deduplicate,
     DuplicateSet,
+    HashedMail,
     MailMeta,
     Stat,
     _hash_in_worker,
@@ -897,12 +898,6 @@ def test_action_system_error_is_one_line(invoke, make_box, monkeypatch):
             "unreadable file: [Errno 13] Permission denied",
             id="unreadable-mid-hash",
         ),
-        pytest.param(
-            "hash",
-            TooFewHeaders("1 headers found out of 4."),
-            "1 headers found out of 4.",
-            id="too-few-headers",
-        ),
     ),
 )
 def test_hashing_worker_rejects_or_sets_aside_its_mail(
@@ -948,6 +943,36 @@ def test_hashing_worker_rejects_or_sets_aside_its_mail(
         rejection,
         failure,
     )
+
+
+def test_hashing_worker_leaves_a_mail_with_too_few_headers_unhashed(
+    config, make_box, monkeypatch, worker_state
+):
+    """A worker sends back why a mail has no hash, and the parent keeps the mail.
+
+    The verdict travels in a field of its own, apart from a rejection, as the parent
+    keeps this mail in the selection where it drops a rejected one.
+    """
+    box_path, _, _ = make_box(Maildir, [MailFactory(message_id=DOOMED_ID)])
+    box = BoxFormat.MAILDIR.constructor(box_path, create=False)
+    mail_id = next(iter(box.keys()))
+    path = resolve_mail_path(box, mail_id)
+    fail_on_doomed(monkeypatch, "hash_key", TooFewHeaders("1 headers found out of 4."))
+
+    _init_hash_worker(config, MaildirDedupMail)
+    result = _hash_in_worker((box._path, mail_id, path))
+
+    assert result == HashedMail(
+        None, None, None, None, unhashed="1 headers found out of 4."
+    )
+    outcome = Deduplicate(config).adopt_hashed(box, mail_id, result)
+    assert (
+        outcome.mail_hash,
+        outcome.rejection,
+        outcome.failure,
+        outcome.unhashed,
+    ) == (None, None, None, "1 headers found out of 4.")
+    assert outcome.mail.mail_id == mail_id
 
 
 @pytest.mark.parametrize("failing", ("select", "read"))
