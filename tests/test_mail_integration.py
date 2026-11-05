@@ -326,14 +326,14 @@ def test_mail_with_too_few_headers_is_kept(
     "args",
     (
         pytest.param(("--strategy=select-one",), id="default"),
-        pytest.param(("--conservative",), id="conservative"),
+        pytest.param(("--preset=conservative",), id="conservative"),
     ),
 )
 def test_crlf_and_lf_bodies_are_duplicates(invoke, tmp_path, args):
     """Two mails that differ only by LF or CRLF line endings are duplicates.
 
     Line endings must not count toward size or content differences, nor toward the
-    bytes `--conservative` compares.
+    bytes the conservative preset compares.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/844 (fixed by PR 845).
     """

@@ -17,7 +17,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 ## Features
 
 - Duplicate detection based on cherry-picked and normalized mail headers.
-- A conservative mode that only treats identical mails as copies, to run on every box before tuning anything.
+- Presets: a conservative one that only treats identical mails as copies, to run on every box before tuning anything, and an aggressive one that trusts `Message-ID` alone.
 - Fetch mails from multiple sources.
 - Reads and writes to `mbox`, `maildir`, `babyl`, `mh`, `mmdf` and `eml` formats.
 - Deduplication strategies based on size, timestamp, file path or quantity, chainable as fallbacks.
@@ -64,10 +64,10 @@ Standalone binaries of `mdedup`'s latest version are available as direct downloa
 
 Duplicate mails pile up whenever boxes get copied around: backups of the same account taken at different times, per-folder exports where a mail tagged with several labels lands in several boxes, archives consolidated from multiple clients, or IMAP synchronizations gone wrong.
 
-`mdedup` cleans this up. Start with a conservative pass over all your boxes: `--conservative` treats as copies only the mails whose bytes are identical, keeps one copy of each, and writes every mail that survives into a brand new box. The sources are only read, so there is nothing to rehearse:
+`mdedup` cleans this up. Start with a conservative pass over all your boxes: `--preset conservative` treats as copies only the mails whose bytes are identical, keeps one copy of each, and writes every mail that survives into a brand new box. The sources are only read, so there is nothing to rehearse:
 
 ```shell-session
-$ mdedup --conservative --export merged.mbox 2024.mbox 2025.mbox
+$ mdedup --preset conservative --export merged.mbox 2024.mbox 2025.mbox
 ```
 
 <p align="center">

@@ -19,7 +19,8 @@ stdout_contains = [
     "Usage: mdedup [OPTIONS] MAIL_SOURCE_1 MAIL_SOURCE_2",
 
     # A flag pair renders both of its spellings.
-    "  --conservative / --no-conservative",
+    "  --raw-headers / --no-raw-headers",
+    "  --preset [conservative|default|aggressive]",
 
     # Check that Enums are properly rendered in help.
     "  -b, --hash-body [skip|raw|decoded|normalized]",

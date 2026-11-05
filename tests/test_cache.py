@@ -171,7 +171,7 @@ def test_warm_run_matches_uncached_run(
 @pytest.mark.parametrize(
     "changed_option",
     (
-        "--conservative",
+        "--raw-headers",
         "--hash-header=message-id",
         "--hash-body=decoded",
         "--time-source=ctime",

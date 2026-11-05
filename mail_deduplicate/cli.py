@@ -19,7 +19,8 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TypedDict
+from enum import StrEnum
+from typing import Any, TypedDict
 
 from click_extra import (
     BadParameter,
@@ -105,19 +106,71 @@ automatically when the hash is narrowed to fewer headers than this cap via
 """
 
 
-CONSERVATIVE_LOCKED_OPTIONS = (
-    "hash_headers",
-    "hash_body",
-    "size_threshold",
-    "content_threshold",
-)
-"""Parameters that `--conservative` replaces, by their name.
+class Preset(StrEnum):
+    """Named sets of option values, each a starting point for a run.
 
-Byte identity leaves them nothing to decide: the mails of a set hold the same
-bytes, so no choice of headers, no body hashing and no threshold applies. One of
-them set from any source, the command line, the environment or a configuration
-file, is a usage error, so a conservative run never carries a setting it ignores.
+    A preset is an alias of the options `PRESET_OPTIONS` lists for it.
+    """
+
+    CONSERVATIVE = "conservative"
+    """Treats as copies only the mails whose bytes are identical."""
+
+    DEFAULT = "default"
+    """Keeps the built-in defaults."""
+
+    AGGRESSIVE = "aggressive"
+    """Trusts the `Message-ID` header alone to group copies."""
+
+
+PRESET_OPTIONS: dict[Preset, tuple[tuple[str, str | bool], ...]] = {
+    Preset.CONSERVATIVE: (
+        ("--raw-headers", True),
+        ("--hash-body", "raw"),
+        ("--size-threshold", "-1"),
+        ("--content-threshold", "-1"),
+        ("--strategy", "select-one"),
+    ),
+    Preset.DEFAULT: (),
+    Preset.AGGRESSIVE: (("--hash-header", "Message-ID"),),
+}
+"""The options each preset stands for, spelled as on the command line.
+
+`apply_preset()` gives each of them its value, unless the user set that option.
+
+The conservative preset hashes the bytes of the whole mail, which only identical
+copies share. The thresholds then have nothing left to catch, and turning them off
+spares a second read of each mail. Identical copies are interchangeable, so it also
+keeps one of each.
+
+The aggressive preset trusts `Message-ID` alone, so the copies whose other headers
+a mailing list or a gateway rewrote still share a hash. The thresholds stay the
+only check against two mails that reuse an ID. Its copies can differ, so which one
+to keep stays the user's choice.
 """
+
+LINKED_OPTIONS: tuple[frozenset[str], ...] = (
+    frozenset(("hash_headers", "raw_headers")),
+)
+"""Options that make one choice between them, by their name.
+
+`--raw-headers` hashes every header, so a `--hash-header` list has nothing left to
+select. The user setting either option decides the headers, so a preset value for
+the other one gives way too.
+"""
+
+QUIET_OVERRIDES = frozenset(("strategies",))
+"""Options the user can set over a preset with no warning, by their name.
+
+The strategy decides which copy stays, not what counts as a copy.
+"""
+
+
+def preset_words(preset: Preset) -> str:
+    """The options a preset stands for, as typed on the command line."""
+    return " ".join(
+        flag if value is True else f"{flag} {value}"
+        for flag, value in PRESET_OPTIONS[preset]
+    )
 
 
 class Config(TypedDict):
@@ -125,7 +178,7 @@ class Config(TypedDict):
 
     input_format: BoxFormat | None
     force_unlock: bool
-    conservative: bool
+    raw_headers: bool
     hash_headers: tuple[str, ...]
     minimal_headers: int
     hash_body: BodyHasher
@@ -311,18 +364,60 @@ def flag_names(param: Parameter) -> str:
     return "/".join(param.opts + param.secondary_opts)
 
 
-def locked_options_set(ctx: Context) -> list[str]:
-    """The options `--conservative` replaces that the user set anyway.
+def user_set(ctx: Context, name: str) -> bool:
+    """Whether the user gave a parameter its value, from any source but its default.
 
-    Read from the source of each parameter, as `ignored_step_options()` does, so a
-    value from a configuration file or the environment counts as set.
+    A value from a configuration file or the environment counts as set, as it does
+    for `ignored_step_options()`.
     """
-    return [
-        flag_names(param)
-        for param in ctx.command.params
-        if param.name in CONSERVATIVE_LOCKED_OPTIONS
-        and ctx.get_parameter_source(param.name) not in (None, ParameterSource.DEFAULT)
-    ]
+    return ctx.get_parameter_source(name) not in (None, ParameterSource.DEFAULT)
+
+
+def apply_preset(ctx: Context, preset: Preset) -> dict[str, Any]:
+    """The values a preset gives the options the user left at their default.
+
+    An option the user set keeps its value. The run warns about each one that
+    overrides the preset with another value, unless `QUIET_OVERRIDES` lists it.
+    The options of a `LINKED_OPTIONS` group give way together.
+
+    :param ctx: the context of the run, holding the values of its parameters.
+    :param preset: the preset to apply.
+    :return: the value of each option the preset sets, by parameter name.
+    """
+    by_flag = {opt: param for param in ctx.command.params for opt in param.opts}
+    by_name = {param.name: param for param in ctx.command.params}
+    values: dict[str, Any] = {}
+    applied: list[str] = []
+    overriding: set[str] = set()
+    for flag, raw in PRESET_OPTIONS[preset]:
+        param = by_flag[flag]
+        # Always set for an option.
+        assert param.name is not None
+        value = param.process_value(ctx, [raw] if param.multiple else raw)
+        word = flag if raw is True else f"{flag} {raw}"
+        group = next(
+            (group for group in LINKED_OPTIONS if param.name in group),
+            frozenset((param.name,)),
+        )
+        set_by_user = [name for name in sorted(group) if user_set(ctx, name)]
+        if not set_by_user:
+            values[param.name] = value
+            applied.append(word)
+        elif set_by_user == [param.name] and ctx.params[param.name] == value:
+            # The user asked for the value the preset gives.
+            applied.append(word)
+        elif param.name not in QUIET_OVERRIDES:
+            overriding.update(flag_names(by_name[name]) for name in set_by_user)
+    if applied:
+        # The options go on a log line of their own: they fill most of a terminal,
+        # and a line folding one of them in two would read as another option.
+        logging.info(f"Apply the options of the {preset} preset:")
+        logging.info(" ".join(applied))
+    if overriding:
+        logging.warning(
+            f"Options override the {preset} preset: {human_join(sorted(overriding))}."
+        )
+    return values
 
 
 def ignored_step_options(ctx) -> list[str]:
@@ -368,6 +463,22 @@ def ignored_step_options(ctx) -> list[str]:
     },
 )
 @option_group(
+    "Preset",
+    option(
+        "--preset",
+        type=EnumChoice(Preset),
+        default=Preset.DEFAULT,
+        help="Start from the option values of a preset. "
+        f"{Preset.CONSERVATIVE} treats as copies only the mails whose bytes are "
+        f"identical, and stands for {preset_words(Preset.CONSERVATIVE)}. "
+        f"{Preset.DEFAULT} keeps the built-in defaults. {Preset.AGGRESSIVE} trusts the "
+        "Message-ID header alone to group copies, and stands for "
+        f"{preset_words(Preset.AGGRESSIVE)}. An option set on the command line, in the "
+        "environment or in a configuration file overrides the value the preset "
+        "gives it.",
+    ),
+)
+@option_group(
     "Mail sources (step #1)",
     option(
         "-i",
@@ -389,17 +500,6 @@ def ignored_step_options(ctx) -> list[str]:
 @option_group(
     "Hashing (step #2)",
     option(
-        "--conservative/--no-conservative",
-        default=False,
-        help="Treat as copies only the mails whose bytes are identical, line endings "
-        "aside. No header is read, no body is decoded and no threshold applies, so "
-        "the --hash-header, --hash-body, --size-threshold and --content-threshold "
-        "options are refused alongside it. Identical copies are interchangeable, so "
-        "the select-one strategy keeps one copy of each mail unless --strategy names "
-        "another criterion. A first pass to run on all your boxes before tuning "
-        "anything.",
-    ),
-    option(
         "-h",
         "--hash-header",
         "hash_headers",
@@ -411,6 +511,14 @@ def ignored_step_options(ctx) -> list[str]:
         help="Headers to use to compute each mail's hash. Must be repeated multiple "
         "times to set an ordered list of headers. Header IDs are case-insensitive. "
         "Repeating entries are ignored.",
+    ),
+    option(
+        "--raw-headers/--no-raw-headers",
+        default=False,
+        help="Hash the header block of each mail as its box stores it, line endings "
+        "aside: every header, in its order, with no normalization. Replaces the "
+        "--hash-header list, so the two are refused together, and no minimal number "
+        "of headers is required.",
     ),
     option(
         "-b",
@@ -637,10 +745,11 @@ def ignored_step_options(ctx) -> list[str]:
 @pass_context
 def mdedup(
     ctx,
+    preset,
     input_format,
     force_unlock,
-    conservative,
     hash_headers,
+    raw_headers,
     hash_body,
     hash_only,
     cache,
@@ -676,45 +785,45 @@ def mdedup(
         echo(ctx.get_help(), color=ctx.color)
         ctx.exit()
 
-    if conservative:
-        locked = locked_options_set(ctx)
-        if locked:
-            raise UsageError(
-                f"--conservative replaces {human_join(locked)}: drop one side."
-            )
-        # Identical copies are interchangeable, so any of them will do unless the
-        # user names a criterion.
-        if not strategies:
-            strategies = (Strategy.SELECT_ONE,)
+    # A header list selects nothing once every header is hashed. The user setting
+    # both is a contradiction, where a preset setting either one gives way.
+    if raw_headers and user_set(ctx, "raw_headers") and user_set(ctx, "hash_headers"):
+        raise UsageError(
+            "--raw-headers hashes every header, so -h/--hash-header has nothing to "
+            "select: drop one of them."
+        )
 
     if export and export.exists() and not export_append:
         raise ClickException(
             f"Cannot export to existing file {export} unless --export-append is set."
         )
 
+    # Every option of the run, the preset filling those left at their default.
+    settings = {**ctx.params, **apply_preset(ctx, preset)}
+
     conf = Config(
-        input_format=input_format,
-        force_unlock=force_unlock,
-        conservative=conservative,
-        hash_headers=hash_headers,
-        minimal_headers=min(DEFAULT_MINIMAL_HEADERS, len(hash_headers)),
-        hash_body=hash_body,
-        hash_only=hash_only,
+        input_format=settings["input_format"],
+        force_unlock=settings["force_unlock"],
+        raw_headers=settings["raw_headers"],
+        hash_headers=settings["hash_headers"],
+        minimal_headers=min(DEFAULT_MINIMAL_HEADERS, len(settings["hash_headers"])),
+        hash_body=settings["hash_body"],
+        hash_only=settings["hash_only"],
         # An explicit database location is a request to use it.
-        cache=cache or cache_path is not None,
-        cache_path=cache_path,
-        size_threshold=size_threshold,
-        content_threshold=content_threshold,
-        show_diff=show_diff,
-        strategies=strategies,
-        time_source=time_source,
-        regexp=regexp,
-        action=action,
-        export=export,
-        export_format=export_format,
-        export_append=export_append,
-        hardlink_differing=hardlink_differing,
-        dry_run=dry_run,
+        cache=settings["cache"] or settings["cache_path"] is not None,
+        cache_path=settings["cache_path"],
+        size_threshold=settings["size_threshold"],
+        content_threshold=settings["content_threshold"],
+        show_diff=settings["show_diff"],
+        strategies=settings["strategies"],
+        time_source=settings["time_source"],
+        regexp=settings["regexp"],
+        action=settings["action"],
+        export=settings["export"],
+        export_format=settings["export_format"],
+        export_append=settings["export_append"],
+        hardlink_differing=settings["hardlink_differing"],
+        dry_run=settings["dry_run"],
     )
 
     dedup = Deduplicate(conf)
@@ -749,15 +858,10 @@ def mdedup(
 
             # Print all computed hashes. Rendering the canonical headers needs the
             # full message back, so borrow it one mail at a time to keep memory flat.
-            # A conservative run hashes bytes, not headers, so it names the mail and
-            # the bytes it read instead of the table.
             for all_mails in dedup.mails.values():
                 for mail in all_mails:
                     with mail.hydrated():
-                        if conservative:
-                            echo(f"\n{mail!r}: {len(mail.raw_mail())} bytes")
-                        else:
-                            echo(mail.pretty_canonical_headers())
+                        echo(mail.pretty_canonical_headers())
                         echo(f"Hash: {mail.hash_key()}")
 
             # Exit right away, releasing the boxes and the cache on the way out.

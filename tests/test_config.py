@@ -86,35 +86,38 @@ def test_config_unknown_key_rejected(invoke, make_box, make_config):
     assert "Unknown configuration key 'strategyy'." in result.stderr
 
 
-def test_config_conservative(invoke, make_box, make_config):
-    """`conservative` picked up from a configuration file drives the hashing."""
+def test_config_preset(invoke, make_box, make_config):
+    """A preset picked up from a configuration file applies its options."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])
     conf_path = make_config("""\
         [mdedup]
-        conservative = true
+        preset = "conservative"
     """)
 
     result = invoke("--config", conf_path, "--hash-only", box_path)
 
     assert result.exit_code == 0
-    assert "Conservative mode" in result.stderr
+    assert "Apply the options of the conservative preset:" in result.stderr
+    assert "info: --raw-headers --hash-body raw " in result.stderr
 
 
-def test_config_conservative_refuses_a_replaced_option(invoke, make_box, make_config):
-    """An option `--conservative` replaces is refused from a configuration file too.
+def test_config_value_overrides_a_preset(invoke, make_box, make_config):
+    """A configuration file value overrides the preset, and the run says so.
 
-    A forgotten `hash-body` would otherwise read as applied to a run that ignores it.
+    A forgotten key would otherwise change a run that reads as conservative.
     """
     box_path, _, _ = make_box(Maildir, [MailFactory()])
     conf_path = make_config("""\
         [mdedup]
-        hash-body = "raw"
+        hash-body = "decoded"
     """)
 
-    result = invoke("--config", conf_path, "--conservative", "--hash-only", box_path)
+    result = invoke(
+        "--config", conf_path, "--preset=conservative", "--hash-only", box_path
+    )
 
-    assert result.exit_code == 2
-    assert "--conservative replaces -b/--hash-body" in result.stderr
+    assert result.exit_code == 0
+    assert "Options override the conservative preset: -b/--hash-body." in result.stderr
 
 
 def test_config_mail_sources_blocked(invoke, make_box, make_config):

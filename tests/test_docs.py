@@ -27,6 +27,8 @@ import extra_platforms
 import pytest
 from extra_platforms import ALL_AGENTS
 
+from mail_deduplicate.cli import Preset, preset_words
+
 TESTS_DIR = Path(__file__).parent
 """Directory of the test suite."""
 
@@ -41,6 +43,9 @@ ASSETS_DIR = PROJECT_ROOT / "docs" / "assets"
 
 CAPTURE_SCRIPT = PROJECT_ROOT / "docs" / "cli_screenshots_update.py"
 """Script drawing the CLI captures the readme and the docs embed."""
+
+DESIGN_PAGE = PROJECT_ROOT / "docs" / "design.md"
+"""Documentation page with the table of the presets."""
 
 NO_DOCS = "The documentation sources are not part of this tree."
 """Why a test reading `docs/` skips in the sdist, which ships the tests alone."""
@@ -60,6 +65,22 @@ def _cli_screenshots():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+@pytest.mark.once
+@pytest.mark.parametrize(
+    "preset", [preset for preset in Preset if preset_words(preset)], ids=str
+)
+def test_design_page_spells_out_each_preset(preset):
+    """`docs/design.md` lists the options each preset stands for.
+
+    The table of the page is written by hand, so a preset changing its options has
+    to change the table too.
+    """
+    if not DESIGN_PAGE.is_file():
+        pytest.skip(NO_DOCS)
+
+    assert f"`{preset_words(preset)}`" in DESIGN_PAGE.read_text(encoding="UTF-8")
 
 
 @pytest.mark.once

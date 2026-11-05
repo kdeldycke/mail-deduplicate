@@ -122,12 +122,11 @@ def test_raw_body_hash_reads_the_bytes_of_the_box(tmp_path, config):
     assert mails["eight-bit"].hash_decoded_body == mails["crlf"].hash_decoded_body
 
 
-def test_conservative_hash_is_the_hash_of_the_whole_mail(tmp_path, config):
-    """Under `--conservative`, `hash_key()` digests the bytes of the whole mail.
+def test_raw_headers_hash_the_header_block(tmp_path, config):
+    """Under `--raw-headers`, `hash_key()` digests the header block as stored.
 
-    Line endings are reduced to LF first, as `raw_mail()` reads them. No header
-    takes part, so a mail with none of the hashed headers still gets a hash, where
-    the default hashing rejects it.
+    Line endings are reduced to LF first. No header is required: a mail with none
+    of the hashed headers still gets a hash, where the default hashing gives it none.
     """
     raw = b"X-Fruit: plum\n\nA plum.\n"
     box_path = tmp_path / "box"
@@ -135,7 +134,7 @@ def test_conservative_hash_is_the_hash_of_the_whole_mail(tmp_path, config):
     (box_path / "new" / "lf").write_bytes(raw)
     (box_path / "new" / "crlf").write_bytes(raw.replace(b"\n", b"\r\n"))
 
-    config["conservative"] = True
+    config["raw_headers"] = True
     box = BoxFormat.MAILDIR.constructor(box_path, create=False)
     mails = {}
     for mail_id, mail in box.iteritems():
@@ -144,9 +143,10 @@ def test_conservative_hash_is_the_hash_of_the_whole_mail(tmp_path, config):
         mails[mail_id] = mail
     box.close()
 
-    assert mails["lf"].raw_mail() == raw
-    assert mails["crlf"].raw_mail() == raw
-    assert mails["lf"].hash_key() == hashlib.sha224(raw).hexdigest()
+    for mail in mails.values():
+        assert mail.raw_headers() == b"X-Fruit: plum\n\n"
+        assert mail.raw_body() == b"A plum.\n"
+    assert mails["lf"].hash_key() == hashlib.sha224(b"X-Fruit: plum\n\n").hexdigest()
     assert mails["crlf"].hash_key() == mails["lf"].hash_key()
 
 
@@ -195,7 +195,7 @@ def test_raw_body_starts_where_the_parser_ends_the_headers(tmp_path, raw, body):
     The parser treats a line that is neither a header nor a continuation as the
     start of the body when the blank line is missing, and so does the raw body. A
     bare CR ends a line for both, so the body of a mail with CR line endings is
-    not lost.
+    not lost. The header block holds the rest: the two join back into the mail.
     """
     path = tmp_path / "mail"
     path.write_bytes(raw)
@@ -203,6 +203,7 @@ def test_raw_body_starts_where_the_parser_ends_the_headers(tmp_path, raw, body):
     mail._path_override = str(path)
 
     assert mail.raw_body() == body
+    assert mail.raw_headers() + mail.raw_body() == raw.replace(b"\r\n", b"\n")
 
 
 def test_size_counts_the_bytes_of_the_decoded_body():

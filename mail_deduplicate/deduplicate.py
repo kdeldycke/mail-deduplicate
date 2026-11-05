@@ -351,12 +351,15 @@ class DuplicateSet:
         # Under `decoded`, every mail of the set shares the decoded body, from which
         # the size and the diff both follow: the size spread is zero and the diff
         # empty by construction, and both checks would only re-read each body to
-        # prove it. Under --conservative every mail of the set is the same bytes,
-        # which decode to the same body. `raw` hashes the bytes before they are
-        # decoded, and the same bytes decode to different texts under different
-        # transfer encodings, a header no hash covers by default. `normalized` folds
-        # whitespace away. The copies of both may still differ, and get checked.
-        if self.conf["conservative"] or self.conf["hash_body"] == BodyHasher.DECODED:
+        # prove it. With --raw-headers too, `raw` hashes every byte of the mail,
+        # and the same bytes decode to the same body. Alone, `raw` hashes the bytes
+        # before they are decoded, and the same bytes decode to different texts
+        # under different transfer encodings, a header no hash covers by default.
+        # `normalized` folds whitespace away. The copies of both may still differ,
+        # and get checked.
+        if self.conf["hash_body"] == BodyHasher.DECODED or (
+            self.conf["raw_headers"] and self.conf["hash_body"] == BodyHasher.RAW
+        ):
             return set()
 
         # Every pair is within the size threshold as soon as the extremes are, and
@@ -1231,11 +1234,8 @@ class Deduplicate:
         """
         self.step = "hashing"
         theme = get_current_theme()
-        if self.conf["conservative"]:
-            logging.info(
-                "Conservative mode: only mails with identical bytes, line endings "
-                "aside, share a hash."
-            )
+        if self.conf["raw_headers"]:
+            logging.info("Use every header, as stored, to compute hashes.")
         else:
             logging.info(
                 f"Use [{', '.join(map(theme.choice, self.conf['hash_headers']))}] "

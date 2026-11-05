@@ -23,6 +23,8 @@ hash-headers = ["Date", "From", "To", "Subject", "Message-ID"]
 size-threshold = 1024
 ```
 
+A `preset` key names a preset, as `--preset` does. Every other key of the file overrides the value the preset gives it, and the run warns about each one that changes what counts as a copy.
+
 Unrecognized keys are rejected: a run aborts with an error naming the offending key, so a typo cannot silently turn into a different deduplication than the one you configured.
 
 ## Location

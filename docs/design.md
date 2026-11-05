@@ -34,13 +34,29 @@ You can use `Message-ID` as the sole reference header by passing `--hash-header 
 
 Once a mail is hashed it is dehydrated: its parsed message is dropped, and only its identity, its source box and a few memoized scalars are retained. Even its own location is derived from its box on demand rather than stored. The steps below re-read from the source box whatever content they need, so the memory held for the rest of the run amounts to about 600 bytes per mail, whatever the size of the boxes.
 
-### Conservative mode
+### Raw headers
 
-`--conservative` replaces the hashing above with the one comparison that interprets nothing: the bytes of the whole mail, as its box holds them, with line endings reduced to LF as `--hash-body raw` does. Two mails share a hash only when they are identical copies, which is what a backup, an export or a repeated IMAP sync leaves behind.
+`--raw-headers` replaces the `--hash-header` list with the header block of each mail, as its box holds it, line endings reduced to LF as `--hash-body raw` does: every header, in its order, with nothing normalized. Every header counts, so no minimal number of them applies. With `--hash-body raw` as well, the hash covers every byte of the mail, and two mails share it only when they are identical copies.
 
-No header is read, so the minimal-headers floor below does not apply, and no mail is rejected for lacking headers. No body is decoded, so the size and content thresholds of the next step have nothing to check, and the selection reads no mail again. The `--hash-header`, `--hash-body`, `--size-threshold` and `--content-threshold` options are refused alongside it, from the command line, the environment or a configuration file alike, so a conservative run never carries a setting it ignores. Identical copies are interchangeable, so the run applies `select-one` unless `--strategy` names another criterion, like `select-matching-path` to keep the copies of one box.
+`--raw-headers` and `--hash-header` make one choice between them, so setting both is refused.
 
-What it misses is every copy that differs somewhere: a `Received` or `Status` header a server or a client added, a `>From ` quote an `mbox` writer inserted, a subject prefix or a footer a mailing list added. Those are the copies the header-based hashing recognizes. The one thing a conservative run loses with a discarded copy is what its box kept beside it: its folder, and its `maildir` flags.
+### Presets
+
+`--preset` starts a run from a named set of options. A preset is an alias: it gives each of its options its value, unless you set that option on the command line, in the environment or in a configuration file. The run then warns about each option that overrides the preset with another value. The strategy is the exception, and replaces the preset's without a warning: it decides which copy stays, not what counts as a copy.
+
+| Preset         | Stands for                                                                                       |
+| :------------- | :----------------------------------------------------------------------------------------------- |
+| `conservative` | `--raw-headers --hash-body raw --size-threshold -1 --content-threshold -1 --strategy select-one` |
+| `default`      | The built-in defaults                                                                            |
+| `aggressive`   | `--hash-header Message-ID`                                                                       |
+
+The `conservative` preset groups only identical copies, which is what a backup, an export or a repeated IMAP sync leaves behind. Its duplicate sets hold the same bytes, so the size and content thresholds have nothing left to catch, and turning them off spares the selection a second read of each mail. Identical copies are interchangeable, so it keeps one of each with `select-one`, unless `--strategy` names another criterion, like `select-matching-path` to keep the copies of one box.
+
+What it misses is every copy that differs somewhere: a `Received` or `Status` header a server or a client added, a `>From ` quote an `mbox` writer inserted, a subject prefix or a footer a mailing list added. The default hashing recognizes those. The one thing a conservative run loses with a discarded copy is what its box kept beside it: its folder, and its `maildir` flags.
+
+The `aggressive` preset trusts `Message-ID` alone. It also groups the copies whose other headers a mailing list or a gateway rewrote, and keeps the thresholds as the only check against two mails that reuse an ID. Its copies can differ, so it names no strategy: which copy to keep stays your choice.
+
+`--raw-headers` and `--hash-header` give way together: setting either one keeps a preset off both.
 
 ### Default headers and mailing lists
 

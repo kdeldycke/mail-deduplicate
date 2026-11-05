@@ -107,7 +107,7 @@ HEADER_LINE = re.compile(rb"\A(From |[!-9;-~]*:|[\t ])")
 or a folded continuation.
 
 The parser ends the headers on the first blank line, or on the first line that is
-none of these when the blank line is missing. `raw_body()` follows the same rule.
+none of these when the blank line is missing. `split_raw()` follows the same rule.
 """
 
 LINE = re.compile(rb"[^\r\n]*[\r\n]|[^\r\n]+\Z")
@@ -474,18 +474,18 @@ class DedupMailMixin(Message):
     def hash_key(self) -> str:
         """Returns the canonical hash of a mail.
 
-        Under `--conservative`, the hash is that of the whole mail, as `raw_mail()`
-        reads it: no header takes part, so the minimal-headers floor does not apply,
-        and no mail is rejected for lacking headers.
+        Under `--raw-headers`, the hash is that of the header block, as
+        `raw_headers()` reads it: every header takes part, so no minimal number of
+        them applies.
 
         ```{caution}
         This method hasn't been made explicitly into a cached property in order to
         reduce the overall memory footprint.
         ```
         """
-        if self.conf["conservative"]:
-            hash_value = hashlib.sha224(self.raw_mail()).hexdigest()
-            logging.debug(f"Mail hash: {hash_value}")
+        if self.conf["raw_headers"]:
+            hash_value = hashlib.sha224(self.raw_headers()).hexdigest()
+            logging.debug(f"Header block hash: {hash_value}")
             return hash_value
 
         serialized_headers = self.serialized_headers()
@@ -502,28 +502,36 @@ class DedupMailMixin(Message):
         them on Windows, so a mail would otherwise never hash like its own export,
         and a hash would depend on the platform.
 
-        Nothing else is interpreted: this is what `--conservative` hashes, so two
-        mails share a hash under it only when they are identical copies. A header a
-        server or a client added, an mbox `>From ` quote and a transfer encoding all
-        count.
+        Nothing else is interpreted. A header a server or a client added, an mbox
+        `>From ` quote and a transfer encoding all count.
         """
         return self.raw_bytes().replace(b"\r\n", b"\n")
 
-    def raw_body(self) -> bytes:
-        """The body bytes of the mail, as `raw_mail()` reads them.
+    def split_raw(self) -> tuple[bytes, bytes]:
+        """The bytes of `raw_mail()`, cut into the header block and the body.
 
-        The body starts after the first blank line, or at the first line that is
-        neither a header nor a continuation when that blank line is missing, where
-        the parser starts it too. A mail of headers alone has an empty body.
+        The header block ends with the first blank line, which it keeps. When that
+        blank line is missing, it ends before the first line that is neither a
+        header nor a continuation, where the parser starts the body too. A mail of
+        headers alone has an empty body. The two halves always join back into the
+        whole mail, so `--raw-headers` with `--hash-body raw` hashes every byte.
         """
         raw = self.raw_mail()
         for match in LINE.finditer(raw):
             line = match.group()
             if line in (b"\n", b"\r"):
-                return raw[match.end() :]
+                return raw[: match.end()], raw[match.end() :]
             if not HEADER_LINE.match(line):
-                return raw[match.start() :]
-        return b""
+                return raw[: match.start()], raw[match.start() :]
+        return raw, b""
+
+    def raw_headers(self) -> bytes:
+        """The header block of the mail, as `split_raw()` cuts it."""
+        return self.split_raw()[0]
+
+    def raw_body(self) -> bytes:
+        """The body bytes of the mail, as `split_raw()` cuts them."""
+        return self.split_raw()[1]
 
     @cached_property
     def hash_raw_body(self) -> str:
@@ -559,9 +567,17 @@ class DedupMailMixin(Message):
     def canonical_headers(self) -> tuple[tuple[str, str], ...]:
         """Returns the canonical header names and values, ready for hashing.
 
+        Under `--raw-headers`, it returns every header instead, in its order and
+        unnormalized, for `--hash-only` to show. The hash itself reads the bytes of
+        the header block: see `raw_headers()`.
+
         Self-hydrating: re-reads the message from its box if it was dehydrated.
         """
         self.hydrate()
+        if self.conf["raw_headers"]:
+            return tuple(
+                (name, self.header_text(value)) for name, value in self.raw_items()
+            )
         return tuple(
             (header_id, "\n".join(self.normalized_header_values(header_id)))
             for header_id in self.conf["hash_headers"]
@@ -622,8 +638,8 @@ class DedupMailMixin(Message):
             [f"{h_id}: {h_value}" for h_id, h_value in self.canonical_headers],
         ).encode("utf-8")
 
-    def header_values(self, header_id: str) -> Iterator[str]:
-        """Returns the text of each occurrence of a header, in the order of the mail.
+    def header_text(self, value: str | bytes | Header) -> str:
+        """The text of one header value, as the mail holds it.
 
         A header holding raw 8-bit bytes is read as those bytes: decoded as UTF-8
         where they are valid UTF-8, and escaped byte by byte elsewhere. `get()` and
@@ -632,18 +648,21 @@ class DedupMailMixin(Message):
         with `U+FFFD`, under which two headers differing in those bytes alone read,
         and hash, alike.
         """
+        if isinstance(value, Header):
+            return str(value)
+        if isinstance(value, bytes):
+            return value.decode("utf-8", "backslashreplace")
+        return self.undo_surrogateescape(value, "backslashreplace")
+
+    def header_values(self, header_id: str) -> Iterator[str]:
+        """Returns the text of each occurrence of a header, in the order of the mail.
+
+        Each value reads as `header_text()` reads it.
+        """
         header_id = header_id.lower()
         for name, value in self.raw_items():
-            if name.lower() != header_id:
-                continue
-            if isinstance(value, Header):  # type: ignore[unreachable]
-                yield str(value)  # type: ignore[unreachable]
-            elif isinstance(value, bytes):  # type: ignore[unreachable]
-                yield value.decode(  # type: ignore[unreachable]
-                    "utf-8", "backslashreplace"
-                )
-            else:
-                yield self.undo_surrogateescape(value, "backslashreplace")
+            if name.lower() == header_id:
+                yield self.header_text(value)
 
     def normalized_header_values(self, header_id: str) -> Iterator[str]:
         """Returns all normalized values of a header.

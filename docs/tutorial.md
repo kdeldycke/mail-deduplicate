@@ -133,16 +133,16 @@ for _path, _count in (("archive-2024.mbox", 4), ("archive-2025.mbox", 5)):
 
 That is 9 mails in total, of which only 6 are distinct. Two traps are laid for naive matchers. The two archives each contain a *different* "Weekly digest" mail, sent a year apart: a deduplicator keying on subjects alone would wrongly collapse them. And the garden club digest is kept twice, as sent and as the list delivered it back: a copy that no comparison of bytes recognizes.
 
-## First pass: the conservative run
+## First pass: the conservative preset
 
-Start with `--conservative`. It treats as copies only the mails whose bytes are identical, line endings aside: no header is read, nothing is decoded, no threshold applies. Identical copies are interchangeable, so it keeps the copy of each mail whose path sorts first. The default `copy-selected` action then writes every mail that survives into the `--export` box. The sources are only read, so this run needs no rehearsal:
+Start with `--preset conservative`. It treats as copies only the mails whose bytes are identical, line endings aside: no header is normalized, no body is decoded, no threshold applies. A preset is an alias of other options, which the run lists as it starts. Identical copies are interchangeable, so it keeps the copy of each mail whose path sorts first. The default `copy-selected` action then writes every mail that survives into the `--export` box. The sources are only read, so this run needs no rehearsal:
 
 ```{click:run}
 from mail_deduplicate.cli import mdedup
 
-result = invoke(mdedup, args=["--conservative", "--export", "first-pass.mbox", "archive-2024.mbox", "archive-2025.mbox"])
+result = invoke(mdedup, args=["--preset", "conservative", "--export", "first-pass.mbox", "archive-2024.mbox", "archive-2025.mbox"])
 assert result.exit_code == 0
-assert "Conservative mode" in result.output
+assert "Apply the options of the conservative preset" in result.output
 assert "7 mails selected for action." in result.output
 ```
 
@@ -170,14 +170,16 @@ The export box defaults to the `mbox` format. Pass `--export-format maildir` to 
 
 ## Second pass: when copies differ
 
-The conservative pass made four decisions for you. Each is an option of the default run:
+The conservative preset set five options for you. A run without `--preset` takes the `default` preset, which leaves each of them at its default:
 
-- Which headers identify a mail: `--hash-header`, ten of them by default, each reduced to a canonical form. `Date` is kept to its day, and `Subject` loses its `Re:` and `[list]` prefixes.
-- Whether the body counts: `--hash-body`, which leaves it out by default.
-- How far two copies may differ before they are left alone: `--size-threshold` and `--content-threshold`, measured on the decoded bodies.
-- Which copy of a set to keep: `--strategy`, which has no default.
+- Which headers identify a mail: `--raw-headers` hashes every header as stored. By default, the hash reads the `--hash-header` list instead, ten headers each reduced to a canonical form: `Date` is kept to its day, and `Subject` loses its `Re:` and `[list]` prefixes.
+- Whether the body counts: `--hash-body raw` hashes its bytes. By default, the body is left out.
+- How far two copies may differ before they are left alone: `--size-threshold` and `--content-threshold`, measured on the decoded bodies. The conservative preset turns both off, as identical bytes cannot differ.
+- Which copy of a set to keep: `--strategy select-one`. By default, no strategy runs.
 
 Under those defaults, the two copies of the garden club digest hash alike, and their bodies differ by a footer the thresholds allow. The price is interpretation: a run that sees through differences can be wrong about one, so it deserves a rehearsal before any destructive action, which is what `--dry-run` is for.
+
+`--preset aggressive` hashes `Message-ID` alone. It also groups the copies whose other headers a gateway rewrote, with the thresholds as the only check, so rehearse it too.
 
 ### Choose a strategy
 
@@ -190,7 +192,7 @@ A strategy decides, within each set of copies, which mails are *selected* and wh
 
 The full list, with the exact semantics of each, sits at the bottom of `mdedup --help` and in the [CLI parameters page](https://kdeldycke.github.io/mail-deduplicate/cli.html).
 
-Backup copies of the same mail are usually byte-identical: same `Date` header, same size. Time-based and size-based strategies cannot tell such copies apart, and skip the set as a whole rather than acting on it. That makes `select-one` the right strategy for merging identical copies, and the one `--conservative` applies on its own. It picks the same copy on every run, so a `--dry-run` names the copies the real run keeps.
+Backup copies of the same mail are usually byte-identical: same `Date` header, same size. Time-based and size-based strategies cannot tell such copies apart, and skip the set as a whole rather than acting on it. That makes `select-one` the right strategy for merging identical copies, and the one the conservative preset applies on its own. It picks the same copy on every run, so a `--dry-run` names the copies the real run keeps.
 
 Strategies can also be chained into a fallback cascade by repeating the option: `--strategy select-oldest --strategy select-one` keeps the oldest copy in the sets where dates differ, and falls back to the copy whose path sorts first in the sets where they do not.
 
@@ -361,12 +363,12 @@ Only copies identical byte for byte are linked by default. Two copies of a mail 
 ```
 
 ```{tip}
-`--conservative --action hardlink-discarded` reclaims space without a rehearsal: a conservative run only ever discards identical copies, which are the ones this action links by default.
+`--preset conservative --action hardlink-discarded` reclaims space without a rehearsal: the conservative preset only ever discards identical copies, which are the ones this action links by default.
 ```
 
 ## Safety nets
 
-Several safeguards run before any mail is acted upon, each detailed in the [design page](https://kdeldycke.github.io/mail-deduplicate/design.html). None of them has anything to check under `--conservative`, whose duplicate sets hold identical bytes by construction.
+Several safeguards run before any mail is acted upon, each detailed in the [design page](https://kdeldycke.github.io/mail-deduplicate/design.html). None of them has anything to check under the conservative preset, whose duplicate sets hold identical bytes by construction.
 
 - A mail with too few of the hashed headers gets no hash, as a hash resting on so little cannot be trusted. It joins no duplicate set, and is kept like a mail without duplicates.
 - Mails differing too much in size or content from the rest of their set are considered suspicious: they are set aside, and only the mails that all match each other are deduplicated. The set is skipped as a whole when no such core remains. The `--size-threshold` and `--content-threshold` options tune these limits, and `--show-diff` prints the offending differences.
@@ -386,7 +388,7 @@ $ mdedup --show-diff --strategy select-one --export merged.mbox new.mbox old.mbo
 
 A run that changes nothing is the number one source of confusion, so map the statistics report to its cause:
 
-- `--conservative` found nothing: no two mails share their bytes. Copies can still be there, differing by a header a server or a client added, a subject prefix or a footer. The [second pass](#second-pass-when-copies-differ) sees through such differences, and `--hash-only` shows what each mail hashes to under either mode.
+- The conservative preset found nothing: no two mails share their bytes. Copies can still be there, differing by a header a server or a client added, a subject prefix or a footer. The [second pass](#second-pass-when-copies-differ) sees through such differences, and `--hash-only` shows what each mail hashes to under any preset.
 - `Copied`, `Moved` or `Deleted` at zero: the action found nothing to act on. That row is the symptom, so read the rows above it for the cause. With `--action delete-selected`, zero is also what a box holding no duplicate at all reports, as mails without a copy are never deleted.
 - `Duplicates: 0`: no two mails shared a hash. A single box that was never merged or re-synced typically holds no duplicates: `mdedup` shines on piles of overlapping boxes. If you are certain copies are in there, they may differ in the hashed headers: mails re-delivered or forwarded can get a new `Message-ID` for instance. Narrow the matching down with repeated `--hash-header` options, or inspect what each mail hashes to with `--hash-only`.
 - `Duplicates` above zero but `Skipped - Strategy` counting sets: either no `--strategy` was given, or the chosen criterion cannot split the copies apart (identical copies share the same date and size). Switch to `select-one` or a path-based strategy, or chain one as a fallback with a repeated `--strategy` option.

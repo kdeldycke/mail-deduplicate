@@ -5,7 +5,8 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
-- Add `--conservative`, which treats as copies only the mails whose bytes are identical, and refuses the hashing and threshold options alongside it.
+- Add `--preset`, whose `conservative` value treats as copies only the mails whose bytes are identical, and whose `aggressive` value trusts `Message-ID` alone.
+- Add `--raw-headers`, which hashes every header as the box stores it, in place of the `--hash-header` list.
 - Make `select-one` keep, and `select-all-but-one` discard, the copy whose path sorts first instead of a random one.
 - Show each comment of `Date`, `MIME-Version` and `Content-Transfer-Encoding` by its shape in the bug report, as a comment can hold free text like a time zone name.
 - Make the steps to reproduce optional in the bug report form when a bug report is pasted, and warn that attached mails are public.

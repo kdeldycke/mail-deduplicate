@@ -502,12 +502,14 @@ picture is about what `mdedup` decides, not about a box changing.
 CAPTURES = (
     Capture(
         "mdedup-conservative-cli",
-        ("--conservative", "--export", "merged.mbox", *SOURCES),
+        ("--preset", "conservative", "--export", "merged.mbox", *SOURCES),
         "A conservative first pass",
         archives_playground,
-        # Cut where the header picture is: through the action's trail and its own
-        # count, without the two report tables.
-        ("--merge-stderr", "--head", "27"),
+        # Through the action's trail and its own count, without the two report
+        # tables, as the header picture is cut. The preset adds four lines above
+        # the trail: two for the options it applies, and two for the thresholds it
+        # turns off.
+        ("--merge-stderr", "--head", "31"),
     ),
     Capture(
         "mdedup-header-cli",
