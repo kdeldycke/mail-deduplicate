@@ -150,9 +150,11 @@ They can hold content: a file name, or a boundary built from a sender address.
 VERBATIM_HEADERS = frozenset(("content-transfer-encoding", "date", "mime-version"))
 """Headers a fingerprint shows as they are: they hold structure, not content.
 
-`Date` holds a time and no name, and its parsing caused several of the past crashes.
-See: https://github.com/kdeldycke/mail-deduplicate/issues/954 and
-https://github.com/kdeldycke/mail-deduplicate/issues/600
+Their comments are free text, so `mask_comments()` shows each one by its shape.
+`Date` caused several of the past crashes, by its parsing or by the bytes of its
+comment. See: https://github.com/kdeldycke/mail-deduplicate/issues/600,
+https://github.com/kdeldycke/mail-deduplicate/issues/954 and
+https://github.com/kdeldycke/mail-deduplicate/issues/1117
 """
 
 CONTROL_BYTES = re.compile(rb"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
@@ -233,6 +235,44 @@ def verbatim(value: str) -> str:
     return repr(flat) if flat.isascii() else repr(to_bytes(flat))
 
 
+def mask_comments(value: str) -> str:
+    """Replace the text of each comment of a header value by its shape.
+
+    A comment is free text in parentheses, which RFC 5322 allows between the tokens
+    of a structured header. Some mail clients write the name of their time zone
+    there, after a `Date`, and some their own name, after `MIME-Version`. A comment
+    can hold others, and a backslash quotes the character after it. A comment left
+    open runs to the end of the value.
+    """
+    shown: list[str] = []
+    comment: list[str] = []
+    depth = 0
+    escaped = False
+    for char in value:
+        if not depth:
+            if char == "(":
+                depth = 1
+            else:
+                shown.append(char)
+            continue
+        if escaped:
+            escaped = False
+        elif char == "\\":
+            escaped = True
+        elif char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+            if not depth:
+                shown.append(f"({shape(''.join(comment))})")
+                comment = []
+                continue
+        comment.append(char)
+    if depth:
+        shown.append(f"({shape(''.join(comment))}")
+    return "".join(shown)
+
+
 def split_parameters(value: str) -> list[str]:
     """Split a header value on its semicolons, except the ones in a quoted string."""
     parts = []
@@ -279,10 +319,13 @@ def structure(value: str) -> str:
 
 
 def header_value(name: str, value: str) -> str:
-    """Show a header value as its name allows: verbatim, by structure, or by shape."""
+    """Show a header value as its name allows: verbatim, by structure, or by shape.
+
+    A verbatim value still shows its comments by their shape.
+    """
     lower = name.lower()
     if lower in VERBATIM_HEADERS:
-        return verbatim(value)
+        return verbatim(mask_comments(value))
     if lower in PARAMETER_HEADERS:
         return structure(value)
     return shape(value)
@@ -373,11 +416,12 @@ def fingerprint(raw: bytes) -> str:
     """Describe a mail by its structure, with none of its content.
 
     The description shows the size and line endings of the mail, then every header
-    name, in order. Headers in `VERBATIM_HEADERS` show their value, those in
-    `PARAMETER_HEADERS` their structure, and any other one only the shape of its
-    value: length, kind of bytes, folding and encoded words. Then comes the MIME
-    tree, with the type, charset, transfer encoding and kind of bytes of each part,
-    the preamble and epilogue of each multipart, and the defects the parser found.
+    name, in order. Headers in `VERBATIM_HEADERS` show their value but for their
+    comments, those in `PARAMETER_HEADERS` their structure, and any other one only
+    the shape of its value: length, kind of bytes, folding and encoded words. Then
+    comes the MIME tree, with the type, charset, transfer encoding and kind of bytes
+    of each part, the preamble and epilogue of each multipart, and the defects the
+    parser found.
 
     Never raises: a mail too broken to describe gets a line saying so.
     """

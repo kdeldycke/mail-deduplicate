@@ -260,6 +260,24 @@ def test_fingerprint_describes_broken_mails(raw, expected):
             f"Date: '{'7' * bug_report.MAX_VALUE_LENGTH}...'",
             id="long-date",
         ),
+        # The 8-bit time zone name in the `Date` of issue 1117.
+        pytest.param(
+            b"Date: Sat, 10 Sep 2005 08:44:22 +0200 (Paris, Madrid (heure d'\xe9t\xe9))"
+            b"\n\nbody",
+            "Date: 'Sat, 10 Sep 2005 08:44:22 +0200 (<27 B 8-bit, not UTF-8>)'",
+            id="8bit-date-comment",
+        ),
+        # The quoted parenthesis closes no comment.
+        pytest.param(
+            b"Date: Thu, 11 Oct 2018 09:30:00 +0800 (a \\) b (c)) (d)\n\nbody",
+            "Date: 'Thu, 11 Oct 2018 09:30:00 +0800 (<10 B ascii>) (<1 B ascii>)'",
+            id="nested-comments",
+        ),
+        pytest.param(
+            b"Date: Thu, 11 Oct 2018 09:30:00 +0800 (Lyon\n\nbody",
+            "Date: 'Thu, 11 Oct 2018 09:30:00 +0800 (<4 B ascii>'",
+            id="unclosed-comment",
+        ),
         # The semicolon quoted after an escaped quote splits no parameter.
         pytest.param(
             b'Content-Type: text/plain; name="a\\"b;c"\n\nbody',
@@ -276,9 +294,17 @@ def test_fingerprint_describes_broken_mails(raw, expected):
 def test_fingerprint_shows_header_values(raw, expected):
     """Header values show by their shape, and a `Content-Type` by its structure.
 
-    A `Date` shows as it is, up to a capped length.
+    A `Date` shows as it is, but for its comments, up to a capped length.
     """
     assert expected in fingerprint(raw)
+
+
+@pytest.mark.parametrize("name", sorted(bug_report.VERBATIM_HEADERS))
+def test_fingerprint_masks_comments(name):
+    """Each header shown as it is shows its comments by their shape alone."""
+    print_ = fingerprint(f"{name}: 1.0 (Picnic in Lyon)\n\nbody".encode())
+    assert f"  {name}: '1.0 (<14 B ascii>)'" in print_
+    assert "Picnic in Lyon" not in print_
 
 
 def test_fingerprint_failure_is_reported(monkeypatch):

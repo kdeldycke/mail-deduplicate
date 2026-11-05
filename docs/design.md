@@ -176,7 +176,8 @@ A fingerprint describes the structure of a mail, never its content:
 
 - its size and line endings,
 - the name of each header,
-- the value of `Date`, `MIME-Version` and `Content-Transfer-Encoding`, and the type and structural parameters of `Content-Type` and `Content-Disposition`,
+- the value of `Date`, `MIME-Version` and `Content-Transfer-Encoding`, with the shape of each comment in place of its text,
+- the type and structural parameters of `Content-Type` and `Content-Disposition`,
 - the shape of every other header value: its length, its kind of bytes, its folding and its encoded words,
 - the MIME tree, with the type, charset, transfer encoding and kind of bytes of each part, the preamble and epilogue of each multipart, and the defects the parser found.
 
