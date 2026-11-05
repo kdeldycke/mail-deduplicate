@@ -65,10 +65,10 @@ DEDUP_ARGS = ("--strategy=select-newest", "--action=delete-discarded", "--dry-ru
 def cache_home(tmp_path):
     """Point the cache directory of `mdedup` to a folder of the test.
 
-    A run that ends with a bug report saves it in the cache directory. The `runner`
-    fixture pins `HOME` and `LOCALAPPDATA`, but not `XDG_CACHE_HOME`, which wins on
-    macOS and Linux, and a test that calls the code directly has no runner at all.
-    Subprocesses inherit the variables too.
+    A run that ends with a bug report saves it in the cache directory. Pointing
+    `XDG_CACHE_HOME` and `LOCALAPPDATA` here keeps every test out of the cache of the
+    user running the suite: the tests inside the `runner` fixture, the tests that
+    call the code directly, and the subprocesses they start.
 
     The variables go through a `MonkeyPatch` of its own. The `monkeypatch` fixture
     would then outlive the `runner` fixture of each test, and restore a working
