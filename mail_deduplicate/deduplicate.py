@@ -42,7 +42,7 @@ from click_extra import (
     progressbar,
 )
 
-from .bug_report import Failure, FailureLog, box_format_of, render_report
+from .bug_report import Failure, FailureLog, box_format_of, log_report
 from .cache import CacheEntry, HashCache, open_cache
 from .mail import TimeSource, TooFewHeaders
 from .mail_box import (
@@ -1591,13 +1591,12 @@ class Deduplicate:
             return False
         for trace in self.failures.traces():
             logging.debug(f"Traceback of a failure the report details:\n{trace}")
-        logging.error(
-            render_report(
-                self.failures.headline(),
-                self.failures.title(),
-                self.failures.report_lines(),
-                self.source_formats,
-            )
+        log_report(
+            logging.ERROR,
+            self.failures.headline(),
+            self.failures.title(),
+            self.failures.report_lines(),
+            self.source_formats,
         )
         return True
 
@@ -1645,20 +1644,19 @@ class Deduplicate:
             for stat in Stat
             if self.stats[stat]
         )
-        logging.error(
-            render_report(
-                "The statistics of the run do not add up, which is a bug.",
-                f"Statistics do not add up: {first_name} {operator} {second_name}",
+        log_report(
+            logging.ERROR,
+            "The statistics of the run do not add up, which is a bug.",
+            f"Statistics do not add up: {first_name} {operator} {second_name}",
+            (
+                "",
                 (
-                    "",
-                    (
-                        f"Failed check: {first_name} {operator} {second_name}, "
-                        f"{first_value} {operator} {second_value}"
-                    ),
-                    f"Statistics: {counts or 'all zero'}",
+                    f"Failed check: {first_name} {operator} {second_name}, "
+                    f"{first_value} {operator} {second_value}"
                 ),
-                self.source_formats,
-            )
+                f"Statistics: {counts or 'all zero'}",
+            ),
+            self.source_formats,
         )
         sys.exit(115)
 

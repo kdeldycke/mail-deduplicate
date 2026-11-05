@@ -9,6 +9,7 @@
 - Make the steps to reproduce optional in the bug report form when a bug report is pasted, and warn that attached mails are public.
 - Name the innermost function of `mdedup` in the title of a bug report, so two bugs raising the same error in the same step get different titles.
 - Say in the first line of a bug report that the run continued with the mails it did not set aside.
+- Save each bug report to a new file in the `reports` folder of the cache directory, and print the path of that file last.
 - Fix an `AttributeError` that set aside each mail whose `Date` header holds raw 8-bit bytes, like an accented time zone comment. Closes [#1117](https://github.com/kdeldycke/mail-deduplicate/issues/1117).
 - Make the binaries catalog of the documentation searchable and sortable.
 - Document how to verify the build attestation of a binary with `gh attestation verify`.

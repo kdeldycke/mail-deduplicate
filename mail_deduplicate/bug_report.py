@@ -41,12 +41,15 @@ import logging
 import os
 import re
 import sys
+import tempfile
 import traceback
 from collections import Counter
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 from email import message_from_bytes
 from email.message import Message
+from pathlib import Path
 from typing import cast
 from urllib.parse import urlencode
 
@@ -64,6 +67,7 @@ from click_extra import (
 from extra_platforms import is_any_agent
 
 from . import __version__
+from .cache import default_cache_dir
 from .mail_box import BoxFormat
 
 TYPE_CHECKING = False
@@ -93,6 +97,9 @@ REPORT_START = "----- 8< ----- mdedup bug report ----- 8< -----"
 
 REPORT_END = "----- 8< ----- end of bug report ----- 8< -----"
 """Last line of the block a user pastes into an issue."""
+
+REPORTS_FOLDER = "reports"
+"""Folder of the cache directory where `save_report()` writes each bug report."""
 
 FAILURE_ATTRIBUTE = "mdedup_failure"
 """Attribute of an exception that holds the `Failure` attached by `blame()`."""
@@ -808,6 +815,56 @@ def render_report(
     return "\n".join(lines)
 
 
+def save_report(report: str) -> Path | None:
+    """Write a bug report to a new file in the `REPORTS_FOLDER` of the cache.
+
+    A user who loses the output of a long run, to a closed terminal or a short
+    scrollback, still finds the report there. The file holds the report as it is
+    printed, with no path and no mail content, so it can be attached to an issue
+    whole.
+
+    Each report gets a new file, named after the time it was saved. `mkstemp()`
+    adds random characters to the name and never reuses one, so two reports of the
+    same second, like a run's failures and its statistics check, keep a file each.
+
+    Returns `None` if the file cannot be written: the printed report then stands
+    alone.
+    """
+    folder = default_cache_dir() / REPORTS_FOLDER
+    try:
+        folder.mkdir(parents=True, exist_ok=True)
+        handle, name = tempfile.mkstemp(
+            prefix=f"bug-report-{datetime.now(UTC):%Y-%m-%dT%H-%M-%S}-",
+            suffix=".txt",
+            dir=folder,
+        )
+        with open(handle, "w", encoding="UTF-8") as report_file:
+            report_file.write(f"{report}\n")
+    except OSError as expt:
+        logging.debug(f"Cannot save the bug report: {expt!r}")
+        return None
+    return Path(name)
+
+
+def log_report(
+    level: int,
+    headline: str,
+    title: str,
+    details: Iterable[str],
+    sources: Counter[str],
+) -> None:
+    """Log the report `render_report()` builds, and save it with `save_report()`.
+
+    The path of the saved file comes last, alone on its line, so it is the last
+    thing a user sees of the run, and easy to copy. It stays out of the file.
+    """
+    report = render_report(headline, title, details, sources)
+    path = save_report(report)
+    if path is not None:
+        report += f"\nThis report is also saved in this file:\n{path}"
+    logging.log(level, report)
+
+
 @contextmanager
 def blame(mail: DedupMailMixin, step: str) -> Generator[None, None, None]:
     """Attach the mail being processed to any error escaping the block.
@@ -852,12 +909,11 @@ def report_unexpected_errors(dedup: Deduplicate) -> Generator[None, None, None]:
         logging.critical(
             f"Unexpected error while {failure.step}{culprit}:", exc_info=expt
         )
-        logging.critical(
-            render_report(
-                "mdedup stopped on this error, which is a bug.",
-                failure.title,
-                failure_lines((failure,), f"Failure while {failure.step}"),
-                dedup.source_formats,
-            )
+        log_report(
+            logging.CRITICAL,
+            "mdedup stopped on this error, which is a bug.",
+            failure.title,
+            failure_lines((failure,), f"Failure while {failure.step}"),
+            dedup.source_formats,
         )
         get_current_context().exit(1)

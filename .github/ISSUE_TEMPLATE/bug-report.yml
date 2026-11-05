@@ -36,7 +36,10 @@ body:
       description: >
         If `mdedup` printed a bug report, paste the lines between its two `8<`
         markers. They give the version, the options of the run and the structure
-        of the failing mails, with none of their content.
+        of the failing mails, with none of their content. `mdedup` also saves each
+        report in the `reports` folder of its cache directory:
+        `~/Library/Caches/mdedup/reports/` on macOS, `~/.cache/mdedup/reports/` on
+        Linux, and `%LOCALAPPDATA%\mdedup\Cache\reports\` on Windows.
       render: text
   - type: textarea
     id: reproduction

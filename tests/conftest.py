@@ -61,6 +61,26 @@ DEDUP_ARGS = ("--strategy=select-newest", "--action=delete-discarded", "--dry-ru
 """A run that exercises every step without touching the mails on disk."""
 
 
+@pytest.fixture(autouse=True)
+def cache_home(tmp_path):
+    """Point the cache directory of `mdedup` to a folder of the test.
+
+    A run that ends with a bug report saves it in the cache directory. The `runner`
+    fixture pins `HOME` and `LOCALAPPDATA`, but not `XDG_CACHE_HOME`, which wins on
+    macOS and Linux, and a test that calls the code directly has no runner at all.
+    Subprocesses inherit the variables too.
+
+    The variables go through a `MonkeyPatch` of its own. The `monkeypatch` fixture
+    would then outlive the `runner` fixture of each test, and restore a working
+    directory that the runner already removed.
+    """
+    cache = tmp_path / "cache-home"
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv("XDG_CACHE_HOME", str(cache))
+        patch.setenv("LOCALAPPDATA", str(cache))
+        yield cache
+
+
 @pytest.fixture()
 def invoke(runner):  # noqa: F811
     return partial(runner.invoke, mdedup)

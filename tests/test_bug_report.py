@@ -27,6 +27,7 @@ from collections import Counter
 from fractions import Fraction
 from importlib.metadata import metadata
 from mailbox import Maildir, mbox
+from pathlib import Path
 
 import pytest
 
@@ -36,15 +37,19 @@ from mail_deduplicate.bug_report import (
     ISSUES_URL,
     REPORT_END,
     REPORT_START,
+    REPORTS_FOLDER,
     SAMPLES,
     FailureLog,
     blame,
     capture,
     fingerprint,
+    log_report,
     mdedup_version,
     render_report,
     report_url,
+    save_report,
 )
+from mail_deduplicate.cache import default_cache_dir
 from mail_deduplicate.deduplicate import (
     Deduplicate,
     DuplicateSet,
@@ -128,6 +133,24 @@ def report_block(output: str) -> str:
     """The lines between the two markers of the bug report in a run's output."""
     start = output.index(REPORT_START)
     return output[start : output.index(REPORT_END, start)]
+
+
+def saved_report(output: str) -> str:
+    """The content of the file that the last line of a run's output names.
+
+    The file sits in the reports folder of the cache, and holds the report as it is
+    printed, from its headline to its end marker, without its own path.
+    """
+    *_, label, name = output.rstrip().splitlines()
+    assert label == "This report is also saved in this file:"
+    path = Path(name)
+    assert path.parent == default_cache_dir() / REPORTS_FOLDER
+    saved = path.read_text(encoding="UTF-8")
+    start = output.index(saved.splitlines()[0])
+    end = output.index(REPORT_END, start) + len(REPORT_END)
+    assert saved == f"{output[start:end]}\n"
+    assert name not in saved
+    return saved
 
 
 def fail_on_doomed(monkeypatch, method: str, error: Exception) -> None:
@@ -617,6 +640,7 @@ def test_hashing_error_sets_the_mail_aside(invoke, make_box, monkeypatch, box_fo
     # Neither the paths nor the content of the mails reach the block.
     assert box_path not in block
     assert [text for text in MAIL_FACTORY_CONTENT if text in block] == []
+    assert box_path not in saved_report(result.stderr)
 
 
 @pytest.mark.parametrize(
@@ -825,6 +849,7 @@ def test_action_error_names_its_mail(
     assert "Fingerprint of a mail involved:" in block
     assert box_path not in block
     assert [text for text in MAIL_FACTORY_CONTENT if text in block] == []
+    assert box_path not in saved_report(result.stderr)
 
 
 def test_action_system_error_is_one_line(invoke, make_box, monkeypatch):
@@ -1005,3 +1030,32 @@ def test_statistics_self_check_reports_a_bug(config, caplog, operator, found, re
     block = report_block(caplog.text)
     assert f"Failed check: {check}, {found} {operator} {retained}" in block
     assert f"Statistics: mail_found={found}, mail_retained={retained}" in block
+    assert block in saved_report(caplog.text)
+
+
+def test_saved_reports_never_overwrite():
+    """Each report gets a file of its own, even two saved within the same second."""
+    first = save_report("First report.")
+    second = save_report("Second report.")
+
+    assert first is not None
+    assert second is not None
+    assert first != second
+    assert first.parent == second.parent == default_cache_dir() / REPORTS_FOLDER
+    assert first.read_text(encoding="UTF-8") == "First report.\n"
+    assert second.read_text(encoding="UTF-8") == "Second report.\n"
+
+
+def test_report_stands_alone_when_it_cannot_be_saved(caplog):
+    """A report the cache directory cannot hold is printed all the same."""
+    folder = default_cache_dir()
+    folder.parent.mkdir(parents=True, exist_ok=True)
+    folder.write_text("A file where the cache folder goes.", encoding="UTF-8")
+
+    assert save_report("Report.") is None
+    with caplog.at_level(logging.ERROR):
+        log_report(logging.ERROR, "Headline.", "Title.", ("Detail.",), Counter())
+
+    assert "Headline." in caplog.text
+    assert REPORT_END in caplog.text
+    assert "saved in this file" not in caplog.text

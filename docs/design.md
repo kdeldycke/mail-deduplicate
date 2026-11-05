@@ -168,6 +168,8 @@ An error `mdedup` has no rule for is a bug, either in its code or in how it hand
 
 The bug report links to the [bug report form](https://github.com/kdeldycke/mail-deduplicate/issues/new?template=bug-report.yml), with a title like `UnicodeEncodeError in add_mail while copying` filled in. The title names the error, the innermost function of `mdedup` it went through, and the step. It holds a block to paste into the form. The block gives the version of `mdedup`, Python and the platform, the options of the run, and the formats of its sources. A development version names its commit, as `mdedup --version` does. Then comes the error, with its traceback reduced to module names, line numbers and function names, and a fingerprint of the mails involved. In the hashing and selection steps, `--verbosity DEBUG` also logs the full traceback of each failure the report details.
 
+`mdedup` also saves each report as it prints it, in a new file of the `reports` folder of its cache directory, beside the [hash cache database](performance.md#managing-the-database). The last line of the output names that file, so a user who loses the output of a long run still finds the report. The file holds no path, and can be attached to an issue whole.
+
 Here is the end of a run whose hashing step met such an error. The error was forced on purpose, on the mail with the `Password reset` subject, to show the report. The forced function is the `__main__` line of its traceback:
 
 ![A run setting a mail aside, then printing the bug report](assets/mdedup-bug-report-cli.svg)
