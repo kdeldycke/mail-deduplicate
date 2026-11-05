@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import email.utils
 import logging
 import re
 import sqlite3
@@ -466,6 +467,45 @@ def test_failure_log_keeps_a_few_samples():
     assert "RuntimeError: Unexpected kiwi." in lines
 
 
+@pytest.mark.parametrize(
+    ("owner", "name", "function"),
+    (
+        # A stand-in for the function of the email library that raised in issue 1117.
+        pytest.param(email.utils, "parsedate_tz", "parsed_date", id="library"),
+        # The generator expression of `canonical_headers` calls it.
+        pytest.param(
+            DedupMailMixin,
+            "normalized_header_values",
+            "canonical_headers",
+            id="generator-expression",
+        ),
+    ),
+)
+def test_title_names_the_innermost_function_of_mdedup(
+    monkeypatch, config, owner, name, function
+):
+    """The title names the innermost function of mdedup the error went through.
+
+    The frames of Python, of a library and of a generator expression do not count,
+    as in the traceback of https://github.com/kdeldycke/mail-deduplicate/issues/1117
+    """
+
+    def fail(*args, **kwargs):
+        raise AttributeError("Unexpected quince.")
+
+    monkeypatch.setattr(owner, name, fail)
+    mail = DedupMailMixin()
+    mail["Date"] = "Sat, 10 Sep 2005 08:44:22 +0200"
+    mail.conf = config
+
+    with pytest.raises(AttributeError) as info:
+        mail.serialized_headers()
+
+    assert capture(info.value, "hashing").title == (
+        f"AttributeError in {function} while hashing"
+    )
+
+
 KINDS_OF_ERROR = (
     ValueError,
     KeyError,
@@ -568,7 +608,8 @@ def test_hashing_error_sets_the_mail_aside(invoke, make_box, monkeypatch, box_fo
     # One copy of the duplicate is deleted, and the failed mail is left alone.
     check_box(box_path, box_type, content=[dup, doomed])
 
-    assert report_url("RuntimeError while hashing") in result.stderr
+    # The patched `hash_key()` is no code of mdedup, so the title names its caller.
+    assert report_url("RuntimeError in compute while hashing") in result.stderr
     block = report_block(result.stderr)
     assert f"Failure 1 of 1, while hashing: 1 mail ({box_format})" in block
     assert "RuntimeError: Unexpected tomato." in block
@@ -745,16 +786,16 @@ def test_selection_error_skips_the_set(invoke, make_box, monkeypatch, box_type):
 
 
 @pytest.mark.parametrize(
-    ("action", "patched", "step"),
+    ("action", "patched", "step", "function"),
     (
-        ("copy-selected", "mailbox.mbox.add", "copying"),
-        ("move-discarded", "mailbox.Maildir.remove", "moving"),
-        ("delete-discarded", "mailbox.Maildir.remove", "deleting"),
-        ("hardlink-discarded", "filecmp.cmp", "hardlinking"),
+        ("copy-selected", "mailbox.mbox.add", "copying", "add_mail"),
+        ("move-discarded", "mailbox.Maildir.remove", "moving", "move_mails"),
+        ("delete-discarded", "mailbox.Maildir.remove", "deleting", "delete_mails"),
+        ("hardlink-discarded", "filecmp.cmp", "hardlinking", "hardlink_blocker"),
     ),
 )
 def test_action_error_names_its_mail(
-    invoke, make_box, monkeypatch, tmp_path, action, patched, step
+    invoke, make_box, monkeypatch, tmp_path, action, patched, step, function
 ):
     """An unexpected error in an action stops the run with a bug report.
 
@@ -776,7 +817,7 @@ def test_action_error_names_its_mail(
     assert result.exit_code == 1
     assert f"Unexpected error while {step} <MaildirDedupMail " in result.stderr
     assert "Traceback (most recent call last):" in result.stderr
-    assert report_url(f"RuntimeError while {step}") in result.stderr
+    assert report_url(f"RuntimeError in {function} while {step}") in result.stderr
     block = report_block(result.stderr)
     assert f"Failure while {step} (maildir)" in block
     assert "RuntimeError: Unexpected fig." in block

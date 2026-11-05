@@ -493,6 +493,23 @@ def compact_frames(tb: TracebackType | None) -> tuple[str, ...]:
     return tuple(frames)
 
 
+def culprit_function(tb: TracebackType | None) -> str:
+    """The name of the innermost function of mdedup in a traceback, or nothing.
+
+    It names the code to fix, even for an error that Python or a library raised
+    from a call of mdedup. A generator expression, a comprehension or a lambda has
+    no name of its own, so the named function nearest to it in the traceback
+    stands for it.
+    """
+    name = ""
+    for frame, _ in traceback.walk_tb(tb):
+        module = frame.f_globals.get("__name__", "")
+        code_name = frame.f_code.co_name
+        if module.partition(".")[0] == __package__ and not code_name.startswith("<"):
+            name = code_name
+    return name
+
+
 @dataclass(frozen=True)
 class Failure:
     """An error mdedup has no rule for, reduced to strings.
@@ -509,6 +526,10 @@ class Failure:
 
     frames: tuple[str, ...]
     """The traceback, as `compact_frames()` renders it."""
+
+    function: str = ""
+    """The innermost function of mdedup the error went through, as
+    `culprit_function()` finds it."""
 
     culprits: tuple[str, ...] = ()
     """The `repr()` of each mail involved. They hold paths, so they never reach the
@@ -536,12 +557,16 @@ class Failure:
 
     @property
     def title(self) -> str:
-        """The title of an issue reporting the failure: its exception class and step.
+        """The title of an issue reporting the failure.
 
-        Reports of the same bug get the same title, so GitHub lists the issue already
-        open for it while the next user types theirs.
+        It names the exception class, the innermost function of mdedup in the
+        traceback and the step. Reports of the same bug get the same title, so GitHub
+        lists the issue already open for it while the next user types theirs. The
+        function tells apart two bugs raising the same class in the same step, and
+        unlike a line number, it does not change between releases.
         """
-        return f"{self.kind[1]} while {self.step}"
+        where = f" in {self.function}" if self.function else ""
+        return f"{self.kind[1]}{where} while {self.step}"
 
 
 def capture(
@@ -564,6 +589,7 @@ def capture(
         step=step,
         error=describe(expt),
         frames=compact_frames(tb),
+        function=culprit_function(tb),
         culprits=tuple(repr(mail) for mail in mails),
         formats=tuple(box_format_of(mail) for mail in mails),
     )
