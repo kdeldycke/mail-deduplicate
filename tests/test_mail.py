@@ -20,13 +20,14 @@ import base64
 import email
 import email.header
 import quopri
+from datetime import UTC, datetime
 from mailbox import Maildir
 from pathlib import Path
 from typing import Any, cast
 
 import pytest
 
-from mail_deduplicate.mail import DedupMailMixin
+from mail_deduplicate.mail import ADDRESS_HEADERS, DedupMailMixin
 from mail_deduplicate.mail_box import BoxFormat, BoxStructure
 
 from .conftest import ALL_FORMATS, MailFactory
@@ -741,6 +742,44 @@ def test_raw_8bit_headers_hash_apart():
     assert list(diaeresis.normalized_header_values("subject")) == ["No\\xebl"]
     assert list(circumflex.normalized_header_values("subject")) == ["No\\xeal"]
     assert list(utf8.normalized_header_values("subject")) == ["Noël"]
+
+
+def test_raw_8bit_date_parses():
+    """A `Date` holding raw 8-bit bytes parses like its ASCII spelling.
+
+    `get()` hands such a header over as a `Header`, which `parsedate_tz()` cannot
+    split. See: https://github.com/kdeldycke/mail-deduplicate/issues/1117
+    """
+    date = b"Date: Sat, 10 Sep 2005 08:44:22 +0200 (Paris, Madrid (heure d'%s))\n"
+    latin1 = create_mail_from_bytes(date % "été".encode("latin-1"))
+    ascii_only = create_mail_from_bytes(date % b"ete")
+
+    expected = datetime(2005, 9, 10, 6, 44, 22, tzinfo=UTC).timestamp()
+    assert latin1.parsed_date == ascii_only.parsed_date == expected
+    assert list(latin1.normalized_header_values("date")) == ["2005-09-10"]
+
+
+@pytest.mark.parametrize(
+    "header_id",
+    sorted(
+        ADDRESS_HEADERS
+        | {
+            name.removeprefix("normalize_").replace("_", "-")
+            for name in vars(DedupMailMixin)
+            if name.startswith("normalize_") and name != "normalize_address_header"
+        }
+    ),
+)
+def test_normalizers_read_raw_8bit_bytes(header_id):
+    """Every header with its own normalization reads a value holding raw 8-bit bytes.
+
+    A normalizer that reads its header again with `get()` gets a `Header`, which
+    string functions reject: `header_values()` gives the text instead.
+    """
+    mail = create_mail_from_bytes(
+        header_id.encode() + b": Sat, 10 Sep 2005 08:44:22 +0200 (heure d'\xe9t\xe9)\n"
+    )
+    assert len(list(mail.normalized_header_values(header_id))) == 1
 
 
 @pytest.mark.parametrize(

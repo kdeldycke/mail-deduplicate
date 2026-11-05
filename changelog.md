@@ -5,6 +5,7 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Fix an `AttributeError` that set aside each mail whose `Date` header holds raw 8-bit bytes, like an accented time zone comment. Closes [#1117](https://github.com/kdeldycke/mail-deduplicate/issues/1117).
 - Make the binaries catalog of the documentation searchable and sortable.
 - Document how to verify the build attestation of a binary with `gh attestation verify`.
 - Group the documentation sidebar into sections, and move the dependency graph to a new packaging page.

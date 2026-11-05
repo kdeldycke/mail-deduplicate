@@ -355,7 +355,7 @@ class DedupMailMixin(Message):
         Self-hydrating: re-reads the message from its box if it was dehydrated.
         """
         self.hydrate()
-        value = self.get("Date")
+        value = next(self.header_values("Date"), None)
         parsed = email.utils.parsedate_tz(value)
 
         if parsed:
@@ -603,32 +603,39 @@ class DedupMailMixin(Message):
             [f"{h_id}: {h_value}" for h_id, h_value in self.canonical_headers],
         ).encode("utf-8")
 
-    def normalized_header_values(self, header_id: str) -> Iterator[str]:
-        """Returns all normalized values of a header.
-
-        Values are cleaned-up into their canonical form.
+    def header_values(self, header_id: str) -> Iterator[str]:
+        """Returns the text of each occurrence of a header, in the order of the mail.
 
         A header holding raw 8-bit bytes is read as those bytes: decoded as UTF-8
-        where they are valid UTF-8, and escaped byte by byte elsewhere. `get_all()`
-        would hand it over as a `Header` whose text replaces every such byte with
-        `U+FFFD`, under which two headers differing in those bytes alone read, and
-        hash, alike.
+        where they are valid UTF-8, and escaped byte by byte elsewhere. `get()` and
+        `get_all()` hand such a header over as a `Header`, which string functions like
+        `email.utils.parsedate_tz()` reject. Its text also replaces every such byte
+        with `U+FFFD`, under which two headers differing in those bytes alone read,
+        and hash, alike.
         """
         header_id = header_id.lower()
-        for name, header_value in self.raw_items():
+        for name, value in self.raw_items():
             if name.lower() != header_id:
                 continue
-            if isinstance(header_value, Header):  # type: ignore[unreachable]
-                value = str(header_value)  # type: ignore[unreachable]
-            elif isinstance(header_value, bytes):  # type: ignore[unreachable]
-                value = header_value.decode(  # type: ignore[unreachable]
+            if isinstance(value, Header):  # type: ignore[unreachable]
+                yield str(value)  # type: ignore[unreachable]
+            elif isinstance(value, bytes):  # type: ignore[unreachable]
+                yield value.decode(  # type: ignore[unreachable]
                     "utf-8", "backslashreplace"
                 )
             else:
-                value = self.undo_surrogateescape(header_value, "backslashreplace")
+                yield self.undo_surrogateescape(value, "backslashreplace")
 
+    def normalized_header_values(self, header_id: str) -> Iterator[str]:
+        """Returns all normalized values of a header.
+
+        Values are cleaned-up into their canonical form, from the text
+        `header_values()` reads.
+        """
+        header_id = header_id.lower()
+        for text in self.header_values(header_id):
             # Normalize whitespace
-            value = " ".join(value.split())
+            value = " ".join(text.split())
 
             # Header-specific normalization: dispatch to normalize_<header_id> methods
             normalizer = getattr(self, f"normalize_{header_id.replace('-', '_')}", None)
