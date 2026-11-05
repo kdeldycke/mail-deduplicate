@@ -117,9 +117,26 @@ $ brew install mail-deduplicate
 ````
 `````
 
+## Support envelope
+
+The compatibility table below keeps the [support envelope](https://kdeldycke.github.io/click-extra/python-directives.html#the-support-envelope) of `mail-deduplicate`. Outside of it, these are obsolete:
+
+<!-- envelope python -->
+
+- `mail-deduplicate` releases before `6.1.0` (2021-01-26)
+- Python versions before `3.6` (2016-12-23)
+
+<!-- envelope-end -->
+
 ## Python compatibility
 
-The table below shows which Python versions each `mail-deduplicate` release range supports, derived from the declarations in each git tag's `pyproject.toml`. It is refreshed by [click-extra's `{matrix}` directive machinery](https://kdeldycke.github.io/click-extra/python-directives.html#matrix-directives) through the `update-docs` job.
+Each cell holds one of three states:
+
+- ✅: the release declares support for that Python.
+- ❌: the `requires-python` of the release rules that Python out.
+- `–`: the release neither claimed nor forbade that Python, usually because that Python was not out yet when the release declared its requirements.
+
+See [three states, two sources](https://kdeldycke.github.io/click-extra/python-directives.html#three-states-two-sources). The table keeps the [support envelope](https://kdeldycke.github.io/click-extra/python-directives.html#the-support-envelope) of `mail-deduplicate`, so the oldest releases drop off as the oldest supported Python moves up.
 
 <!-- matrix python -->
 
