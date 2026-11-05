@@ -395,8 +395,9 @@ def ignored_step_options(ctx) -> list[str]:
         "aside. No header is read, no body is decoded and no threshold applies, so "
         "the --hash-header, --hash-body, --size-threshold and --content-threshold "
         "options are refused alongside it. Identical copies are interchangeable, so "
-        "an arbitrary one is kept in each set unless --strategy names a criterion. "
-        "A first pass to run on all your boxes before tuning anything.",
+        "the select-one strategy keeps one copy of each mail unless --strategy names "
+        "another criterion. A first pass to run on all your boxes before tuning "
+        "anything.",
     ),
     option(
         "-h",

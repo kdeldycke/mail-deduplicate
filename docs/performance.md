@@ -82,7 +82,7 @@ Processes, not threads. Both steps are Python-level work, which the interpreter 
 Work is handed out a window at a time rather than all at once, so a parallel run holds no more per-mail state than a sequential one. Sets of a single mail are settled without leaving the main process: there is nothing to compare, and shipping one would cost more than deciding it.
 
 ```{note}
-`select-one` and `discard-one` pick arbitrarily among equal copies, and each worker seeds its own randomness. A parallel run therefore keeps the same *number* of mails as a sequential one, but not necessarily the same ones. Every other strategy is fully determined by the mails themselves and decides identically.
+A parallel run keeps the same mails as a sequential one. Every strategy is determined by the mails alone, `select-one` and `discard-one` included: both rule on the copy whose path sorts first.
 ```
 
 Two limits are worth knowing. Only folder-based boxes (`maildir`, `MH`, `eml`) can be shared out, because their mails each own a file; the mails of an `mbox` and its kin are byte ranges of a single file that one handle seeks through, so a run over them stays sequential whatever `--jobs` says. And starting workers costs around 50 ms, which a small box never earns back: below a thousand mails or so, leave `--jobs` at `1`.

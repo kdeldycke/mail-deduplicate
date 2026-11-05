@@ -6,13 +6,14 @@
 > This version is **not released yet** and is under active development.
 
 - Add `--conservative`, which treats as copies only the mails whose bytes are identical, and refuses the hashing and threshold options alongside it.
-- Restructure the tutorial and the readme around a conservative first pass, then the options that see through the differences between copies.
+- Make `select-one` keep, and `select-all-but-one` discard, the copy whose path sorts first instead of a random one.
 - Show each comment of `Date`, `MIME-Version` and `Content-Transfer-Encoding` by its shape in the bug report, as a comment can hold free text like a time zone name.
 - Make the steps to reproduce optional in the bug report form when a bug report is pasted, and warn that attached mails are public.
 - Name the innermost function of `mdedup` in the title of a bug report, so two bugs raising the same error in the same step get different titles.
 - Say in the first line of a bug report that the run continued with the mails it did not set aside.
 - Save each bug report to a new file in the `reports` folder of the cache directory, and print the path of that file last.
 - Fix an `AttributeError` that set aside each mail whose `Date` header holds raw 8-bit bytes, like an accented time zone comment. Closes [#1117](https://github.com/kdeldycke/mail-deduplicate/issues/1117).
+- Restructure the tutorial and the readme around a conservative first pass, then the options that see through the differences between copies.
 - Make the binaries catalog of the documentation searchable and sortable.
 - Document how to verify the build attestation of a binary with `gh attestation verify`.
 - Group the documentation sidebar into sections, and move the dependency graph to a new packaging page.

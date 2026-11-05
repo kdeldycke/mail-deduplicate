@@ -20,7 +20,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 - A conservative mode that only treats identical mails as copies, to run on every box before tuning anything.
 - Fetch mails from multiple sources.
 - Reads and writes to `mbox`, `maildir`, `babyl`, `mh`, `mmdf` and `eml` formats.
-- Deduplication strategies based on size, timestamp, file path or random choice, chainable as fallbacks.
+- Deduplication strategies based on size, timestamp, file path or quantity, chainable as fallbacks.
 - Copy, move, delete or hardlink the resulting set of duplicates.
 - Dry-run mode.
 - Protection against false-positives with safety checks on size and content differences. Two mails sharing every hashed header but not their body are left alone, while their real duplicate is acted on, here by `mdedup --strategy discard-matching-path --regexp old --action delete-discarded --dry-run new.mbox old.mbox`: ![A dry run deleting one duplicate and skipping a set of two different mails](https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mdedup-safeguard-cli.svg)
@@ -82,7 +82,7 @@ So to merge the same two archives into a single clean box, keeping the copy each
 $ mdedup --strategy select-matching-path --regexp 2024 --export merged.mbox 2024.mbox 2025.mbox
 ```
 
-Mails found in both archives are copied once into `merged.mbox`, along with all the mails that were unique to each source. Backups usually leave copies byte-identical, which no date or size strategy splits apart: `select-one` then keeps an arbitrary copy of each mail.
+Mails found in both archives are copied once into `merged.mbox`, along with all the mails that were unique to each source. Backups usually leave copies byte-identical, which no date or size strategy splits apart: `select-one` then keeps one copy of each mail, the one whose path sorts first.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mdedup-run-cli.svg" alt="A whole mdedup run, ending on its two report tables">

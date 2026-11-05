@@ -38,7 +38,7 @@ Once a mail is hashed it is dehydrated: its parsed message is dropped, and only 
 
 `--conservative` replaces the hashing above with the one comparison that interprets nothing: the bytes of the whole mail, as its box holds them, with line endings reduced to LF as `--hash-body raw` does. Two mails share a hash only when they are identical copies, which is what a backup, an export or a repeated IMAP sync leaves behind.
 
-No header is read, so the minimal-headers floor below does not apply, and no mail is rejected for lacking headers. No body is decoded, so the size and content thresholds of the next step have nothing to check, and the selection reads no mail again. The `--hash-header`, `--hash-body`, `--size-threshold` and `--content-threshold` options are refused alongside it, from the command line, the environment or a configuration file alike, so a conservative run never carries a setting it ignores. Identical copies are interchangeable, so the run keeps one of each at random unless `--strategy` names a criterion, like `select-matching-path` to keep the copies of one box.
+No header is read, so the minimal-headers floor below does not apply, and no mail is rejected for lacking headers. No body is decoded, so the size and content thresholds of the next step have nothing to check, and the selection reads no mail again. The `--hash-header`, `--hash-body`, `--size-threshold` and `--content-threshold` options are refused alongside it, from the command line, the environment or a configuration file alike, so a conservative run never carries a setting it ignores. Identical copies are interchangeable, so the run applies `select-one` unless `--strategy` names another criterion, like `select-matching-path` to keep the copies of one box.
 
 What it misses is every copy that differs somewhere: a `Received` or `Status` header a server or a client added, a `>From ` quote an `mbox` writer inserted, a subject prefix or a footer a mailing list added. Those are the copies the header-based hashing recognizes. The one thing a conservative run loses with a discarded copy is what its box kept beside it: its folder, and its `maildir` flags.
 
@@ -87,7 +87,9 @@ Hashing the same mail with the same options always produces the same result, so 
 
 Once all mails have been hashed, mails with the same hash are grouped together as duplicates. Then a selection strategy is applied to each group of duplicates to select which mails will be acted upon.
 
-Several strategies can be chained into a fallback cascade by repeating the `--strategy` option. Each group is submitted to the first strategy, and handed over to the next each time a strategy fails to discriminate its mails: because it selected all of them, none of them, or could not compare mails missing a timestamp. The group is only skipped once the whole cascade is exhausted. A cascade ending with one of the random strategies, which always succeed, resolves the byte-identical copies that time-based and size-based criteria cannot tell apart.
+Several strategies can be chained into a fallback cascade by repeating the `--strategy` option. Each group is submitted to the first strategy, and handed over to the next each time a strategy fails to discriminate its mails: because it selected all of them, none of them, or could not compare mails missing a timestamp. The group is only skipped once the whole cascade is exhausted. A cascade ending with `select-one` or `select-all-but-one`, which always succeed, resolves the byte-identical copies that time-based and size-based criteria cannot tell apart.
+
+Those two strategies compare nothing, so they rule on the copy whose path sorts first, with the mail's key breaking the tie inside a file-based box: `select-one` keeps that copy, and `select-all-but-one` discards it. Every strategy thus decides the same way on every run, and a `--dry-run` names the mails that the real run acts on.
 
 ### ❎ Safeguard: size threshold
 

@@ -1216,8 +1216,8 @@ class Deduplicate:
         theme = get_current_theme()
         if self.conf["conservative"]:
             logging.info(
-                "Conservative mode: hash the bytes of each mail, line endings aside, "
-                "so only identical copies share a hash."
+                "Conservative mode: only mails with identical bytes, line endings "
+                "aside, share a hash."
             )
         else:
             logging.info(

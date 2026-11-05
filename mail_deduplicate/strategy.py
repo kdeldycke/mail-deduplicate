@@ -19,11 +19,12 @@ from __future__ import annotations
 
 import enum
 import logging
-import random
 import re
 from functools import wraps
 
 from click_extra import get_current_theme
+
+from .deduplicate import path_order
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -180,16 +181,27 @@ def select_non_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
     }
 
 
-@log_selection("Randomly select one duplicate...")
+def first_by_path(duplicates: DuplicateSet) -> DedupMailMixin:
+    """The mail of a set that `select_one()` keeps and `select_all_but_one()` drops.
+
+    Neither strategy compares the mails, so the order of their paths decides: the
+    order the action trail lists them in. Both strategies then rule on the same mail
+    at every run. A dry run names the copy that the real run acts on, and a `--jobs`
+    worker picks the copy that the main process would.
+    """
+    return min(duplicates.pool, key=path_order)
+
+
+@log_selection("Select the duplicate whose path sorts first...")
 def select_one(duplicates: DuplicateSet) -> set[DedupMailMixin]:
-    """Randomly select one duplicate, and discards all others."""
-    return {random.choice(tuple(duplicates.pool))}
+    """Select the duplicate whose path sorts first, and discard all others."""
+    return {first_by_path(duplicates)}
 
 
-@log_selection("Randomly select all but one duplicate...")
+@log_selection("Select all duplicates but the one whose path sorts first...")
 def select_all_but_one(duplicates: DuplicateSet) -> set[DedupMailMixin]:
-    """Randomly discard one duplicate, and select all others."""
-    return set(random.sample(tuple(duplicates.pool), k=len(duplicates.pool) - 1))
+    """Discard the duplicate whose path sorts first, and select all others."""
+    return set(duplicates.pool) - {first_by_path(duplicates)}
 
 
 @enum.unique

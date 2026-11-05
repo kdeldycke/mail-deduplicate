@@ -471,12 +471,8 @@ class Capture(NamedTuple):
 MERGE_ARGS = ("--strategy", "select-matching-path", "--regexp", "2024")
 """Options the captures of {func}`archives_playground` share.
 
-`select-matching-path` rather than the `select-one` the readme names for
-byte-identical copies: `select-one` keeps a copy at random, so two recaptures of
-the same command would disagree on which copy survived, and the picture would
-change where the CLI did not. A path criterion is the one strategy family that
-splits copies a backup left identical, and it is fully determined by the mails
-themselves, as `docs/performance.md` details.
+The path criterion of the readme's quickstart, which keeps the copy each mail has
+in the older archive.
 """
 
 SOURCES = ("2024.mbox", "2025.mbox")
@@ -509,10 +505,9 @@ CAPTURES = (
         ("--conservative", "--export", "merged.mbox", *SOURCES),
         "A conservative first pass",
         archives_playground,
-        # The four steps through the action's opening lines, before its trail:
-        # `select-one` keeps a copy at random, so the trail names a different copy
-        # on each recapture, where everything above it is the same picture.
-        ("--merge-stderr", "--head", "20"),
+        # Cut where the header picture is: through the action's trail and its own
+        # count, without the two report tables.
+        ("--merge-stderr", "--head", "27"),
     ),
     Capture(
         "mdedup-header-cli",
@@ -565,9 +560,8 @@ CAPTURES = (
         ),
         "What tells two lookalikes apart",
         lookalikes_playground,
-        # Through the diff and the verdict it leads to, before any action: the
-        # picture stops ahead of the copy `select-one` picks at random, so a
-        # recapture draws the same picture.
+        # Through the diff and the verdict it leads to, before the action, which
+        # the other captures picture.
         ("--merge-stderr", "--head", "44"),
     ),
     Capture(

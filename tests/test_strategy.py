@@ -25,8 +25,9 @@ from string import ascii_lowercase
 import pytest
 from click_extra import BUILTIN_THEMES, unstyle
 
-from mail_deduplicate.deduplicate import BodyHasher, DuplicateSet
+from mail_deduplicate.deduplicate import BodyHasher, DuplicateSet, path_order
 from mail_deduplicate.mail import DedupMailMixin
+from mail_deduplicate.mail_box import BoxFormat
 from mail_deduplicate.strategy import Strategy
 
 from .conftest import MailFactory, check_box, mail_files
@@ -391,6 +392,87 @@ def test_maildir_strategy(
 
     assert result.exit_code == 0
     check_box(box_path, box_type, content=mailbox_results)
+
+
+@pytest.mark.parametrize("strategy", Strategy, ids=str)
+def test_strategy_is_deterministic(make_box, config, strategy):
+    """Each strategy selects the same mails from the same set, at every pass.
+
+    A dry run must name the mails that the real run acts on, and a `--jobs` worker
+    must decide what the main process decides. Each pass loads the mails anew, as a
+    worker does.
+    """
+    box_path, _, _ = make_box(
+        Maildir,
+        [
+            oldest_mail,
+            newest_mail,
+            smallest_mail,
+            biggest_mail,
+            random_mail_1,
+            random_mail_1,
+            random_mail_2,
+        ],
+    )
+    config["regexp"] = re.compile(".*")
+    box = BoxFormat.MAILDIR.constructor(box_path, create=False)
+    # Kept alive, so the mails of each pass live at new addresses, and their set can
+    # iterate in another order.
+    passes: list[list[DedupMailMixin]] = []
+
+    def selection() -> set[tuple[str, str]]:
+        mails = []
+        for mail_id, mail in box.iteritems():
+            mail.add_box_metadata(box, mail_id)
+            mail.conf = config
+            mails.append(mail)
+        passes.append(mails)
+        selected = strategy.apply(DuplicateSet("a-hash", mails, config))
+        return {path_order(mail) for mail in selected}
+
+    expected = selection()
+    for _ in range(8):
+        assert selection() == expected
+
+
+@pytest.mark.parametrize("jobs", ("1", "2"))
+@pytest.mark.parametrize(
+    ("strategy", "kept_by_first"),
+    (
+        pytest.param(Strategy.SELECT_ONE, True, id="select-one"),
+        pytest.param(Strategy.DISCARD_ALL_BUT_ONE, True, id="discard-all-but-one"),
+        pytest.param(Strategy.SELECT_ALL_BUT_ONE, False, id="select-all-but-one"),
+        pytest.param(Strategy.DISCARD_ONE, False, id="discard-one"),
+    ),
+)
+def test_quantity_strategies_rule_on_the_first_path(
+    invoke, make_box, strategy, kept_by_first, jobs
+):
+    """`select-one` keeps the first copy by path, and `select-all-but-one` drops it.
+
+    The order of the sources on the command line plays no part, and a `--jobs` worker
+    rules on the same copy.
+    """
+    mails = [
+        MailFactory(message_id=f"<{fruit}@nohost.com>")
+        for fruit in ("apple", "fig", "kiwi", "lemon", "lime", "plum")
+    ]
+    one, _, _ = make_box(Maildir, mails)
+    other, _, _ = make_box(Maildir, mails)
+    first, second = sorted((one, other))
+
+    result = invoke(
+        f"--strategy={strategy}",
+        "--action=delete-discarded",
+        f"--jobs={jobs}",
+        second,
+        first,
+    )
+
+    assert result.exit_code == 0
+    kept, emptied = (first, second) if kept_by_first else (second, first)
+    check_box(kept, Maildir, content=mails)
+    check_box(emptied, Maildir, content=[])
 
 
 undated_mail = MailFactory(date_rfc2822="Not a date")

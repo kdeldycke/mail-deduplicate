@@ -35,6 +35,11 @@ from mail_deduplicate.mail import DedupMailMixin
 from .conftest import MailFactory, assert_one_line_error, check_box
 
 
+def acted_upon(result) -> list[str]:
+    """The lines of a dry run's action trail, one per mail it would act on."""
+    return [line for line in result.stderr.splitlines() if "would be " in line]
+
+
 def test_bare_call(invoke):
     result = invoke()
     assert result.exit_code == 0
@@ -153,8 +158,8 @@ def test_cli_test_suite():
         # Path-based, which needs a mail's location: a worker has no box to derive
         # that from, and reads it off the file it opened instead.
         "select-matching-path",
-        # Arbitrary pick. Which copy it lands on differs between processes, since
-        # each seeds its own randomness, but how many it picks does not.
+        # Keeps the copy whose path sorts first, which a worker reads off the file
+        # it opened, as the main process derives it from the box.
         "select-one",
     ),
 )
@@ -189,6 +194,8 @@ def test_parallel_run_matches_sequential(invoke, make_box, strategy):
     assert sequential.exit_code == 0
     assert parallel.exit_code == 0
     assert parallel.stdout == sequential.stdout
+    # The same mails, not only as many of them.
+    assert acted_upon(parallel) == acted_upon(sequential)
 
 
 @pytest.mark.parametrize("jobs", ("1", "2"))
@@ -427,7 +434,7 @@ def test_conservative_hash_only_names_the_mail_and_its_bytes(invoke, make_box):
 
 
 def test_conservative_parallel_run_matches_sequential(invoke, make_box):
-    """A conservative run hashes the same bytes in a worker process."""
+    """A conservative run picks the same copies in a worker process."""
     pairs = [
         MailFactory(date="2024-05-10", message_id="<a@nohost.com>"),
         MailFactory(date="2024-05-10", message_id="<b@nohost.com>"),
@@ -441,6 +448,7 @@ def test_conservative_parallel_run_matches_sequential(invoke, make_box):
     assert sequential.exit_code == 0
     assert parallel.exit_code == 0
     assert parallel.stdout == sequential.stdout
+    assert acted_upon(parallel) == acted_upon(sequential)
 
 
 def test_headers_table_rendered_only_when_logged(invoke, make_box, monkeypatch):

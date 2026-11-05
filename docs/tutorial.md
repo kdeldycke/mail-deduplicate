@@ -135,7 +135,7 @@ That is 9 mails in total, of which only 6 are distinct. Two traps are laid for n
 
 ## First pass: the conservative run
 
-Start with `--conservative`. It treats as copies only the mails whose bytes are identical, line endings aside: no header is read, nothing is decoded, no threshold applies. Identical copies are interchangeable, so it keeps one of each, picked at random, and the default `copy-selected` action writes every mail that survives into the `--export` box. The sources are only read, so this run needs no rehearsal:
+Start with `--conservative`. It treats as copies only the mails whose bytes are identical, line endings aside: no header is read, nothing is decoded, no threshold applies. Identical copies are interchangeable, so it keeps the copy of each mail whose path sorts first. The default `copy-selected` action then writes every mail that survives into the `--export` box. The sources are only read, so this run needs no rehearsal:
 
 ```{click:run}
 from mail_deduplicate.cli import mdedup
@@ -146,7 +146,7 @@ assert "Conservative mode" in result.output
 assert "7 mails selected for action." in result.output
 ```
 
-Read the report bottom-up: the two shared mails were found in both archives, one copy of each was selected and the other discarded, and the 2 selected mails were copied to `first-pass.mbox` together with the 5 mails that have no identical copy. 9 mails in, 7 out, and nothing lost: each copy discarded here is the same bytes as the copy kept.
+Read the report bottom-up: the two shared mails were found in both archives, the copy of each in `archive-2024.mbox` was selected and the other discarded, and the 2 selected mails were copied to `first-pass.mbox` together with the 5 mails that have no identical copy. 9 mails in, 7 out, and nothing lost: each copy discarded here is the same bytes as the copy kept.
 
 ```shell-session
 $ grep --count "^From " first-pass.mbox
@@ -186,13 +186,13 @@ A strategy decides, within each set of copies, which mails are *selected* and wh
 - Time-based: `select-oldest`, `select-newest` and friends, comparing dates.
 - Size-based: `select-smallest`, `select-biggest` and friends, comparing mail sizes.
 - Path-based: `select-matching-path` and friends, testing mail locations against `--regexp`.
-- Random: `select-one` and `select-all-but-one`, for when copies are indistinguishable.
+- Quantity-based: `select-one` keeps the copy whose path sorts first, and `select-all-but-one` discards it, for when copies are indistinguishable.
 
 The full list, with the exact semantics of each, sits at the bottom of `mdedup --help` and in the [CLI parameters page](https://kdeldycke.github.io/mail-deduplicate/cli.html).
 
-Backup copies of the same mail are usually byte-identical: same `Date` header, same size. Time-based and size-based strategies cannot tell such copies apart, and skip the set as a whole rather than acting on it. That makes `select-one`, which keeps an arbitrary copy of each mail, the right strategy for merging identical copies, and the one `--conservative` applies on its own.
+Backup copies of the same mail are usually byte-identical: same `Date` header, same size. Time-based and size-based strategies cannot tell such copies apart, and skip the set as a whole rather than acting on it. That makes `select-one` the right strategy for merging identical copies, and the one `--conservative` applies on its own. It picks the same copy on every run, so a `--dry-run` names the copies the real run keeps.
 
-Strategies can also be chained into a fallback cascade by repeating the option: `--strategy select-oldest --strategy select-one` keeps the oldest copy in the sets where dates differ, and falls back to an arbitrary copy in the sets where they do not.
+Strategies can also be chained into a fallback cascade by repeating the option: `--strategy select-oldest --strategy select-one` keeps the oldest copy in the sets where dates differ, and falls back to the copy whose path sorts first in the sets where they do not.
 
 ### Merge into a clean box
 
