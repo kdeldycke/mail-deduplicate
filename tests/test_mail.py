@@ -19,6 +19,7 @@ from __future__ import annotations
 import base64
 import email
 import email.header
+import hashlib
 import quopri
 from datetime import UTC, datetime
 from mailbox import Maildir
@@ -119,6 +120,34 @@ def test_raw_body_hash_reads_the_bytes_of_the_box(tmp_path, config):
     assert mails["eight-bit"].hash_decoded_body == mails["quoted"].hash_decoded_body
     assert mails["eight-bit"].hash_raw_body == mails["crlf"].hash_raw_body
     assert mails["eight-bit"].hash_decoded_body == mails["crlf"].hash_decoded_body
+
+
+def test_conservative_hash_is_the_hash_of_the_whole_mail(tmp_path, config):
+    """Under `--conservative`, `hash_key()` digests the bytes of the whole mail.
+
+    Line endings are reduced to LF first, as `raw_mail()` reads them. No header
+    takes part, so a mail with none of the hashed headers still gets a hash, where
+    the default hashing rejects it.
+    """
+    raw = b"X-Fruit: plum\n\nA plum.\n"
+    box_path = tmp_path / "box"
+    Maildir(box_path).close()
+    (box_path / "new" / "lf").write_bytes(raw)
+    (box_path / "new" / "crlf").write_bytes(raw.replace(b"\n", b"\r\n"))
+
+    config["conservative"] = True
+    box = BoxFormat.MAILDIR.constructor(box_path, create=False)
+    mails = {}
+    for mail_id, mail in box.iteritems():
+        mail.add_box_metadata(box, mail_id)
+        mail.conf = config
+        mails[mail_id] = mail
+    box.close()
+
+    assert mails["lf"].raw_mail() == raw
+    assert mails["crlf"].raw_mail() == raw
+    assert mails["lf"].hash_key() == hashlib.sha224(raw).hexdigest()
+    assert mails["crlf"].hash_key() == mails["lf"].hash_key()
 
 
 def test_raw_bytes_come_from_the_file_or_the_box(tmp_path):

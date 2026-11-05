@@ -505,6 +505,16 @@ picture is about what `mdedup` decides, not about a box changing.
 
 CAPTURES = (
     Capture(
+        "mdedup-conservative-cli",
+        ("--conservative", "--export", "merged.mbox", *SOURCES),
+        "A conservative first pass",
+        archives_playground,
+        # The four steps through the action's opening lines, before its trail:
+        # `select-one` keeps a copy at random, so the trail names a different copy
+        # on each recapture, where everything above it is the same picture.
+        ("--merge-stderr", "--head", "20"),
+    ),
+    Capture(
         "mdedup-header-cli",
         (*MERGE_ARGS, "--export", "merged.mbox", *SOURCES),
         "Merging two overlapping archives",

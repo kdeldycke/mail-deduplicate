@@ -347,11 +347,12 @@ class DuplicateSet:
         # Under `decoded`, every mail of the set shares the decoded body, from which
         # the size and the diff both follow: the size spread is zero and the diff
         # empty by construction, and both checks would only re-read each body to
-        # prove it. `raw` hashes the bytes before they are decoded, and the same
-        # bytes decode to different texts under different transfer encodings, a
-        # header no hash covers by default. `normalized` folds whitespace away. The
-        # copies of both may still differ, and get checked.
-        if self.conf["hash_body"] == BodyHasher.DECODED:
+        # prove it. Under --conservative every mail of the set is the same bytes,
+        # which decode to the same body. `raw` hashes the bytes before they are
+        # decoded, and the same bytes decode to different texts under different
+        # transfer encodings, a header no hash covers by default. `normalized` folds
+        # whitespace away. The copies of both may still differ, and get checked.
+        if self.conf["conservative"] or self.conf["hash_body"] == BodyHasher.DECODED:
             return set()
 
         # Every pair is within the size threshold as soon as the extremes are, and
@@ -1213,10 +1214,16 @@ class Deduplicate:
         """
         self.step = "hashing"
         theme = get_current_theme()
-        logging.info(
-            f"Use [{', '.join(map(theme.choice, self.conf['hash_headers']))}] "
-            "headers to compute hashes.",
-        )
+        if self.conf["conservative"]:
+            logging.info(
+                "Conservative mode: hash the bytes of each mail, line endings aside, "
+                "so only identical copies share a hash."
+            )
+        else:
+            logging.info(
+                f"Use [{', '.join(map(theme.choice, self.conf['hash_headers']))}] "
+                "headers to compute hashes.",
+            )
 
         body_hasher = self.conf["hash_body"].function
 

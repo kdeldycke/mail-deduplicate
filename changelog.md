@@ -5,6 +5,8 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Add `--conservative`, which treats as copies only the mails whose bytes are identical, and refuses the hashing and threshold options alongside it.
+- Restructure the tutorial and the readme around a conservative first pass, then the options that see through the differences between copies.
 - Show each comment of `Date`, `MIME-Version` and `Content-Transfer-Encoding` by its shape in the bug report, as a comment can hold free text like a time zone name.
 - Make the steps to reproduce optional in the bug report form when a bug report is pasted, and warn that attached mails are public.
 - Name the innermost function of `mdedup` in the title of a bug report, so two bugs raising the same error in the same step get different titles.

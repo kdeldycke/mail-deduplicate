@@ -17,6 +17,7 @@ Provides the `mdedup` CLI, an utility to deduplicate mails from a set of boxes.
 ## Features
 
 - Duplicate detection based on cherry-picked and normalized mail headers.
+- A conservative mode that only treats identical mails as copies, to run on every box before tuning anything.
 - Fetch mails from multiple sources.
 - Reads and writes to `mbox`, `maildir`, `babyl`, `mh`, `mmdf` and `eml` formats.
 - Deduplication strategies based on size, timestamp, file path or random choice, chainable as fallbacks.
@@ -63,9 +64,19 @@ Standalone binaries of `mdedup`'s latest version are available as direct downloa
 
 Duplicate mails pile up whenever boxes get copied around: backups of the same account taken at different times, per-folder exports where a mail tagged with several labels lands in several boxes, archives consolidated from multiple clients, or IMAP synchronizations gone wrong.
 
-`mdedup` cleans this up. Point it at your boxes: it groups copies of the same mail by hashing a curated set of headers, applies a `--strategy` to pick which copy to keep in each group, then performs an `--action` on the result. The default action is the safest one: sources are only read, and the deduplicated selection is written to a brand new box.
+`mdedup` cleans this up. Start with a conservative pass over all your boxes: `--conservative` treats as copies only the mails whose bytes are identical, keeps one copy of each, and writes every mail that survives into a brand new box. The sources are only read, so there is nothing to rehearse:
 
-So to merge two overlapping archives, `2024.mbox` and `2025.mbox`, into a single clean box, keeping the copy each mail has in the older one:
+```shell-session
+$ mdedup --conservative --export merged.mbox 2024.mbox 2025.mbox
+```
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/kdeldycke/mail-deduplicate/main/docs/assets/mdedup-conservative-cli.svg" alt="A conservative first pass merging two archives">
+</p>
+
+Copies that differ somewhere, by a header a mailing list added or a `Re:` prefix, are left in place. `mdedup` catches those with its default hashing: it groups copies of the same mail by hashing a curated set of normalized headers, applies a `--strategy` to pick which copy to keep in each group, then performs an `--action` on the result. The default action is the safest one: sources are only read, and the deduplicated selection is written to a brand new box.
+
+So to merge the same two archives into a single clean box, keeping the copy each mail has in the older one:
 
 ```shell-session
 $ mdedup --strategy select-matching-path --regexp 2024 --export merged.mbox 2024.mbox 2025.mbox

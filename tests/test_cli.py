@@ -32,7 +32,7 @@ from click_extra.test_suite import load_test_suite, run_test_suite
 from mail_deduplicate.__main__ import WORKER_RERUN_ERROR, main
 from mail_deduplicate.mail import DedupMailMixin
 
-from .conftest import MailFactory, assert_one_line_error
+from .conftest import MailFactory, assert_one_line_error, check_box
 
 
 def test_bare_call(invoke):
@@ -300,6 +300,147 @@ def test_too_few_headers_rejects_mail(invoke, make_box):
     assert "Header ID" in result.stderr
     # Being rejected, the mail never reaches the hashing step.
     assert "Hash:" not in result.stdout
+
+
+@pytest.mark.parametrize(
+    "locked_option",
+    (
+        "--hash-header=subject",
+        "--hash-body=raw",
+        "--size-threshold=0",
+        "--content-threshold=0",
+    ),
+)
+def test_conservative_refuses_the_options_it_replaces(invoke, make_box, locked_option):
+    """An option `--conservative` replaces is refused alongside it.
+
+    Byte identity leaves nothing for a header choice, a body hashing or a threshold
+    to decide, so a value a conservative run would ignore ends the run instead of
+    reading as applied. A configuration file is a source too, which
+    `tests/test_config.py` covers.
+    """
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+
+    result = invoke("--conservative", locked_option, "--hash-only", box_path)
+
+    assert result.exit_code == 2
+    assert "--conservative replaces" in result.stderr
+    assert locked_option.partition("=")[0] in result.stderr
+
+
+def test_conservative_refuses_an_option_set_by_the_environment(invoke, make_box):
+    """A replaced option set through its environment variable is refused too."""
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+
+    result = invoke(
+        "--conservative", "--hash-only", box_path, env={"MDEDUP_HASH_BODY": "raw"}
+    )
+
+    assert result.exit_code == 2
+    assert "--conservative replaces -b/--hash-body" in result.stderr
+
+
+def test_conservative_keeps_near_copies(invoke, make_box):
+    """Only identical copies are deduplicated: a near copy is left untouched.
+
+    The same three mails collapse into one set under the default hashing, as the
+    near copy shares every hashed header and differs by a footer the thresholds
+    allow. The footer sits on the body's single line: `MailFactory` indents the
+    first line of a body alone, so a second line would break the mail apart.
+    """
+    mail = MailFactory(
+        date="2024-05-10",
+        message_id="<garden@nohost.com>",
+        body="Plums and quinces.\n",
+    )
+    near_copy = MailFactory(
+        date="2024-05-10",
+        message_id="<garden@nohost.com>",
+        body="Plums and quinces. Unsubscribe: lists.example.com\n",
+    )
+    box_path, box_type, _ = make_box(Maildir, [mail, mail, near_copy])
+
+    result = invoke("--conservative", "--action=delete-discarded", box_path)
+
+    assert result.exit_code == 0
+    assert "Conservative mode" in result.stderr
+    # The default strategy, as no copy of a set is worth more than another.
+    assert "select-one strategy will be applied" in result.stderr
+    check_box(box_path, box_type, content=[mail, near_copy])
+
+    result = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
+
+    assert result.exit_code == 0
+    assert len(Maildir(box_path, create=False)) == 1
+
+
+def test_conservative_honors_the_strategy_of_the_user(invoke, make_box):
+    """A `--strategy` of the user replaces the `select-one` default."""
+    mail = MailFactory(date="2024-05-10", message_id="<garden@nohost.com>")
+    box_path, _, _ = make_box(Maildir, [mail, mail])
+
+    result = invoke(
+        "--conservative",
+        "--strategy=select-matching-path",
+        "--regexp=.*",
+        "--action=delete-discarded",
+        "--dry-run",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "select-matching-path strategy will be applied" in result.stderr
+    assert "select-one" not in result.stderr
+
+
+def test_conservative_hashes_a_mail_lacking_headers(invoke, tmp_path):
+    """No header takes part in the hash, so no mail is rejected for lacking them.
+
+    The same mail is rejected by the minimal-headers floor under the default
+    hashing: see `test_mail_rejected_when_too_few_headers`.
+    """
+    box_path = str(tmp_path / "box")
+    box = Maildir(box_path, create=True)
+    for _ in range(2):
+        box.add(b"Subject: lonely mail\n\nA body.\n")
+    box.close()
+
+    result = invoke("--conservative", "--action=delete-discarded", box_path)
+
+    assert result.exit_code == 0
+    assert "Rejecting" not in result.stderr
+    assert len(Maildir(box_path, create=False)) == 1
+
+
+def test_conservative_hash_only_names_the_mail_and_its_bytes(invoke, make_box):
+    """`--hash-only` has no canonical headers to show under `--conservative`.
+
+    It names each mail and the bytes it hashed instead of the table.
+    """
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+
+    result = invoke("--conservative", "--hash-only", box_path)
+
+    assert result.exit_code == 0
+    assert "Header ID" not in result.stdout
+    assert " bytes\nHash: " in result.stdout
+
+
+def test_conservative_parallel_run_matches_sequential(invoke, make_box):
+    """A conservative run hashes the same bytes in a worker process."""
+    pairs = [
+        MailFactory(date="2024-05-10", message_id="<a@nohost.com>"),
+        MailFactory(date="2024-05-10", message_id="<b@nohost.com>"),
+    ]
+    box_path, _, _ = make_box(Maildir, [mail for mail in pairs for _ in range(2)])
+    args = ("--conservative", "--action=delete-selected", "--dry-run", box_path)
+
+    sequential = invoke(*args)
+    parallel = invoke("--jobs=2", *args)
+
+    assert sequential.exit_code == 0
+    assert parallel.exit_code == 0
+    assert parallel.stdout == sequential.stdout
 
 
 def test_headers_table_rendered_only_when_logged(invoke, make_box, monkeypatch):

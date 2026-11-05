@@ -12,7 +12,7 @@ Duplicate mails are rarely typed twice: they are copies accumulated by the tools
 - IMAP synchronization accidents, where an interrupted or misconfigured sync re-uploads mails.
 - Mailing lists reflecting back mails you also keep in your sent box, slightly altered by footers or subject prefixes.
 
-That last case is why `mdedup` does not blindly compare raw files: mails are grouped by a hash of a [curated set of headers](https://kdeldycke.github.io/mail-deduplicate/design.html#default-headers-and-mailing-lists), so two copies can differ in transport details and still be recognized as the same mail.
+The first four mostly leave copies that are identical byte for byte, which the first pass below catches without interpreting anything. The last one is why `mdedup` does not stop at comparing bytes: it can also group mails by a hash of a [curated set of headers](https://kdeldycke.github.io/mail-deduplicate/design.html#default-headers-and-mailing-lists), so two copies can differ in transport details and still be recognized as the same mail.
 
 ## Build a playground
 
@@ -61,6 +61,23 @@ shared = [
     ),
 ]
 
+# One mail kept twice, as it was sent and as a mailing list delivered it back:
+# a copy too, with a subject prefix, the list's header and a footer.
+sent = make_mail(
+    "Garden club digest",
+    "Fri, 10 May 2024 10:00:00 +0000",
+    "<garden-2024-05-10@example.com>",
+    "This month: plums and quinces.\n",
+)
+reflected = make_mail(
+    "[garden-club] Garden club digest",
+    "Fri, 10 May 2024 10:00:00 +0000",
+    "<garden-2024-05-10@example.com>",
+    "This month: plums and quinces.\n"
+    "\n--\nUnsubscribe: https://lists.example.com/garden-club\n",
+)
+reflected["List-Id"] = "<garden-club.lists.example.com>"
+
 # Mails unique to each archive.
 only_2024 = [
     make_mail(
@@ -86,8 +103,8 @@ only_2025 = [
 ]
 
 for path, mails in (
-    ("archive-2024.mbox", shared + only_2024),
-    ("archive-2025.mbox", shared + only_2025),
+    ("archive-2024.mbox", shared + only_2024 + [sent]),
+    ("archive-2025.mbox", shared + only_2025 + [reflected]),
 ):
     box = mailbox.mbox(path)
     for mail in mails:
@@ -101,52 +118,70 @@ Run it from an empty working folder:
 
 ```shell-session
 $ python make_playground.py
-archive-2024.mbox: 3 mails
-archive-2025.mbox: 4 mails
+archive-2024.mbox: 4 mails
+archive-2025.mbox: 5 mails
 ```
 
 ```{click:source}
 :hide-source:
 # The script above just ran for real: check the boxes match the counts shown.
-for _path, _count in (("archive-2024.mbox", 3), ("archive-2025.mbox", 4)):
+for _path, _count in (("archive-2024.mbox", 4), ("archive-2025.mbox", 5)):
     _box = mailbox.mbox(_path)
     assert len(_box) == _count
     _box.close()
 ```
 
-That is 7 mails in total, of which only 5 are distinct. Notice the trap laid for naive matchers: the two archives each contain a *different* "Weekly digest" mail, sent a year apart. A deduplicator keying on subjects alone would wrongly collapse them.
+That is 9 mails in total, of which only 6 are distinct. Two traps are laid for naive matchers. The two archives each contain a *different* "Weekly digest" mail, sent a year apart: a deduplicator keying on subjects alone would wrongly collapse them. And the garden club digest is kept twice, as sent and as the list delivered it back: a copy that no comparison of bytes recognizes.
 
-## Take stock, without a strategy
+## First pass: the conservative run
 
-Your first instinct might be to just feed both boxes to `mdedup`:
+Start with `--conservative`. It treats as copies only the mails whose bytes are identical, line endings aside: no header is read, nothing is decoded, no threshold applies. Identical copies are interchangeable, so it keeps one of each, picked at random, and the default `copy-selected` action writes every mail that survives into the `--export` box. The sources are only read, so this run needs no rehearsal:
 
 ```{click:run}
 from mail_deduplicate.cli import mdedup
 
-result = invoke(mdedup, args=["--export", "merged.mbox", "archive-2024.mbox", "archive-2025.mbox"])
+result = invoke(mdedup, args=["--conservative", "--export", "first-pass.mbox", "archive-2024.mbox", "archive-2025.mbox"])
 assert result.exit_code == 0
-assert "No strategy configured, skip selection." in result.output
-assert result.output.count("Skip set: no strategy to apply.") == 2
+assert "Conservative mode" in result.output
+assert "7 mails selected for action." in result.output
 ```
 
-The run went fine, yet ended with `Deduplicated: 0`. This is `mdedup` being cautious, not broken: it did detect the 2 duplicate pairs (`Duplicates: 4` mails), but it refuses to guess which copy of each pair you want to keep. Without a `--strategy`, every duplicate set is skipped, and only the mails without copies end up in `merged.mbox`.
-
-Delete that incomplete `merged.mbox` before moving on, as `mdedup` will refuse to overwrite an existing box:
+Read the report bottom-up: the two shared mails were found in both archives, one copy of each was selected and the other discarded, and the 2 selected mails were copied to `first-pass.mbox` together with the 5 mails that have no identical copy. 9 mails in, 7 out, and nothing lost: each copy discarded here is the same bytes as the copy kept.
 
 ```shell-session
-$ rm merged.mbox
+$ grep --count "^From " first-pass.mbox
+7
 ```
 
 ```{click:source}
 :hide-source:
-import os
+import mailbox
 
-os.remove("merged.mbox")
+_first_pass = mailbox.mbox("first-pass.mbox")
+assert len(_first_pass) == 7
+_first_pass.close()
 ```
 
-## Choose a strategy
+The garden club digest is still there twice, as its two copies differ: the list added a subject prefix, a header and a footer. Whatever a conservative pass leaves behind differs somewhere, and the rest of this page is about seeing through such differences.
 
-A strategy decides, within each set of copies, which mails are *selected* and which are *discarded*. Strategies come in mirrored pairs (`select-oldest` is `discard-newer`, and so on), and in a few families:
+```{tip}
+The export box defaults to the `mbox` format. Pass `--export-format maildir` to produce a `maildir` folder instead, ready to be dropped on an IMAP server or opened by any client.
+```
+
+## Second pass: when copies differ
+
+The conservative pass made four decisions for you. Each is an option of the default run:
+
+- Which headers identify a mail: `--hash-header`, ten of them by default, each reduced to a canonical form. `Date` is kept to its day, and `Subject` loses its `Re:` and `[list]` prefixes.
+- Whether the body counts: `--hash-body`, which leaves it out by default.
+- How far two copies may differ before they are left alone: `--size-threshold` and `--content-threshold`, measured on the decoded bodies.
+- Which copy of a set to keep: `--strategy`, which has no default.
+
+Under those defaults, the two copies of the garden club digest hash alike, and their bodies differ by a footer the thresholds allow. The price is interpretation: a run that sees through differences can be wrong about one, so it deserves a rehearsal before any destructive action, which is what `--dry-run` is for.
+
+### Choose a strategy
+
+A strategy decides, within each set of copies, which mails are *selected* and which are *discarded*. Without one, `mdedup` refuses to guess: every duplicate set is skipped, and only the mails without copies reach the export box. Strategies come in mirrored pairs (`select-oldest` is `discard-newer`, and so on), and in a few families:
 
 - Time-based: `select-oldest`, `select-newest` and friends, comparing dates.
 - Size-based: `select-smallest`, `select-biggest` and friends, comparing mail sizes.
@@ -155,27 +190,27 @@ A strategy decides, within each set of copies, which mails are *selected* and wh
 
 The full list, with the exact semantics of each, sits at the bottom of `mdedup --help` and in the [CLI parameters page](https://kdeldycke.github.io/mail-deduplicate/cli.html).
 
-Backup copies of the same mail are usually byte-identical: same `Date` header, same size. Time-based and size-based strategies cannot tell such copies apart, and skip the set as a whole rather than acting on it. That makes `select-one`, which keeps an arbitrary copy of each mail, the right strategy for merging identical copies.
+Backup copies of the same mail are usually byte-identical: same `Date` header, same size. Time-based and size-based strategies cannot tell such copies apart, and skip the set as a whole rather than acting on it. That makes `select-one`, which keeps an arbitrary copy of each mail, the right strategy for merging identical copies, and the one `--conservative` applies on its own.
 
 Strategies can also be chained into a fallback cascade by repeating the option: `--strategy select-oldest --strategy select-one` keeps the oldest copy in the sets where dates differ, and falls back to an arbitrary copy in the sets where they do not.
 
-## Merge into a clean box
+### Merge into a clean box
 
-Now for the real run. `--strategy select-one` picks one copy per set, and the default action (`copy-selected`) writes every selected mail to the `--export` box, leaving the sources untouched:
+`--strategy select-one` picks one copy per set, and the default action (`copy-selected`) writes every selected mail to the `--export` box, leaving the sources untouched:
 
 ```{click:run}
 from mail_deduplicate.cli import mdedup
 
 result = invoke(mdedup, args=["--strategy", "select-one", "--export", "merged.mbox", "archive-2024.mbox", "archive-2025.mbox"])
 assert result.exit_code == 0
-assert "5 mails selected for action." in result.output
+assert "6 mails selected for action." in result.output
 ```
 
-Read the report bottom-up: both duplicate sets were deduplicated, one copy of each was selected and the other discarded, and the 2 selected mails were copied to `merged.mbox` together with the 3 unique mails. 7 mails in, 5 mails out, nothing lost:
+Three duplicate sets this time: the two the first pass found, and the garden club digest, whose two copies now share a hash. One copy of each was selected, and the 3 selected mails were copied to `merged.mbox` together with the 3 unique mails. 9 mails in, 6 mails out:
 
 ```shell-session
 $ grep --count "^From " merged.mbox
-5
+6
 ```
 
 ```{click:source}
@@ -183,28 +218,24 @@ $ grep --count "^From " merged.mbox
 import mailbox
 
 _merged = mailbox.mbox("merged.mbox")
-assert len(_merged) == 5
+assert len(_merged) == 6
 _merged.close()
 ```
 
 Both "Weekly digest" mails made it through, as their different `Date` and `Message-ID` headers put them in different sets.
 
-```{tip}
-The export box defaults to the `mbox` format. Pass `--export-format maildir` to produce a `maildir` folder instead, ready to be dropped on an IMAP server or opened by any client.
-```
-
-## Delete duplicates in place
+### Delete duplicates in place
 
 Copying is the safe default, but sometimes you want to prune the originals: say the mails in `archive-2025.mbox` are the canonical ones, and any copy of them lingering in `archive-2024.mbox` should go.
 
-Path-based strategies handle this preference: `select-matching-path` keeps the copies whose location matches `--regexp`, so the `delete-discarded` action removes the copies living elsewhere. Destructive actions deserve a rehearsal first:
+Path-based strategies handle this preference: `select-matching-path` keeps the copies whose location matches `--regexp`, so the `delete-discarded` action removes the copies living elsewhere. Destructive actions deserve a rehearsal first, and `--dry-run` reports what the run would do without touching a mail:
 
 ```{click:run}
 from mail_deduplicate.cli import mdedup
 
 result = invoke(mdedup, args=["--strategy", "select-matching-path", "--regexp", "2025", "--action", "delete-discarded", "--dry-run", "archive-2024.mbox", "archive-2025.mbox"])
 assert result.exit_code == 0
-assert "DRY RUN: 2 mails would be acted upon, but none will be altered." in result.output
+assert "DRY RUN: 3 mails would be acted upon, but none will be altered." in result.output
 ```
 
 ```{click:source}
@@ -212,34 +243,34 @@ assert "DRY RUN: 2 mails would be acted upon, but none will be altered." in resu
 import mailbox
 
 # The rehearsal must not have touched any box.
-for _path, _count in (("archive-2024.mbox", 3), ("archive-2025.mbox", 4)):
+for _path, _count in (("archive-2024.mbox", 4), ("archive-2025.mbox", 5)):
     _box = mailbox.mbox(_path)
     assert len(_box) == _count
     _box.close()
 ```
 
-Two deletions planned, as expected: the two shared mails, in their `archive-2024.mbox` incarnation. Do not let the `5 mails selected` line worry you: it counts the mails that will survive, while the action itself only touches the 2 discarded copies. Drop `--dry-run` to proceed:
+Three deletions planned, as expected: the two shared mails and the garden club digest, in their `archive-2024.mbox` incarnation. Do not let the `6 mails selected` line worry you: it counts the mails that will survive, while the action itself only touches the 3 discarded copies. Drop `--dry-run` to proceed:
 
 ```{click:run}
 from mail_deduplicate.cli import mdedup
 
 result = invoke(mdedup, args=["--strategy", "select-matching-path", "--regexp", "2025", "--action", "delete-discarded", "archive-2024.mbox", "archive-2025.mbox"])
 assert result.exit_code == 0
-assert "Deleted 2/2 mails" in result.output
+assert "Deleted 3/3 mails" in result.output
 ```
 
 ```shell-session
 $ grep --count "^From " archive-2024.mbox
 1
 $ grep --count "^From " archive-2025.mbox
-4
+5
 ```
 
 ```{click:source}
 :hide-source:
 import mailbox
 
-for _path, _count in (("archive-2024.mbox", 1), ("archive-2025.mbox", 4)):
+for _path, _count in (("archive-2024.mbox", 1), ("archive-2025.mbox", 5)):
     _box = mailbox.mbox(_path)
     assert len(_box) == _count
     _box.close()
@@ -251,7 +282,7 @@ for _path, _count in (("archive-2024.mbox", 1), ("archive-2025.mbox", 4)):
 For folder-based boxes (`maildir`, `mh`, `eml`), `--regexp` is tested against the path of each individual mail file. For file-based boxes (`mbox`, `babyl`, `mmdf`), all mails share the path of the box itself.
 ```
 
-## Link duplicates instead of deleting them
+### Link duplicates instead of deleting them
 
 Deleting a discarded copy frees its space, but the mail also leaves the folder it was in. Sometimes every copy has a reason to stay: the same message delivered to two accounts you sync side by side, or a mail filed under several labels. The `hardlink-discarded` action covers that case. Each discarded mail keeps its name and its folder, and only the file behind it changes: it becomes a hardlink to the copy that was selected, so the copies share a single file and the space the others took is given back.
 
@@ -329,9 +360,13 @@ Still 7 mails on disk, now backed by 5 files: each `account-b` copy shares the f
 Only copies identical byte for byte are linked by default. Two copies of a mail that reached you by different routes usually differ, if only by a `Received` header, and linking those swaps one copy's content for the other's. `--hardlink-differing` allows it, as a deliberate choice. Mails from `mbox`, `babyl` and `mmdf` boxes are always left alone, having no file of their own to link.
 ```
 
+```{tip}
+`--conservative --action hardlink-discarded` reclaims space without a rehearsal: a conservative run only ever discards identical copies, which are the ones this action links by default.
+```
+
 ## Safety nets
 
-Several safeguards run before any mail is acted upon, each detailed in the [design page](https://kdeldycke.github.io/mail-deduplicate/design.html):
+Several safeguards run before any mail is acted upon, each detailed in the [design page](https://kdeldycke.github.io/mail-deduplicate/design.html). None of them has anything to check under `--conservative`, whose duplicate sets hold identical bytes by construction.
 
 - Mails with too few of the hashed headers are rejected as unparsable instead of being trusted.
 - Mails differing too much in size or content from the rest of their set are considered suspicious: they are set aside, and only the mails that all match each other are deduplicated. The set is skipped as a whole when no such core remains. The `--size-threshold` and `--content-threshold` options tune these limits, and `--show-diff` prints the offending differences.
@@ -351,6 +386,7 @@ $ mdedup --show-diff --strategy select-one --export merged.mbox new.mbox old.mbo
 
 A run that changes nothing is the number one source of confusion, so map the statistics report to its cause:
 
+- `--conservative` found nothing: no two mails share their bytes. Copies can still be there, differing by a header a server or a client added, a subject prefix or a footer. The [second pass](#second-pass-when-copies-differ) sees through such differences, and `--hash-only` shows what each mail hashes to under either mode.
 - `Copied`, `Moved` or `Deleted` at zero: the action found nothing to act on. That row is the symptom, so read the rows above it for the cause. With `--action delete-selected`, zero is also what a box holding no duplicate at all reports, as mails without a copy are never deleted.
 - `Duplicates: 0`: no two mails shared a hash. A single box that was never merged or re-synced typically holds no duplicates: `mdedup` shines on piles of overlapping boxes. If you are certain copies are in there, they may differ in the hashed headers: mails re-delivered or forwarded can get a new `Message-ID` for instance. Narrow the matching down with repeated `--hash-header` options, or inspect what each mail hashes to with `--hash-only`.
 - `Duplicates` above zero but `Skipped - Strategy` counting sets: either no `--strategy` was given, or the chosen criterion cannot split the copies apart (identical copies share the same date and size). Switch to `select-one` or a path-based strategy, or chain one as a fallback with a repeated `--strategy` option.

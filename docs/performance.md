@@ -34,7 +34,7 @@ Both thresholds exist to catch mails that hash alike without being copies, so tu
 
 That middle row is the surprise: dropping the content check alone changes nothing under the default `--hash-body skip`. A mail's size is the byte length of its decoded body, and skip mode never reads bodies while hashing, so the *size* check drags them back on its own.
 
-Hash the body with `decoded` and the second pass goes away on its own. Every mail of a set then shares the decoded text that was hashed, so both thresholds are settled without reading a mail again. Under `raw`, copies share their bytes but can still differ in their transfer encoding or charset. Under `normalized`, copies can still differ in their whitespace. In both modes the thresholds still compare the copies, and the bodies are read again.
+Hash the body with `decoded` and the second pass goes away on its own. Every mail of a set then shares the decoded text that was hashed, so both thresholds are settled without reading a mail again. So does `--conservative`, whose sets hold identical bytes. Under `raw`, copies share their bytes but can still differ in their transfer encoding or charset. Under `normalized`, copies can still differ in their whitespace. In both modes the thresholds still compare the copies, and the bodies are read again.
 
 ## Memory
 

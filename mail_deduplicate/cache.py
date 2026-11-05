@@ -60,12 +60,12 @@ hashed afresh: the whole database is discarded instead, as for a change of setti
 SCHEMA_VERSION = "1"
 """Bumped whenever the table layout changes, to discard databases of older shapes."""
 
-CACHED_SETTINGS = ("hash_headers", "hash_body", "time_source")
+CACHED_SETTINGS = ("conservative", "hash_headers", "hash_body", "time_source")
 """Configuration keys whose value changes what gets cached.
 
-`hash_headers` and `hash_body` change the hash itself. `time_source` changes the
-timestamp memoized alongside it. The minimal-headers floor is derived from the number
-of hash headers, so it is covered by the first one.
+`conservative`, `hash_headers` and `hash_body` change the hash itself. `time_source`
+changes the timestamp memoized alongside it. The minimal-headers floor is derived
+from the number of hash headers, so it is covered by them.
 """
 
 

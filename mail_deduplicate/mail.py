@@ -474,30 +474,49 @@ class DedupMailMixin(Message):
     def hash_key(self) -> str:
         """Returns the canonical hash of a mail.
 
+        Under `--conservative`, the hash is that of the whole mail, as `raw_mail()`
+        reads it: no header takes part, so the minimal-headers floor does not apply,
+        and no mail is rejected for lacking headers.
+
         ```{caution}
         This method hasn't been made explicitly into a cached property in order to
         reduce the overall memory footprint.
         ```
         """
+        if self.conf["conservative"]:
+            hash_value = hashlib.sha224(self.raw_mail()).hexdigest()
+            logging.debug(f"Mail hash: {hash_value}")
+            return hash_value
+
         serialized_headers = self.serialized_headers()
         logging.debug(f"Serialized headers: {serialized_headers!r}")
         hash_value = hashlib.sha224(serialized_headers).hexdigest()
         logging.debug(f"Hash: {hash_value}")
         return hash_value
 
-    def raw_body(self) -> bytes:
-        """The body bytes of the mail, as the box holds them, with LF line endings.
+    def raw_mail(self) -> bytes:
+        """The bytes of the whole mail, as the box holds them, with LF line endings.
 
         Line endings are reduced to LF, as `add_mail()` writes them: every box format
         rewrites them to the separator of the platform, and the mbox reader reduces
         them on Windows, so a mail would otherwise never hash like its own export,
         and a hash would depend on the platform.
 
+        Nothing else is interpreted: this is what `--conservative` hashes, so two
+        mails share a hash under it only when they are identical copies. A header a
+        server or a client added, an mbox `>From ` quote and a transfer encoding all
+        count.
+        """
+        return self.raw_bytes().replace(b"\r\n", b"\n")
+
+    def raw_body(self) -> bytes:
+        """The body bytes of the mail, as `raw_mail()` reads them.
+
         The body starts after the first blank line, or at the first line that is
         neither a header nor a continuation when that blank line is missing, where
         the parser starts it too. A mail of headers alone has an empty body.
         """
-        raw = self.raw_bytes().replace(b"\r\n", b"\n")
+        raw = self.raw_mail()
         for match in LINE.finditer(raw):
             line = match.group()
             if line in (b"\n", b"\r"):

@@ -86,6 +86,37 @@ def test_config_unknown_key_rejected(invoke, make_box, make_config):
     assert "Unknown configuration key 'strategyy'." in result.stderr
 
 
+def test_config_conservative(invoke, make_box, make_config):
+    """`conservative` picked up from a configuration file drives the hashing."""
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+    conf_path = make_config("""\
+        [mdedup]
+        conservative = true
+    """)
+
+    result = invoke("--config", conf_path, "--hash-only", box_path)
+
+    assert result.exit_code == 0
+    assert "Conservative mode" in result.stderr
+
+
+def test_config_conservative_refuses_a_replaced_option(invoke, make_box, make_config):
+    """An option `--conservative` replaces is refused from a configuration file too.
+
+    A forgotten `hash-body` would otherwise read as applied to a run that ignores it.
+    """
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+    conf_path = make_config("""\
+        [mdedup]
+        hash-body = "raw"
+    """)
+
+    result = invoke("--config", conf_path, "--conservative", "--hash-only", box_path)
+
+    assert result.exit_code == 2
+    assert "--conservative replaces -b/--hash-body" in result.stderr
+
+
 def test_config_mail_sources_blocked(invoke, make_box, make_config):
     """Mail sources are command-line only: a config file cannot point at boxes."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])

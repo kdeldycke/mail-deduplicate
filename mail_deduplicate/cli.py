@@ -28,6 +28,7 @@ from click_extra import (
     EnumChoice,
     IntRange,
     ParameterSource,
+    UsageError,
     argument,
     command,
     constraint,
@@ -104,11 +105,27 @@ automatically when the hash is narrowed to fewer headers than this cap via
 """
 
 
+CONSERVATIVE_LOCKED_OPTIONS = (
+    "hash_headers",
+    "hash_body",
+    "size_threshold",
+    "content_threshold",
+)
+"""Parameters that `--conservative` replaces, by their name.
+
+Byte identity leaves them nothing to decide: the mails of a set hold the same
+bytes, so no choice of headers, no body hashing and no threshold applies. One of
+them set from any source, the command line, the environment or a configuration
+file, is a usage error, so a conservative run never carries a setting it ignores.
+"""
+
+
 class Config(TypedDict):
     """Holds global configuration."""
 
     input_format: BoxFormat | None
     force_unlock: bool
+    conservative: bool
     hash_headers: tuple[str, ...]
     minimal_headers: int
     hash_body: BodyHasher
@@ -289,6 +306,25 @@ class MdedupCommand(Command):
             formatter.write_dl(sorted(strategy_table))
 
 
+def flag_names(param: Parameter) -> str:
+    """Every spelling of an option, joined as the help screen lists them."""
+    return "/".join(param.opts + param.secondary_opts)
+
+
+def locked_options_set(ctx: Context) -> list[str]:
+    """The options `--conservative` replaces that the user set anyway.
+
+    Read from the source of each parameter, as `ignored_step_options()` does, so a
+    value from a configuration file or the environment counts as set.
+    """
+    return [
+        flag_names(param)
+        for param in ctx.command.params
+        if param.name in CONSERVATIVE_LOCKED_OPTIONS
+        and ctx.get_parameter_source(param.name) not in (None, ParameterSource.DEFAULT)
+    ]
+
+
 def ignored_step_options(ctx) -> list[str]:
     """User-provided options from the steps `-H`/`--hash-only` never runs.
 
@@ -303,7 +339,7 @@ def ignored_step_options(ctx) -> list[str]:
         # apply in every mode.
         if step_number and int(step_number.group(1)) > 2:
             ignored.extend(
-                "/".join(opt.opts + opt.secondary_opts)
+                flag_names(opt)
                 for opt in group.options
                 if ctx.get_parameter_source(opt.name) != ParameterSource.DEFAULT
             )
@@ -352,6 +388,16 @@ def ignored_step_options(ctx) -> list[str]:
 )
 @option_group(
     "Hashing (step #2)",
+    option(
+        "--conservative/--no-conservative",
+        default=False,
+        help="Treat as copies only the mails whose bytes are identical, line endings "
+        "aside. No header is read, no body is decoded and no threshold applies, so "
+        "the --hash-header, --hash-body, --size-threshold and --content-threshold "
+        "options are refused alongside it. Identical copies are interchangeable, so "
+        "an arbitrary one is kept in each set unless --strategy names a criterion. "
+        "A first pass to run on all your boxes before tuning anything.",
+    ),
     option(
         "-h",
         "--hash-header",
@@ -592,6 +638,7 @@ def mdedup(
     ctx,
     input_format,
     force_unlock,
+    conservative,
     hash_headers,
     hash_body,
     hash_only,
@@ -628,6 +675,17 @@ def mdedup(
         echo(ctx.get_help(), color=ctx.color)
         ctx.exit()
 
+    if conservative:
+        locked = locked_options_set(ctx)
+        if locked:
+            raise UsageError(
+                f"--conservative replaces {human_join(locked)}: drop one side."
+            )
+        # Identical copies are interchangeable, so any of them will do unless the
+        # user names a criterion.
+        if not strategies:
+            strategies = (Strategy.SELECT_ONE,)
+
     if export and export.exists() and not export_append:
         raise ClickException(
             f"Cannot export to existing file {export} unless --export-append is set."
@@ -636,6 +694,7 @@ def mdedup(
     conf = Config(
         input_format=input_format,
         force_unlock=force_unlock,
+        conservative=conservative,
         hash_headers=hash_headers,
         minimal_headers=min(DEFAULT_MINIMAL_HEADERS, len(hash_headers)),
         hash_body=hash_body,
@@ -689,10 +748,15 @@ def mdedup(
 
             # Print all computed hashes. Rendering the canonical headers needs the
             # full message back, so borrow it one mail at a time to keep memory flat.
+            # A conservative run hashes bytes, not headers, so it names the mail and
+            # the bytes it read instead of the table.
             for all_mails in dedup.mails.values():
                 for mail in all_mails:
                     with mail.hydrated():
-                        echo(mail.pretty_canonical_headers())
+                        if conservative:
+                            echo(f"\n{mail!r}: {len(mail.raw_mail())} bytes")
+                        else:
+                            echo(mail.pretty_canonical_headers())
                         echo(f"Hash: {mail.hash_key()}")
 
             # Exit right away, releasing the boxes and the cache on the way out.

@@ -96,6 +96,7 @@ def config() -> Config:
     return Config(
         input_format=None,
         force_unlock=False,
+        conservative=False,
         hash_headers=DEFAULT_HASH_HEADERS,
         minimal_headers=DEFAULT_MINIMAL_HEADERS,
         hash_body=BodyHasher.SKIP,

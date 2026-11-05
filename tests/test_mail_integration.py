@@ -285,10 +285,18 @@ def test_mail_rejected_when_too_few_headers(invoke, tmp_path):
     assert len(Maildir(box_path, create=False)) == 1
 
 
-def test_crlf_and_lf_bodies_are_duplicates(invoke, tmp_path):
+@pytest.mark.parametrize(
+    "args",
+    (
+        pytest.param(("--strategy=select-one",), id="default"),
+        pytest.param(("--conservative",), id="conservative"),
+    ),
+)
+def test_crlf_and_lf_bodies_are_duplicates(invoke, tmp_path, args):
     """Two mails that differ only by LF or CRLF line endings are duplicates.
 
-    Line endings must not count toward size or content differences.
+    Line endings must not count toward size or content differences, nor toward the
+    bytes `--conservative` compares.
 
     See: https://github.com/kdeldycke/mail-deduplicate/issues/844 (fixed by PR 845).
     """
@@ -313,7 +321,7 @@ def test_crlf_and_lf_bodies_are_duplicates(invoke, tmp_path):
         headers.replace(b"\n", b"\r\n") + body.replace(b"\n", b"\r\n")
     )
 
-    result = invoke("--strategy=select-one", "--action=delete-discarded", box_path)
+    result = invoke(*args, "--action=delete-discarded", box_path)
 
     assert result.exit_code == 0
     assert "too dissimilar" not in result.stderr
