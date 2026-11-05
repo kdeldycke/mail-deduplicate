@@ -574,9 +574,10 @@ CAPTURES = (
         (*MERGE_ARGS, "--export", "merged.mbox", *SOURCES),
         "The bug report of an unexpected error",
         archives_playground,
-        # The run up to the mail it set aside, then the report closing it. The
-        # statistics between them hold one more row, `Failed`, at 1.
-        ("--merge-stderr", "--head", "13", "--tail", "28"),
+        # The run up to the mail it set aside, then the report closing it, down to
+        # the file that saves it. The statistics between them hold one more row,
+        # `Failed`, at 1.
+        ("--merge-stderr", "--head", "13", "--tail", "30"),
         injected=True,
     ),
     Capture(
@@ -612,10 +613,17 @@ the file even when the CLI did not change. Each also builds a maildir of
 
 
 def capture_environment() -> dict[str, str]:
-    """The environment of every capture: this one, minus {data}`AGENT_VARIABLES`."""
-    return {
+    """The environment of every capture: this one, minus {data}`AGENT_VARIABLES`.
+
+    `XDG_CACHE_HOME` points into {data}`PLAYGROUND`, so the bug report a capture
+    saves stays out of the cache of the user running the script, and the path of
+    the report that the picture ends on is short and names no user.
+    """
+    environment = {
         name: value for name, value in os.environ.items() if name not in AGENT_VARIABLES
     }
+    environment["XDG_CACHE_HOME"] = str(PLAYGROUND / "cache")
+    return environment
 
 
 def prompt_budget(capture: Capture, columns: int = COLUMNS) -> int:
