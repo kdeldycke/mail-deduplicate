@@ -234,8 +234,8 @@ wheels = [
 
 [[package]]
 name = "click-extra"
-version = "10.1.1"
-source = { registry = "https://pypi.org/simple" }
+version = "10.2.0.dev0"
+source = { git = "https://github.com/kdeldycke/click-extra?branch=main#98547cc6ed61ffaf4d4440a64573290cf74ee153" }
 dependencies = [
     { name = "click" },
     { name = "cloup" },
@@ -243,10 +243,6 @@ dependencies = [
     { name = "tabulate", extra = ["widechars"] },
     { name = "wcmatch" },
     { name = "wcwidth" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/de/aee972d458aafadb49a7cb17d145df990c318ab1835b37172841fa9aaf4a/click_extra-10.1.1.tar.gz", hash = "sha256:c383baa8e2046d151e16158f77440e0dc42e893a73b03040728b5adf676ef075", size = 1920550, upload-time = "2026-11-02T09:43:42.142Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/82/18/e2bd26561bf30da03401fd2cba9d68b3061b03e4db99da187b0c6bf7c66c/click_extra-10.1.1-py3-none-any.whl", hash = "sha256:d2dc2f0d27ef30d28b598564d3f220b3e11986150935a6c74b471bf71900af2d", size = 729196, upload-time = "2026-11-02T09:43:40.484Z" },
 ]
 
 [package.optional-dependencies]
@@ -546,14 +542,14 @@ docs = ">=3.14"
 
 [package.metadata]
 requires-dist = [
-    { name = "click-extra", extras = ["toml"], specifier = ">=10" },
+    { name = "click-extra", extras = ["toml"], git = "https://github.com/kdeldycke/click-extra?branch=main" },
     { name = "extra-platforms", specifier = ">=14" },
 ]
 
 [package.metadata.requires-dev]
 docs = [
-    { name = "click-extra", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=10" },
-    { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", specifier = ">=10.1" },
+    { name = "click-extra", extras = ["pytest"], marker = "python_full_version >= '3.14'", git = "https://github.com/kdeldycke/click-extra?branch=main" },
+    { name = "click-extra", extras = ["sphinx"], marker = "python_full_version >= '3.14'", git = "https://github.com/kdeldycke/click-extra?branch=main" },
     { name = "coverage", marker = "python_full_version >= '3.14'", specifier = ">=7.11" },
     { name = "extra-platforms", extras = ["pytest"], marker = "python_full_version >= '3.14'", specifier = ">=14" },
     { name = "furo", marker = "python_full_version >= '3.14'", specifier = ">=2025.9.25" },
@@ -574,7 +570,7 @@ docs = [
     { name = "sphinxext-opengraph", marker = "python_full_version >= '3.14'", specifier = ">=0.13" },
 ]
 test = [
-    { name = "click-extra", extras = ["pytest"], specifier = ">=10" },
+    { name = "click-extra", extras = ["pytest"], git = "https://github.com/kdeldycke/click-extra?branch=main" },
     { name = "coverage", specifier = ">=7.11" },
     { name = "extra-platforms", extras = ["pytest"], specifier = ">=14" },
     { name = "pytest", specifier = ">=9" },
