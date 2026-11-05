@@ -9,12 +9,12 @@ flowchart LR
     pygments(["`pygments`"])
     requests(["`requests`"])
     jinja2(["`jinja2`"])
+    packaging(["`packaging`"])
     typing_extensions(["`typing-extensions`"])
     beautifulsoup4(["`beautifulsoup4`"])
     cloup(["`cloup`"])
     docutils(["`docutils`"])
     markdown_it_py(["`markdown-it-py`"])
-    packaging(["`packaging`"])
     accessible_pygments(["`accessible-pygments`"])
     click_0(["`click`"])
     colorama(["`colorama`"])
@@ -57,8 +57,10 @@ flowchart LR
         furo{{"`furo >=2025.9.25`"}}
         pytest_cov{{"`pytest-cov >=7`"}}
         pytest_xdist{{"`pytest-xdist >=3.7`"}}
+        sphinx_datatables{{"`sphinx-datatables >=1`"}}
         sphinxcontrib_mermaid{{"`sphinxcontrib-mermaid >=1.2.3`"}}
         sphinx_autodoc_typehints{{"`sphinx-autodoc-typehints >=2.4`"}}
+        sphinxcontrib_jquery{{"`sphinxcontrib-jquery >=4`"}}
         coverage{{"`coverage >=7.11`"}}
         pytest_github_actions_annotate_failures{{"`pytest-github-actions-annotate-failures >=0.2`"}}
         pytest_randomly{{"`pytest-randomly >=3.3.1`"}}
@@ -82,8 +84,8 @@ flowchart LR
     sphinx --> pygments
     sphinx --> requests
     sphinx --> jinja2
-    sphinx --> docutils
     sphinx --> packaging
+    sphinx --> docutils
     sphinx --> colorama
     sphinx --> alabaster
     sphinx --> babel
@@ -100,10 +102,10 @@ flowchart LR
     click_extra --> pytest
     click_extra --> myst_parser
     click_extra --> pygments
+    click_extra --> packaging
     click_extra --> cloup
     click_extra --> docutils
     click_extra --> extra_platforms
-    click_extra --> packaging
     click_extra --> click_0
     click_extra --> tabulate
     click_extra --> tomlrt
@@ -131,12 +133,16 @@ flowchart LR
     pytest_xdist --> pytest
     pytest_xdist --> execnet
     pytest_xdist --> psutil
+    sphinx_datatables --> sphinx
+    sphinx_datatables --> packaging
+    sphinx_datatables --> sphinxcontrib_jquery
     sphinxcontrib_mermaid --> sphinx
     sphinxcontrib_mermaid --> jinja2
     sphinxcontrib_mermaid --> pyyaml
     extra_platforms --> pytest
     sphinx_autodoc_typehints --> sphinx
     sphinx_autodoc_typehints --> typing_extensions
+    sphinxcontrib_jquery --> sphinx
     pytest_github_actions_annotate_failures --> pytest
     pytest_randomly --> pytest
     sphinx_copybutton --> sphinx
@@ -213,12 +219,14 @@ flowchart LR
     click sphinx_autodoc_typehints "https://pypi.org/project/sphinx-autodoc-typehints/" _blank
     click sphinx_basic_ng "https://pypi.org/project/sphinx-basic-ng/" _blank
     click sphinx_copybutton "https://pypi.org/project/sphinx-copybutton/" _blank
+    click sphinx_datatables "https://pypi.org/project/sphinx-datatables/" _blank
     click sphinx_design "https://pypi.org/project/sphinx-design/" _blank
     click sphinx_last_updated_by_git "https://pypi.org/project/sphinx-last-updated-by-git/" _blank
     click sphinx_sitemap "https://pypi.org/project/sphinx-sitemap/" _blank
     click sphinxcontrib_applehelp "https://pypi.org/project/sphinxcontrib-applehelp/" _blank
     click sphinxcontrib_devhelp "https://pypi.org/project/sphinxcontrib-devhelp/" _blank
     click sphinxcontrib_htmlhelp "https://pypi.org/project/sphinxcontrib-htmlhelp/" _blank
+    click sphinxcontrib_jquery "https://pypi.org/project/sphinxcontrib-jquery/" _blank
     click sphinxcontrib_jsmath "https://pypi.org/project/sphinxcontrib-jsmath/" _blank
     click sphinxcontrib_mermaid "https://pypi.org/project/sphinxcontrib-mermaid/" _blank
     click sphinxcontrib_qthelp "https://pypi.org/project/sphinxcontrib-qthelp/" _blank
@@ -251,8 +259,10 @@ flowchart LR
     style sphinx stroke-width:3px
     style sphinx_autodoc_typehints stroke-width:3px
     style sphinx_copybutton stroke-width:3px
+    style sphinx_datatables stroke-width:3px
     style sphinx_design stroke-width:3px
     style sphinx_sitemap stroke-width:3px
+    style sphinxcontrib_jquery stroke-width:3px
     style sphinxcontrib_mermaid stroke-width:3px
     style sphinxext_opengraph stroke-width:3px
     style grp_test_pytest stroke-width:3px,stroke-dasharray:5 5
