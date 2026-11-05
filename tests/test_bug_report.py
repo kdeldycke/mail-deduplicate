@@ -458,7 +458,7 @@ def test_failure_log_keeps_a_few_samples():
     assert not any(failure.trace for failure in failures[SAMPLES:])
     assert log.headline() == (
         "mdedup set aside 5 mails after unexpected errors, and acted on none of "
-        "their mails."
+        "their mails. The run continued with the other mails."
     )
     assert log.title() == "RuntimeError while hashing"
     assert len(list(log.traces())) == SAMPLES

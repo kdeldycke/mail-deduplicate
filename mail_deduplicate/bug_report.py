@@ -654,7 +654,11 @@ class FailureLog:
             kept.append(failure)
 
     def headline(self) -> str:
-        """The first line of the report, saying how much the failures set aside."""
+        """The first line of the report, saying how much the failures set aside.
+
+        It also says that the run continued, as the word `error` reads to some users
+        as a crash that stopped everything.
+        """
         mails = sum(n for kind, n in self.counts.items() if kind[0] == "hashing")
         sets = sum(n for kind, n in self.counts.items() if kind[0] != "hashing")
         aside = " and ".join(
@@ -667,7 +671,7 @@ class FailureLog:
         )
         return (
             f"mdedup set aside {aside} after unexpected errors, and acted on none of "
-            "their mails."
+            "their mails. The run continued with the other mails."
         )
 
     def title(self) -> str:
