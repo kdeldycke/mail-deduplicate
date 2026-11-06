@@ -117,8 +117,7 @@ docs = [
   # the test dependencies installed.
   { include-group = "test" },
   # 10.2.0 stacks the installation methods of docs/install.md in vertical tabs.
-  # Until it ships, [tool.uv] sources track the click-extra main branch.
-  "click-extra[sphinx]>=10.2.0.dev0",
+  "click-extra[sphinx]>=10.2",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",
   # myst-parser 5.1 ships the native "alert" extension (enabled in docs/conf.py)
@@ -158,9 +157,6 @@ required-version = ">=0.12.22"
 # packages (like Sphinx 9.2, which requires Python 3.13) that dropped support for
 # the project's floor.
 dependency-groups.docs = { requires-python = ">= 3.14" }
-# The click-extra main branch, until the release the `.dev` floor of the docs
-# group awaits: `sync-dep-sources` drops the entry once it ships.
-sources.click-extra = { git = "https://github.com/kdeldycke/click-extra", branch = "main" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
 # click-extra and extra-platforms are published by this repository's own
@@ -171,7 +167,7 @@ exclude-newer = "1 week"
 # `repomatic run` registry pins before that release clears the window: without
 # it, the binary builds cannot install Nuitka. `sync-uv-lock` prunes the entry
 # once the window passes its date.
-exclude-newer-package = { click-extra = "2026-11-03T00:00:00Z", extra-platforms = "2026-11-02T00:00:00Z", nuitka = "2026-10-31T00:00:00Z" }
+exclude-newer-package = { click-extra = "2026-11-08T00:00:00Z", extra-platforms = "2026-11-02T00:00:00Z", nuitka = "2026-10-31T00:00:00Z" }
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
 build-backend.source-exclude = [
