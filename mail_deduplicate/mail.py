@@ -494,21 +494,15 @@ class DedupMailMixin(Message):
         logging.debug(f"Hash: {hash_value}")
         return hash_value
 
-    def raw_mail(self) -> bytes:
-        """The bytes of the whole mail, as the box holds them, with LF line endings.
+    def split_raw(self) -> tuple[bytes, bytes]:
+        """The bytes of the mail as the box holds them, cut into headers and body.
 
         Line endings are reduced to LF, as `add_mail()` writes them: every box format
         rewrites them to the separator of the platform, and the mbox reader reduces
         them on Windows, so a mail would otherwise never hash like its own export,
-        and a hash would depend on the platform.
-
-        Nothing else is interpreted. A header a server or a client added, an mbox
-        `>From ` quote and a transfer encoding all count.
-        """
-        return self.raw_bytes().replace(b"\r\n", b"\n")
-
-    def split_raw(self) -> tuple[bytes, bytes]:
-        """The bytes of `raw_mail()`, cut into the header block and the body.
+        and a hash would depend on the platform. Nothing else is interpreted. A
+        header a server or a client added, an mbox `>From ` quote and a transfer
+        encoding all count.
 
         The header block ends with the first blank line, which it keeps. When that
         blank line is missing, it ends before the first line that is neither a
@@ -516,7 +510,7 @@ class DedupMailMixin(Message):
         headers alone has an empty body. The two halves always join back into the
         whole mail, so `--raw-headers` with `--hash-body raw` hashes every byte.
         """
-        raw = self.raw_mail()
+        raw = self.raw_bytes().replace(b"\r\n", b"\n")
         for match in LINE.finditer(raw):
             line = match.group()
             if line in (b"\n", b"\r"):

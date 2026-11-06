@@ -116,7 +116,8 @@ docs = [
   # docs/tests.md documents the tests/ modules, which autodoc can only import with
   # the test dependencies installed.
   { include-group = "test" },
-  # 10.2.0 stacks the installation methods of docs/install.md in vertical tabs.
+  # 10.2.0 adds the years_since() that docs/conf.py imports, and stacks the
+  # installation methods of docs/install.md in vertical tabs.
   "click-extra[sphinx]>=10.2",
   # furo 2024.8.6+ supports Sphinx 8; floored at a recent CalVer release.
   "furo>=2025.9.25",

@@ -7,19 +7,21 @@
 
 - Add `--preset`, whose `conservative` value treats as copies only the mails whose bytes are identical, and whose `aggressive` value trusts `Message-ID` alone.
 - Add `--raw-headers`, which hashes every header as the box stores it, in place of the `--hash-header` list.
-- Make `select-one` keep, and `select-all-but-one` discard, the copy whose path sorts first instead of a random one.
-- Show each comment of `Date`, `MIME-Version` and `Content-Transfer-Encoding` by its shape in the bug report, as a comment can hold free text like a time zone name.
-- Make the steps to reproduce optional in the bug report form when a bug report is pasted, and warn that attached mails are public.
-- Name the innermost function of `mdedup` in the title of a bug report, so two bugs raising the same error in the same step get different titles.
-- Say in the first line of a bug report that the run continued with the mails it did not set aside.
 - Save each bug report to a new file in the `reports` folder of the cache directory, and print the path of that file last.
+- Make `select-one` keep, and `select-all-but-one` discard, the copy whose path sorts first instead of a random one.
+- Show each comment of the `Date`, `MIME-Version` and `Content-Transfer-Encoding` headers by its shape in the bug report, instead of its text.
+- Make the steps to reproduce optional in the bug report form, and warn that attached mails are public.
+- Name the innermost function of `mdedup` in the title of a bug report, like `UnicodeEncodeError in add_mail while copying`.
+- Say in the first line of a bug report that the run continued with the mails it did not set aside.
+- Discard the hash cache written by earlier versions, so the first run with `--cache` hashes every mail again.
 - Fix an `AttributeError` that set aside each mail whose `Date` header holds raw 8-bit bytes, like an accented time zone comment. Closes [#1117](https://github.com/kdeldycke/mail-deduplicate/issues/1117).
-- Fix a copy or a move leaving out of the export box each mail with too few headers to hash, now kept like a mail without duplicates.
+- Fix a copy or a move leaving out of the export box each mail with too few headers to hash, now counted as `Unhashed`.
 - Restructure the tutorial and the readme around a conservative first pass, then the options that see through the differences between copies.
+- Stack the installation methods of the install page in vertical tabs, and trim its Python compatibility table to the support envelope.
 - Make the binaries catalog of the documentation searchable and sortable.
 - Document how to verify the build attestation of a binary with `gh attestation verify`.
-- Group the documentation sidebar into sections, and move the dependency graph to a new packaging page.
-- Give the documentation a favicon and a social preview card, and hide the readme banner its sidebar logo repeats.
+- Group the documentation sidebar into sections, list the binaries catalog in it, and move the dependency graph to a new packaging page.
+- Give the documentation a favicon and a social preview card, and hide the readme banner on its front page.
 
 ## [`9.5.0` (2026-11-02)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.4.0...v9.5.0)
 

@@ -42,7 +42,7 @@ Once a mail is hashed it is dehydrated: its parsed message is dropped, and only 
 
 ### Presets
 
-`--preset` starts a run from a named set of options. A preset is an alias: it gives each of its options its value, unless you set that option on the command line, in the environment or in a configuration file. The run then warns about each option that overrides the preset with another value. The strategy is the exception, and replaces the preset's without a warning: it decides which copy stays, not what counts as a copy.
+`--preset` starts a run from a named set of options. A preset is an alias: it gives each of its options its value, unless you set that option on the command line, in the environment or in a configuration file. The run then warns about each option that overrides the preset with another value. The strategy is the exception, and replaces the preset's without a warning: it decides which copy stays, not what counts as a copy. The thresholds of the `conservative` preset follow one more rule, below.
 
 | Preset         | Stands for                                                                                       |
 | :------------- | :----------------------------------------------------------------------------------------------- |
@@ -53,6 +53,8 @@ Once a mail is hashed it is dehydrated: its parsed message is dropped, and only 
 The `conservative` preset groups only identical copies, which is what a backup, an export or a repeated IMAP sync leaves behind. Its duplicate sets hold the same bytes, so the size and content thresholds have nothing left to catch, and turning them off spares the selection a second read of each mail. Identical copies are interchangeable, so it keeps one of each with `select-one`, unless `--strategy` names another criterion, like `select-matching-path` to keep the copies of one box.
 
 What it misses is every copy that differs somewhere: a `Received` or `Status` header a server or a client added, a `>From ` quote an `mbox` writer inserted, a subject prefix or a footer a mailing list added. The default hashing recognizes those. The one thing a conservative run loses with a discarded copy is what its box kept beside it: its folder, and its `maildir` flags.
+
+The `conservative` preset turns the size and content thresholds off only while its hash covers every byte of a mail. That needs `--raw-headers` and `--hash-body raw` together. If you set `--no-raw-headers`, any `--hash-header`, or a `--hash-body` other than `raw`, the hash no longer covers every byte. The preset then leaves both thresholds at their defaults, or at the values you set. The run logs the thresholds that keep their defaults. A value equal to the preset's, like `--hash-body raw`, changes nothing.
 
 The `aggressive` preset trusts `Message-ID` alone. It also groups the copies whose other headers a mailing list or a gateway rewrote, and keeps the thresholds as the only check against two mails that reuse an ID. Its copies can differ, so it names no strategy: which copy to keep stays your choice.
 
@@ -95,7 +97,7 @@ To avoid hashing mails with too few headers (like corrupted mails), a minimal nu
 
 A mail below that floor gets no hash. It joins no duplicate set, so no strategy rules on it, and it stays in the selection like a mail without duplicates: a copy or a move carries it into the export box, and the `Unhashed` row of the statistics counts it.
 
-This floor is derived automatically as the smaller of **4** and the number of headers selected via `--hash-header`. The default ten-header set therefore requires at least four to be present, while narrowing the selection down to a single header relaxes the floor to match, so no dedicated option is needed.
+This floor is derived automatically as the smaller of **4** and the number of headers selected via `--hash-header`. The default ten-header set therefore requires at least four to be present, while narrowing the selection down to a single header relaxes the floor to match, so no dedicated option is needed. `--raw-headers` hashes every header, so no floor applies to it.
 
 ### Reusing hashes between runs
 
@@ -133,7 +135,7 @@ Similarly to the size threshold, we generate unified diffs of duplicates and ens
 
 The default content threshold is **768 bytes**, and can be changed via the `--content-threshold` option. Its `0` and `-1` values mean what they mean for the size threshold.
 
-When `--hash-body decoded` puts the decoded body in the hash, every mail of a set already shares it, and both thresholds are settled without reading a mail again. With `raw` and `normalized` the checks still run: `raw` copies share their bytes but can differ in their transfer encoding or charset, and `normalized` copies can differ in their whitespace.
+When `--hash-body decoded` puts the decoded body in the hash, every mail of a set already shares it, and both thresholds are settled without reading a mail again. `--raw-headers` with `--hash-body raw` does the same, as the hash then covers every byte of the mail. With `raw` alone and with `normalized` the checks still run: `raw` copies share their body bytes but can differ in their transfer encoding or charset, and `normalized` copies can differ in their whitespace.
 
 Here two boxes hold a real duplicate, and two mails that share every hashed header, `Message-ID` included, but not their body. The dry run deletes the duplicate, and skips the other set, which the `Skipped - Content` row counts:
 
@@ -196,7 +198,7 @@ An error `mdedup` has no rule for is a bug, either in its code or in how it hand
 
 The bug report links to the [bug report form](https://github.com/kdeldycke/mail-deduplicate/issues/new?template=bug-report.yml), with a title like `UnicodeEncodeError in add_mail while copying` filled in. The title names the error, the innermost function of `mdedup` it went through, and the step. It holds a block to paste into the form. The block gives the version of `mdedup`, Python and the platform, the options of the run, and the formats of its sources. A development version names its commit, as `mdedup --version` does. Then comes the error, with its traceback reduced to module names, line numbers and function names, and a fingerprint of the mails involved. In the hashing and selection steps, `--verbosity DEBUG` also logs the full traceback of each failure the report details.
 
-`mdedup` also saves each report as it prints it, in a new file of the `reports` folder of its cache directory, beside the [hash cache database](performance.md#managing-the-database). The last line of the output names that file, so a user who loses the output of a long run still finds the report. The file holds no path, and can be attached to an issue whole.
+`mdedup` also saves each report as it prints it, in a new file of the `reports` folder of its cache directory, beside the [hash cache database](performance.md#managing-the-database). The last line of the output names that file, so a user who loses the output of a long run still finds the report. The file holds no path, and can be attached to an issue whole. When `mdedup` cannot write the file, the report exists in the printed output only.
 
 Here is the end of a run whose hashing step met such an error. The error was forced on purpose, on the mail with the `Password reset` subject, to show the report. The forced function is the `__main__` line of its traceback:
 

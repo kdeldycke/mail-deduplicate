@@ -1748,9 +1748,9 @@ class Deduplicate:
         # Action stats. Each action targets a single subset of mails: the unique,
         # unhashed and selected mails for *-selected actions, the selected ones
         # alone for the deletion sparing the other two, and the discarded mails for
-        # *-discarded ones. The counters the action reports on
-        # are expected to account for its target exactly, as they are incremented in
-        # dry-run mode too.
+        # *-discarded ones. The counters the action reports on are expected to
+        # account for its target exactly, as they are incremented in dry-run mode
+        # too.
         action = self.conf["action"]
         if action.verb == "hardlink":
             # Hardlinking is the one action that cannot always go through: a mail

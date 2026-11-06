@@ -99,10 +99,10 @@ By default we choose to exclude:
 DEFAULT_MINIMAL_HEADERS = 4
 """Cap on the number of headers that must be present in a mail to compute a solid hash.
 
-The per-mail floor is `min(DEFAULT_MINIMAL_HEADERS, len(hash_headers))`: it rejects
-near-empty or corrupted mails whose hash would rest on too few headers, while relaxing
-automatically when the hash is narrowed to fewer headers than this cap via
-`--hash-header`.
+The per-mail floor is `min(DEFAULT_MINIMAL_HEADERS, len(hash_headers))`. A near-empty
+or corrupted mail whose hash would rest on too few headers gets no hash, and the run
+keeps it like a mail without duplicates. The floor relaxes automatically when
+`--hash-header` narrows the hash to fewer headers than this cap.
 """
 
 
@@ -135,12 +135,15 @@ PRESET_OPTIONS: dict[Preset, tuple[tuple[str, str | bool], ...]] = {
 }
 """The options each preset stands for, spelled as on the command line.
 
-`apply_preset()` gives each of them its value, unless the user set that option.
+`apply_preset()` gives each of them its value, unless the user set that option. A
+value that relies on other values of the same preset applies only while all of them
+apply: see `DEPENDENT_OPTIONS`.
 
 The conservative preset hashes the bytes of the whole mail, which only identical
 copies share. The thresholds then have nothing left to catch, and turning them off
-spares a second read of each mail. Identical copies are interchangeable, so it also
-keeps one of each.
+spares a second read of each mail. When the user replaces one of its two hashing
+options, copies that differ can share a hash, so the thresholds stay on. Identical
+copies are interchangeable, so the preset also keeps one of each.
 
 The aggressive preset trusts `Message-ID` alone, so the copies whose other headers
 a mailing list or a gateway rewrote still share a hash. The thresholds stay the
@@ -158,6 +161,22 @@ select. The user setting either option decides the headers, so a preset value fo
 the other one gives way too.
 """
 
+DEPENDENT_OPTIONS: dict[str, frozenset[str]] = {
+    "content_threshold": frozenset(("hash_body", "raw_headers")),
+    "size_threshold": frozenset(("hash_body", "raw_headers")),
+}
+"""Options whose preset value relies on the preset values of others, by their name.
+
+A preset value of such an option applies only while each option it relies on keeps
+the value of the same preset: the preset gives that value, or the user gives the
+same one. When one of them gives way, the option gives way too, and keeps its
+default or the user's value. The rule ignores an option that the preset does not
+set.
+
+The thresholds can stay off only while the hash covers every byte of a mail, which
+`--raw-headers` and `--hash-body raw` do together.
+"""
+
 QUIET_OVERRIDES = frozenset(("strategies",))
 """Options the user can set over a preset with no warning, by their name.
 
@@ -165,12 +184,14 @@ The strategy decides which copy stays, not what counts as a copy.
 """
 
 
+def preset_word(flag: str, value: str | bool) -> str:
+    """One option of a preset, as typed on the command line."""
+    return flag if value is True else f"{flag} {value}"
+
+
 def preset_words(preset: Preset) -> str:
     """The options a preset stands for, as typed on the command line."""
-    return " ".join(
-        flag if value is True else f"{flag} {value}"
-        for flag, value in PRESET_OPTIONS[preset]
-    )
+    return " ".join(preset_word(flag, value) for flag, value in PRESET_OPTIONS[preset])
 
 
 class Config(TypedDict):
@@ -367,8 +388,7 @@ def flag_names(param: Parameter) -> str:
 def user_set(ctx: Context, name: str) -> bool:
     """Whether the user gave a parameter its value, from any source but its default.
 
-    A value from a configuration file or the environment counts as set, as it does
-    for `ignored_step_options()`.
+    A value from a configuration file or the environment counts as set.
     """
     return ctx.get_parameter_source(name) not in (None, ParameterSource.DEFAULT)
 
@@ -378,7 +398,9 @@ def apply_preset(ctx: Context, preset: Preset) -> dict[str, Any]:
 
     An option the user set keeps its value. The run warns about each one that
     overrides the preset with another value, unless `QUIET_OVERRIDES` lists it.
-    The options of a `LINKED_OPTIONS` group give way together.
+    The options of a `LINKED_OPTIONS` group give way together. A value that relies
+    on other values of the preset, as `DEPENDENT_OPTIONS` lists, gives way with any
+    of them, and the run names the options that then keep their defaults.
 
     :param ctx: the context of the run, holding the values of its parameters.
     :param preset: the preset to apply.
@@ -386,28 +408,45 @@ def apply_preset(ctx: Context, preset: Preset) -> dict[str, Any]:
     """
     by_flag = {opt: param for param in ctx.command.params for opt in param.opts}
     by_name = {param.name: param for param in ctx.command.params}
+    # The value and the spelling of each option of the preset, in its order.
     values: dict[str, Any] = {}
-    applied: list[str] = []
+    words: dict[str, str] = {}
+    # Options the preset gives a value to.
+    given: set[str] = set()
+    # Options that keep the value of the preset, from the preset or from the user.
+    kept: set[str] = set()
     overriding: set[str] = set()
     for flag, raw in PRESET_OPTIONS[preset]:
         param = by_flag[flag]
         # Always set for an option.
         assert param.name is not None
-        value = param.process_value(ctx, [raw] if param.multiple else raw)
-        word = flag if raw is True else f"{flag} {raw}"
+        name = param.name
+        values[name] = param.process_value(ctx, [raw] if param.multiple else raw)
+        words[name] = preset_word(flag, raw)
         group = next(
-            (group for group in LINKED_OPTIONS if param.name in group),
-            frozenset((param.name,)),
+            (group for group in LINKED_OPTIONS if name in group), frozenset((name,))
         )
-        set_by_user = [name for name in sorted(group) if user_set(ctx, name)]
+        set_by_user = [other for other in sorted(group) if user_set(ctx, other)]
         if not set_by_user:
-            values[param.name] = value
-            applied.append(word)
-        elif set_by_user == [param.name] and ctx.params[param.name] == value:
+            given.add(name)
+            kept.add(name)
+        elif set_by_user == [name] and ctx.params[name] == values[name]:
             # The user asked for the value the preset gives.
-            applied.append(word)
-        elif param.name not in QUIET_OVERRIDES:
-            overriding.update(flag_names(by_name[name]) for name in set_by_user)
+            kept.add(name)
+        elif name not in QUIET_OVERRIDES:
+            overriding.update(flag_names(by_name[other]) for other in set_by_user)
+    # A value that gives way breaks each value that relies on it, which can break
+    # others in turn. Repeat until no value breaks, so the order of the preset does
+    # not change the result.
+    broken = True
+    while broken:
+        broken = False
+        for name in sorted(kept):
+            premises = DEPENDENT_OPTIONS.get(name, frozenset()) & values.keys()
+            if not premises <= kept:
+                kept.discard(name)
+                broken = True
+    applied = [word for name, word in words.items() if name in kept]
     if applied:
         # The options go on a log line of their own: they fill most of a terminal,
         # and a line folding one of them in two would read as another option.
@@ -417,7 +456,13 @@ def apply_preset(ctx: Context, preset: Preset) -> dict[str, Any]:
         logging.warning(
             f"Options override the {preset} preset: {human_join(sorted(overriding))}."
         )
-    return values
+    defaults = sorted(flag_names(by_name[name]) for name in given - kept)
+    if defaults:
+        logging.info(
+            f"Options keep their defaults, because their values in the {preset} "
+            f"preset rely on overridden options: {human_join(defaults)}."
+        )
+    return {name: value for name, value in values.items() if name in given & kept}
 
 
 def ignored_step_options(ctx) -> list[str]:
@@ -434,9 +479,7 @@ def ignored_step_options(ctx) -> list[str]:
         # apply in every mode.
         if step_number and int(step_number.group(1)) > 2:
             ignored.extend(
-                flag_names(opt)
-                for opt in group.options
-                if ctx.get_parameter_source(opt.name) != ParameterSource.DEFAULT
+                flag_names(opt) for opt in group.options if user_set(ctx, opt.name)
             )
     return ignored
 
@@ -475,7 +518,9 @@ def ignored_step_options(ctx) -> list[str]:
         "Message-ID header alone to group copies, and stands for "
         f"{preset_words(Preset.AGGRESSIVE)}. An option set on the command line, in the "
         "environment or in a configuration file overrides the value the preset "
-        "gives it.",
+        f"gives it. {Preset.CONSERVATIVE} turns the thresholds off only with its own "
+        "--raw-headers and --hash-body raw. When another value or a --hash-header "
+        "list replaces either one, both thresholds keep their defaults.",
     ),
 )
 @option_group(
@@ -848,7 +893,7 @@ def mdedup(
         echo_step("Step #2 - Compute hashes and group duplicates")
         dedup.hash_all()
 
-        if hash_only:
+        if conf["hash_only"]:
             ignored_user_options = ignored_step_options(ctx)
             if ignored_user_options:
                 logging.warning(
@@ -872,7 +917,7 @@ def mdedup(
         dedup.build_sets()
 
         echo_step("Step #4 - Perform action on selected mails")
-        action.perform(dedup)
+        conf["action"].perform(dedup)
         dedup.close_all()
 
         echo_step("Step #5 - Report and statistics")

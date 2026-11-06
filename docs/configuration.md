@@ -23,7 +23,7 @@ hash-headers = ["Date", "From", "To", "Subject", "Message-ID"]
 size-threshold = 1024
 ```
 
-A `preset` key names a preset, as `--preset` does. Every other key of the file overrides the value the preset gives it, and the run warns about each one that changes what counts as a copy.
+A `preset` key names a preset, as `--preset` does. Every other key of the file overrides the value the preset gives it, and the run warns about each one that changes what counts as a copy. A key that sets `raw-headers`, `hash-headers` or `hash-body` to a value other than the preset's has one more effect on the `conservative` preset: it no longer turns the two thresholds off. See [presets](design.md#presets).
 
 Unrecognized keys are rejected: a run aborts with an error naming the offending key, so a typo cannot silently turn into a different deduplication than the one you configured.
 
@@ -53,6 +53,8 @@ invoke(mdedup, args=["--export-config", "toml"])
 ```
 
 Options without a value are commented out in the TOML export, as TOML has no null type. Combine the flag with other options or environment variables to capture them in the generated file: `mdedup --strategy discard-older --export-config toml` emits a configuration whose `strategies` chain is already filled in.
+
+The template lists every option with its value. Saved as it is, each key then overrides the value that `--preset` gives the same option. Delete the keys you do not need.
 
 ## Validate a file
 

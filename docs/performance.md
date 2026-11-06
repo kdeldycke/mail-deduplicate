@@ -34,7 +34,7 @@ Both thresholds exist to catch mails that hash alike without being copies, so tu
 
 That middle row is the surprise: dropping the content check alone changes nothing under the default `--hash-body skip`. A mail's size is the byte length of its decoded body, and skip mode never reads bodies while hashing, so the *size* check drags them back on its own.
 
-Hash the body with `decoded` and the second pass goes away on its own. Every mail of a set then shares the decoded text that was hashed, so both thresholds are settled without reading a mail again. So do `--raw-headers` and `--hash-body raw` together, which the conservative preset sets: their sets hold identical bytes. Under `raw`, copies share their bytes but can still differ in their transfer encoding or charset. Under `normalized`, copies can still differ in their whitespace. In both modes the thresholds still compare the copies, and the bodies are read again.
+Hash the body with `decoded` and the second pass goes away on its own. Every mail of a set then shares the decoded text that was hashed, so both thresholds are settled without reading a mail again. `--raw-headers` with `--hash-body raw` does the same, because the hash then covers every byte of the mail: the conservative preset sets both. `--hash-body raw` alone does not. Its copies share their body bytes, but can still differ in their transfer encoding or charset. Under `normalized`, copies can still differ in their whitespace. In both modes the thresholds still compare the copies, and the bodies are read again.
 
 ## Memory
 
@@ -115,14 +115,14 @@ $ mdedup --hash-body normalized --cache-path cache.db --strategy select-one --ac
 
 Two independent guards decide whether an entry can still be trusted.
 
-**The options feeding the hash.** `--hash-header`, `--hash-body` and `--time-source` are fingerprinted together. Changing any of them discards the whole database, since an entry produced under different options cannot be told apart from a valid one. An upgrade of `mdedup` that changes how a hash or a size is computed discards it the same way.
+**The options feeding the hash.** `--hash-header`, `--raw-headers`, `--hash-body` and `--time-source` are fingerprinted together. Changing any of them discards the whole database, since an entry produced under different options cannot be told apart from a valid one. An upgrade of `mdedup` that changes how a hash or a size is computed discards it the same way.
 
 **The file backing the mail.** Its size and modification time are recorded, and re-checked before the entry is used. What this covers depends on the box structure:
 
 - Folder-based boxes (`maildir`, `MH`, `eml`) give each mail its own file, so the key tracks that mail alone. Editing one mail invalidates only that mail. Maildir flag changes, like marking a mail read, rename the file but keep its identity, so they do not needlessly invalidate anything.
 - File-based boxes (`mbox`, `babyl`, `mmdf`) pack every mail into the box's single file, and identify them by byte offsets that shift as soon as a mail is added or removed. Any edit to the box therefore invalidates all of its mails at once.
 
-Mails rejected for having [too few headers](design.md) are never cached, as that verdict depends on more than the hash.
+Mails that could not be read, and mails with [too few headers](design.md#safeguard-minimal-headers) to get a hash, are never cached: the first verdict depends on more than the hash, and the second leaves no hash to store. A later run reads both again.
 
 ### Dry runs fill the cache
 

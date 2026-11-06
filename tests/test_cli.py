@@ -448,6 +448,77 @@ def test_preset_takes_some_options_without_a_warning(invoke, make_box):
     assert "select-matching-path strategy will be applied" in result.stderr
 
 
+def test_preset_thresholds_stay_on_without_its_hashing(invoke, tmp_path):
+    """Replacing a hashing option of the conservative preset keeps the thresholds on.
+
+    Under `--hash-body skip`, the hash covers the header block alone, so two mails
+    with the same headers and different bodies share it. The preset turns the
+    thresholds off only with its own hashing options, so here they stay on and skip
+    the set.
+    """
+    box_path = str(tmp_path / "box")
+    box = Maildir(box_path, create=True)
+    headers = (
+        b"Date: Mon, 05 Feb 2024 09:00:00 +0000\n"
+        b"From: fig@example.com\n"
+        b"To: plum@example.com\n"
+        b"Subject: harvest\n"
+        b"Message-ID: <harvest@example.com>\n"
+        b"\n"
+    )
+    box.add(headers + b"Figs and plums.\n" * 100)
+    box.add(headers + b"Apricots and pears, picked in the rain.\n" * 100)
+    box.close()
+
+    result = invoke(
+        "--preset=conservative",
+        "--hash-body=skip",
+        "--action=delete-discarded",
+        "--dry-run",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert "Skip set: mails are too dissimilar in size." in result.stderr
+    assert metrics(result.stdout)["Deleted"] == "0"
+    applied = applied_options(result, Preset.CONSERVATIVE)
+    assert "--size-threshold" not in applied
+    assert "--content-threshold" not in applied
+    assert (
+        "Options keep their defaults, because their values in the conservative "
+        "preset rely on overridden options: -C/--content-threshold and "
+        "-S/--size-threshold."
+    ) in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("args", "kept"),
+    (
+        pytest.param(("--hash-body=decoded",), False, id="hash-body"),
+        # The header list and the raw headers make one choice.
+        pytest.param(("--hash-header=subject",), False, id="header-list"),
+        pytest.param(("--no-raw-headers",), False, id="negated-flag"),
+        # The values of the preset, given by the user.
+        pytest.param(("--raw-headers", "--hash-body=raw"), True, id="same-values"),
+    ),
+)
+def test_preset_thresholds_rely_on_its_hashing(invoke, make_box, args, kept):
+    """The thresholds of the conservative preset apply only with its hashing options.
+
+    Replacing a hashing option, directly or through the option linked to it, leaves
+    the thresholds at their defaults. A user value equal to the preset's keeps them.
+    """
+    box_path, _, _ = make_box(Maildir, [MailFactory()])
+
+    result = invoke("--preset=conservative", *args, "--hash-only", box_path)
+
+    assert result.exit_code == 0
+    applied = applied_options(result, Preset.CONSERVATIVE)
+    assert ("--size-threshold -1" in applied) is kept
+    assert ("--content-threshold -1" in applied) is kept
+    assert ("Options keep their defaults" in result.stderr) is not kept
+
+
 def test_raw_headers_refuse_a_header_list(invoke, make_box):
     """`--raw-headers` and `--hash-header` set together contradict each other."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])

@@ -77,8 +77,9 @@ def main():
     # call turns that launch into the worker and never returns. A no-op elsewhere.
     multiprocessing.freeze_support()
 
-    # Nuitka sets no `sys.frozen`, and its launcher before 4.3.3 calls this function
-    # in each worker: stop there, before the CLI opens a box or starts more workers.
+    # Nuitka sets no `sys.frozen`, and its launcher before `4.3.3` calls this
+    # function in each worker: stop there, before the CLI opens a box or starts more
+    # workers.
     if in_worker_process():
         sys.exit(WORKER_RERUN_ERROR)
 

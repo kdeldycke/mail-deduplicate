@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import tomllib
-from datetime import UTC, date, datetime
+from datetime import date
 from pathlib import Path
+
+from click_extra.sphinx.announcement import years_since
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -29,9 +31,8 @@ docs_site_url = toml_config["project"]["urls"]["Documentation"].rstrip("/") + "/
 project = " ".join(word.title() for word in project_id.split("-"))
 
 # Whole years since `0.0.0` (2010-06-08), the oldest entry of the changelog, for
-# the announcement banner below. Floored, so the figure is never ahead of the
-# anniversary it claims.
-maintained_years = (datetime.now(tz=UTC).date() - date(2010, 6, 8)).days // 365
+# the announcement banner below.
+maintained_years = years_since(date(2010, 6, 8))
 
 extensions = [
     # Core Sphinx.
