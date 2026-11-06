@@ -1,5 +1,10 @@
 # Changelog
 
+## [`9.6.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.6.0...main)
+
+> [!WARNING]
+> This version is **not released yet** and is under active development.
+
 ## [`9.6.0` (2026-11-06)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.5.0...v9.6.0)
 
 - Add `--preset`, whose `conservative` value treats as copies only the mails whose bytes are identical, and whose `aggressive` value trusts `Message-ID` alone.
