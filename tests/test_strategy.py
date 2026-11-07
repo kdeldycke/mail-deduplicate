@@ -659,7 +659,7 @@ def test_outlier_eviction_keeps_core_dedup(invoke, make_box):
 
     assert result.exit_code == 0
     assert "Set aside 1 mails too dissimilar" in result.stderr
-    assert "--hash-header" in result.stderr
+    assert "raise --size-threshold and --content-threshold" in result.stderr
 
     # One of the two identical copies was deleted, the outlier was left untouched.
     check_box(box_path, box_type, content=[smallest_mail, outlier_mail])

@@ -627,10 +627,10 @@ def ignored_step_options(ctx) -> list[str]:
         "duplicate set is handed over to the next strategy each time a strategy "
         "fails to discriminate its mails, by selecting all of them, none of them, or "
         "by missing the timestamps to compare them. Repeating entries are ignored, "
-        "including aliases of strategies already listed. If not set, duplicates will "
-        "be grouped and counted but all be skipped, selection will be empty, and no "
-        "action will be performed. Description of each strategy is available further "
-        "down that help screen.",
+        "including aliases of strategies already listed. If not set, every duplicate "
+        "set is skipped: none of its mails is selected or discarded. The mails without "
+        "duplicates stay selected, and a copy or a move still carries them. "
+        "Description of each strategy is available further down that help screen.",
     ),
     option(
         "-t",

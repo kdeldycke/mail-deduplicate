@@ -542,8 +542,8 @@ class DuplicateSet:
                 f"Set aside {len(evicted)} mails too dissimilar from the rest of "
                 "the set: "
                 + ", ".join(sorted(repr(mail) for mail in evicted))
-                + ". Narrow down the --hash-header selection if they were expected "
-                "to be recognized as copies."
+                + ". Inspect them with --show-diff, and raise --size-threshold and "
+                "--content-threshold if they are copies."
             )
             self.stats[Stat.MAIL_SKIPPED] += len(evicted)
             # Resume the selection on the remaining core of coherent duplicates, and

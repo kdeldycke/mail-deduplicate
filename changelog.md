@@ -5,6 +5,9 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Fix the `--strategy` help, which said no action runs without a strategy, while a copy or a move still carries the mails without duplicates.
+- Fix the tutorial and a warning advising to narrow `--hash-header` for mails too dissimilar from their set.
+
 ## [`9.6.0` (2026-11-06)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.5.0...v9.6.0)
 
 - Add `--preset`, whose `conservative` value treats as copies only the mails whose bytes are identical, and whose `aggressive` value trusts `Message-ID` alone.
