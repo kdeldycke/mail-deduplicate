@@ -135,8 +135,9 @@ docs = [
   # sphinx-datatables 1.0.0 is the first stable release. It makes the binaries
   # catalog a searchable, sortable table.
   "sphinx-datatables>=1",
-  # sphinx-design 0.6 introduced the current directive syntax for cards, grids, and tabs.
-  "sphinx-design>=0.6",
+  # sphinx-design 0.8.0 added the `:orientation: vertical` option of `tab-set`,
+  # which the install page sets: an older release fails the build on it.
+  "sphinx-design>=0.8",
   # sphinx-sitemap 2.7.0 and 2.7.1 turn sitemap_show_lastmod on by default, which
   # dates every page from its git history. 2.7.2 turns it back off.
   "sphinx-sitemap>=2.7.2",
@@ -168,7 +169,10 @@ exclude-newer = "1 week"
 # `repomatic run` registry pins before that release clears the window: without
 # it, the binary builds cannot install Nuitka. `sync-uv-lock` prunes the entry
 # once the window passes its date.
-exclude-newer-package = { click-extra = "2026-11-08T00:00:00Z", extra-platforms = "2026-11-02T00:00:00Z" }
+# XXX The `sphinx-design` entry lets the `sphinx-design>=0.8` floor of the docs
+# group resolve inside its cooldown: drop this comment once `sync-uv-lock`
+# prunes the entry.
+exclude-newer-package = { click-extra = "2026-11-08T00:00:00Z", extra-platforms = "2026-11-02T00:00:00Z", sphinx-design = "0 days" }
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
 build-backend.source-exclude = [
@@ -426,6 +430,10 @@ abandoned-versions = [ "7.2.1", "7.2.2" ]
 # Opting in keeps `[tool.lychee]` in step with the bundled template. The sync
 # keeps the local entries and their comments, placed after the template's.
 include = [ "lychee" ]
+# XXX Drop once `lint-deps` reports that this entry exempts nothing.
+lint-deps.allow.sphinx-design = """\
+  sphinx-design 0.8.0 is on PyPI: only a docs install under a cooldown fails, until 2026-11-17.\
+  """
 # Render the Click command tree as roff `.1` files and attach a
 # `mail-deduplicate-manpages.tar.gz` asset to every GitHub release. The script
 # target mirrors `click_extra_manpages` in `docs/conf.py`, so the release

@@ -48,7 +48,7 @@ This will download `mail-deduplicate` (the package), and run `mdedup`, the CLI i
 ## Installation methods
 
 `````{tab-set}
-:class: tabs-vertical
+:orientation: vertical
 ````{tab-item} uv
 Easiest way is to [install `uv`](https://docs.astral.sh/uv/getting-started/installation/), then install `mail-deduplicate` system-wide, with the [`uv tool`](https://docs.astral.sh/uv/guides/tools/#installing-tools) command:
 
