@@ -19,11 +19,12 @@
 from __future__ import annotations
 
 from mailbox import Maildir
+from pathlib import Path
 from textwrap import dedent
 
 import pytest
 
-from .conftest import MailFactory
+from .conftest import MailFactory, check_box
 
 
 @pytest.fixture()
@@ -56,6 +57,27 @@ def test_config_file_drives_run(invoke, make_box, make_config):
     assert "Perform delete-discarded action" in result.stderr
     assert "DRY RUN:" in result.stderr
     assert "none will be altered" in result.stderr
+
+
+def test_config_regexps_list(invoke, make_box, make_config):
+    """The `regexps` key holds the ordered list of `--regexp` expressions."""
+    duplicate = MailFactory()
+    one, _, _ = make_box(Maildir, [duplicate])
+    other, _, _ = make_box(Maildir, [duplicate])
+    # The first expression matches no path and hands the set over to the second one,
+    # which names a box by its random name.
+    conf_path = make_config(f"""\
+        [mdedup]
+        strategies = ["select-matching-path"]
+        regexps = ["(?!)", "{Path(one).name}"]
+        action = "delete-discarded"
+    """)
+
+    result = invoke("--config", conf_path, one, other)
+
+    assert result.exit_code == 0
+    check_box(one, Maildir, content=[duplicate])
+    check_box(other, Maildir, content=[])
 
 
 def test_config_kebab_case_keys(invoke, make_box, make_config):
@@ -250,8 +272,8 @@ def test_export_config_toml_roundtrip(invoke, make_config):
     # and keys use the canonical kebab-case spelling.
     assert "strategies = []" in export
     assert "hash-headers = [" in export
+    assert "regexps = []" in export
     assert "# input-format =" in export
-    assert "# regexp =" in export
     assert "# export =" in export
     # Command-line-only and self-referential parameters are not exported.
     assert "mail_sources" not in export

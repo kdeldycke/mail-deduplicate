@@ -111,6 +111,8 @@ Several strategies can be chained into a fallback cascade by repeating the `--st
 
 Those two strategies compare nothing, so they rule on the copy whose path sorts first, with the mail's key breaking the tie inside a file-based box: `select-one` keeps that copy, and `select-all-but-one` discards it. Every strategy thus decides the same way on every run, and a `--dry-run` names the mails that the real run acts on.
 
+A path-based strategy adds one step to the strategy cascade per `--regexp` expression, in their order. An expression that matches all the mails of a group, or none of them, hands the group over to the next expression, and the last expression hands it over to the next strategy. The first expression that splits a group decides, so the earlier expressions have priority.
+
 ### ❎ Safeguard: size threshold
 
 Sets of duplicates are verified by comparing the body sizes of the mails they contain, and two mails differing by more than a threshold are not considered copies of each other. A size is measured in bytes of the decoded body, with its transfer encodings undone and its text decoded, so copies that differ in their encoding alone measure the same.

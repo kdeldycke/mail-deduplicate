@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import enum
 import logging
-import re
 from functools import wraps
 
 from click_extra import get_current_theme
@@ -28,26 +27,31 @@ from .deduplicate import path_order
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    import re
     from collections.abc import Callable
     from typing import TypeAlias
 
     from .deduplicate import DuplicateSet
     from .mail import DedupMailMixin
 
-    SelectionFunc: TypeAlias = Callable[[DuplicateSet], set[DedupMailMixin]]
+    SelectionFunc: TypeAlias = Callable[..., set[DedupMailMixin]]
 
 
 def log_selection(message_template: str):
-    """Decorator to log selection criteria."""
+    """Decorator to log selection criteria.
+
+    The template reads the duplicate set as `d`, and the other arguments of the
+    selection function by their name.
+    """
 
     def decorator(func: SelectionFunc) -> SelectionFunc:
         @wraps(func)
-        def wrapper(duplicates: DuplicateSet) -> set[DedupMailMixin]:
+        def wrapper(duplicates: DuplicateSet, **kwargs) -> set[DedupMailMixin]:
             # Debug, not info: this fires once per duplicate set, and a corpus has
             # as many of those as it has distinct mails.
             if logging.getLogger().isEnabledFor(logging.DEBUG):
-                logging.debug(message_template.format(d=duplicates))
-            return func(duplicates)
+                logging.debug(message_template.format(d=duplicates, **kwargs))
+            return func(duplicates, **kwargs)
 
         return wrapper
 
@@ -155,29 +159,30 @@ def select_biggest(duplicates: DuplicateSet) -> set[DedupMailMixin]:
 
 
 @log_selection(
-    "Select all mails with file path matching the {d.conf[regexp].pattern} regexp..."
+    "Select all mails with file path matching the {regexp.pattern} regexp..."
 )
-def select_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
-    """Select all duplicates whose file path matches the --regexp expression."""
-    assert duplicates.conf["regexp"] is not None
-    return {
-        mail
-        for mail in duplicates.pool
-        if re.search(duplicates.conf["regexp"], mail.path)
-    }
+def select_matching_path(
+    duplicates: DuplicateSet, regexp: re.Pattern[str]
+) -> set[DedupMailMixin]:
+    """Select all duplicates whose file path matches the --regexp expression.
+
+    With several expressions, the first one that splits the set decides.
+    """
+    return {mail for mail in duplicates.pool if regexp.search(duplicates.paths[mail])}
 
 
 @log_selection(
-    "Select all mails with file path not matching the "
-    "{d.conf[regexp].pattern} regexp..."
+    "Select all mails with file path not matching the {regexp.pattern} regexp..."
 )
-def select_non_matching_path(duplicates: DuplicateSet) -> set[DedupMailMixin]:
-    """Select all duplicates whose file path doesn't match the --regexp expression."""
-    assert duplicates.conf["regexp"] is not None
+def select_non_matching_path(
+    duplicates: DuplicateSet, regexp: re.Pattern[str]
+) -> set[DedupMailMixin]:
+    """Select all duplicates whose file path doesn't match the --regexp expression.
+
+    With several expressions, the first one that splits the set decides.
+    """
     return {
-        mail
-        for mail in duplicates.pool
-        if not re.search(duplicates.conf["regexp"], mail.path)
+        mail for mail in duplicates.pool if not regexp.search(duplicates.paths[mail])
     }
 
 
@@ -298,8 +303,18 @@ class Strategy(enum.Enum):
             func_id = self.name.lower()
         return globals()[func_id]  # type: ignore[no-any-return]
 
-    def apply(self, duplicates: DuplicateSet) -> set[DedupMailMixin]:
+    @property
+    def path_based(self) -> bool:
+        """Whether the strategy tests the paths of mails against a `--regexp`."""
+        return self.function in (select_matching_path, select_non_matching_path)
+
+    def apply(
+        self, duplicates: DuplicateSet, regexp: re.Pattern[str] | None = None
+    ) -> set[DedupMailMixin]:
         """Perform the selection strategy on the provided duplicate set.
+
+        A path-based strategy tests the paths of mails against `regexp`, one of the
+        `--regexp` expressions. The other strategies take none.
 
         Returns the set of selected mail objects.
         """
@@ -308,4 +323,6 @@ class Strategy(enum.Enum):
         # the name is not free either, so it waits until it is going to be said.
         if logging.getLogger().isEnabledFor(logging.DEBUG):
             logging.debug(f"Apply {get_current_theme().choice(str(self))} strategy...")
-        return set(self.function(duplicates))
+        if regexp is None:
+            return set(self.function(duplicates))
+        return set(self.function(duplicates, regexp=regexp))

@@ -10,7 +10,7 @@ The only parameter that cannot come from a configuration file is the list of mai
 
 TOML, YAML, JSON and INI files are supported. Keys are the option names in `kebab-case`, the spelling of the CLI flags: `hash-body` sets `--hash-body`. The `snake_case` spelling of the internal parameter ID (`hash_body`), as reported by `--params` and used by the `MDEDUP_*` environment variables, is accepted too.
 
-Repeatable options are written as lists. The `strategies` key holds the ordered `--strategy` chain, and `hash-headers` the ordered `--hash-header` list.
+Repeatable options are written as lists. The `strategies` key holds the ordered `--strategy` chain, `hash-headers` the ordered `--hash-header` list, and `regexps` the ordered `--regexp` expressions.
 
 ```toml
 # My default configuration file.
@@ -68,6 +68,8 @@ Configuration file ./mdedup.toml is valid.
 ## Environment variables
 
 Every option also reads from an environment variable named after it, prefixed with `MDEDUP_`: `MDEDUP_VERBOSITY`, `MDEDUP_HASH_BODY`, `MDEDUP_DRY_RUN`, ... Environment variables take precedence over the configuration file, but not over the command line.
+
+The variable of a repeatable option holds its values separated by whitespace, like `MDEDUP_STRATEGIES="select-oldest select-one"`. `MDEDUP_REGEXPS` is the exception: it takes one expression per line, as an expression can hold spaces.
 
 ## Troubleshooting
 

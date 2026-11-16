@@ -20,6 +20,7 @@ import base64
 import re
 from datetime import UTC, datetime, timedelta
 from mailbox import Maildir
+from pathlib import Path
 from string import ascii_lowercase
 
 import pytest
@@ -414,7 +415,7 @@ def test_strategy_is_deterministic(make_box, config, strategy):
             random_mail_2,
         ],
     )
-    config["regexp"] = re.compile(".*")
+    regexp = re.compile(".*") if strategy.path_based else None
     box = BoxFormat.MAILDIR.constructor(box_path, create=False)
     # Kept alive, so the mails of each pass live at new addresses, and their set can
     # iterate in another order.
@@ -427,7 +428,7 @@ def test_strategy_is_deterministic(make_box, config, strategy):
             mail.conf = config
             mails.append(mail)
         passes.append(mails)
-        selected = strategy.apply(DuplicateSet("a-hash", mails, config))
+        selected = strategy.apply(DuplicateSet("a-hash", mails, config), regexp)
         return {path_order(mail) for mail in selected}
 
     expected = selection()
@@ -636,6 +637,141 @@ def test_strategy_cascade_regexp(invoke, make_box, args, messages):
     assert result.exit_code == 2
     for message in messages:
         assert message in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("strategy", "exit_code"), (("select-matching-path", 2), ("select-one", 0))
+)
+def test_empty_regexp_counts_as_unset(invoke, make_box, strategy, exit_code):
+    """An empty `--regexp` matches every path, so it decides no set and is ignored.
+
+    A path-based strategy then misses its expression. Any other strategy accepts it.
+    """
+    box_path, _, _ = make_box(Maildir, [random_mail_1, random_mail_1])
+
+    result = invoke(
+        f"--strategy={strategy}",
+        "--regexp=",
+        "--action=delete-discarded",
+        "--dry-run",
+        box_path,
+    )
+
+    assert result.exit_code == exit_code
+    assert ("--regexp is required" in result.stderr) is (exit_code == 2)
+
+
+NO_PATH = "(?!)"
+"""A regular expression that matches no path."""
+
+
+@pytest.mark.parametrize(
+    ("strategies", "regexps", "env", "kept", "handovers"),
+    (
+        # The earliest expression that splits the set decides.
+        pytest.param(
+            ("select-matching-path",),
+            ("{second}", "{first}"),
+            {},
+            {"second"},
+            (),
+            id="earliest-decides",
+        ),
+        # An expression that matches no mail of the set, or all of them, hands the
+        # set over to the next expression.
+        pytest.param(
+            ("select-matching-path",),
+            (NO_PATH, "{first}", "{second}"),
+            {},
+            {"first"},
+            ((NO_PATH, "regexp"),),
+            id="matching-none-hands-over",
+        ),
+        pytest.param(
+            ("select-matching-path",),
+            (".", "{second}", "{first}"),
+            {},
+            {"second"},
+            ((".", "regexp"),),
+            id="matching-all-hands-over",
+        ),
+        # A repeated expression is tried once.
+        pytest.param(
+            ("select-matching-path",),
+            (NO_PATH, NO_PATH, "{first}"),
+            {},
+            {"first"},
+            ((NO_PATH, "regexp"),),
+            id="repeat-ignored",
+        ),
+        # The alias selects the mails that the deciding expression does not match.
+        pytest.param(
+            ("discard-matching-path",),
+            ("{second}", "{first}"),
+            {},
+            {"first"},
+            (),
+            id="complement",
+        ),
+        # Once every expression handed the set over, the next strategy decides.
+        pytest.param(
+            ("select-matching-path", "select-all-but-one"),
+            (".", NO_PATH),
+            {},
+            {"second"},
+            ((".", "regexp"), (NO_PATH, "strategy")),
+            id="next-strategy",
+        ),
+        # With no strategy left, the set is skipped.
+        pytest.param(
+            ("select-matching-path",),
+            (".", NO_PATH),
+            {},
+            {"first", "second"},
+            ((".", "regexp"),),
+            id="cascade-exhausted",
+        ),
+        # The environment variable holds one expression per line, spaces included.
+        pytest.param(
+            ("select-matching-path",),
+            (),
+            {"MDEDUP_REGEXPS": NO_PATH + "\n({first}| )"},
+            {"first"},
+            ((NO_PATH, "regexp"),),
+            id="environment-variable",
+        ),
+    ),
+)
+def test_regexp_cascade(invoke, make_box, strategies, regexps, env, kept, handovers):
+    """Each `--regexp` expression is a step of the strategy cascade, in their order.
+
+    The log line of each hand-over names the expression, and what the set goes to.
+    The two boxes have random names, so an expression naming one of them matches no
+    other part of a path.
+    """
+    mail = MailFactory()
+    one, _, _ = make_box(Maildir, [mail])
+    other, _, _ = make_box(Maildir, [mail])
+    first, second = sorted((one, other))
+    names = {"first": Path(first).name, "second": Path(second).name}
+
+    result = invoke(
+        *(f"--strategy={strategy}" for strategy in strategies),
+        *(f"--regexp={regexp.format(**names)}" for regexp in regexps),
+        "--action=delete-discarded",
+        first,
+        second,
+        env={name: value.format(**names) for name, value in env.items()},
+    )
+
+    assert result.exit_code == 0
+    for label, box_path in (("first", first), ("second", second)):
+        check_box(box_path, Maildir, content=[mail] if label in kept else [])
+    lines = [line for line in result.stderr.splitlines() if " strategy failed" in line]
+    assert len(lines) == len(handovers)
+    for line, (regexp, fallback) in zip(lines, handovers, strict=True):
+        assert f" strategy failed with the {regexp!r} regexp: " in line
+        assert line.endswith(f" Fall back to the next {fallback}...")
 
 
 outlier_mail = MailFactory(body="An entirely different mail body. " * 60)

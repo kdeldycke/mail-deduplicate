@@ -19,6 +19,7 @@ from __future__ import annotations
 import builtins
 import multiprocessing
 import os
+import re
 import subprocess
 import sys
 import tracemalloc
@@ -30,7 +31,7 @@ from click_extra import BUILTIN_THEMES, unstyle
 from click_extra.test_suite import load_test_suite, run_test_suite
 
 from mail_deduplicate.__main__ import WORKER_RERUN_ERROR, main
-from mail_deduplicate.cli import PRESET_OPTIONS, Preset
+from mail_deduplicate.cli import PRESET_OPTIONS, Preset, RegexpType
 from mail_deduplicate.mail import DedupMailMixin
 
 from .conftest import MailFactory, assert_one_line_error, check_box, metrics
@@ -660,6 +661,18 @@ def test_headers_table_rendered_only_when_logged(invoke, make_box, monkeypatch):
             "invalid regular expression",
             id="uncompilable-regexp",
         ),
+        # `re.compile` raises `ValueError` and `OverflowError` too, not only
+        # `re.error`.
+        pytest.param(
+            ("--strategy=select-matching-path", "--regexp=(?a)(?u)x"),
+            "invalid regular expression",
+            id="regexp-flags-incompatible",
+        ),
+        pytest.param(
+            ("--strategy=select-matching-path", "--regexp=x{99999999999}"),
+            "invalid regular expression",
+            id="regexp-repetition-overflow",
+        ),
     ),
 )
 def test_invalid_option_value_rejected(invoke, make_box, args, message):
@@ -670,6 +683,13 @@ def test_invalid_option_value_rejected(invoke, make_box, args, message):
 
     assert result.exit_code == 2
     assert message in result.stderr
+
+
+def test_regexp_type_keeps_compiled_expression():
+    """A compiled expression goes through as is, as Click expects of a type."""
+    regexp = re.compile("orchard")
+
+    assert RegexpType().convert(regexp, None, None) is regexp
 
 
 def test_duplicate_source_rejected(invoke, make_box):
