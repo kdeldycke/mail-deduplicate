@@ -29,6 +29,7 @@ from click_extra import (
     EnumChoice,
     IntRange,
     ParameterSource,
+    ParamType,
     UsageError,
     argument,
     command,
@@ -211,7 +212,7 @@ class Config(TypedDict):
     show_diff: bool
     strategies: tuple[Strategy, ...]
     time_source: TimeSource
-    regexp: re.Pattern | None
+    regexps: tuple[re.Pattern[str], ...]
     action: Action
     export: Path | None
     export_format: BoxFormat
@@ -256,24 +257,46 @@ def unique_strategies(
     return tuple(deduplicated.values())
 
 
-def compile_regexp(
-    ctx: Context, param: Parameter, value: str
-) -> re.Pattern[str] | None:
-    """Validate and compile regular expression provided as parameters to the CLI."""
-    if value:
+class RegexpType(ParamType):
+    """A regular expression on the path of a mail, compiled as soon as it is read."""
+
+    name = "regexp"
+
+    envvar_list_splitter = "\n"
+    """Separator of the expressions in an environment variable.
+
+    Click splits the variable of a repeatable option on whitespace by default, and
+    an expression can hold spaces.
+    """
+
+    def convert(
+        self, value: Any, param: Parameter | None, ctx: click.Context | None
+    ) -> re.Pattern[str]:
+        """Compile `value`, or refuse it with a usage error."""
+        if isinstance(value, re.Pattern):
+            return value
         try:
             return re.compile(value)
-        except re.error:
-            raise BadParameter(f"invalid regular expression: {value!r}.")
-    return None
+        # Besides `re.error`, conflicting flags raise `ValueError`, a repetition count
+        # above the limit `OverflowError`, and too many nested groups
+        # `RecursionError`.
+        except (re.error, ValueError, OverflowError, RecursionError):
+            self.fail(f"invalid regular expression: {value!r}.", param, ctx)
 
 
-PATH_STRATEGIES = (
-    Strategy.DISCARD_MATCHING_PATH,
-    Strategy.DISCARD_NON_MATCHING_PATH,
-    Strategy.SELECT_MATCHING_PATH,
-    Strategy.SELECT_NON_MATCHING_PATH,
-)
+def unique_regexps(
+    ctx: Context, param: Parameter, value: tuple[re.Pattern[str], ...]
+) -> tuple[re.Pattern[str], ...]:
+    """Deduplicate the regular expressions provided to the CLI, preserving order.
+
+    A repeated expression cannot decide a set that its first occurrence left
+    undecided. An empty expression matches every path, so it decides no set at all.
+    Both are ignored, and an option left without expressions counts as not set.
+    """
+    return tuple(dict.fromkeys(regexp for regexp in value if regexp.pattern))
+
+
+PATH_STRATEGIES = tuple(sorted((s for s in Strategy if s.path_based), key=str))
 """Strategies relying on the `-r`/`--regexp` parameter."""
 
 
@@ -642,14 +665,20 @@ def ignored_step_options(ctx) -> list[str]:
     option(
         "-r",
         "--regexp",
-        callback=compile_regexp,
+        "regexps",
+        multiple=True,
+        type=RegexpType(),
+        callback=unique_regexps,
         metavar="REGEXP",
         help="Regular expression on a mail's file path. Applies to individual mail "
         "location for folder-based boxes ("
         f"{', '.join(map(str, FOLDER_FORMATS))}). But for file-based boxes ("
         f"{', '.join(map(str, FILE_FORMATS))}), applies to the whole box's "
-        "path, as all mails are packed into one single file. Required in "
-        f"{human_join(PATH_STRATEGIES)} strategies.",
+        "path, as all mails are packed into one single file. Can be repeated "
+        "multiple times to set an ordered list of fallback expressions: a path-based "
+        "strategy hands each duplicate set over to the next expression each time an "
+        "expression matches all of its mails or none of them. Empty and repeating "
+        f"entries are ignored. Required in {human_join(PATH_STRATEGIES)} strategies.",
     ),
     option(
         "-S",
@@ -750,14 +779,14 @@ def ignored_step_options(ctx) -> list[str]:
 # triggered it, without dragging the other into the error message.
 @constraint(
     If(AnyValueIn("strategies", PATH_STRATEGIES, "-s/--strategy"), then=require_all),
-    ["regexp"],
+    ["regexps"],
 )
 @constraint(
     If(
         AnyValueIn("strategies", PATH_STRATEGIES, "-s/--strategy", negate=True),
         then=accept_none,
     ),
-    ["regexp"],
+    ["regexps"],
 )
 @constraint(
     If(AnyValueIn("action", EXPORT_ACTIONS, "-a/--action"), then=require_all),
@@ -804,7 +833,7 @@ def mdedup(
     show_diff,
     strategies,
     time_source,
-    regexp,
+    regexps,
     action,
     export,
     export_format,
@@ -862,7 +891,7 @@ def mdedup(
         show_diff=settings["show_diff"],
         strategies=settings["strategies"],
         time_source=settings["time_source"],
-        regexp=settings["regexp"],
+        regexps=settings["regexps"],
         action=settings["action"],
         export=settings["export"],
         export_format=settings["export_format"],

@@ -324,6 +324,16 @@ class DuplicateSet:
         """Returns the smallest size among all mails in the set."""
         return min(mail.size for mail in self.pool)
 
+    @cached_property
+    def paths(self) -> dict[DedupMailMixin, str]:
+        """Returns the file path of each mail in the set.
+
+        A mail derives its path from its box at each access, and a path-based
+        strategy reads the paths of the set once per `--regexp` expression. The set
+        is dropped once settled, and its paths with it.
+        """
+        return {mail: mail.path for mail in self.pool}
+
     def check_differences(self) -> set[DedupMailMixin]:
         """Checks the mails of the set against each other for size and content.
 
@@ -560,13 +570,20 @@ class DuplicateSet:
         # failing to discriminate the set, by selecting all its mails, none of them,
         # or by missing the timestamps to compare them, hands the set over to the next
         # strategy. See: https://github.com/kdeldycke/mail-deduplicate/issues/647
+        # A path-based strategy is one step per --regexp expression, in their order,
+        # so an expression matching all mails or none hands the set over the same way.
+        steps = [
+            (strategy, regexp)
+            for strategy in strategies
+            for regexp in (self.conf["regexps"] if strategy.path_based else (None,))
+        ]
         selected = set()
         skip_reason = ""
         skip_stat = Stat.SET_SKIPPED_STRATEGY
-        for strategy_counter, strategy in enumerate(strategies, 1):
+        for step_counter, (strategy, regexp) in enumerate(steps, 1):
             skip_stat = Stat.SET_SKIPPED_STRATEGY
             try:
-                selected = strategy.apply(self)
+                selected = strategy.apply(self, regexp)
             except MissingTimestamps as expt:
                 selected = set()
                 skip_reason = (
@@ -588,10 +605,15 @@ class DuplicateSet:
                     )
             if selected:
                 break
-            if strategy_counter < len(strategies):
+            if step_counter < len(steps):
+                next_strategy, _ = steps[step_counter]
+                with_regexp = (
+                    "" if regexp is None else f" with the {regexp.pattern!r} regexp"
+                )
                 logging.info(
-                    f"{get_current_theme().choice(str(strategy))} strategy failed: "
-                    f"{skip_reason} Fall back to the next strategy..."
+                    f"{get_current_theme().choice(str(strategy))} strategy failed"
+                    f"{with_regexp}: {skip_reason} Fall back to the next "
+                    f"{'regexp' if next_strategy is strategy else 'strategy'}..."
                 )
 
         # The whole cascade was exhausted without producing a proper selection.

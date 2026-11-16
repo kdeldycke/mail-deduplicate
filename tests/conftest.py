@@ -108,7 +108,7 @@ def config() -> Config:
         show_diff=False,
         strategies=(),
         time_source=TimeSource.DATE_HEADER,
-        regexp=None,
+        regexps=(),
         action=Action.COPY_SELECTED,
         export=None,
         export_format=BoxFormat.MBOX,
