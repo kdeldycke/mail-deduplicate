@@ -1,9 +1,6 @@
 # Changelog
 
-## [`9.7.0.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.6.0...main)
-
-> [!WARNING]
-> This version is **not released yet** and is under active development.
+## [`9.7.0` (2026-11-16)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.6.0...v9.7.0)
 
 - **Breaking:** a repeated `-r`/`--regexp` makes a path-based strategy try each expression in turn, until one splits the set. The last expression no longer replaces the others.
 - **Breaking:** pluralize the `--regexp` parameter ID: its configuration key becomes a `regexps` list, and its environment variable `MDEDUP_REGEXPS`, with one expression per line. The `-r`/`--regexp` flag is unchanged.
