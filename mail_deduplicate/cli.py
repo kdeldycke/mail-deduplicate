@@ -272,11 +272,15 @@ class RegexpType(ParamType):
     def convert(
         self, value: Any, param: Parameter | None, ctx: click.Context | None
     ) -> re.Pattern[str]:
-        """Compile `value`, or refuse it with a usage error."""
+        """Compile `value`, or refuse it with a usage error.
+
+        A configuration file can give a number, like a year. A string option reads it
+        as text, and so does this type.
+        """
         if isinstance(value, re.Pattern):
             return value
         try:
-            return re.compile(value)
+            return re.compile(str(value))
         # Besides `re.error`, conflicting flags raise `ValueError`, a repetition count
         # above the limit `OverflowError`, and too many nested groups
         # `RecursionError`.
@@ -326,9 +330,9 @@ def echo_step(title: str) -> None:
 def human_join(items: Iterable) -> str:
     """Renders IDs as an English enumeration, for the help screen.
 
-    Both tuples above are the single source of truth of which strategies and actions
-    take an extra parameter, so the options mentioning them read the list from there
-    instead of spelling it out again and drifting from it.
+    The options mentioning the strategies and actions that take an extra parameter
+    read them from the two tuples above, instead of spelling them out again and
+    drifting from them.
     """
     ids = [str(item) for item in items]
     return " and ".join((", ".join(ids[:-1]), ids[-1])) if len(ids) > 1 else ids[0]

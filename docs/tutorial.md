@@ -187,7 +187,7 @@ A strategy decides, within each set of copies, which mails are *selected* and wh
 
 - Time-based: `select-oldest`, `select-newest` and friends, comparing dates.
 - Size-based: `select-smallest`, `select-biggest` and friends, comparing mail sizes.
-- Path-based: `select-matching-path` and friends, testing mail locations against `--regexp`.
+- Path-based: `select-matching-path` and friends, testing mail locations against `--regexp`. Repeat the option to chain fallback expressions.
 - Quantity-based: `select-one` keeps the copy whose path sorts first, and `select-all-but-one` discards it, for when copies are indistinguishable.
 
 The full list, with the exact semantics of each, sits at the bottom of `mdedup --help` and in the [CLI parameters page](https://kdeldycke.github.io/mail-deduplicate/cli.html).
@@ -372,7 +372,7 @@ Several safeguards run before any mail is acted upon, each detailed in the [desi
 
 - A mail with too few of the hashed headers gets no hash, as a hash resting on so little cannot be trusted. It joins no duplicate set, and is kept like a mail without duplicates.
 - Mails differing too much in size or content from the rest of their set are considered suspicious: they are set aside, and only the mails that all match each other are deduplicated. The set is skipped as a whole when no such core remains. The `--size-threshold` and `--content-threshold` options tune these limits, and `--show-diff` prints the offending differences.
-- A strategy that would select all mails of a set, or none, achieves nothing: the set is handed over to the next `--strategy` if one was chained, and left untouched otherwise.
+- A strategy that would select all mails of a set, or none, achieves nothing. The set is handed over to the next `--regexp` expression of a path-based strategy, then to the next `--strategy` if one was chained. It stays untouched when no step is left.
 - Unique mails, and mails with no hash, are always part of the final selection, so a merge never drops them.
 - A mail or a set that hits an unexpected error is set aside and left untouched, and the run ends with a bug report to paste into an issue. See [errors and bug reports](https://kdeldycke.github.io/mail-deduplicate/design.html#errors-and-bug-reports).
 

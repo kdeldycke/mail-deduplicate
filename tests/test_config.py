@@ -80,6 +80,27 @@ def test_config_regexps_list(invoke, make_box, make_config):
     check_box(other, Maildir, content=[])
 
 
+def test_config_regexps_number(invoke, make_box, make_config):
+    """A number in the `regexps` list works as an expression, as a string does.
+
+    TOML reads a bare year as an integer, where the command line passes text.
+    """
+    duplicate = MailFactory()
+    box_path, _, _ = make_box(Maildir, [duplicate, duplicate])
+    conf_path = make_config("""\
+        [mdedup]
+        strategies = ["select-matching-path"]
+        regexps = [2024]
+        action = "delete-discarded"
+        dry_run = true
+    """)
+
+    result = invoke("--config", conf_path, "--verbosity=DEBUG", box_path)
+
+    assert result.exit_code == 0
+    assert "with file path matching the 2024 regexp" in result.stderr
+
+
 def test_config_kebab_case_keys(invoke, make_box, make_config):
     """Kebab-case keys, the TOML convention matching the CLI flags, are accepted."""
     box_path, _, _ = make_box(Maildir, [MailFactory()])

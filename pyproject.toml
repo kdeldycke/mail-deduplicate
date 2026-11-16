@@ -161,14 +161,6 @@ required-version = ">=0.12.22"
 dependency-groups.docs = { requires-python = ">= 3.14" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
-# click-extra and extra-platforms are published by this repository's own
-# maintainer: the cooldown guards against a compromised upstream, which does not
-# apply here, and it otherwise holds each release back a week from the projects
-# that consume it.
-# nuitka is no dependency. Its entry admits the Nuitka release that the
-# `repomatic run` registry pins before that release clears the window: without
-# it, the binary builds cannot install Nuitka. `sync-uv-lock` prunes the entry
-# once the window passes its date.
 # XXX The `sphinx-design` entry lets the `sphinx-design>=0.8` floor of the docs
 # group resolve inside its cooldown: drop this comment once `sync-uv-lock`
 # prunes the entry.
