@@ -9,6 +9,7 @@
 - **Breaking:** pluralize the `--regexp` parameter ID: its configuration key becomes a `regexps` list, and its environment variable `MDEDUP_REGEXPS`, with one expression per line. The `-r`/`--regexp` flag is unchanged.
 - **Breaking:** `Strategy.apply()` of a path-based strategy now takes the expression to test as its `regexp` argument.
 - Fix the traceback of a `--regexp` with incompatible flags or a repetition count too large: the run now ends with a usage error.
+- Fix the size-based strategies, which still measured the mails a threshold set aside, and skipped the set instead of deduplicating the rest.
 - Fix the `--strategy` help, which said no action runs without a strategy, while a copy or a move still carries the mails without duplicates.
 - Fix the tutorial and a warning advising to narrow `--hash-header` for mails too dissimilar from their set.
 

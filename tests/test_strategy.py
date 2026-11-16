@@ -19,6 +19,7 @@ from __future__ import annotations
 import base64
 import re
 from datetime import UTC, datetime, timedelta
+from functools import cached_property
 from mailbox import Maildir
 from pathlib import Path
 from string import ascii_lowercase
@@ -799,6 +800,61 @@ def test_outlier_eviction_keeps_core_dedup(invoke, make_box):
 
     # One of the two identical copies was deleted, the outlier was left untouched.
     check_box(box_path, box_type, content=[smallest_mail, outlier_mail])
+
+
+@pytest.mark.parametrize(
+    ("strategy", "kept"),
+    (("select-smaller", smallest_mail), ("select-biggest", smaller_mail)),
+)
+def test_size_strategy_ignores_set_aside_mails(invoke, make_box, strategy, kept):
+    """A size-based strategy compares the mails left once the outlier is set aside.
+
+    The biggest size of the set is then the one of `smaller_mail`, not the outlier's.
+    """
+    box_path, box_type, _ = make_box(
+        Maildir, [smallest_mail, smaller_mail, outlier_mail]
+    )
+
+    result = invoke(f"--strategy={strategy}", "--action=delete-discarded", box_path)
+
+    assert result.exit_code == 0
+    assert "Set aside 1 mails too dissimilar" in result.stderr
+    check_box(box_path, box_type, content=[kept, outlier_mail])
+
+
+def test_set_aside_resets_cached_properties(make_box, config):
+    """Setting mails aside drops every property that a set cached on its pool.
+
+    Each property then describes the mails left, as on a set built from them alone.
+    """
+    box_path, _, _ = make_box(Maildir, [smallest_mail, smaller_mail, outlier_mail])
+    box = BoxFormat.MAILDIR.constructor(box_path, create=False)
+    mails = []
+    for mail_id, mail in box.iteritems():
+        mail.add_box_metadata(box, mail_id)
+        mail.conf = config
+        mails.append(mail)
+    config["strategies"] = (Strategy.SELECT_ONE,)
+    duplicates = DuplicateSet("a-hash", mails, config)
+    cached = [
+        name
+        for name, attribute in vars(DuplicateSet).items()
+        if isinstance(attribute, cached_property)
+    ]
+    # Cache every property on the full pool first.
+    for name in cached:
+        getattr(duplicates, name)
+
+    duplicates.select()
+
+    assert len(duplicates.pool) == 2
+    fresh = DuplicateSet("a-hash", duplicates.pool, config)
+    for name in cached:
+        value, expected = getattr(duplicates, name), getattr(fresh, name)
+        # The order of a tuple follows the iteration of the pool.
+        if isinstance(expected, tuple):
+            value, expected = sorted(value), sorted(expected)
+        assert value == expected, name
 
 
 def test_dissimilar_pair_still_skipped(invoke, make_box):

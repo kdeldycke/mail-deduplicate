@@ -238,9 +238,9 @@ class DuplicateSet:
     ) -> None:
         """Load-up the duplicate set of mail and freeze pool.
 
-        Once loaded-up, the pool of parsed mails is considered frozen for the rest of
-        the duplicate set's life. This allows aggressive caching of lazy instance
-        attributes depending on the pool content.
+        Once loaded-up, the pool of parsed mails is considered frozen. This allows
+        aggressive caching of lazy instance attributes depending on the pool content.
+        Only `replace_pool()` changes the pool, and it drops these attributes.
         """
         self.hash_key: str = hash_key
 
@@ -275,6 +275,18 @@ class DuplicateSet:
     def __repr__(self) -> str:
         """Print internal raw states for debugging."""
         return f"<{self.__class__.__name__} hash={self.hash_key} size={self.size}>"
+
+    def replace_pool(self, pool: frozenset[DedupMailMixin]) -> None:
+        """Replace the pool, and drop every property cached on the previous one.
+
+        Each cached property of the set derives from its pool. One computed before
+        the change, like the biggest size the size threshold compares, would still
+        describe the mails set aside.
+        """
+        self.pool = pool
+        for name, attribute in vars(DuplicateSet).items():
+            if isinstance(attribute, cached_property):
+                self.__dict__.pop(name, None)
 
     @cached_property
     def size(self) -> int:
@@ -556,10 +568,8 @@ class DuplicateSet:
                 "--content-threshold if they are copies."
             )
             self.stats[Stat.MAIL_SKIPPED] += len(evicted)
-            # Resume the selection on the remaining core of coherent duplicates, and
-            # invalidate the cached size so it tracks the reduced pool.
-            self.pool = frozenset(self.pool.difference(evicted))
-            self.__dict__.pop("size", None)
+            # Resume the selection on the remaining core of coherent duplicates.
+            self.replace_pool(self.pool.difference(evicted))
 
         strategies = self.conf["strategies"]
         if not strategies:
@@ -654,8 +664,7 @@ class DuplicateSet:
         mail could not be read again, which needs no bug report. Any other error is
         captured for the report and returned.
         """
-        self.pool = pool
-        self.__dict__.pop("size", None)
+        self.replace_pool(pool)
         self.selection, self.unique, self.discard = set(), set(), set()
         self.stats = Counter({Stat.MAIL_DUPLICATES: self.size})
         if isinstance(expt, OSError):
