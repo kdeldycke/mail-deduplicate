@@ -7,6 +7,9 @@
 
 ## [`9.7.0` (2026-11-16)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.6.0...v9.7.0)
 
+> [!NOTE]
+> `9.7.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/9.7.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.7.0).
+
 - **Breaking:** a repeated `-r`/`--regexp` makes a path-based strategy try each expression in turn, until one splits the set. The last expression no longer replaces the others.
 - **Breaking:** pluralize the `--regexp` parameter ID: its configuration key becomes a `regexps` list, and its environment variable `MDEDUP_REGEXPS`, with one expression per line. The `-r`/`--regexp` flag is unchanged.
 - **Breaking:** Python importers must pass the expression to test as the `regexp` argument of `Strategy.apply()` and `Strategy.function` for a path-based strategy.
