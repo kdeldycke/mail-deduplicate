@@ -106,6 +106,12 @@ $ paru -S mail-deduplicate
 ```{code-block} shell-session
 $ yay -S mail-deduplicate
 ```
+
+The [`mail-deduplicate-bin`](https://aur.archlinux.org/packages/mail-deduplicate-bin) package installs the [standalone binary](#binaries) instead. The two packages conflict, so install only one:
+
+```{code-block} shell-session
+$ yay -S mail-deduplicate-bin
+```
 ````
 
 ````{tab-item} Homebrew

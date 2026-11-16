@@ -12,6 +12,7 @@
 - Fix the size-based strategies, which still measured the mails a threshold set aside, and skipped the set instead of deduplicating the rest.
 - Fix the `--strategy` help, which said no action runs without a strategy, while a copy or a move still carries the mails without duplicates.
 - Fix the tutorial and a warning advising to narrow `--hash-header` for mails too dissimilar from their set.
+- Document the `mail-deduplicate-bin` AUR package, which installs the standalone binary.
 
 ## [`9.6.0` (2026-11-07)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.5.0...v9.6.0)
 
