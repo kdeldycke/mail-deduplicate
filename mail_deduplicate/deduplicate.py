@@ -22,6 +22,7 @@ hashing and selection, can fan out across worker processes: the module-level
 
 from __future__ import annotations
 
+import errno
 import logging
 import sys
 from collections import Counter
@@ -1245,6 +1246,13 @@ class Deduplicate:
                 logging.info(f"{mail_found} mails found.")
                 self.stats[Stat.MAIL_FOUND] += mail_found
         except (OSError, MailboxError) as expt:
+            if isinstance(expt, OSError) and expt.errno == errno.EMFILE:
+                raise MailSourceError(
+                    f"Cannot open {path}: too many open files. Each mbox, babyl and "
+                    "mmdf box keeps its file open until the end of the run: raise the "
+                    "limit of open files, like with ulimit -n, or deduplicate fewer "
+                    "boxes at once."
+                ) from expt
             raise MailSourceError(f"Cannot read {path}: {expt}") from expt
 
     def hash_all(self) -> None:

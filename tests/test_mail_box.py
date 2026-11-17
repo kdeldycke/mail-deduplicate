@@ -27,6 +27,7 @@ from functools import cache
 from mailbox import Mailbox, Message, NoSuchMailboxError
 
 import pytest
+from extra_platforms.pytest import skip_windows
 
 from mail_deduplicate.action import Action
 from mail_deduplicate.mail import DedupMailMixin
@@ -43,6 +44,9 @@ from mail_deduplicate.mail_box import (
 )
 
 from .conftest import ALL_FORMATS, MailFactory, assert_one_line_error, check_box
+
+if sys.platform != "win32":
+    import resource
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -721,6 +725,36 @@ def test_mbox_tree_refused_lock_unlocks_the_folders_before_it(invoke, tmp_path):
     assert_one_line_error(refused, "Trash is already locked")
     assert not (root / "Inbox.lock").exists()
     assert invoke(*args).exit_code == 0
+
+
+@skip_windows(reason="Windows has no `resource` module to lower the limit with.")
+def test_mbox_tree_past_the_limit_of_open_files(invoke, tmp_path):
+    """A tree of more folders than the limit of open files stops the run.
+
+    Each `mbox` box keeps its file open until the end of the run. The error says how
+    to get past the limit, and no `.lock` file stays in the tree.
+    """
+    root = tmp_path / "Local Folders"
+    folders = 64
+    build_thunderbird_tree(
+        root,
+        {
+            f"Folder{index:02d}": [MailFactory(message_id=f"<folder-{index}@test.com>")]
+            for index in range(folders)
+        },
+    )
+    soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    # Room for the files this process holds already, but not for every box.
+    lowered = len(os.listdir("/dev/fd")) + folders // 2
+    resource.setrlimit(resource.RLIMIT_NOFILE, (lowered, hard))
+    try:
+        result = invoke("--hash-only", str(root))
+    finally:
+        resource.setrlimit(resource.RLIMIT_NOFILE, (soft, hard))
+
+    assert result.exit_code == 1
+    assert_one_line_error(result, "too many open files", "ulimit -n")
+    assert not list(root.glob("*.lock"))
 
 
 def test_thunderbird_forced_mbox_format(invoke, tmp_path):

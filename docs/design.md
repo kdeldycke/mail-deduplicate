@@ -24,6 +24,8 @@ Quit Thunderbird before you run `mdedup` on its folders: Thunderbird does not ch
 Give `mdedup` the `Mail` directory of the profile, or one of its accounts, like `Mail/Local Folders`. Do not give it the `ImapMail` directory: its `mbox` files are offline copies of the mails on IMAP servers. Thunderbird finds each mail there by its position in the file, and does not check these files against their summaries.
 ```
 
+Each `mbox`, `babyl` and `mmdf` box keeps its file open until the end of the run, so the limit of open files of the system caps how many of them one run holds. macOS sets that limit to 256 by default, which a Thunderbird account of a few hundred folders goes past. The run then stops with a `too many open files` error. Raise the limit in the shell before the run, like with `ulimit -n 4096`, or deduplicate fewer boxes at once.
+
 ## Step 2: Hashing
 
 In theory, we could rely on the mail's `Message-ID` as a key to identify duplicate mails.
