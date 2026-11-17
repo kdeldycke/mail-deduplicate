@@ -1239,9 +1239,7 @@ class Deduplicate:
         and `mmdf` box holds its file open until the end of the run. The message says
         how to raise the limit: the run never changes the limits of the system itself.
 
-        A source in which no mail is found gets a warning. An autodetected file that
-        is no mail is read as an `mbox`, so the warning of such a file names the
-        formats that autodetection never finds.
+        A source in which no mail is found gets a warning.
         """
         self.step = "loading"
         # Make the path absolute and resolve any symlinks.
@@ -1287,10 +1285,7 @@ class Deduplicate:
             raise MailSourceError(f"Cannot read {path}: {expt}") from expt
 
         if not found:
-            hint = ""
-            if path.is_file() and not self.conf["input_format"]:
-                hint = " Name the format of a babyl or mmdf file with --input-format."
-            logging.warning(f"No mail found in {path}.{hint}")
+            logging.warning(f"No mail found in {path}.")
 
         if removes_mails and any(lacks_new(box) for box in boxes):
             logging.warning(

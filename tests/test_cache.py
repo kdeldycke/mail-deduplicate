@@ -138,8 +138,6 @@ def test_warm_run_matches_uncached_run(
     surface as a different grouping and different metrics. Swept over every format,
     as each one locates its mails differently, and over the sequential and parallel
     hashing paths, as only the former reads the cache one mail at a time.
-
-    MH, Babyl and MMDF are never autodetected, so the format is forced.
     """
     mails = [
         MailFactory(message_id="<a@nohost.com>"),

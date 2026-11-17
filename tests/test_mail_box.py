@@ -26,6 +26,7 @@ from contextlib import contextmanager
 from email import message_from_bytes
 from functools import cache
 from mailbox import Mailbox, Message, NoSuchMailboxError
+from pathlib import Path
 
 import pytest
 from extra_platforms.pytest import skip_windows
@@ -54,7 +55,6 @@ if sys.platform != "win32":
 TYPE_CHECKING = False
 if TYPE_CHECKING:
     from collections.abc import Generator
-    from pathlib import Path
 
 
 @cache
@@ -159,9 +159,8 @@ def test_box_roundtrip(make_box, box_format, mails):
 def test_dedup_across_formats(invoke, make_box, box_format):
     """A full dedup run succeeds on every supported format.
 
-    MH, Babyl and MMDF are never autodetected, so the format is forced. Babyl also
-    guards a regression: its `get_file()` hands back a nameless in-memory buffer,
-    which used to crash the extraction of a mail's path metadata.
+    Babyl guards a regression: its `get_file()` hands back a nameless in-memory
+    buffer, which used to crash the extraction of a mail's path metadata.
     """
     box_type = box_format.base_class
     dup = MailFactory(body="Same body.\n", message_id="<dup@test.com>")
@@ -408,7 +407,7 @@ def test_nonexistent_path(invoke, source):
     (
         pytest.param(
             (),
-            ("Error: Unrecognized folder", "--input-format"),
+            ("Error: Unrecognized folder", "no .mh_sequences file", "--input-format"),
             id="unrecognized-folder",
         ),
         pytest.param(
@@ -441,24 +440,68 @@ def test_unusable_source(invoke, args, messages):
             id="mbox",
         ),
         pytest.param(b"", BoxFormat.MBOX, id="empty"),
-        pytest.param(b"\x01\x01\x01\x01\nSubject: Plums\n", BoxFormat.MBOX, id="mmdf"),
-        pytest.param(b"BABYL OPTIONS: -*- rmail -*-\n", BoxFormat.MBOX, id="babyl"),
+        pytest.param(b"\x01\x01\x01\x01\nSubject: Plums\n", BoxFormat.MMDF, id="mmdf"),
+        pytest.param(b"BABYL OPTIONS: -*- rmail -*-\n", BoxFormat.BABYL, id="babyl"),
     ),
 )
 def test_file_autodetect(tmp_path, content, box_format):
-    """A file that starts with a header is one mail, and any other file an `mbox`."""
+    """A file that starts like a `babyl` box, an `mmdf` box or one mail is one.
+
+    Any other file is an `mbox`.
+    """
     path = tmp_path / "harvest"
     path.write_bytes(content)
     assert autodetect_box_type(path) is box_format
 
 
+@ALL_FORMATS
+def test_every_format_is_autodetected(make_box, box_format):
+    """A box written in a format is detected in that format."""
+    box_path, _, _ = make_box(box_format.base_class, [MailFactory()])
+    assert autodetect_box_type(Path(box_path)) is box_format
+
+
+def test_mh_detection_needs_sequences_file(make_box):
+    """Numbered mails alone do not make an `mh` folder: its `.mh_sequences` does.
+
+    An empty one is enough, as the documentation tells users to create.
+    """
+    box_path, _, _ = make_box(mailbox.MH, [MailFactory()])
+    sequences = Path(box_path, ".mh_sequences")
+    sequences.unlink()
+    with pytest.raises(MailSourceError, match="Unrecognized folder"):
+        autodetect_box_type(Path(box_path))
+
+    sequences.write_bytes(b"")
+    assert autodetect_box_type(Path(box_path)) is BoxFormat.MH
+
+
+def test_dedup_mixes_autodetected_formats(invoke, make_box):
+    """One run reads a box of each format, each in the format detected for it.
+
+    The same mail is in every box. Only the copy whose path sorts first is kept.
+    """
+    mail = MailFactory()
+    boxes = sorted(make_box(fmt.base_class, [mail])[:2] for fmt in BoxFormat)
+
+    result = invoke(
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        *(box_path for box_path, _ in boxes),
+    )
+
+    assert result.exit_code == 0
+    for box_format in BoxFormat:
+        assert f"{box_format} detected." in result.stderr
+    (kept_path, kept_type), *emptied = boxes
+    check_box(kept_path, kept_type, content=[mail])
+    for box_path, box_type in emptied:
+        check_box(box_path, box_type, content=[])
+
+
 @pytest.mark.parametrize("autodetected", (True, False), ids=("autodetected", "forced"))
 def test_source_without_mail_warns(invoke, tmp_path, autodetected):
-    """A source in which no mail is found gets a warning.
-
-    An autodetected file that is no mail is read as an `mbox`, so its warning names
-    the formats that autodetection never finds. A forced format needs no such hint.
-    """
+    """A source in which no mail is found gets a warning."""
     path = tmp_path / "empty.mbox"
     path.write_bytes(b"")
     args = () if autodetected else ("--input-format=mbox",)
@@ -467,8 +510,6 @@ def test_source_without_mail_warns(invoke, tmp_path, autodetected):
 
     assert result.exit_code == 0
     assert f"No mail found in {path}." in result.stderr
-    hint = "Name the format of a babyl or mmdf file with --input-format."
-    assert (hint in result.stderr) is autodetected
 
 
 def test_verbatim_nested_maildirs(invoke, tmp_path):

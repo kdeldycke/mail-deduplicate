@@ -557,12 +557,12 @@ def ignored_step_options(ctx) -> list[str]:
         "--input-format",
         type=EnumChoice(BoxFormat),
         help="Force all provided mail sources to be parsed in the specified format. "
-        "If not set, auto-detect the format of sources independently. Auto-detection "
-        "only supports maildir, mbox and eml formats. A file that starts with a "
-        "header is a single eml mail, and any other file an mbox. A directory of mbox "
-        "files at any depth, like the folders of a Thunderbird account, is an mbox "
-        "source too. Use this option to open up other box formats, or bypass "
-        "unreliable detection.",
+        "If not set, auto-detect the format of sources independently. A file that "
+        "starts like a babyl box, an mmdf box or a single eml mail is read as such, "
+        "and any other file as an mbox. A directory that holds a .mh_sequences file "
+        "is an mh folder. Any other directory is read as a maildir, a folder of eml "
+        "files, or a tree of mbox files at any depth, like the folders of a "
+        "Thunderbird account. Use this option to bypass unreliable detection.",
     ),
     option(
         "-u",

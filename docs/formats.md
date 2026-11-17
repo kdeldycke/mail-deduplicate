@@ -4,30 +4,40 @@
 
 `mdedup` reads and writes six box formats. Three of them keep each mail in a file of its own, and the other three keep a whole box in one file:
 
-| Format    | Storage           | Autodetected | Lock                     |
-| :-------- | :---------------- | :----------- | :----------------------- |
-| `maildir` | One file per mail | Yes          | None                     |
-| `mbox`    | One file per box  | Yes          | The box file             |
-| `mh`      | One file per mail | No           | The `.mh_sequences` file |
-| `babyl`   | One file per box  | No           | The box file             |
-| `mmdf`    | One file per box  | No           | The box file             |
-| `eml`     | One file per mail | Yes          | None                     |
+| Format    | Storage           | Lock                     |
+| :-------- | :---------------- | :----------------------- |
+| `maildir` | One file per mail | None                     |
+| `mbox`    | One file per box  | The box file             |
+| `mh`      | One file per mail | The `.mh_sequences` file |
+| `babyl`   | One file per box  | The box file             |
+| `mmdf`    | One file per box  | The box file             |
+| `eml`     | One file per mail | None                     |
 
 `--input-format` and `--export-format` take the names of the first column.
 
 ## Autodetection
 
-Without `--input-format`, `mdedup` finds the format of each source by itself. A file that starts with a header holds one mail saved alone, like an `.eml` file: it is an `eml` box of that one mail. Any other file is an `mbox`. A folder takes the first format that fits:
+Without `--input-format`, `mdedup` finds the format of each source by itself, so one run can mix sources of different formats. A file takes its format from the bytes it starts with:
 
-1. `maildir`, when the folder holds a `cur` and a `tmp` folder, or holds such a folder at any depth.
-2. `eml`, when the folder holds a file whose name ends with `.eml`, at any depth.
-3. `mbox`, when the folder holds an [`mbox` file](#mbox-mmdf-and-babyl), at any depth.
+- `babyl`, when it starts with `BABYL OPTIONS:`.
+- `mmdf`, when it starts with four Control-A characters, which separate its mails.
+- `eml`, when it starts with a header: the file holds one mail saved alone, like an `.eml` file.
+- `mbox`, in any other case.
+
+A folder takes the first format that fits:
+
+1. `mh`, when the folder holds a `.mh_sequences` file.
+2. `maildir`, when the folder holds a `cur` and a `tmp` folder, or holds such a folder at any depth.
+3. `eml`, when the folder holds a file whose name ends with `.eml`, at any depth.
+4. `mbox`, when the folder holds an [`mbox` file](#mbox-mmdf-and-babyl), at any depth.
 
 A folder that fits none of them stops the run with an error.
 
 The first format that fits applies to the whole folder. A folder that holds `maildir` folders and `.eml` files is read as `maildir` alone, and its `.eml` files are skipped. Give each part as a source of its own.
 
-`mdedup` never detects `mh`, `babyl` or `mmdf`: name the format with `--input-format`. That option applies to every source of the run, so a run cannot mix one of these three formats with another one.
+A folder of numbered mails with no `.mh_sequences` file is not detected as `mh`. Create an empty `.mh_sequences` file in it before the run.
+
+`--input-format` skips the detection and names the format of every source of the run.
 
 A run warns about each source in which it finds no mail.
 

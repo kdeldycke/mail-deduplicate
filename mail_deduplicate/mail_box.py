@@ -373,6 +373,15 @@ only, as `new` holds the mails that no client saw yet. See
 """
 
 
+MH_SEQUENCES = ".mh_sequences"
+"""File that holds the sequences of an `MH` folder, like `unseen`.
+
+Autodetection reads a folder as `MH` only when it holds this file. Numbered mail
+files are not enough: without this file, `MH.lock()` fails before Python 3.13, and
+creates it in the folder from Python 3.13 on.
+"""
+
+
 MBOX_FAMILY = (mbox, MMDF)
 """Formats keeping an envelope `From ` line before each mail.
 
@@ -394,9 +403,26 @@ MAIL_START = re.compile(rb"[!-9;-~]+:")
 """The start of a file holding one mail saved alone: the name of its first header.
 
 A header name is printable ASCII but the colon. An `mbox` file starts with the
-`From ` line of its first mail instead, and an `mmdf` or `babyl` file with the
-separator of its format, none of which matches.
+`From ` line of its first mail instead, an `mmdf` file with {data}`MMDF_START` and a
+`babyl` file with {data}`BABYL_START`, none of which matches.
 """
+
+
+BABYL_START = b"BABYL OPTIONS:"
+"""The start of a `babyl` file: the first line of its options header.
+
+Emacs Rmail writes `BABYL OPTIONS: -*- rmail -*-`, and the standard library
+`BABYL OPTIONS:` alone.
+"""
+
+
+MMDF_START = b"\x01\x01\x01\x01"
+"""The start of an `mmdf` file: the four Control-A characters that open each mail."""
+
+
+def is_mh(path: Path) -> bool:
+    """Returns `True` when the path holds the {data}`MH_SEQUENCES` file of `MH`."""
+    return path.joinpath(MH_SEQUENCES).is_file()
 
 
 def is_maildir(path: Path) -> bool:
@@ -515,17 +541,28 @@ def contains_mbox(path: Path) -> bool:
     return next(iter_mbox_files(path), None) is not None
 
 
-def is_single_mail(path: Path) -> bool:
-    """Returns `True` when the file starts like one mail saved alone, as an `.eml` does.
+def file_box_format(path: Path) -> BoxFormat:
+    """Returns the format of the box a file holds, from the bytes it starts with.
 
-    It then starts with {data}`MAIL_START`, which RFC 5322 puts within the first
-    1,000 bytes of the file: no line of a mail is longer.
+    A file that starts with {data}`BABYL_START` is a `babyl` box, and one that starts
+    with {data}`MMDF_START` an `mmdf` box. A file that starts with
+    {data}`MAIL_START` holds one mail saved alone, as an `.eml` does: RFC 5322 puts
+    that start within the first 1,000 bytes of the file, as no line of a mail is
+    longer. Any other file is an `mbox`, an unreadable one too: opening it then
+    reports the error.
     """
     try:
         with path.open("rb") as file:
-            return MAIL_START.match(file.read(1000)) is not None
+            start = file.read(1000)
     except OSError:
-        return False
+        return BoxFormat.MBOX
+    if start.startswith(BABYL_START):
+        return BoxFormat.BABYL
+    if start.startswith(MMDF_START):
+        return BoxFormat.MMDF
+    if MAIL_START.match(start):
+        return BoxFormat.EML
+    return BoxFormat.MBOX
 
 
 def profile_lock_held(lock: Path) -> bool:
@@ -577,32 +614,29 @@ def thunderbird_profile_in_use(path: Path) -> Path | None:
 def autodetect_box_type(path: Path) -> BoxFormat:
     """Auto-detect the format of the mailbox located at the provided path.
 
-    A file is an `mbox`, unless it starts like one mail saved alone, as an `.eml`
-    file or a `maildir` mail does: it is then an `eml` box of that one mail. Else,
-    if the provided path is a folder and features the `MAILDIR_REQUIRED_SUBDIRS`
-    sub-directories, or holds nested maildir folders at any depth, it is parsed as a
-    `maildir`, like the folders of a Thunderbird account of one file per message.
-    A folder holding loose `.eml` files instead is parsed as an `eml` source, and a
-    folder holding `mbox` files at any depth as a tree of `mbox` boxes, like the
-    folders of a Thunderbird account.
+    A file is a `babyl` box, an `mmdf` box or an `eml` box of one mail saved alone
+    when it starts like one, and an `mbox` otherwise: see `file_box_format()`.
 
-    ```{todo}
-    Future finer autodetection heuristics should be implemented here. Some ideas:
+    A folder takes the first format that fits:
 
-    - other mailbox formats supported in Python's standard library:
-
-      - `MH`
-      - `Babyl`
-      - `MMDF`
-    ```
+    1. `MH`, when it holds the {data}`MH_SEQUENCES` file.
+    2. `maildir`, when it holds the `MAILDIR_REQUIRED_SUBDIRS` sub-directories, or
+       nested maildir folders at any depth, like the folders of a Thunderbird
+       account of one file per message.
+    3. `eml`, when it holds loose `.eml` files.
+    4. A tree of `mbox` boxes, when it holds `mbox` files at any depth, like the
+       folders of a Thunderbird account.
     """
     box_format = None
 
-    # Validates folder as a maildir, either by its own structure or by the nested
-    # maildir folders it contains. Falls back to a folder of loose .eml files, then
-    # to a tree of mbox files.
+    # An MH folder holds its sequences file at its top: one stat tells it apart.
+    # Else validates folder as a maildir, either by its own structure or by the
+    # nested maildir folders it contains. Falls back to a folder of loose .eml
+    # files, then to a tree of mbox files.
     if path.is_dir():
-        if contains_maildir(path):
+        if is_mh(path):
+            box_format = BoxFormat.MH
+        elif contains_maildir(path):
             box_format = BoxFormat.MAILDIR
         elif contains_eml(path):
             box_format = BoxFormat.EML
@@ -611,14 +645,14 @@ def autodetect_box_type(path: Path) -> BoxFormat:
         else:
             required = "/".join(sorted(MAILDIR_REQUIRED_SUBDIRS))
             raise MailSourceError(
-                f"Unrecognized folder: no {required} "
+                f"Unrecognized folder: no {MH_SEQUENCES} file, no {required} "
                 "maildir structure, no nested maildir folders, no .eml files, and "
                 f"no mbox files found in {path}. Force a format with --input-format."
             )
 
-    # A single file is read as an mbox, unless it holds one mail saved alone.
+    # A single file is read as an mbox, unless it starts like another format.
     elif path.is_file():
-        box_format = BoxFormat.EML if is_single_mail(path) else BoxFormat.MBOX
+        box_format = file_box_format(path)
 
     if not box_format:
         raise MailSourceError(f"Unrecognized mail source type: {path}")
