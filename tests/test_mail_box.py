@@ -22,6 +22,7 @@ import os
 import signal
 import subprocess
 import sys
+from contextlib import contextmanager
 from email import message_from_bytes
 from functools import cache
 from mailbox import Mailbox, Message, NoSuchMailboxError
@@ -35,6 +36,7 @@ from mail_deduplicate.mail_box import (
     EML,
     FILE_FORMATS,
     FOLDER_FORMATS,
+    PROFILE_LOCK,
     BoxFormat,
     BoxStructure,
     MailSourceError,
@@ -50,6 +52,7 @@ if sys.platform != "win32":
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
+    from collections.abc import Generator
     from pathlib import Path
 
 
@@ -755,6 +758,142 @@ def test_mbox_tree_past_the_limit_of_open_files(invoke, tmp_path):
     assert result.exit_code == 1
     assert_one_line_error(result, "too many open files", "ulimit -n")
     assert not list(root.glob("*.lock"))
+
+
+HOLD_PROFILE_LOCK = """\
+import sys
+
+lock = sys.argv[1]
+if sys.platform == "win32":
+    import ctypes
+    from ctypes import wintypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.CreateFileW.argtypes = (
+        wintypes.LPCWSTR,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.LPVOID,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        wintypes.HANDLE,
+    )
+    kernel32.CreateFileW.restype = wintypes.HANDLE
+    # Read and write access, OPEN_EXISTING, and no sharing, as Thunderbird opens it.
+    handle = kernel32.CreateFileW(lock, 0xC0000000, 0, None, 3, 0, None)
+    if handle == wintypes.HANDLE(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+else:
+    import fcntl
+    import os
+
+    fcntl.lockf(os.open(lock, os.O_WRONLY), fcntl.LOCK_EX)
+print("held", flush=True)
+sys.stdin.read()
+"""
+"""Holds the lock of a profile the way a running Thunderbird does, until killed.
+
+A lock of the test process itself would not do: `fcntl` locks never conflict within
+one process.
+"""
+
+
+@contextmanager
+def thunderbird_running(profile: Path) -> Generator[None, None, None]:
+    """Hold the lock of *profile* from another process, as a running Thunderbird."""
+    with subprocess.Popen(
+        (sys.executable, "-c", HOLD_PROFILE_LOCK, str(profile / PROFILE_LOCK)),
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
+        encoding="UTF-8",
+    ) as holder:
+        try:
+            assert holder.stdout is not None
+            assert holder.stdout.readline() == "held\n"
+            yield
+        finally:
+            holder.kill()
+
+
+def build_thunderbird_profile(tmp_path: Path) -> tuple[Path, Path]:
+    """A Thunderbird profile with its lock file, and an account holding a duplicate.
+
+    Returns the profile and the `Local Folders` account in it.
+    """
+    profile = tmp_path / "kiwi.default-release"
+    root = profile / "Mail" / "Local Folders"
+    dup = MailFactory(message_id="<plum@test.com>")
+    build_thunderbird_tree(root, {"Inbox": [dup, dup]})
+    (profile / PROFILE_LOCK).touch()
+    return profile.resolve(), root
+
+
+@pytest.mark.parametrize(
+    "args",
+    (
+        pytest.param(("--action=delete-discarded",), id="delete"),
+        pytest.param(("--action=move-discarded", "--export={export}"), id="move"),
+    ),
+)
+def test_thunderbird_open_refuses_to_remove_mails(invoke, tmp_path, args):
+    """A run that deletes or moves mails refuses a profile Thunderbird has open.
+
+    No mail is touched.
+    """
+    profile, root = build_thunderbird_profile(tmp_path)
+    inbox = (root / "Inbox").read_bytes()
+    args = [arg.format(export=tmp_path / "out.mbox") for arg in args]
+
+    with thunderbird_running(profile):
+        result = invoke("--strategy=select-one", *args, str(root))
+
+    assert result.exit_code == 1
+    assert_one_line_error(
+        result,
+        f"Thunderbird has the profile at {profile} open.",
+        "Quit it before you delete or move the mails of",
+    )
+    assert (root / "Inbox").read_bytes() == inbox
+
+
+@pytest.mark.parametrize(
+    "args",
+    (
+        pytest.param(("--action=copy-selected", "--export={export}"), id="copy"),
+        pytest.param(("--action=delete-discarded", "--dry-run"), id="dry-run"),
+        pytest.param(("--action=delete-discarded", "--hash-only"), id="hash-only"),
+    ),
+)
+def test_thunderbird_open_allows_runs_that_remove_no_mail(invoke, tmp_path, args):
+    """A run that leaves the boxes as they are goes on while Thunderbird runs."""
+    profile, root = build_thunderbird_profile(tmp_path)
+    inbox = (root / "Inbox").read_bytes()
+    args = [arg.format(export=tmp_path / "out.mbox") for arg in args]
+
+    with thunderbird_running(profile):
+        result = invoke("--strategy=select-one", *args, str(root))
+
+    assert result.exit_code == 0
+    assert (root / "Inbox").read_bytes() == inbox
+
+
+@pytest.mark.parametrize("read_only", (False, True), ids=("writable", "read-only"))
+def test_thunderbird_closed_lets_the_run_remove_mails(invoke, tmp_path, read_only):
+    """The lock file Thunderbird leaves in its profile after it quits stops nothing.
+
+    A lock file that cannot be tried, here a read-only one, counts as free too.
+    """
+    profile, root = build_thunderbird_profile(tmp_path)
+    if read_only:
+        (profile / PROFILE_LOCK).chmod(0o444)
+
+    result = invoke("--strategy=select-one", "--action=delete-discarded", str(root))
+
+    assert result.exit_code == 0
+    box = mailbox.mbox(root / "Inbox", create=False)
+    assert len(box) == 1
+    box.close()
 
 
 def test_thunderbird_forced_mbox_format(invoke, tmp_path):

@@ -122,6 +122,10 @@ def test_action_definition(action):
         action.verb == "delete" and not action.acts_on_discarded
     )
 
+    # Only a move and a delete take mails out of their boxes, which a profile that
+    # Thunderbird has open refuses.
+    assert action.removes_mails == (action.verb in ("move", "delete"))
+
 
 duplicate_mail = MailFactory(body="Shared duplicate body.\n")
 unique_mail = MailFactory(

@@ -20,9 +20,11 @@ Based on [Python's standard library mailbox module](https://docs.python.org/3.11
 
 from __future__ import annotations
 
+import errno
 import logging
 import mailbox
 import os
+import sys
 from email.generator import BytesGenerator
 from enum import Enum, auto
 from functools import partial
@@ -34,6 +36,9 @@ from uuid import uuid4
 from click_extra import ClickException, get_current_theme
 
 from .mail import DedupMailMixin
+
+if sys.platform != "win32":
+    import fcntl
 
 TYPE_CHECKING = False
 if TYPE_CHECKING:
@@ -336,6 +341,15 @@ from one to the other.
 """
 
 
+PROFILE_LOCK = "parent.lock" if sys.platform == "win32" else ".parentlock"
+"""File that Thunderbird locks in its profile directory while it runs.
+
+See `nsProfileLock::Lock()` in
+[Firefox's source code](https://github.com/mozilla-firefox/firefox/blob/41db707342feaa6722e4a2076a24ec3d01fe96d2/toolkit/profile/nsProfileLock.cpp#L415-L531),
+which Thunderbird shares.
+"""
+
+
 def is_maildir(path: Path) -> bool:
     """Returns `True` when the path holds all the sub-directories of a maildir."""
     return all(path.joinpath(subdir).is_dir() for subdir in MAILDIR_SUBDIRS)
@@ -432,6 +446,52 @@ def iter_mbox_files(path: Path) -> Iterator[Path]:
 def contains_mbox(path: Path) -> bool:
     """Returns `True` when the path holds at least one `mbox` file, at any depth."""
     return next(iter_mbox_files(path), None) is not None
+
+
+def profile_lock_held(lock: Path) -> bool:
+    """Returns `True` when another process holds the lock file of a profile.
+
+    On Linux and macOS, Thunderbird holds an `fcntl` lock on the file, which ends
+    with its process. The lock is tried here without waiting, and released at once.
+    On Windows, Thunderbird keeps the file open with no sharing, so opening it fails.
+
+    The file stays in the profile after Thunderbird quits: only the lock tells. A
+    lock that cannot be tried, like on a network file system, counts as free.
+    """
+    if sys.platform == "win32":
+        try:
+            with lock.open("rb"):
+                return False
+        except PermissionError:
+            return True
+        except OSError:
+            return False
+    try:
+        descriptor = os.open(lock, os.O_WRONLY)
+    except OSError:
+        return False
+    try:
+        fcntl.lockf(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError as expt:
+        return expt.errno in (errno.EACCES, errno.EAGAIN)
+    finally:
+        # Closing the file also releases the lock, if the try took it.
+        os.close(descriptor)
+    return False
+
+
+def thunderbird_profile_in_use(path: Path) -> Path | None:
+    """Returns the Thunderbird profile holding *path*, if Thunderbird has it open.
+
+    The profile is the nearest directory above *path* that holds a
+    {data}`PROFILE_LOCK` file. A path outside any profile, like an account whose
+    directory was moved out of it, returns `None`.
+    """
+    for directory in (path, *path.parents):
+        lock = directory / PROFILE_LOCK
+        if lock.is_file():
+            return directory if profile_lock_held(lock) else None
+    return None
 
 
 def autodetect_box_type(path: Path) -> BoxFormat:

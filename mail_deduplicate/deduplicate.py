@@ -53,6 +53,7 @@ from .mail_box import (
     open_box,
     release_box,
     resolve_mail_path,
+    thunderbird_profile_in_use,
 )
 
 TYPE_CHECKING = False
@@ -1226,12 +1227,28 @@ class Deduplicate:
 
         A source that cannot be opened or listed raises `MailSourceError`: the error
         comes from the source or its format, which the user can fix.
+
+        A run that deletes or moves mails also refuses a source in a profile that
+        Thunderbird has open, as Thunderbird checks none of the locks taken here. A
+        copy or a rehearsal of the same run goes on.
         """
         self.step = "loading"
         # Make the path absolute and resolve any symlinks.
         path = Path(source_path).resolve(strict=True)
         if str(path) in self.sources:
             raise MailSourceError(f"{path} already added.")
+
+        if (
+            self.conf["action"].removes_mails
+            and not self.conf["dry_run"]
+            and not self.conf["hash_only"]
+        ):
+            profile = thunderbird_profile_in_use(path)
+            if profile:
+                raise MailSourceError(
+                    f"Thunderbird has the profile at {profile} open. Quit it before "
+                    f"you delete or move the mails of {path}."
+                )
 
         # Open and register the mail source. Subfolders will be registered as their
         # own box.

@@ -21,6 +21,8 @@ A source can also be a directory of `mbox` files, at any depth, like the folders
 ```{warning}
 Quit Thunderbird before you run `mdedup` on its folders: Thunderbird does not check the locks that `mdedup` takes. When the size or the date of a folder file changes, Thunderbird rebuilds the summary of that folder from the file.
 
+Thunderbird locks its profile while it runs, so a run that deletes or moves mails refuses a profile that Thunderbird has open. A copy, a `--dry-run` or a `--hash-only` run goes on. The check does not see an account whose directory is outside the profile, nor a profile on a network file system.
+
 Give `mdedup` the `Mail` directory of the profile, or one of its accounts, like `Mail/Local Folders`. Do not give it the `ImapMail` directory: its `mbox` files are offline copies of the mails on IMAP servers. Thunderbird finds each mail there by its position in the file, and does not check these files against their summaries.
 ```
 

@@ -316,6 +316,11 @@ class Action(StrEnum):
         return self.value.partition("-")[0]
 
     @property
+    def removes_mails(self) -> bool:
+        """Whether the action removes mails from their boxes: a move or a delete."""
+        return self.verb in ("move", "delete")
+
+    @property
     def acts_on_discarded(self) -> bool:
         """Whether the action applies to the discarded mails, not the selected ones."""
         return self.value.endswith("-discarded")
