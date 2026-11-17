@@ -16,6 +16,14 @@ For added protection against accidentally removing mails due to false positives,
 
 Mails are loaded from a variety of mailbox formats (`maildir`, `mbox`, `babyl`, `mh`, `mmdf` and `eml`).
 
+A source can also be a directory of `mbox` files, at any depth, like the folders of a Thunderbird account. By default, Thunderbird stores each folder as one `mbox` file, named after the folder with no extension added. The sub-folders of a folder are in its `<folder>.sbd` directory, and an `.msf` summary of the folder is beside it. A file opens as a box when it starts with a `From ` line, or when it has an `.msf` summary, as an empty folder has. Names that Thunderbird never shows as folders are skipped: the ones starting with `.` or `#` or ending with `~`, the `.msf` summaries, and the `.mozmsgs` directories.
+
+```{warning}
+Quit Thunderbird before you run `mdedup` on its folders: Thunderbird does not check the locks that `mdedup` takes. When the size or the date of a folder file changes, Thunderbird rebuilds the summary of that folder from the file.
+
+Give `mdedup` the `Mail` directory of the profile, or one of its accounts, like `Mail/Local Folders`. Do not give it the `ImapMail` directory: its `mbox` files are offline copies of the mails on IMAP servers. Thunderbird finds each mail there by its position in the file, and does not check these files against their summaries.
+```
+
 ## Step 2: Hashing
 
 In theory, we could rely on the mail's `Message-ID` as a key to identify duplicate mails.

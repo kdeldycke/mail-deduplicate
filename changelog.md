@@ -5,6 +5,8 @@
 > [!WARNING]
 > This version is **not released yet** and is under active development.
 
+- Read a directory of `mbox` files, at any depth, as a mail source, like the folders of a Thunderbird account.
+
 ## [`9.7.0` (2026-11-16)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.6.0...v9.7.0)
 
 > [!NOTE]
