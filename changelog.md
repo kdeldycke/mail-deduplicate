@@ -1,9 +1,6 @@
 # Changelog
 
-## [`9.7.1.dev0` (unreleased)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.7.0...main)
-
-> [!WARNING]
-> This version is **not released yet** and is under active development.
+## [`9.7.1` (2026-11-17)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.7.0...v9.7.1)
 
 - Read a directory of `mbox` files, at any depth, as a mail source, like the folders of a Thunderbird account.
 - Read the folders of a Thunderbird account of one file per message, which are maildirs with no `new` directory.
