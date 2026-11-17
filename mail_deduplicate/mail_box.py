@@ -24,6 +24,7 @@ import errno
 import logging
 import mailbox
 import os
+import re
 import sys
 from email.generator import BytesGenerator
 from enum import Enum, auto
@@ -73,8 +74,16 @@ def maildir_mail_path(box: Mailbox, key: str) -> str:
 
 
 def keyed_mail_path(box: Mailbox, key: str) -> str:
-    """Location of an `MH` or `eml` mail, whose file is named after its key."""
+    """Location of an `MH` mail, whose file is named after its key."""
     return os.path.join(box._path, str(key))
+
+
+def eml_mail_path(box: Mailbox, key: str) -> str:
+    """Location of an `eml` mail: a file below its box, or the file its box is.
+
+    An `eml` box opened on a single mail file holds that file alone.
+    """
+    return cast("str", box._full_path(key))  # type: ignore[attr-defined]
 
 
 def box_file_path(box: Mailbox, key: str) -> str:
@@ -141,11 +150,11 @@ mboxDedupMail = make_dedup_mail("mboxDedupMail", mailbox.mboxMessage, box_file_p
 MHDedupMail = make_dedup_mail("MHDedupMail", mailbox.MHMessage, keyed_mail_path)
 BabylDedupMail = make_dedup_mail("BabylDedupMail", mailbox.BabylMessage, box_file_path)
 MMDFDedupMail = make_dedup_mail("MMDFDedupMail", mailbox.MMDFMessage, box_file_path)
-EMLDedupMail = make_dedup_mail("EMLDedupMail", mailbox.Message, keyed_mail_path)
+EMLDedupMail = make_dedup_mail("EMLDedupMail", mailbox.Message, eml_mail_path)
 
 
 class EML(Mailbox):
-    """A folder of loose `.eml` files, walked recursively.
+    """A folder of loose `.eml` files, walked recursively, or one mail file alone.
 
     Supports mail archives exported as individual RFC 5322 files, one mail per
     file, as produced by Outlook PST/OST conversion tools for instance. See:
@@ -154,6 +163,9 @@ class EML(Mailbox):
     Keys are the paths of the mail files, relative to the folder's root. Files
     without the `.eml` extension (case-insensitive) are ignored, as well as
     hidden files and directories.
+
+    A box opened on a file holds that one mail, whatever the name of the file. Its
+    key is the name of the file, and the box takes no other mail.
 
     Follows the interface of Python's
     [mailbox.Mailbox](https://docs.python.org/3/library/mailbox.html#mailbox.Mailbox).
@@ -167,11 +179,22 @@ class EML(Mailbox):
                 os.mkdir(self._path, 0o700)
             else:
                 raise mailbox.NoSuchMailboxError(self._path)
+        # The file name of a box opened on a single mail file, `None` for a folder.
+        self._single = (
+            os.path.basename(self._path) if os.path.isfile(self._path) else None
+        )
 
     def _full_path(self, key: str) -> str:
-        return os.path.join(self._path, key)
+        if self._single is None:
+            return os.path.join(self._path, key)
+        if key != self._single:
+            raise KeyError(key)
+        return self._path
 
     def iterkeys(self):
+        if self._single is not None:
+            yield self._single
+            return
         for dirpath, dirnames, filenames in os.walk(self._path):
             dirnames[:] = sorted(d for d in dirnames if not d.startswith("."))
             for filename in sorted(filenames):
@@ -179,6 +202,8 @@ class EML(Mailbox):
                     yield os.path.relpath(os.path.join(dirpath, filename), self._path)
 
     def __contains__(self, key) -> bool:
+        if self._single is not None:
+            return key == self._single and os.path.isfile(self._path)
         return key.lower().endswith(".eml") and os.path.isfile(self._full_path(key))
 
     def __len__(self) -> int:
@@ -204,6 +229,11 @@ class EML(Mailbox):
         return mailbox.Message(self.get_bytes(key))
 
     def add(self, message) -> str:
+        if self._single is not None:
+            # A file takes no other mail: fail as a write below a file does.
+            raise NotADirectoryError(
+                errno.ENOTDIR, os.strerror(errno.ENOTDIR), self._path
+            )
         key = f"{uuid4().hex}.eml"
         # Bytes are written as they are, with LF line endings. The stdlib
         # `_dump_message` rewrites `\n` to `os.linesep`, which emits CRLF on Windows
@@ -360,9 +390,27 @@ which Thunderbird shares.
 """
 
 
+MAIL_START = re.compile(rb"[!-9;-~]+:")
+"""The start of a file holding one mail saved alone: the name of its first header.
+
+A header name is printable ASCII but the colon. An `mbox` file starts with the
+`From ` line of its first mail instead, and an `mmdf` or `babyl` file with the
+separator of its format, none of which matches.
+"""
+
+
 def is_maildir(path: Path) -> bool:
     """Returns `True` when the path holds the sub-directories of a maildir."""
     return all(path.joinpath(subdir).is_dir() for subdir in MAILDIR_REQUIRED_SUBDIRS)
+
+
+def holds_cur(path: Path) -> bool:
+    """Returns `True` when the path holds the `cur` sub-directory of a maildir.
+
+    A maildir copied by a tool that skips empty folders, like `git`, keeps its `cur`
+    but can lose its `tmp`, which `is_maildir()` requires.
+    """
+    return path.joinpath("cur").is_dir()
 
 
 def lacks_new(box: Mailbox) -> bool:
@@ -372,7 +420,7 @@ def lacks_new(box: Mailbox) -> bool:
     )
 
 
-def contains_maildir(path: Path) -> bool:
+def contains_maildir(path: Path, test: Callable[[Path], bool] = is_maildir) -> bool:
     """Returns `True` when the path is a maildir or holds one at any depth.
 
     Allows the discovery of nested maildir folders stored as plain directories, as
@@ -383,11 +431,13 @@ def contains_maildir(path: Path) -> bool:
     Dot-prefixed directories are ignored, as they are covered by the `Maildir++`
     folder convention. The mail-holding sub-directories of maildirs are not
     explored either.
+
+    `test` tells a maildir apart, with `is_maildir()` by default.
     """
-    if is_maildir(path):
+    if test(path):
         return True
     return any(
-        contains_maildir(sub)
+        contains_maildir(sub, test)
         for sub in path.iterdir()
         if sub.is_dir()
         and not sub.name.startswith(".")
@@ -465,6 +515,19 @@ def contains_mbox(path: Path) -> bool:
     return next(iter_mbox_files(path), None) is not None
 
 
+def is_single_mail(path: Path) -> bool:
+    """Returns `True` when the file starts like one mail saved alone, as an `.eml` does.
+
+    It then starts with {data}`MAIL_START`, which RFC 5322 puts within the first
+    1,000 bytes of the file: no line of a mail is longer.
+    """
+    try:
+        with path.open("rb") as file:
+            return MAIL_START.match(file.read(1000)) is not None
+    except OSError:
+        return False
+
+
 def profile_lock_held(lock: Path) -> bool:
     """Returns `True` when another process holds the lock file of a profile.
 
@@ -514,8 +577,9 @@ def thunderbird_profile_in_use(path: Path) -> Path | None:
 def autodetect_box_type(path: Path) -> BoxFormat:
     """Auto-detect the format of the mailbox located at the provided path.
 
-    If the path is a file, then it is considered as an `mbox`. Else, if the
-    provided path is a folder and features the `MAILDIR_REQUIRED_SUBDIRS`
+    A file is an `mbox`, unless it starts like one mail saved alone, as an `.eml`
+    file or a `maildir` mail does: it is then an `eml` box of that one mail. Else,
+    if the provided path is a folder and features the `MAILDIR_REQUIRED_SUBDIRS`
     sub-directories, or holds nested maildir folders at any depth, it is parsed as a
     `maildir`, like the folders of a Thunderbird account of one file per message.
     A folder holding loose `.eml` files instead is parsed as an `eml` source, and a
@@ -525,8 +589,6 @@ def autodetect_box_type(path: Path) -> BoxFormat:
     ```{todo}
     Future finer autodetection heuristics should be implemented here. Some ideas:
 
-    - single mail from a `maildir`
-    - plain text mail content
     - other mailbox formats supported in Python's standard library:
 
       - `MH`
@@ -554,9 +616,9 @@ def autodetect_box_type(path: Path) -> BoxFormat:
                 f"no mbox files found in {path}. Force a format with --input-format."
             )
 
-    # A single file is read as an mbox.
+    # A single file is read as an mbox, unless it holds one mail saved alone.
     elif path.is_file():
-        box_format = BoxFormat.MBOX
+        box_format = BoxFormat.EML if is_single_mail(path) else BoxFormat.MBOX
 
     if not box_format:
         raise MailSourceError(f"Unrecognized mail source type: {path}")
@@ -657,6 +719,10 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     contents, and fails on a missing one. A maildir with no `new`, like a Thunderbird
     folder, gets `cur` alone to list. `Maildir.add()` would still file a mail in the
     missing `new`, but mails are only added to the boxes a run creates.
+
+    A directory that holds a `cur` but no `tmp` is a maildir that lost its empty
+    `tmp`, like in a `git` copy. Its mails are not read, and a warning names it, at
+    any depth of the tree.
     """
     folder_list = []
 
@@ -664,7 +730,13 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
         if lacks_new(box):
             box._toc_mtimes.pop("new")  # type: ignore[attr-defined]
         if isinstance(box, Maildir) and not is_maildir(Path(box._path)):
-            logging.info("No mails at this level: only browse nested folders.")
+            if holds_cur(Path(box._path)):
+                logging.warning(
+                    f"Skip {box._path}: it holds a cur folder but no tmp folder. "
+                    "Create an empty tmp folder in it to read its mails."
+                )
+            else:
+                logging.info("No mails at this level: only browse nested folders.")
         else:
             folder_list.append(lock_box(box, force_unlock))
 
@@ -677,14 +749,15 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
                 folder_list += open_subfolders(box.get_folder(folder_id), force_unlock)
 
             # Python's mailbox module only lists dot-prefixed Maildir++ folders, so
-            # browse the filesystem for Verbatim-style nested maildir folders.
+            # browse the filesystem for Verbatim-style nested maildir folders. A
+            # folder that lost its tmp is entered too, for the warning above.
             if isinstance(box, Maildir):
                 for sub_path in sorted(Path(box._path).iterdir()):
                     if (
                         sub_path.is_dir()
                         and not sub_path.name.startswith(".")
                         and sub_path.name not in MAILDIR_SUBDIRS
-                        and contains_maildir(sub_path)
+                        and contains_maildir(sub_path, holds_cur)
                     ):
                         logging.info(f"Opening subfolder {sub_path.name} ...")
                         sub_box = Maildir(sub_path, factory=box._factory, create=False)

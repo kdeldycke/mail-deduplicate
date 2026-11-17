@@ -7,8 +7,10 @@
 
 - Read a directory of `mbox` files, at any depth, as a mail source, like the folders of a Thunderbird account.
 - Read the folders of a Thunderbird account of one file per message, which are maildirs with no `new` directory.
+- Read a single mail file given as a source, like one `.eml` file, as a box of that one mail.
 - Explain how to raise the limit of open files when a run holds more `mbox`, `babyl` or `mmdf` boxes than the system allows.
 - Refuse to delete or move the mails of a Thunderbird profile while Thunderbird has it open.
+- Warn about each source in which no mail is found, and about each maildir folder that lacks its `tmp` folder.
 - Document the box formats on a page of their own: autodetection, locks, Thunderbird accounts, and what a copy keeps from each format.
 
 ## [`9.7.0` (2026-11-16)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.6.0...v9.7.0)

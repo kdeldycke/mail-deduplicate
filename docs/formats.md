@@ -17,7 +17,7 @@
 
 ## Autodetection
 
-Without `--input-format`, `mdedup` finds the format of each source by itself. A file is an `mbox`. A folder takes the first format that fits:
+Without `--input-format`, `mdedup` finds the format of each source by itself. A file that starts with a header holds one mail saved alone, like an `.eml` file: it is an `eml` box of that one mail. Any other file is an `mbox`. A folder takes the first format that fits:
 
 1. `maildir`, when the folder holds a `cur` and a `tmp` folder, or holds such a folder at any depth.
 2. `eml`, when the folder holds a file whose name ends with `.eml`, at any depth.
@@ -29,11 +29,11 @@ The first format that fits applies to the whole folder. A folder that holds `mai
 
 `mdedup` never detects `mh`, `babyl` or `mmdf`: name the format with `--input-format`. That option applies to every source of the run, so a run cannot mix one of these three formats with another one.
 
-A single mail file given as a source, like one `.eml` file, is read as an `mbox`, where only a line starting with `From ` opens a mail. Such a file seldom has one, so the run finds no mail in it. Give the folder that holds the file instead.
+A run warns about each source in which it finds no mail.
 
 ## `maildir`
 
-A folder is a `maildir` when it holds a `cur` and a `tmp` folder. The `new` folder is optional, as Thunderbird does not create it. A copy made by a tool that skips empty folders, like `git`, can lack `tmp`. Create an empty `tmp` folder again before the run: without it, `mdedup` reads no mail from that `maildir`, even with `--input-format maildir`.
+A folder is a `maildir` when it holds a `cur` and a `tmp` folder. The `new` folder is optional, as Thunderbird does not create it. A copy made by a tool that skips empty folders, like `git`, can lack `tmp`. `mdedup` then skips that `maildir` with a warning, even with `--input-format maildir`: create an empty `tmp` folder again before the run.
 
 `mdedup` reads the sub-folders of a `maildir` in the two layouts that mail tools use:
 
@@ -58,7 +58,7 @@ A run that deletes or moves mails out of such a box rewrites its whole file at t
 
 ## `eml`
 
-An `eml` source is a folder of mails saved one per file, like the files that conversion tools export from an Outlook PST archive. `mdedup` walks all its sub-folders and reads each file whose name ends with `.eml`, in any case. It skips the files and folders whose name starts with a `.`.
+An `eml` source is a folder of mails saved one per file, like the files that conversion tools export from an Outlook PST archive. `mdedup` walks all its sub-folders and reads each file whose name ends with `.eml`, in any case. It skips the files and folders whose name starts with a `.`. A single mail file given as a source is an `eml` box of that one mail, whatever its name.
 
 An `eml` export box keeps each mail in a file of its own, at the top of the folder, with a random name.
 

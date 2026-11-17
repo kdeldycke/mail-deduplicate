@@ -40,6 +40,7 @@ from mail_deduplicate.mail_box import (
     BoxFormat,
     BoxStructure,
     MailSourceError,
+    autodetect_box_type,
     create_box,
     iter_mbox_files,
     lock_box,
@@ -425,6 +426,47 @@ def test_unusable_source(invoke, args, messages):
     assert_one_line_error(result, *messages)
 
 
+@pytest.mark.parametrize(
+    ("content", "box_format"),
+    (
+        pytest.param(b"Subject: Plums\n\nRipe.\n", BoxFormat.EML, id="mail"),
+        pytest.param(
+            b"From plum@orchard.example Tue Nov 17 10:00:00 2026\n"
+            b"Subject: Plums\n\nRipe.\n",
+            BoxFormat.MBOX,
+            id="mbox",
+        ),
+        pytest.param(b"", BoxFormat.MBOX, id="empty"),
+        pytest.param(b"\x01\x01\x01\x01\nSubject: Plums\n", BoxFormat.MBOX, id="mmdf"),
+        pytest.param(b"BABYL OPTIONS: -*- rmail -*-\n", BoxFormat.MBOX, id="babyl"),
+    ),
+)
+def test_file_autodetect(tmp_path, content, box_format):
+    """A file that starts with a header is one mail, and any other file an `mbox`."""
+    path = tmp_path / "harvest"
+    path.write_bytes(content)
+    assert autodetect_box_type(path) is box_format
+
+
+@pytest.mark.parametrize("autodetected", (True, False), ids=("autodetected", "forced"))
+def test_source_without_mail_warns(invoke, tmp_path, autodetected):
+    """A source in which no mail is found gets a warning.
+
+    An autodetected file that is no mail is read as an `mbox`, so its warning names
+    the formats that autodetection never finds. A forced format needs no such hint.
+    """
+    path = tmp_path / "empty.mbox"
+    path.write_bytes(b"")
+    args = () if autodetected else ("--input-format=mbox",)
+
+    result = invoke(*args, "--hash-only", str(path))
+
+    assert result.exit_code == 0
+    assert f"No mail found in {path}." in result.stderr
+    hint = "Name the format of a babyl or mmdf file with --input-format."
+    assert (hint in result.stderr) is autodetected
+
+
 def test_verbatim_nested_maildirs(invoke, tmp_path):
     """Nested plain-directory maildir folders (isync's Verbatim style) are discovered.
 
@@ -496,6 +538,37 @@ def test_mixed_maildir_folder_conventions(invoke, tmp_path):
 
     assert result.exit_code == 0
     assert result.stderr.count("1 mails found.") == 3
+
+
+@pytest.mark.parametrize("forced", (False, True), ids=("autodetected", "forced"))
+def test_maildir_without_tmp_warns(invoke, tmp_path, forced):
+    """A maildir folder that lost its empty `tmp` is skipped with a warning.
+
+    `git` and other tools that skip empty folders leave a maildir this way. The
+    warning names each such folder, at any depth, and the run still reads the
+    complete maildir beside them.
+    """
+    root = tmp_path / "backup"
+    for folder in ("INBOX", "Archive/2024", "Sent"):
+        # `Maildir` creates its own folder, but not the folders above it.
+        (root / folder).parent.mkdir(parents=True, exist_ok=True)
+        box = mailbox.Maildir(str(root / folder), create=True)
+        box.add(MailFactory().render())
+        box.close()
+    for folder in ("INBOX", "Archive/2024"):
+        (root / folder / "tmp").rmdir()
+    args = ("--input-format=maildir",) if forced else ()
+
+    result = invoke(*args, "--hash-only", str(root))
+
+    assert result.exit_code == 0
+    for folder in ("INBOX", "Archive/2024"):
+        assert (
+            f"Skip {root / folder}: it holds a cur folder but no tmp folder."
+            in result.stderr
+        )
+    assert result.stderr.count("1 mails found.") == 1
+    assert "No mail found" not in result.stderr
 
 
 def test_eml_autodetect_and_dedup(invoke, tmp_path):
@@ -606,6 +679,60 @@ def test_eml_folders_unsupported(tmp_path):
     assert box.list_folders() == []
     with pytest.raises(NotImplementedError):
         box.get_folder("sub")
+
+
+def test_eml_single_mail_box(tmp_path):
+    """An `eml` box opened on a file holds that one mail, under the file's name.
+
+    Its accessors refuse any other key, even the name of a mail file beside it, and
+    the box takes no other mail.
+    """
+    raw = MailFactory().render()
+    path = tmp_path / "plums.txt"
+    path.write_bytes(raw)
+    (tmp_path / "pears.eml").write_bytes(raw)
+    box = EML(str(path), create=False)
+
+    assert list(box.iterkeys()) == ["plums.txt"]
+    assert len(box) == 1
+    assert "plums.txt" in box
+    assert "pears.eml" not in box
+    assert box.get_bytes("plums.txt") == raw
+    for accessor in (box.get_file, box.get_bytes, box.remove):
+        with pytest.raises(KeyError):
+            accessor("pears.eml")
+    with pytest.raises(NotADirectoryError):
+        box.add(raw)
+
+
+def test_single_mail_files_dedup(invoke, tmp_path):
+    """Mail files given one by one are each a source of one mail, and deduplicated.
+
+    The content of a file decides, not its name: a file that starts with a header is
+    one mail. Deleting a mail deletes its file.
+    """
+    duplicate = MailFactory()
+    files = {
+        "one.eml": duplicate,
+        "two.txt": duplicate,
+        "three.eml": MailFactory(message_id="<unique@example.com>"),
+    }
+    for name, mail in files.items():
+        (tmp_path / name).write_bytes(mail.render())
+
+    result = invoke(
+        "--strategy=select-one",
+        "--action=delete-discarded",
+        *(str(tmp_path / name) for name in files),
+    )
+
+    assert result.exit_code == 0
+    assert result.stderr.count("eml detected.") == 3
+    assert result.stderr.count("1 mails found.") == 3
+    # `select-one` keeps the copy whose path sorts first.
+    assert not (tmp_path / "two.txt").exists()
+    assert (tmp_path / "one.eml").read_bytes() == duplicate.render()
+    assert (tmp_path / "three.eml").is_file()
 
 
 THUNDERBIRD_SUMMARY = '// <!-- <mdb:mork:z v="1.4"/> -->\n'

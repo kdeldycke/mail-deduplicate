@@ -1238,6 +1238,10 @@ class Deduplicate:
         A run out of open files gets a message of its own, as every `mbox`, `babyl`
         and `mmdf` box holds its file open until the end of the run. The message says
         how to raise the limit: the run never changes the limits of the system itself.
+
+        A source in which no mail is found gets a warning. An autodetected file that
+        is no mail is read as an `mbox`, so the warning of such a file names the
+        formats that autodetection never finds.
         """
         self.step = "loading"
         # Make the path absolute and resolve any symlinks.
@@ -1260,6 +1264,7 @@ class Deduplicate:
 
         # Open and register the mail source. Subfolders will be registered as their
         # own box.
+        found = 0
         try:
             boxes = open_box(path, self.conf["input_format"], self.conf["force_unlock"])
             for box in boxes:
@@ -1270,6 +1275,7 @@ class Deduplicate:
                 mail_found = len(box)
                 logging.info(f"{mail_found} mails found.")
                 self.stats[Stat.MAIL_FOUND] += mail_found
+                found += mail_found
         except (OSError, MailboxError) as expt:
             if isinstance(expt, OSError) and expt.errno == errno.EMFILE:
                 raise MailSourceError(
@@ -1279,6 +1285,12 @@ class Deduplicate:
                     "boxes at once."
                 ) from expt
             raise MailSourceError(f"Cannot read {path}: {expt}") from expt
+
+        if not found:
+            hint = ""
+            if path.is_file() and not self.conf["input_format"]:
+                hint = " Name the format of a babyl or mmdf file with --input-format."
+            logging.warning(f"No mail found in {path}.{hint}")
 
         if removes_mails and any(lacks_new(box) for box in boxes):
             logging.warning(
