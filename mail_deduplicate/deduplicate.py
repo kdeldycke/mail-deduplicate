@@ -50,6 +50,7 @@ from .mail_box import (
     FOLDER_FORMAT_CLASSES,
     MailSourceError,
     iter_mail_ids,
+    lacks_new,
     open_box,
     release_box,
     resolve_mail_path,
@@ -1230,7 +1231,9 @@ class Deduplicate:
 
         A run that deletes or moves mails also refuses a source in a profile that
         Thunderbird has open, as Thunderbird checks none of the locks taken here. A
-        copy or a rehearsal of the same run goes on.
+        copy or a rehearsal of the same run goes on. The same run on a maildir with
+        no `new`, like a Thunderbird folder, warns to repair that folder after the
+        run: Thunderbird does not check those folders against their summaries.
 
         A run out of open files gets a message of its own, as every `mbox`, `babyl`
         and `mmdf` box holds its file open until the end of the run. The message says
@@ -1242,11 +1245,12 @@ class Deduplicate:
         if str(path) in self.sources:
             raise MailSourceError(f"{path} already added.")
 
-        if (
+        removes_mails = (
             self.conf["action"].removes_mails
             and not self.conf["dry_run"]
             and not self.conf["hash_only"]
-        ):
+        )
+        if removes_mails:
             profile = thunderbird_profile_in_use(path)
             if profile:
                 raise MailSourceError(
@@ -1275,6 +1279,13 @@ class Deduplicate:
                     "boxes at once."
                 ) from expt
             raise MailSourceError(f"Cannot read {path}: {expt}") from expt
+
+        if removes_mails and any(lacks_new(box) for box in boxes):
+            logging.warning(
+                "Thunderbird does not re-read its folders of one file per message: "
+                "after the run, click Repair Folder in the properties of each folder "
+                f"of {path} that lost mails."
+            )
 
     def hash_all(self) -> None:
         """Read the mails of all sources, compute their hashes and group them by hash.

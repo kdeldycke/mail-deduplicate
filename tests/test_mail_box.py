@@ -905,3 +905,83 @@ def test_thunderbird_forced_mbox_format(invoke, tmp_path):
 
     assert result.exit_code == 0
     assert "1 mails found." in result.stderr
+
+
+def build_thunderbird_maildir_tree(
+    root: Path, folders: dict[str, list[MailFactory]]
+) -> None:
+    """Lay out an account that Thunderbird stores as one file per message.
+
+    `folders` maps the path of each folder to its mails: the sub-folders of a folder
+    are in its `<folder>.sbd` directory. Each folder is a maildir with the `cur` and
+    `tmp` directories Thunderbird creates, and no `new`. Its mails are in `cur`, under
+    names of the form Thunderbird gives them. Each folder gets an `.msf` summary
+    beside it, and the account gets the file of its filters.
+    """
+    root.mkdir(parents=True)
+    (root / "msgFilterRules.dat").write_text(THUNDERBIRD_FILTERS, encoding="UTF-8")
+    for relative, mails in folders.items():
+        folder = root / relative
+        (folder / "tmp").mkdir(parents=True)
+        (folder / "cur").mkdir()
+        for count, mail in enumerate(mails, start=1):
+            name = f"1700000000.M{count}P4242Q{count}.kiwi"
+            (folder / "cur" / name).write_bytes(mail.render())
+        (root / f"{relative}.msf").write_text(THUNDERBIRD_SUMMARY, encoding="UTF-8")
+
+
+def test_thunderbird_maildir_tree_autodetect_and_dedup(invoke, tmp_path):
+    """An account of one file per message is read as maildir boxes, with no `new`.
+
+    The folders of `.sbd` directories are read too. A run that deletes mails says to
+    repair the changed folders in Thunderbird, which does not re-read them.
+    """
+    root = tmp_path / "Mail" / "Local Folders"
+    dup = MailFactory(date="2024-02-05", message_id="<dup@example.com>")
+    unique = MailFactory(date="2024-02-06", message_id="<unique@example.com>")
+    build_thunderbird_maildir_tree(
+        root,
+        {
+            "Inbox": [dup, unique],
+            "Trash": [],
+            "Inbox.sbd/Archive": [dup],
+        },
+    )
+
+    result = invoke("--strategy=select-one", "--action=delete-discarded", str(root))
+
+    assert result.exit_code == 0
+    assert "maildir detected." in result.stderr
+    assert result.stderr.count("2 mails found.") == 1
+    assert result.stderr.count("1 mails found.") == 1
+    assert result.stderr.count("0 mails found.") == 1
+    assert "Repair Folder" in result.stderr
+    # One copy of the duplicated mail was deleted, and no folder gained a `new`.
+    assert len(list(root.glob("**/cur/*"))) == 2
+    assert not list(root.glob("**/new"))
+
+
+@pytest.mark.parametrize(
+    ("args", "repair"),
+    (
+        pytest.param(("--action=delete-discarded",), True, id="delete"),
+        pytest.param(("--action=delete-discarded", "--dry-run"), False, id="dry-run"),
+        pytest.param(("--action=copy-selected", "--export={export}"), False, id="copy"),
+    ),
+)
+def test_thunderbird_maildir_folder_forced_format(invoke, tmp_path, args, repair):
+    """The `maildir` format can be forced on a single folder of one file per message.
+
+    Only a run that removes mails says to repair the folder.
+    """
+    root = tmp_path / "Local Folders"
+    build_thunderbird_maildir_tree(root, {"Inbox": [MailFactory(), MailFactory()]})
+    args = [arg.format(export=tmp_path / "out.mbox") for arg in args]
+
+    result = invoke(
+        "--input-format=maildir", "--strategy=select-one", *args, str(root / "Inbox")
+    )
+
+    assert result.exit_code == 0
+    assert "2 mails found." in result.stderr
+    assert ("Repair Folder" in result.stderr) is repair

@@ -330,7 +330,17 @@ FOLDER_FORMAT_CLASSES = tuple(box.base_class for box in FOLDER_FORMATS)
 
 
 MAILDIR_SUBDIRS = frozenset(("cur", "new", "tmp"))
-"""List of required sub-folders defining a properly structured maildir."""
+"""Sub-folders of a maildir, which hold its mails and are never folders of their own."""
+
+
+MAILDIR_REQUIRED_SUBDIRS = frozenset(("cur", "tmp"))
+"""Sub-folders a directory needs to be read as a maildir.
+
+`new` may be missing: Thunderbird creates the maildir of a folder with `cur` and `tmp`
+only, as `new` holds the mails that no client saw yet. See
+`nsMsgMaildirStore::CreateMaildir()` in
+[Thunderbird's source code](https://github.com/mozilla/releases-comm-central/blob/a4152ebda36430ccc2c8e4cfa2b081aa4e14966d/mailnews/local/src/nsMsgMaildirStore.cpp#L327-L361).
+"""
 
 
 MBOX_FAMILY = (mbox, MMDF)
@@ -351,8 +361,15 @@ which Thunderbird shares.
 
 
 def is_maildir(path: Path) -> bool:
-    """Returns `True` when the path holds all the sub-directories of a maildir."""
-    return all(path.joinpath(subdir).is_dir() for subdir in MAILDIR_SUBDIRS)
+    """Returns `True` when the path holds the sub-directories of a maildir."""
+    return all(path.joinpath(subdir).is_dir() for subdir in MAILDIR_REQUIRED_SUBDIRS)
+
+
+def lacks_new(box: Mailbox) -> bool:
+    """Returns `True` for a maildir box with no `new`, like a Thunderbird folder."""
+    return isinstance(box, Maildir) and not os.path.isdir(
+        os.path.join(box._path, "new")
+    )
 
 
 def contains_maildir(path: Path) -> bool:
@@ -498,8 +515,9 @@ def autodetect_box_type(path: Path) -> BoxFormat:
     """Auto-detect the format of the mailbox located at the provided path.
 
     If the path is a file, then it is considered as an `mbox`. Else, if the
-    provided path is a folder and features the `MAILDIR_SUBDIRS` sub-directories,
-    or holds nested maildir folders at any depth, it is parsed as a `maildir`.
+    provided path is a folder and features the `MAILDIR_REQUIRED_SUBDIRS`
+    sub-directories, or holds nested maildir folders at any depth, it is parsed as a
+    `maildir`, like the folders of a Thunderbird account of one file per message.
     A folder holding loose `.eml` files instead is parsed as an `eml` source, and a
     folder holding `mbox` files at any depth as a tree of `mbox` boxes, like the
     folders of a Thunderbird account.
@@ -529,8 +547,9 @@ def autodetect_box_type(path: Path) -> BoxFormat:
         elif contains_mbox(path):
             box_format = BoxFormat.MBOX
         else:
+            required = "/".join(sorted(MAILDIR_REQUIRED_SUBDIRS))
             raise MailSourceError(
-                f"Unrecognized folder: no {'/'.join(sorted(MAILDIR_SUBDIRS))} "
+                f"Unrecognized folder: no {required} "
                 "maildir structure, no nested maildir folders, no .eml files, and "
                 f"no mbox files found in {path}. Force a format with --input-format."
             )
@@ -633,10 +652,17 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
     (nested plain directories, each a maildir of its own) are browsed. A directory
     without the maildir structure only acts as a container of nested folders and
     carries no mail of its own.
+
+    `Maildir` lists the mails of `new` and `cur` each time it refreshes its table of
+    contents, and fails on a missing one. A maildir with no `new`, like a Thunderbird
+    folder, gets `cur` alone to list. `Maildir.add()` would still file a mail in the
+    missing `new`, but mails are only added to the boxes a run creates.
     """
     folder_list = []
 
     try:
+        if lacks_new(box):
+            box._toc_mtimes.pop("new")  # type: ignore[attr-defined]
         if isinstance(box, Maildir) and not is_maildir(Path(box._path)):
             logging.info("No mails at this level: only browse nested folders.")
         else:

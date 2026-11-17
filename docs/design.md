@@ -18,8 +18,10 @@ Mails are loaded from a variety of mailbox formats (`maildir`, `mbox`, `babyl`, 
 
 A source can also be a directory of `mbox` files, at any depth, like the folders of a Thunderbird account. By default, Thunderbird stores each folder as one `mbox` file, named after the folder with no extension added. The sub-folders of a folder are in its `<folder>.sbd` directory, and an `.msf` summary of the folder is beside it. A file opens as a box when it starts with a `From ` line, or when it has an `.msf` summary, as an empty folder has. Names that Thunderbird never shows as folders are skipped: the ones starting with `.` or `#` or ending with `~`, the `.msf` summaries, and the `.mozmsgs` directories.
 
+An account that Thunderbird stores as one file per message is read as `maildir` boxes instead. Each of its folders is a directory with `cur` and `tmp` sub-directories but no `new`, which `mdedup` accepts. A tree that holds accounts of both kinds is read as `maildir` alone: give each account as a source of its own.
+
 ```{warning}
-Quit Thunderbird before you run `mdedup` on its folders: Thunderbird does not check the locks that `mdedup` takes. When the size or the date of a folder file changes, Thunderbird rebuilds the summary of that folder from the file.
+Quit Thunderbird before you run `mdedup` on its folders: Thunderbird does not check the locks that `mdedup` takes. When the size or the date of an `mbox` folder file changes, Thunderbird rebuilds the summary of that folder from the file. It does not check a folder of one file per message: after a run that deletes or moves its mails, click Repair Folder in the properties of that folder, or Thunderbird keeps showing the mails that are gone.
 
 Thunderbird locks its profile while it runs, so a run that deletes or moves mails refuses a profile that Thunderbird has open. A copy, a `--dry-run` or a `--hash-only` run goes on. The check does not see an account whose directory is outside the profile, nor a profile on a network file system.
 

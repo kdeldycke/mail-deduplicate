@@ -6,6 +6,7 @@
 > This version is **not released yet** and is under active development.
 
 - Read a directory of `mbox` files, at any depth, as a mail source, like the folders of a Thunderbird account.
+- Read the folders of a Thunderbird account of one file per message, which are maildirs with no `new` directory.
 - Explain how to raise the limit of open files when a run holds more `mbox`, `babyl` or `mmdf` boxes than the system allows.
 - Refuse to delete or move the mails of a Thunderbird profile while Thunderbird has it open.
 
