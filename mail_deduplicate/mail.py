@@ -379,9 +379,12 @@ class DedupMailMixin(Message):
         rather [the time of the last metadata change](https://docs.python.org/3/library/os.path.html#os.path.getctime).
         ```
 
-        ```{todo}
-        Investigate what [mailbox.MaildirMessage.get_date()](https://docs.python.org/3.11/library/mailbox.html#mailbox.MaildirMessage.get_date)
-        does and if we can use it.
+        ```{note}
+        [`MaildirMessage.get_date()`](https://docs.python.org/3/library/mailbox.html#mailbox.MaildirMessage.get_date)
+        cannot replace this property. `Maildir.get_message()` sets that date from the
+        modification time of the mail file. But a box with a message factory, as
+        every box of mdedup has, reads a mail with that factory and skips
+        `get_message()`. The date of such a mail is the time it was read.
         ```
         """
         if self.conf["time_source"] == TimeSource.CTIME:
@@ -398,11 +401,6 @@ class DedupMailMixin(Message):
         decoded, never the size of the mail on disk. Copies of a mail that differ in
         their transfer encoding alone measure the same, and `--size-threshold`
         compares them in the unit it names.
-
-        ```{todo}
-        Allow customization of the way the size is computed, by getting the file
-        size instead, for example with `os.path.getsize(mail_file)`.
-        ```
         """
         return len("".join(self.body_lines).encode("utf-8"))
 

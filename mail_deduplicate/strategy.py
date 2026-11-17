@@ -239,18 +239,12 @@ class Strategy(enum.Enum):
     3. `tests/test_strategy.py` feeds `f"--strategy={strategy_id}"`, so pairs like
        `[SELECT_OLDER, DISCARD_NEWEST]` would stringify identically and the alias
        spellings would no longer be exercised end to end.
-    ```
 
-    ```{todo}
-    Revisit the aliasing arrangement once the Python floor reaches 3.13, whose
-    `Enum._add_alias_()` accepts non-identifier names, so
-    `SELECT_OLDER._add_alias_("discard-newest")` puts the CLI spelling straight into
-    `__members__`, where
-    `EnumChoice(Strategy, choice_source="name", show_aliases=True)` picks it up.
-    `EnumChoice` also grew a `transform` argument (click-extra 8.9.0) to kebab-case
-    the raw identifiers that `show_aliases` otherwise yields. Neither addresses the
-    three losses listed in the note above, which is why the current arrangement
-    stands.
+    Python 3.13 adds `Enum._add_alias_()`, which accepts the CLI spelling as a name:
+    `SELECT_OLDER._add_alias_("discard-newest")`. click-extra 8.9.0 gives
+    `EnumChoice` a `transform` argument, which kebab-cases the names of plain
+    aliases. Neither changes the above: an alias made either way is still the same
+    object as its member.
     ```
     """
 
