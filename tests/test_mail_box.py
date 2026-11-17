@@ -38,10 +38,15 @@ from mail_deduplicate.mail_box import (
     BoxStructure,
     MailSourceError,
     create_box,
+    iter_mbox_files,
     lock_box,
 )
 
 from .conftest import ALL_FORMATS, MailFactory, assert_one_line_error, check_box
+
+TYPE_CHECKING = False
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @cache
@@ -394,9 +399,10 @@ def test_nonexistent_path(invoke, source):
             ("Error: Unrecognized folder", "--input-format"),
             id="unrecognized-folder",
         ),
-        # A folder cannot be read as a single-file box.
         pytest.param(
-            ("--input-format=mbox",), ("Error: Cannot read ",), id="folder-as-mbox"
+            ("--input-format=mbox",),
+            ("Error: No mbox file found in ",),
+            id="folder-without-mbox",
         ),
     ),
 )
@@ -593,3 +599,136 @@ def test_eml_folders_unsupported(tmp_path):
     assert box.list_folders() == []
     with pytest.raises(NotImplementedError):
         box.get_folder("sub")
+
+
+THUNDERBIRD_SUMMARY = '// <!-- <mdb:mork:z v="1.4"/> -->\n'
+"""First line of the `.msf` summary Thunderbird keeps beside each folder."""
+
+THUNDERBIRD_FILTERS = 'version="9"\nlogging="no"\n'
+"""The `msgFilterRules.dat` file Thunderbird writes for an account with no filter."""
+
+
+def build_thunderbird_tree(root: Path, folders: dict[str, list[MailFactory]]) -> None:
+    """Lay out a tree of `mbox` folders as Thunderbird stores an account.
+
+    `folders` maps the path of each folder file to its mails: the sub-folders of a
+    folder are in its `<folder>.sbd` directory. Each folder gets an `.msf` summary
+    beside it, and the account gets the file of its filters.
+    """
+    root.mkdir(parents=True)
+    (root / "msgFilterRules.dat").write_text(THUNDERBIRD_FILTERS, encoding="UTF-8")
+    for relative, mails in folders.items():
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        box = mailbox.mbox(path, create=True)
+        for mail in mails:
+            box.add(mail.render())
+        box.close()
+        (root / f"{relative}.msf").write_text(THUNDERBIRD_SUMMARY, encoding="UTF-8")
+
+
+def test_thunderbird_tree_autodetect_and_dedup(invoke, tmp_path):
+    """A Thunderbird account is detected as a tree of `mbox` folders and deduplicated.
+
+    The folders of `.sbd` directories are read too. The `.msf` summaries and the file
+    of filters are not mails, and are left as they are.
+    """
+    root = tmp_path / "Mail" / "Local Folders"
+    dup = MailFactory(date="2024-02-05", message_id="<dup@example.com>")
+    unique = MailFactory(date="2024-02-06", message_id="<unique@example.com>")
+    build_thunderbird_tree(
+        root,
+        {
+            "Inbox": [dup, unique],
+            # An empty folder is an empty file, recognized by its `.msf` summary.
+            "Trash": [],
+            "Inbox.sbd/Archive": [dup],
+        },
+    )
+
+    result = invoke("--strategy=select-one", "--action=delete-discarded", str(root))
+
+    assert result.exit_code == 0
+    assert "mbox detected." in result.stderr
+    assert result.stderr.count("2 mails found.") == 1
+    assert result.stderr.count("1 mails found.") == 1
+    assert result.stderr.count("0 mails found.") == 1
+
+    # One copy of the duplicated mail was deleted, its survivor and the unique mail
+    # remain, and the files that are not folders were left untouched.
+    total = 0
+    for folder in ("Inbox", "Inbox.sbd/Archive"):
+        box = mailbox.mbox(root / folder, create=False)
+        total += len(box)
+        box.close()
+    assert total == 2
+    assert b"<unique@example.com>" in (root / "Inbox").read_bytes()
+    assert (root / "Inbox.msf").read_text(encoding="UTF-8") == THUNDERBIRD_SUMMARY
+    filters = (root / "msgFilterRules.dat").read_text(encoding="UTF-8")
+    assert filters == THUNDERBIRD_FILTERS
+
+
+@pytest.mark.parametrize(
+    "name",
+    (
+        pytest.param("Inbox~", id="backup"),
+        pytest.param("#Inbox#", id="autosave"),
+        pytest.param(".Inbox", id="hidden"),
+        pytest.param("Inbox.mozmsgs/Inbox", id="search-support"),
+    ),
+)
+def test_mbox_tree_skips_names_thunderbird_hides(tmp_path, name):
+    """A copy of a folder is not read under a name Thunderbird never shows as a folder.
+
+    Read, the copy would join a duplicate set with the folder it copies, and could be
+    kept in place of the folder Thunderbird shows.
+    """
+    root = tmp_path / "Local Folders"
+    build_thunderbird_tree(root, {"Inbox": [MailFactory()]})
+    copy = root / name
+    copy.parent.mkdir(exist_ok=True)
+    copy.write_bytes((root / "Inbox").read_bytes())
+
+    assert list(iter_mbox_files(root)) == [root / "Inbox"]
+
+
+def test_mbox_tree_refused_lock_unlocks_the_folders_before_it(invoke, tmp_path):
+    """A folder of the tree locked by another program stops the run.
+
+    The folders locked before it are unlocked again: the next run needs no
+    `--force-unlock`, and no `.lock` file stays in the tree, where Thunderbird would
+    show it as a folder.
+    """
+    root = tmp_path / "Local Folders"
+    build_thunderbird_tree(
+        root,
+        {
+            "Inbox": [MailFactory(message_id="<apple@test.com>")],
+            "Trash": [MailFactory(message_id="<kiwi@test.com>")],
+        },
+    )
+    args = ("--strategy=select-one", "--action=delete-discarded", str(root))
+
+    holder = mailbox.mbox(root / "Trash", create=False)
+    holder.lock()
+    try:
+        refused = invoke(*args)
+    finally:
+        holder.unlock()
+        holder.close()
+
+    assert refused.exit_code == 1
+    assert_one_line_error(refused, "Trash is already locked")
+    assert not (root / "Inbox.lock").exists()
+    assert invoke(*args).exit_code == 0
+
+
+def test_thunderbird_forced_mbox_format(invoke, tmp_path):
+    """The `mbox` format can be forced on a directory of mbox files."""
+    root = tmp_path / "Local Folders"
+    build_thunderbird_tree(root, {"Inbox": [MailFactory()]})
+
+    result = invoke("--input-format=mbox", "--action=delete-discarded", str(root))
+
+    assert result.exit_code == 0
+    assert "1 mails found." in result.stderr

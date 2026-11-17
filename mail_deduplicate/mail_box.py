@@ -377,13 +377,72 @@ def contains_eml(path: Path) -> bool:
     return False
 
 
+def hidden_by_thunderbird(name: str) -> bool:
+    """Returns `True` for a file or directory name Thunderbird never shows as a folder.
+
+    A name starting with `.` or `#` or ending with `~` is a hidden, autosave or backup
+    file: Thunderbird stores a folder with such a name under a hashed file name. The
+    other names are the `.msf` summaries of the folders, and the `.mozmsgs`
+    directories where Thunderbird writes files for the search of the operating
+    system. See `nsShouldIgnoreFile()` in
+    [Thunderbird's source code](https://github.com/mozilla/releases-comm-central/blob/a4152ebda36430ccc2c8e4cfa2b081aa4e14966d/mailnews/local/src/nsMsgLocalStoreUtils.cpp#L32-L88).
+    """
+    return (
+        name.startswith((".", "#"))
+        or name.endswith("~")
+        or name.lower().endswith((".msf", ".mozmsgs"))
+    )
+
+
+def is_mbox_file(path: Path) -> bool:
+    """Returns `True` when the file holds an `mbox` box.
+
+    An `mbox` file starts with the `From ` line of its first mail. An empty folder of
+    Thunderbird is an empty file, recognized by the `.msf` summary beside it.
+    Thunderbird writes the summary when it creates a folder, and writes it again when
+    it opens a folder that lost it.
+    """
+    if hidden_by_thunderbird(path.name):
+        return False
+    if path.with_name(f"{path.name}.msf").is_file():
+        return True
+    try:
+        with path.open("rb") as file:
+            return file.read(5) == b"From "
+    except OSError:
+        return False
+
+
+def iter_mbox_files(path: Path) -> Iterator[Path]:
+    """Yields every `mbox` file of a directory tree, in a stable order.
+
+    The walk enters every directory, so the tree can be one Thunderbird account, like
+    `Mail/Local Folders`, or the whole `Mail` directory. Thunderbird keeps the
+    sub-folders of a folder in its `<folder>.sbd` directory. The walk skips the names
+    Thunderbird never shows as folders, with all they hold.
+    """
+    for dirpath, dirnames, filenames in os.walk(path):
+        dirnames[:] = sorted(d for d in dirnames if not hidden_by_thunderbird(d))
+        for filename in sorted(filenames):
+            file = Path(dirpath) / filename
+            if is_mbox_file(file):
+                yield file
+
+
+def contains_mbox(path: Path) -> bool:
+    """Returns `True` when the path holds at least one `mbox` file, at any depth."""
+    return next(iter_mbox_files(path), None) is not None
+
+
 def autodetect_box_type(path: Path) -> BoxFormat:
     """Auto-detect the format of the mailbox located at the provided path.
 
     If the path is a file, then it is considered as an `mbox`. Else, if the
     provided path is a folder and features the `MAILDIR_SUBDIRS` sub-directories,
     or holds nested maildir folders at any depth, it is parsed as a `maildir`.
-    A folder holding loose `.eml` files instead is parsed as an `eml` source.
+    A folder holding loose `.eml` files instead is parsed as an `eml` source, and a
+    folder holding `mbox` files at any depth as a tree of `mbox` boxes, like the
+    folders of a Thunderbird account.
 
     ```{todo}
     Future finer autodetection heuristics should be implemented here. Some ideas:
@@ -400,17 +459,20 @@ def autodetect_box_type(path: Path) -> BoxFormat:
     box_format = None
 
     # Validates folder as a maildir, either by its own structure or by the nested
-    # maildir folders it contains. Falls back to a folder of loose .eml files.
+    # maildir folders it contains. Falls back to a folder of loose .eml files, then
+    # to a tree of mbox files.
     if path.is_dir():
         if contains_maildir(path):
             box_format = BoxFormat.MAILDIR
         elif contains_eml(path):
             box_format = BoxFormat.EML
+        elif contains_mbox(path):
+            box_format = BoxFormat.MBOX
         else:
             raise MailSourceError(
                 f"Unrecognized folder: no {'/'.join(sorted(MAILDIR_SUBDIRS))} "
-                "maildir structure, no nested maildir folders, and no .eml files "
-                f"found in {path}. Force a format with --input-format."
+                "maildir structure, no nested maildir folders, no .eml files, and "
+                f"no mbox files found in {path}. Force a format with --input-format."
             )
 
     # A single file is read as an mbox.
@@ -435,12 +497,17 @@ def open_box(
 
     If `box_format` is provided, forces the opening of the box in the specified format.
     Else, defaults to autodetection.
+
+    A directory opened as `mbox` gives one box per `mbox` file of its tree.
     """
     logging.info(f"Opening {get_current_theme().choice(str(path))} ...")
     if not box_format:
         box_format = autodetect_box_type(path)
     else:
         logging.warning(f"Forcing {box_format} format.")
+
+    if box_format is BoxFormat.MBOX and path.is_dir():
+        return open_mbox_tree(path, force_unlock)
 
     # Do not allow the constructor to create a new mailbox if not found.
     box = box_format.constructor(path, create=False)
@@ -543,6 +610,29 @@ def open_subfolders(box: Mailbox, force_unlock: bool) -> list[Mailbox]:
             release_box(locked)
         raise
     return folder_list
+
+
+def open_mbox_tree(path: Path, force_unlock: bool) -> list[Mailbox]:
+    """Open each `mbox` file of a directory tree as a box of its own.
+
+    Returns the list of opened and locked boxes. Like `open_subfolders()`, if a box
+    cannot be locked, the boxes locked before it are unlocked again and the error is
+    raised. A `.lock` file left behind in a Thunderbird account would show up there
+    as a folder.
+    """
+    boxes: list[Mailbox] = []
+    try:
+        for file in iter_mbox_files(path):
+            logging.info(f"Opening {get_current_theme().choice(str(file))} ...")
+            box = BoxFormat.MBOX.constructor(file, create=False)
+            boxes.append(lock_box(box, force_unlock))
+    except BaseException:
+        for locked in boxes:
+            release_box(locked)
+        raise
+    if not boxes:
+        raise MailSourceError(f"No mbox file found in {path}.")
+    return boxes
 
 
 def carry_maildir_metadata(
