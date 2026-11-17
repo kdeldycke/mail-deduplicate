@@ -26,7 +26,7 @@ The contribution guide (`docs/contributing.md`) lists the commands that run the 
 
 ## Architecture
 
-`mdedup` runs a four-step pipeline, orchestrated by the `Deduplicate` class in `deduplicate.py`. Each step is documented in depth in `docs/design.md`:
+`mdedup` runs a four-step pipeline, orchestrated by the `Deduplicate` class in `deduplicate.py`. Each step is documented in depth in `docs/design.md`, and the box formats that step 1 reads in `docs/formats.md`:
 
 1. **Load** the source boxes and read their mails (`mail_box.py`, `mail.py`).
 2. **Hash** mails into `DuplicateSet`s keyed by a hash of selected headers (`deduplicate.py`).

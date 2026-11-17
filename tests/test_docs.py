@@ -28,6 +28,7 @@ import pytest
 from extra_platforms import ALL_AGENTS
 
 from mail_deduplicate.cli import Preset, preset_words
+from mail_deduplicate.mail_box import BoxFormat
 
 TESTS_DIR = Path(__file__).parent
 """Directory of the test suite."""
@@ -46,6 +47,9 @@ CAPTURE_SCRIPT = PROJECT_ROOT / "docs" / "cli_screenshots_update.py"
 
 DESIGN_PAGE = PROJECT_ROOT / "docs" / "design.md"
 """Documentation page with the table of the presets."""
+
+FORMATS_PAGE = PROJECT_ROOT / "docs" / "formats.md"
+"""Documentation page with the table of the box formats."""
 
 NO_DOCS = "The documentation sources are not part of this tree."
 """Why a test reading `docs/` skips in the sdist, which ships the tests alone."""
@@ -105,6 +109,23 @@ def test_every_test_module_has_a_section():
     stale = sorted(documented - modules)
     assert not missing, f"`docs/tests.md` has no section for: {missing}."
     assert not stale, f"`docs/tests.md` documents modules that do not exist: {stale}."
+
+
+@pytest.mark.once
+@pytest.mark.parametrize("box_format", BoxFormat, ids=str)
+def test_formats_page_lists_each_box_format(box_format):
+    """`docs/formats.md` opens a table row with each box format.
+
+    The table of the page is written by hand, so a new format has to add its row.
+    Only a row that opens with the format counts: the table of what a copy keeps
+    names formats in its other columns.
+    """
+    if not FORMATS_PAGE.is_file():
+        pytest.skip(NO_DOCS)
+
+    page = FORMATS_PAGE.read_text(encoding="UTF-8")
+    row = re.compile(rf"^\| `{box_format}` ", flags=re.MULTILINE)
+    assert row.search(page), f"`docs/formats.md` has no table row for `{box_format}`."
 
 
 def _pages_embedding(stem: str) -> list[Path]:

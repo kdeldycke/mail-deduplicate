@@ -165,7 +165,7 @@ _first_pass.close()
 The garden club digest is still there twice, as its two copies differ: the list added a subject prefix, a header and a footer. Whatever a conservative pass leaves behind differs somewhere, and the rest of this page is about seeing through such differences.
 
 ```{tip}
-The export box defaults to the `mbox` format. Pass `--export-format maildir` to produce a `maildir` folder instead, ready to be dropped on an IMAP server or opened by any client.
+The export box defaults to the `mbox` format. Pass `--export-format maildir` to produce a `maildir` folder instead, ready to be dropped on an IMAP server or opened by any client. [Writing to a box](formats.md#writing-to-a-box) says what a mail keeps when it changes format.
 ```
 
 ## Second pass: when copies differ
@@ -281,7 +281,7 @@ for _path, _count in (("archive-2024.mbox", 1), ("archive-2025.mbox", 5)):
 `archive-2024.mbox` is down to its single unique mail, and `archive-2025.mbox` was not touched. Mails without duplicates are never deleted, whatever the strategy and whichever of the two delete actions runs: only members of a duplicate set are.
 
 ```{caution}
-For folder-based boxes (`maildir`, `mh`, `eml`), `--regexp` is tested against the path of each individual mail file. For file-based boxes (`mbox`, `babyl`, `mmdf`), all mails share the path of the box itself.
+For folder-based boxes (`maildir`, `mh`, `eml`), `--regexp` is tested against the path of each individual mail file. For file-based boxes (`mbox`, `babyl`, `mmdf`), all mails share the path of the box itself. See [how the format changes a run](formats.md#how-the-format-changes-a-run).
 ```
 
 ### Link duplicates instead of deleting them
@@ -359,7 +359,7 @@ assert _census() == (7, 5)
 Still 7 mails on disk, now backed by 5 files: each `account-b` copy shares the file of its `account-a` twin. Both accounts still list everything they held, and each copy keeps its own `maildir` flags, which live in the file name rather than in the file, so the same mail can stay read in one account and unread in the other. Running the command again changes nothing, as copies already sharing a file are reported as such and left alone.
 
 ```{caution}
-Only copies identical byte for byte are linked by default. Two copies of a mail that reached you by different routes usually differ, if only by a `Received` header, and linking those swaps one copy's content for the other's. `--hardlink-differing` allows it, as a deliberate choice. Mails from `mbox`, `babyl` and `mmdf` boxes are always left alone, having no file of their own to link.
+Only copies identical byte for byte are linked by default. Two copies of a mail that reached you by different routes usually differ, if only by a `Received` header, and linking those swaps one copy's content for the other's. `--hardlink-differing` allows it, as a deliberate choice. Mails from `mbox`, `babyl` and `mmdf` boxes are always left alone, having no [file of their own](formats.md#supported-formats) to link.
 ```
 
 ```{tip}

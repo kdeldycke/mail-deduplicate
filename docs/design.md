@@ -14,21 +14,7 @@ For added protection against accidentally removing mails due to false positives,
 
 ## Step 1: Loading mails
 
-Mails are loaded from a variety of mailbox formats (`maildir`, `mbox`, `babyl`, `mh`, `mmdf` and `eml`).
-
-A source can also be a directory of `mbox` files, at any depth, like the folders of a Thunderbird account. By default, Thunderbird stores each folder as one `mbox` file, named after the folder with no extension added. The sub-folders of a folder are in its `<folder>.sbd` directory, and an `.msf` summary of the folder is beside it. A file opens as a box when it starts with a `From ` line, or when it has an `.msf` summary, as an empty folder has. Names that Thunderbird never shows as folders are skipped: the ones starting with `.` or `#` or ending with `~`, the `.msf` summaries, and the `.mozmsgs` directories.
-
-An account that Thunderbird stores as one file per message is read as `maildir` boxes instead. Each of its folders is a directory with `cur` and `tmp` sub-directories but no `new`, which `mdedup` accepts. A tree that holds accounts of both kinds is read as `maildir` alone: give each account as a source of its own.
-
-```{warning}
-Quit Thunderbird before you run `mdedup` on its folders: Thunderbird does not check the locks that `mdedup` takes. When the size or the date of an `mbox` folder file changes, Thunderbird rebuilds the summary of that folder from the file. It does not check a folder of one file per message: after a run that deletes or moves its mails, click Repair Folder in the properties of that folder, or Thunderbird keeps showing the mails that are gone.
-
-Thunderbird locks its profile while it runs, so a run that deletes or moves mails refuses a profile that Thunderbird has open. A copy, a `--dry-run` or a `--hash-only` run goes on. The check does not see an account whose directory is outside the profile, nor a profile on a network file system.
-
-Give `mdedup` the `Mail` directory of the profile, or one of its accounts, like `Mail/Local Folders`. Do not give it the `ImapMail` directory: its `mbox` files are offline copies of the mails on IMAP servers. Thunderbird finds each mail there by its position in the file, and does not check these files against their summaries.
-```
-
-Each `mbox`, `babyl` and `mmdf` box keeps its file open until the end of the run, so the limit of open files of the system caps how many of them one run holds. macOS sets that limit to 256 by default, which a Thunderbird account of a few hundred folders goes past. The run then stops with a `too many open files` error. Raise the limit in the shell before the run, like with `ulimit -n 4096`, or deduplicate fewer boxes at once.
+Mails are loaded from `maildir`, `mbox`, `mh`, `babyl`, `mmdf` and `eml` boxes. The [box formats](formats.md) page says how `mdedup` finds the format of a source, and how to read the folders of a Thunderbird account.
 
 ## Step 2: Hashing
 
@@ -165,9 +151,7 @@ $ mdedup --strategy discard-matching-path --regexp old --action delete-discarded
 
 Once duplicates have been selected, an action is performed on them.
 
-The `copy-*` and `move-*` actions write each mail into the export box as the bytes its source box holds, never as a message rebuilt from its parsed form. Python's `email` generator redraws multipart boundaries, closes a boundary left open, turns a bare CR into a line break, and drops the content of a multipart part it parsed with no subpart: a deduplication is no reason to repair a mail. Line endings are the one conversion left. A mail is written with LF endings, which every format but `eml` turns into the line separator of the platform. An `mbox` or `mmdf` box also quotes the body lines starting with `From `, as its format requires.
-
-What a format keeps beside a mail travels with it into a box of the same format: the envelope `From ` line of an `mbox` or `mmdf` mail, the `new` or `cur` folder, the flags and the modification time of a `maildir` mail, and the sequences of an `mh` mail. The envelope line also travels between an `mbox` and an `mmdf` box, which both keep it. Any other box has no place for these, and nothing is translated: a `maildir` mail copied into an `mbox` gets no `Status` header, and loses its flags. The labels of a `babyl` mail are not carried.
+The `copy-*` and `move-*` actions write each mail into the export box as the bytes its source box holds. [Writing to a box](formats.md#writing-to-a-box) says what a mail keeps when it changes format.
 
 ### Reading a strategy against an action
 
@@ -204,7 +188,7 @@ Linked mails share one inode, and so share the permissions, ownership and modifi
 
 ## Errors and bug reports
 
-A problem you can fix ends the run with a one-line `Error:` message and exit code `1`: a source with no structure `mdedup` recognizes, a box another program locked, a source given twice, an export box that already exists, or a system error, like a missing permission or a full disk, while `mdedup` opens a source or acts on the mails. The first four stop the run before `mdedup` touches any mail. A system error in the action step can come after the action handled some mails. Its message names the mail it stopped on, and the mails already handled stay handled.
+A problem you can fix ends the run with a one-line `Error:` message and exit code `1`: a source with no structure `mdedup` recognizes, a box another program locked, a source given twice, an export box that already exists, or a system error, like a missing permission or a full disk, while `mdedup` opens a source or acts on the mails. The first four stop the run before `mdedup` touches any mail. A system error in the action step can come after the action handled some mails. Its message names the mail it stopped on. The mails already handled stay handled, except in an `mbox`, `mmdf` or `babyl` source, which the run leaves as it found it: see [locks](formats.md#locks).
 
 An error `mdedup` has no rule for is a bug, either in its code or in how it handles a mail shape it never met. What happens next depends on the step:
 

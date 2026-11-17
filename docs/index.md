@@ -11,6 +11,7 @@ hide-toc: true
 install
 tutorial
 design
+formats
 cli
 man
 configuration
