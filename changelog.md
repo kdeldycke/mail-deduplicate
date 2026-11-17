@@ -11,6 +11,7 @@
 - Explain how to raise the limit of open files when a run holds more `mbox`, `babyl` or `mmdf` boxes than the system allows.
 - Refuse to delete or move the mails of a Thunderbird profile while Thunderbird has it open.
 - Warn about each source in which no mail is found, and about each maildir folder that lacks its `tmp` folder.
+- Warn when a failed run leaves an `mbox`, `mmdf` or `babyl` source unchanged, after its output listed mails as deleted or moved from it.
 - Document the box formats on a page of their own: autodetection, locks, Thunderbird accounts, and what a copy keeps from each format.
 
 ## [`9.7.0` (2026-11-16)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.6.0...v9.7.0)

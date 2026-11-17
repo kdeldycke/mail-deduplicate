@@ -186,7 +186,8 @@ def test_dedup_across_formats(invoke, make_box, box_format):
 def test_run_cut_short_unlocks_boxes(invoke, make_box, monkeypatch, box_format, error):
     """A run cut short by an error or an interrupt still unlocks its source box.
 
-    The next run needs no `--force-unlock`.
+    The next run needs no `--force-unlock`. A single-file box is left as the run
+    found it, and a warning names it.
     """
     box_type = box_format.base_class
     dup = MailFactory(body="Same body.\n", message_id="<cut-short@test.com>")
@@ -206,12 +207,15 @@ def test_run_cut_short_unlocks_boxes(invoke, make_box, monkeypatch, box_format, 
         raise error
 
     monkeypatch.setattr(Action, "perform", perform_then_fail)
-    assert invoke(*args).exit_code == 1
+    result = invoke(*args)
+    assert result.exit_code == 1
     # A single-file box only writes the removals it queued when it is closed, and a
     # run cut short leaves them unwritten. A folder-based box deletes each mail file
     # as soon as it is removed.
     queued = box_format.structure == BoxStructure.FILE
     check_box(box_path, box_type, content=[dup, dup] if queued else [dup])
+    warning = f"The run stopped before it rewrote {box_path}:"
+    assert (warning in result.stderr) is queued
 
     monkeypatch.undo()
     result = invoke(*args)

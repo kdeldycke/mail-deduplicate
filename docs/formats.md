@@ -87,7 +87,7 @@ A box that another program locked stops the run with an error. A program that cr
 
 A run that fails, or that you interrupt, unlocks all its boxes, so the next run needs no `--force-unlock`. No `.lock` file then stays in a Thunderbird account, where Thunderbird would show it as a folder.
 
-Such a run also leaves each `mbox`, `mmdf` and `babyl` source as it found it. These formats write a deletion only when a run ends without error, as they rewrite their file then. A mail that the output of a failed run lists as deleted or moved stays in such a box. A mail deleted from a `maildir`, `mh` or `eml` box is gone at once.
+Such a run also leaves each `mbox`, `mmdf` and `babyl` source as it found it. These formats write a deletion only when a run ends without error, as they rewrite their file then. A mail that the output of a failed run lists as deleted or moved stays in such a box, and a warning names the box. A mail deleted from a `maildir`, `mh` or `eml` box is gone at once.
 
 ## Writing to a box
 

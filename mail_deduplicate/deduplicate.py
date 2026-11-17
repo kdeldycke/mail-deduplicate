@@ -1663,12 +1663,21 @@ class Deduplicate:
         With `flush` off, the pending changes of the boxes stay unwritten: see
         `release_box()`. Closed boxes and cache are dropped, so calling this again
         does nothing.
+
+        A single-file box with pending changes then gets a warning. The trail of the
+        action step already listed its mails as deleted or moved, while its file
+        still holds every one of them.
         """
         for source_path, box in self.sources.items():
             logging.debug(f"Close {source_path}")
             if flush:
                 box.close()
             else:
+                if getattr(box, "_pending", False):
+                    logging.warning(
+                        f"The run stopped before it rewrote {source_path}: the mails "
+                        "it listed as deleted or moved from that box are still in it."
+                    )
                 release_box(box)
         self.sources.clear()
         if self.cache:
