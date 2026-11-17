@@ -1231,6 +1231,10 @@ class Deduplicate:
         A run that deletes or moves mails also refuses a source in a profile that
         Thunderbird has open, as Thunderbird checks none of the locks taken here. A
         copy or a rehearsal of the same run goes on.
+
+        A run out of open files gets a message of its own, as every `mbox`, `babyl`
+        and `mmdf` box holds its file open until the end of the run. The message says
+        how to raise the limit: the run never changes the limits of the system itself.
         """
         self.step = "loading"
         # Make the path absolute and resolve any symlinks.
