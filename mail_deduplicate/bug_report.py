@@ -28,10 +28,14 @@ file paths, which hold the name of the user on most systems.
 ```
 
 ```{todo}
-Contribute the crash handler, the environment and options lines and the report
-invitation to [click-extra](https://github.com/kdeldycke/click-extra), so every
-Click Extra CLI can invite bug reports. mdedup then keeps only the mail fingerprint
-and the quarantine of the failing mails.
+Switch to `click_extra.bug_report` once the next release of
+[click-extra](https://github.com/kdeldycke/click-extra), after `10.2.0`, ships it.
+Raise the `click-extra` floor to that release, set `report_url` on the `mdedup`
+command, and log each report with `click_extra.log_report()`. That drops
+`describe()`, `compact_frames()`, `culprit_function()`, the options and version
+lines, and the rendering and saving of a report. mdedup then keeps only the mail
+fingerprints, the failure log of the mails it set aside, and the handler that names
+the step and the mail of an unexpected error.
 ```
 """
 
