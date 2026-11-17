@@ -119,7 +119,7 @@ Nothing is translated from one format to another. A `maildir` mail copied into a
 ## How the format changes a run
 
 - `--regexp` tests the path of each mail file in a `maildir`, `mh` or `eml` box. Every mail of an `mbox`, `mmdf` or `babyl` box shares the path of the box file. The path of a `maildir` mail ends with its `cur` or `new` folder and its file name, flags included.
-- `--time-source ctime` reads the time of the file that holds a mail, so every mail of an `mbox`, `mmdf` or `babyl` box gets the time of its box. On Linux and macOS, `ctime` is the time of the last change to the metadata of the file, not its creation time.
+- `--time-source mtime` and `--time-source ctime` read a time of the file that holds a mail, so every mail of an `mbox`, `mmdf` or `babyl` box gets the time of its box. `mtime` is the time the content of the file last changed: for a `maildir` mail, the time it arrived. On Linux and macOS, `ctime` is the time of the last change to the metadata of the file, not its creation time: a client that sets a flag on a `maildir` mail renames its file, which changes its `ctime` but not its `mtime`.
 - `--jobs` works in parallel only when every source is a `maildir`, `mh` or `eml` box: one `mbox`, `mmdf` or `babyl` source keeps the whole run sequential. See [running in parallel](performance.md#running-in-parallel).
 - `--cache` trusts an entry only while the file of its mail is unchanged. For an `mbox`, `mmdf` or `babyl` mail, that file is the whole box. See [what invalidates an entry](performance.md#what-invalidates-an-entry).
 - `--action hardlink-discarded` leaves alone the mails of an `mbox`, `mmdf` or `babyl` box, which have no file of their own to link. See [hardlinking duplicates](design.md#hardlinking-duplicates).

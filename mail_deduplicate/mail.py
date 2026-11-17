@@ -59,7 +59,19 @@ class TimeSource(StrEnum):
     """Timestamp is from the email's file on the filesystem.
 
     ```{attention}
-    Only meaningful for sources storing one mail per file, like `maildir`
+    Only meaningful for sources storing one mail per file, like `maildir`, `mh`
+    and `eml`.
+    ```
+    """
+
+    MTIME = "mtime"
+    """Timestamp is the modification time of the email's file on the filesystem.
+
+    For a `maildir` mail, it is the time the mail arrived. A client sets a flag by
+    renaming the file, which keeps this time but changes the `ctime`.
+
+    ```{attention}
+    Only meaningful for sources storing one mail per file, like `maildir`, `mh`
     and `eml`.
     ```
     """
@@ -371,8 +383,8 @@ class DedupMailMixin(Message):
     def timestamp(self) -> float | None:
         """Compute the normalized canonical timestamp of the mail.
 
-        Sourced from the message's `Date` header by default. In the case of
-        `maildir`, can be sourced from the email's file from the filesystem.
+        Sourced from the message's `Date` header by default, or from a time of the
+        email's file on the filesystem: see `TimeSource`.
 
         ```{warning}
         `ctime` does not refer to creation time on POSIX systems, but
@@ -381,14 +393,17 @@ class DedupMailMixin(Message):
 
         ```{note}
         [`MaildirMessage.get_date()`](https://docs.python.org/3/library/mailbox.html#mailbox.MaildirMessage.get_date)
-        cannot replace this property. `Maildir.get_message()` sets that date from the
-        modification time of the mail file. But a box with a message factory, as
+        cannot serve the `mtime` source. `Maildir.get_message()` sets that date from
+        the modification time of the mail file. But a box with a message factory, as
         every box of mdedup has, reads a mail with that factory and skips
-        `get_message()`. The date of such a mail is the time it was read.
+        `get_message()`. The date of such a mail is the time it was read, so the
+        `mtime` source reads the file instead.
         ```
         """
         if self.conf["time_source"] == TimeSource.CTIME:
             return os.path.getctime(self.path)
+        if self.conf["time_source"] == TimeSource.MTIME:
+            return os.path.getmtime(self.path)
 
         return self.parsed_date
 

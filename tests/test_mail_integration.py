@@ -21,8 +21,10 @@ Unit-level tests of the mail object live in `test_mail.py`.
 
 from __future__ import annotations
 
+import os
 import time
 from mailbox import Maildir, mbox, mboxMessage
+from pathlib import Path
 from textwrap import dedent
 
 import pytest
@@ -262,6 +264,29 @@ def test_ctime_time_source(invoke, make_box):
     assert result.exit_code == 0
     # The newest copy (delivered last) was selected and deleted; one copy remains.
     assert len(Maildir(box_path, create=False)) == 1
+
+
+def test_mtime_time_source(invoke, make_box):
+    """--time-source=mtime dates each mail by the modification time of its file.
+
+    The copy dated newest is touched first, so its ctime is the oldest: only the
+    modification times pick it.
+    """
+    dup = MailFactory(body="Same body.\n", message_id="<mtime@nohost.com>")
+    box_path, _, _ = make_box(Maildir, [dup, dup])
+    newer, older = sorted(Path(box_path, "new").iterdir())
+    os.utime(newer, (2_000_000_000, 2_000_000_000))
+    os.utime(older, (1_000_000_000, 1_000_000_000))
+
+    result = invoke(
+        "--time-source=mtime",
+        "--strategy=select-newest",
+        "--action=delete-selected",
+        box_path,
+    )
+
+    assert result.exit_code == 0
+    assert [path.name for path in Path(box_path, "new").iterdir()] == [older.name]
 
 
 @pytest.mark.parametrize("jobs", ("1", "2"))

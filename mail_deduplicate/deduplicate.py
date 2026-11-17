@@ -1034,7 +1034,8 @@ class Deduplicate:
         """
         mail = self.blank_stub(box, mail_id)
         # A ctime timestamp is a stat away and would not be caught by the cache's
-        # staleness key, so it is left to be derived rather than restored.
+        # staleness key, so it is left to be derived rather than restored. An mtime
+        # timestamp is part of that key, so it is restored.
         if self.conf["time_source"] != TimeSource.CTIME:
             mail.__dict__["timestamp"] = entry.timestamp
         if entry.mail_size is not None:

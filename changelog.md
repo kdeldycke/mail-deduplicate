@@ -9,6 +9,7 @@
 - Read the folders of a Thunderbird account of one file per message, which are maildirs with no `new` directory.
 - Read a single mail file given as a source, like one `.eml` file, as a box of that one mail.
 - Autodetect `mh` folders by their `.mh_sequences` file, and `babyl` and `mmdf` files by their first bytes, so one run can mix them with other formats.
+- Add `--time-source mtime`, which dates a mail by the modification time of its file: for a `maildir` mail, the time it arrived.
 - Explain how to raise the limit of open files when a run holds more `mbox`, `babyl` or `mmdf` boxes than the system allows.
 - Refuse to delete or move the mails of a Thunderbird profile while Thunderbird has it open.
 - Warn about each source in which no mail is found, and about each maildir folder that lacks its `tmp` folder.

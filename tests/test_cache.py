@@ -173,6 +173,7 @@ def test_warm_run_matches_uncached_run(
         "--hash-header=message-id",
         "--hash-body=decoded",
         "--time-source=ctime",
+        "--time-source=mtime",
     ),
 )
 def test_settings_change_discards_the_cache(
