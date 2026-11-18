@@ -7,6 +7,9 @@
 
 ## [`9.7.1` (2026-11-17)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.7.0...v9.7.1)
 
+> [!NOTE]
+> `9.7.1` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/9.7.1/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.7.1).
+
 - Read a directory of `mbox` files, at any depth, as a mail source, like the folders of a Thunderbird account.
 - Read the folders of a Thunderbird account of one file per message, which are maildirs with no `new` directory.
 - Read a single mail file given as a source, like one `.eml` file, as a box of that one mail.
