@@ -91,9 +91,6 @@
 
 ## [`9.4.0` (2026-10-26)](https://github.com/kdeldycke/mail-deduplicate/compare/v9.3.2...v9.4.0)
 
-> [!WARNING]
-> The binaries of this version fail when `--jobs` is above `1`, ending with exit code `1` and a bug report that names `BrokenProcessPool`. Run them with `--jobs=1`, or install `mdedup` from 🐍 PyPI.
-
 > [!NOTE]
 > `9.4.0` is available on [🐍 PyPI](https://pypi.org/project/mail-deduplicate/9.4.0/) and [🐙 GitHub](https://github.com/kdeldycke/mail-deduplicate/releases/tag/v9.4.0).
 
