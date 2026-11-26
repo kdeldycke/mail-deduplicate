@@ -356,7 +356,7 @@ jobs:
           uv --no-progress pip uninstall "$PACKAGE"
       - name: Run CLI via pipx
         run: |
-          uv --no-progress tool install pipx
+          uv --no-progress tool install 'pipx==1.18.19'
           for script in $CLI_SCRIPTS; do
             # `pipx run <script>` resolves the script name as a PyPI package, just
             # like a bare `uvx <script>` above; skip it when the two differ.
