@@ -161,10 +161,6 @@ required-version = ">=0.12.22"
 dependency-groups.docs = { requires-python = ">= 3.14" }
 # Cooldown buffer before adopting newly released packages.
 exclude-newer = "1 week"
-# XXX The `sphinx-design` entry lets the `sphinx-design>=0.8` floor of the docs
-# group resolve inside its cooldown: drop this comment once `sync-uv-lock`
-# prunes the entry.
-exclude-newer-package = { soupsieve = "2026-11-16T00:00:00Z", sphinx-design = "2026-11-12T00:00:00Z" }
 # Package is at root level, not in "./src/".
 build-backend.module-root = ""
 build-backend.source-exclude = [
